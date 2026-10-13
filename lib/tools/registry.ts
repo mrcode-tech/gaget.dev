@@ -34,7 +34,7 @@ export const tools: Tool[] = [
 ];
 
 export const categories = [
-  { name: "JSON", href: "/json", icon: Braces },
+  { name: "JSON", href: "/json/formatter", icon: Braces },
   { name: "Encoding", href: "/encoding/url", icon: Binary },
   { name: "Security", href: "/security/jwt-decoder", icon: ShieldCheck },
   { name: "Text", href: "/text/regex", icon: Regex },
