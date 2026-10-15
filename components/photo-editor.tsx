@@ -83,6 +83,7 @@ export function PhotoEditor() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("adjust");
+  const [filterPreset, setFilterPreset] = useState("custom");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const nextTextId = useRef(1);
@@ -144,14 +145,12 @@ export function PhotoEditor() {
   useEffect(() => () => { if (sourceUrlRef.current) URL.revokeObjectURL(sourceUrlRef.current); }, []);
 
   const change = useCallback((patch: Partial<EditorState>) => {
-    setDoc((current) => {
-      historyRef.current = [...historyRef.current.slice(-49), current];
-      futureRef.current = [];
-      setCanUndo(true);
-      setCanRedo(false);
-      return { ...current, ...patch };
-    });
-  }, []);
+    historyRef.current = [...historyRef.current.slice(-49), doc];
+    futureRef.current = [];
+    setCanUndo(true);
+    setCanRedo(false);
+    setDoc({ ...doc, ...patch });
+  }, [doc]);
 
   async function chooseFile(file?: File) {
     if (!file) return;
@@ -298,7 +297,8 @@ export function PhotoEditor() {
 
           {hasImage && activePanel === "adjust" && <div className="space-y-4">
             <label className="block space-y-2 text-sm">Filter preset
-              <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value="custom" onChange={(e) => {
+              <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={filterPreset} onChange={(e) => {
+                setFilterPreset(e.target.value);
                 const presets: Record<string, Partial<EditorState>> = {
                   original: { brightness: 100, contrast: 100, saturation: 100, grayscale: 0, sepia: 0, blur: 0 },
                   vivid: { brightness: 105, contrast: 112, saturation: 145, grayscale: 0, sepia: 0, blur: 0 },
@@ -319,7 +319,7 @@ export function PhotoEditor() {
               ["Grayscale", "grayscale", 0, 100, "%"],
               ["Sepia", "sepia", 0, 100, "%"],
               ["Blur", "blur", 0, 12, "px"],
-            ] as const).map(([label, key, min, max, unit]) => <label key={key} className="block space-y-1.5 text-sm">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => change({ [key]: Number(e.target.value) })} /></label>)}
+            ] as const).map(([label, key, min, max, unit]) => <label key={key} className="block space-y-1.5 text-sm">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
           </div>}
 
           {hasImage && activePanel === "transform" && <div className="space-y-4">
