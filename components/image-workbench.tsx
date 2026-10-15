@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ImageTool = { title: string; description: string; group: string };
-export const imageToolSlugs = ["crop", "resize", "compress", "convert", "rotate-flip", "editor", "add-text", "watermark", "annotate", "collage", "borders", "grayscale", "blur", "pixelate", "metadata", "privacy-check", "palette", "color-picker", "base64", "base64-to-image", "favicon", "svg-optimizer", "dimensions", "print-size"] as const;
 const imageTools: Record<string, ImageTool> = {
   crop: { title: "Image Cropper", description: "Crop an image to the exact region you need. Coordinates are measured in source-image pixels.", group: "Edit" },
   resize: { title: "Image Resizer", description: "Resize images by dimensions or scale while keeping the original untouched.", group: "Optimize" },
