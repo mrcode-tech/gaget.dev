@@ -139,6 +139,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
       try {
         const raw = base64Text.trim();
         if (!raw) throw new Error("Paste an image data URL or Base64 string first.");
+        if (raw.length > 36 * 1024 * 1024) throw new Error("This Base64 input is too large. Keep it under 36 MB for browser-side decoding.");
         const dataUrl = raw.startsWith("data:") ? raw : `data:image/png;base64,${raw.replace(/\s/g, "")}`;
         const image = await loadImage(dataUrl);
         const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
