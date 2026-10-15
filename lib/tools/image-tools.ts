@@ -1,22 +1,9 @@
-export const imageToolSlugs = ["crop", "resize", "compress", "convert", "rotate-flip", "editor", "add-text", "watermark", "annotate", "collage", "borders", "grayscale", "blur", "pixelate", "metadata", "privacy-check", "palette", "color-picker", "base64", "base64-to-image", "favicon", "svg-optimizer", "dimensions", "print-size"] as const;
+export const imageToolSlugs = ["editor", "collage", "metadata", "palette", "color-picker", "base64", "base64-to-image", "favicon", "svg-optimizer", "dimensions", "print-size"] as const;
 
 export const imageToolMeta = {
-  crop: { title: "Image Cropper", description: "Crop photos precisely in your browser. Private, free image cropping with no upload." },
-  resize: { title: "Image Resizer", description: "Resize photos by pixel dimensions locally in your browser. Your images stay on your device." },
-  compress: { title: "Image Compressor", description: "Compress images with adjustable output quality in your browser, without uploading your files." },
-  convert: { title: "Image Format Converter", description: "Convert images between PNG, JPEG, and WebP locally for privacy-friendly image conversion." },
-  "rotate-flip": { title: "Rotate & Flip Image", description: "Rotate and flip images in your browser without uploading or storing your photo." },
-  editor: { title: "Photo Editor & Filters", description: "Edit photos with brightness, contrast, saturation, grayscale, and blur controls in your browser." },
-  "add-text": { title: "Add Text to Image", description: "Add captions and text overlays to images privately in your browser." },
-  watermark: { title: "Image Watermark Tool", description: "Add a text watermark to your photo locally and download a new copy." },
-  annotate: { title: "Image Annotator", description: "Add text annotations to an image in your browser, with no image upload." },
+  editor: { title: "Photo Editor", description: "Edit photos in one private browser-based editor with filters, color adjustments, resizing, rotation, text overlays, watermarks, and export controls." },
   collage: { title: "Photo Collage Maker", description: "Combine two to four local images into a simple downloadable photo collage." },
-  borders: { title: "Image Borders & Corners", description: "Add a border and rounded corners to photos using local browser processing." },
-  grayscale: { title: "Grayscale Image", description: "Convert images to grayscale without uploading your photo." },
-  blur: { title: "Image Blur Tool", description: "Apply a blur effect to an image locally in your browser." },
-  pixelate: { title: "Pixelate Image", description: "Pixelate or mosaic an image locally and export the result." },
-  metadata: { title: "Image Metadata Viewer & Remover", description: "Inspect image dimensions and file properties, then export a copy stripped of embedded metadata." },
-  "privacy-check": { title: "Image Privacy Checker", description: "Review basic image properties and create a metadata-free image copy without uploads." },
+  metadata: { title: "Image Metadata & Privacy", description: "Review image dimensions and file properties, then export a copy stripped of embedded metadata." },
   palette: { title: "Dominant Color Palette", description: "Extract representative HEX colors from an image directly in your browser." },
   "color-picker": { title: "Image Color Picker", description: "Sample exact pixel colors from an image and copy HEX values, privately in your browser." },
   base64: { title: "Image to Base64", description: "Convert a local image to a Base64 data URL entirely in your browser." },
