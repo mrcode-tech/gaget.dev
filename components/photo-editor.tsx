@@ -176,6 +176,7 @@ export function PhotoEditor() {
       futureRef.current = [];
       setCanUndo(false); setCanRedo(false);
       setDoc(initial);
+      setFilterPreset("custom");
       setFileName(file.name.replace(/\.[^.]+$/, "") || "gaget-photo");
       setHasImage(true);
       setStatus("Photo loaded locally. Your original file has not been changed or uploaded.");
@@ -324,8 +325,8 @@ export function PhotoEditor() {
 
           {hasImage && activePanel === "transform" && <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <label className="space-y-1 text-sm">Width (px)<Input type="number" min="1" max="12000" value={doc.width} onChange={(e) => change({ width: clamp(Number(e.target.value) || 1, 1, 12000) })} /></label>
-              <label className="space-y-1 text-sm">Height (px)<Input type="number" min="1" max="12000" value={doc.height} onChange={(e) => change({ height: clamp(Number(e.target.value) || 1, 1, 12000) })} /></label>
+              <label className="space-y-1 text-sm">Width (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.height))} value={doc.width} onChange={(e) => change({ width: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.height))) })} /></label>
+              <label className="space-y-1 text-sm">Height (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.width))} value={doc.height} onChange={(e) => change({ height: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.width))) })} /></label>
             </div>
             <div className="border-t border-border pt-3">
               <p className="mb-2 text-sm font-medium">Crop rectangle (source pixels)</p>
