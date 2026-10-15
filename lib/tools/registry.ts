@@ -1,47 +1,19 @@
-import {
-  Braces, Link2, Binary, KeyRound, Fingerprint, Hash, Regex, Clock3, FileCode2,
-  GitCompareArrows, Database, FileSpreadsheet, ShieldCheck, Code2, Image, Terminal,
-  type LucideIcon
-} from "lucide-react";
-
-export type Tool = {
-  name: string;
-  description: string;
-  href: string;
-  category: string;
-  keywords: string[];
-  icon: LucideIcon;
-  color: "blue" | "green" | "violet" | "rose" | "orange" | "cyan";
-  status?: "available" | "planned";
-};
-
-export const tools: Tool[] = [
-  { name: "JSON Formatter", description: "Format, validate, and inspect JSON.", href: "/json/formatter", category: "JSON", keywords: ["json", "pretty", "beautify", "validate", "viewer"], icon: Braces, color: "blue" },
-  { name: "JSON Diff", description: "Compare two JSON documents side by side.", href: "/json/diff", category: "JSON", keywords: ["json", "compare", "difference"], icon: GitCompareArrows, color: "violet", status: "planned" },
-  { name: "URL Encoder / Decoder", description: "Encode and decode URL components.", href: "/encoding/url", category: "Encoding", keywords: ["url", "encode", "decode", "percent"], icon: Link2, color: "green" },
-  { name: "Base64 Encoder / Decoder", description: "Encode and decode text using Base64.", href: "/encoding/base64", category: "Encoding", keywords: ["base64", "binary", "encode", "decode"], icon: Binary, color: "violet" },
-  { name: "JWT Decoder", description: "Inspect JWT headers, claims, and expiration.", href: "/security/jwt-decoder", category: "Security", keywords: ["jwt", "token", "oauth", "claims"], icon: KeyRound, color: "rose" },
-  { name: "UUID Generator", description: "Generate UUID v4 identifiers in your browser.", href: "/generators/uuid", category: "Generators", keywords: ["uuid", "guid", "identifier"], icon: Fingerprint, color: "orange" },
-  { name: "Hash Generator", description: "Generate SHA-256, SHA-384, and SHA-512 hashes.", href: "/security/hash", category: "Security", keywords: ["hash", "sha256", "sha512", "digest"], icon: Hash, color: "cyan", status: "planned" },
-  { name: "Regex Tester", description: "Test regular expressions against sample text.", href: "/text/regex", category: "Text", keywords: ["regex", "regexp", "pattern"], icon: Regex, color: "violet", status: "planned" },
-  { name: "Unix Timestamp Converter", description: "Convert epoch timestamps to readable dates.", href: "/datetime/timestamp", category: "Date & Time", keywords: ["unix", "timestamp", "epoch", "date"], icon: Clock3, color: "orange", status: "planned" },
-  { name: "XML Formatter", description: "Format XML documents for easier reading.", href: "/xml/formatter", category: "Data Formats", keywords: ["xml", "pretty", "format"], icon: FileCode2, color: "green", status: "planned" },
-  { name: "SQL Formatter", description: "Make SQL queries easier to read.", href: "/sql/formatter", category: "SQL", keywords: ["sql", "query", "database"], icon: Database, color: "blue", status: "planned" },
-  { name: "CSV ↔ JSON", description: "Convert tabular CSV data and JSON arrays.", href: "/data/csv-json", category: "Data Formats", keywords: ["csv", "json", "spreadsheet", "convert"], icon: FileSpreadsheet, color: "green", status: "planned" },
-  { name: "HTML Formatter", description: "Format HTML markup for readability.", href: "/web/html-formatter", category: "Web & API", keywords: ["html", "markup", "format"], icon: Code2, color: "orange", status: "planned" },
-  { name: "Image to Base64", description: "Convert an image into a data URL.", href: "/images/base64", category: "Images", keywords: ["image", "base64", "data url"], icon: Image, color: "rose", status: "planned" },
-  { name: "cURL Converter", description: "Inspect cURL commands and generate client snippets.", href: "/api/curl-converter", category: "Web & API", keywords: ["curl", "http", "api", "fetch"], icon: Terminal, color: "cyan", status: "planned" }
-];
-
-export const categories = [
-  { name: "JSON", href: "/json/formatter", icon: Braces },
-  { name: "Encoding", href: "/encoding/url", icon: Binary },
-  { name: "Security", href: "/security/jwt-decoder", icon: ShieldCheck },
-  { name: "Text", href: "/text/regex", icon: Regex },
-  { name: "Date & Time", href: "/datetime/timestamp", icon: Clock3 },
-  { name: "SQL", href: "/sql/formatter", icon: Database },
-  { name: "Generators", href: "/generators/uuid", icon: Fingerprint },
-  { name: "Web & API", href: "/api/curl-converter", icon: Code2 },
-  { name: "Data Formats", href: "/data/csv-json", icon: FileSpreadsheet },
-  { name: "Images", href: "/images/base64", icon: Image }
-];
+import {Braces,Link2,Binary,KeyRound,Fingerprint,Hash,Regex,Clock3,FileCode2,GitCompareArrows,Database,FileSpreadsheet,ShieldCheck,Code2,Image,Terminal,type LucideIcon} from "lucide-react";
+export type Tool={name:string;description:string;href:string;category:string;keywords:string[];icon:LucideIcon;color:"blue"|"green"|"violet"|"rose"|"orange"|"cyan";status?:"available"|"planned"};
+export const tools:Tool[]=[
+{name:"JSON Formatter",description:"Format, validate, and inspect JSON.",href:"/json/formatter",category:"JSON",keywords:["json","pretty","beautify","validate","viewer"],icon:Braces,color:"blue"},
+{name:"JSON Diff",description:"Compare two JSON documents side by side.",href:"/json/diff",category:"JSON",keywords:["json","compare","difference"],icon:GitCompareArrows,color:"violet",status:"planned"},
+{name:"URL Encoder / Decoder",description:"Encode and decode URL components.",href:"/encoding/url",category:"Encoding",keywords:["url","encode","decode","percent"],icon:Link2,color:"green"},
+{name:"Base64 Encoder / Decoder",description:"Encode and decode text using Base64.",href:"/encoding/base64",category:"Encoding",keywords:["base64","binary","encode","decode"],icon:Binary,color:"violet"},
+{name:"JWT Decoder",description:"Inspect JWT headers, claims, and expiration.",href:"/security/jwt-decoder",category:"Security",keywords:["jwt","token","oauth","claims"],icon:KeyRound,color:"rose"},
+{name:"UUID Generator",description:"Generate UUID v4 identifiers in your browser.",href:"/generators/uuid",category:"Generators",keywords:["uuid","guid","identifier"],icon:Fingerprint,color:"orange"},
+{name:"Hash Generator",description:"Generate SHA-256, SHA-384, and SHA-512 hashes.",href:"/security/hash",category:"Security",keywords:["hash","sha256","sha512","digest"],icon:Hash,color:"cyan",status:"planned"},
+{name:"Regex Tester",description:"Test regular expressions against sample text.",href:"/text/regex",category:"Text",keywords:["regex","regexp","pattern"],icon:Regex,color:"violet",status:"planned"},
+{name:"Unix Timestamp Converter",description:"Convert epoch timestamps to readable dates.",href:"/datetime/timestamp",category:"Date & Time",keywords:["unix","timestamp","epoch","date"],icon:Clock3,color:"orange",status:"planned"},
+{name:"XML Formatter",description:"Format XML documents for easier reading.",href:"/xml/formatter",category:"Data Formats",keywords:["xml","pretty","format"],icon:FileCode2,color:"green",status:"planned"},
+{name:"SQL Formatter",description:"Make SQL queries easier to read.",href:"/sql/formatter",category:"SQL",keywords:["sql","query","database"],icon:Database,color:"blue",status:"planned"},
+{name:"CSV ↔ JSON",description:"Convert tabular CSV data and JSON arrays.",href:"/data/csv-json",category:"Data Formats",keywords:["csv","json","spreadsheet","convert"],icon:FileSpreadsheet,color:"green",status:"planned"},
+{name:"HTML Formatter",description:"Format HTML markup for readability.",href:"/web/html-formatter",category:"Web & API",keywords:["html","markup","format"],icon:Code2,color:"orange",status:"planned"},
+{name:"Image to Base64",description:"Convert an image into a data URL.",href:"/images/base64",category:"Images",keywords:["image","base64","data url"],icon:Image,color:"rose",status:"planned"},
+{name:"cURL Converter",description:"Inspect cURL commands and generate client snippets.",href:"/api/curl-converter",category:"Web & API",keywords:["curl","http","api","fetch"],icon:Terminal,color:"cyan",status:"planned"}];
+export const categories=[{name:"JSON",slug:"json-data",href:"/categories/json-data",icon:Braces},{name:"Encoding",slug:"encoding",href:"/categories/encoding",icon:Binary},{name:"Security",slug:"security",href:"/categories/security",icon:ShieldCheck},{name:"Text",slug:"text",href:"/categories/text",icon:Regex},{name:"Date & Time",slug:"date-time",href:"/categories/date-time",icon:Clock3},{name:"SQL",slug:"sql",href:"/categories/sql",icon:Database},{name:"Generators",slug:"generators",href:"/categories/generators",icon:Fingerprint},{name:"Web & API",slug:"web-api",href:"/categories/web-api",icon:Code2},{name:"Data Formats",slug:"data-formats",href:"/categories/data-formats",icon:FileSpreadsheet},{name:"Images",slug:"images",href:"/categories/images",icon:Image}];
