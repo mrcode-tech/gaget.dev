@@ -7,34 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type ImageTool = { title: string; description: string; group: string };
-const imageTools: Record<string, ImageTool> = {
-  crop: { title: "Image Cropper", description: "Crop an image to the exact region you need. Coordinates are measured in source-image pixels.", group: "Edit" },
-  resize: { title: "Image Resizer", description: "Resize images by dimensions or scale while keeping the original untouched.", group: "Optimize" },
-  compress: { title: "Image Compressor", description: "Reduce JPEG, WebP, or PNG output size with adjustable quality where supported.", group: "Optimize" },
-  convert: { title: "Image Format Converter", description: "Convert images to PNG, JPEG, or WebP directly in this browser.", group: "Optimize" },
-  "rotate-flip": { title: "Rotate & Flip Image", description: "Rotate by quarter turns and flip an image horizontally or vertically.", group: "Edit" },
-  editor: { title: "Photo Editor & Filters", description: "Tune brightness, contrast, saturation, grayscale, and blur with a live preview.", group: "Edit" },
-  "add-text": { title: "Add Text to Image", description: "Add a caption, title, or label and export the result as a new image.", group: "Edit" },
-  watermark: { title: "Image Watermark Tool", description: "Place a text watermark on your image before exporting.", group: "Edit" },
-  annotate: { title: "Image Annotator", description: "Add a visible text annotation to explain or label important details in an image.", group: "Edit" },
-  collage: { title: "Photo Collage Maker", description: "Choose multiple images and combine them into a clean, evenly spaced contact collage.", group: "Edit" },
-  borders: { title: "Image Borders & Corners", description: "Add a border and rounded corners to create a polished image card.", group: "Edit" },
-  grayscale: { title: "Grayscale Image", description: "Convert a photo to grayscale without sending it anywhere.", group: "Colors" },
-  blur: { title: "Image Blur Tool", description: "Apply a controllable blur effect and export a new image.", group: "Colors" },
-  pixelate: { title: "Pixelate Image", description: "Create a blocky pixel-art effect using a low-resolution intermediate canvas.", group: "Colors" },
-  metadata: { title: "Image Metadata Viewer & Remover", description: "Inspect file type, dimensions, and size. Re-exporting pixels creates a fresh file without embedded EXIF metadata.", group: "Privacy" },
-  "privacy-check": { title: "Image Privacy Checker", description: "Review basic image properties and create a metadata-stripped copy locally.", group: "Privacy" },
-  palette: { title: "Dominant Color Palette", description: "Extract representative colors from your image and copy their HEX values.", group: "Colors" },
-  "color-picker": { title: "Image Color Picker", description: "Click any point in the preview to sample its exact pixel color.", group: "Colors" },
-  base64: { title: "Image to Base64", description: "Convert a local image into a data URL or Base64 string without uploading it.", group: "Developer" },
-  "base64-to-image": { title: "Base64 to Image", description: "Preview a Base64 image data URL and download it as an image file.", group: "Developer" },
-  favicon: { title: "Image to Favicon", description: "Create a square 32×32 PNG favicon from a local image.", group: "Developer" },
-  "svg-optimizer": { title: "SVG Optimizer", description: "Remove comments and redundant whitespace from SVG source locally. Review output before using it.", group: "Developer" },
-  dimensions: { title: "Image Dimensions Checker", description: "Check image dimensions, aspect ratio, file type, and file size.", group: "Info" },
-  "print-size": { title: "DPI & Print Size Calculator", description: "Estimate print dimensions at common DPI settings from your image's pixel dimensions.", group: "Info" },
-};
-
 const maxBytes = 25 * 1024 * 1024;
 const outputTypes = [
   { value: "image/png", label: "PNG" },
@@ -65,7 +37,6 @@ function hex(r: number, g: number, b: number) {
 }
 
 export function ImageWorkbench({ slug }: { slug: string }) {
-  const tool = imageTools[slug] ?? imageTools.editor;
   const [file, setFile] = useState<File | null>(null);
   const [sourceUrl, setSourceUrl] = useState("");
   const [resultUrl, setResultUrl] = useState("");
