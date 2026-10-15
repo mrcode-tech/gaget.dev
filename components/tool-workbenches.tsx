@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Check, Copy, Download, RotateCcw, WandSparkles, AlertCircle, ArrowLeftRight, Trash2, KeyRound, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

@@ -1,12 +1,1 @@
-import type { Metadata } from "next";
-import { HomeContent } from "@/components/home-content";
-
-export const metadata: Metadata = {
-  title: "Free Online Developer Tools",
-  description: "Discover free online developer utilities: JSON formatter, URL encoder, Base64 decoder, JWT inspector, UUID generator, and more.",
-  alternates: { canonical: "/" },
-};
-
-export default function HomePage() {
-  return <HomeContent />;
-}
+import type {Metadata} from "next";import {headers} from "next/headers";import {HomeContent} from "@/components/home-content";import {isLocale} from "@/lib/i18n/messages";export async function generateMetadata():Promise<Metadata>{const h=await headers();const raw=h.get("x-gaget-locale")||"en";const locale=isLocale(raw)?raw:"en";return {title:locale==="fa"?"ابزارهای رایگان توسعه‌دهندگان":locale==="ar"?"أدوات تطوير مجانية عبر الإنترنت":"Free Online Developer Tools",description:locale==="fa"?"ابزارهای رایگان برای قالب‌بندی JSON، کدگذاری URL، رمزگشایی Base64 و JWT و تولید UUID.":locale==="ar"?"أدوات مجانية لتنسيق JSON وترميز URL وفك Base64 وJWT وإنشاء UUID.":"Discover free online developer utilities: JSON formatter, URL encoder, Base64 decoder, JWT inspector, UUID generator, and more.",alternates:{canonical:"/",languages:{en:"/",fa:"/fa",ar:"/ar"}}}}export default function HomePage(){return <HomeContent/>}

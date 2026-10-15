@@ -1,47 +1,66 @@
-import {
-  Braces, Link2, Binary, KeyRound, Fingerprint, Hash, Regex, Clock3, FileCode2,
-  GitCompareArrows, Database, FileSpreadsheet, ShieldCheck, Code2, Image, Terminal,
-  type LucideIcon
-} from "lucide-react";
-
-export type Tool = {
-  name: string;
-  description: string;
-  href: string;
-  category: string;
-  keywords: string[];
-  icon: LucideIcon;
-  color: "blue" | "green" | "violet" | "rose" | "orange" | "cyan";
-  status?: "available" | "planned";
-};
-
-export const tools: Tool[] = [
-  { name: "JSON Formatter", description: "Format, validate, and inspect JSON.", href: "/json/formatter", category: "JSON", keywords: ["json", "pretty", "beautify", "validate", "viewer"], icon: Braces, color: "blue" },
-  { name: "JSON Diff", description: "Compare two JSON documents side by side.", href: "/json/diff", category: "JSON", keywords: ["json", "compare", "difference"], icon: GitCompareArrows, color: "violet", status: "planned" },
-  { name: "URL Encoder / Decoder", description: "Encode and decode URL components.", href: "/encoding/url", category: "Encoding", keywords: ["url", "encode", "decode", "percent"], icon: Link2, color: "green" },
-  { name: "Base64 Encoder / Decoder", description: "Encode and decode text using Base64.", href: "/encoding/base64", category: "Encoding", keywords: ["base64", "binary", "encode", "decode"], icon: Binary, color: "violet" },
-  { name: "JWT Decoder", description: "Inspect JWT headers, claims, and expiration.", href: "/security/jwt-decoder", category: "Security", keywords: ["jwt", "token", "oauth", "claims"], icon: KeyRound, color: "rose" },
-  { name: "UUID Generator", description: "Generate UUID v4 identifiers in your browser.", href: "/generators/uuid", category: "Generators", keywords: ["uuid", "guid", "identifier"], icon: Fingerprint, color: "orange" },
-  { name: "Hash Generator", description: "Generate SHA-256, SHA-384, and SHA-512 hashes.", href: "/security/hash", category: "Security", keywords: ["hash", "sha256", "sha512", "digest"], icon: Hash, color: "cyan", status: "planned" },
-  { name: "Regex Tester", description: "Test regular expressions against sample text.", href: "/text/regex", category: "Text", keywords: ["regex", "regexp", "pattern"], icon: Regex, color: "violet", status: "planned" },
-  { name: "Unix Timestamp Converter", description: "Convert epoch timestamps to readable dates.", href: "/datetime/timestamp", category: "Date & Time", keywords: ["unix", "timestamp", "epoch", "date"], icon: Clock3, color: "orange", status: "planned" },
-  { name: "XML Formatter", description: "Format XML documents for easier reading.", href: "/xml/formatter", category: "Data Formats", keywords: ["xml", "pretty", "format"], icon: FileCode2, color: "green", status: "planned" },
-  { name: "SQL Formatter", description: "Make SQL queries easier to read.", href: "/sql/formatter", category: "SQL", keywords: ["sql", "query", "database"], icon: Database, color: "blue", status: "planned" },
-  { name: "CSV ↔ JSON", description: "Convert tabular CSV data and JSON arrays.", href: "/data/csv-json", category: "Data Formats", keywords: ["csv", "json", "spreadsheet", "convert"], icon: FileSpreadsheet, color: "green", status: "planned" },
-  { name: "HTML Formatter", description: "Format HTML markup for readability.", href: "/web/html-formatter", category: "Web & API", keywords: ["html", "markup", "format"], icon: Code2, color: "orange", status: "planned" },
-  { name: "Image to Base64", description: "Convert an image into a data URL.", href: "/images/base64", category: "Images", keywords: ["image", "base64", "data url"], icon: Image, color: "rose", status: "planned" },
-  { name: "cURL Converter", description: "Inspect cURL commands and generate client snippets.", href: "/api/curl-converter", category: "Web & API", keywords: ["curl", "http", "api", "fetch"], icon: Terminal, color: "cyan", status: "planned" }
-];
-
-export const categories = [
-  { name: "JSON", href: "/json/formatter", icon: Braces },
-  { name: "Encoding", href: "/encoding/url", icon: Binary },
-  { name: "Security", href: "/security/jwt-decoder", icon: ShieldCheck },
-  { name: "Text", href: "/text/regex", icon: Regex },
-  { name: "Date & Time", href: "/datetime/timestamp", icon: Clock3 },
-  { name: "SQL", href: "/sql/formatter", icon: Database },
-  { name: "Generators", href: "/generators/uuid", icon: Fingerprint },
-  { name: "Web & API", href: "/api/curl-converter", icon: Code2 },
-  { name: "Data Formats", href: "/data/csv-json", icon: FileSpreadsheet },
-  { name: "Images", href: "/images/base64", icon: Image }
-];
+import {Braces,Link2,Binary,KeyRound,Fingerprint,Hash,Regex,Clock3,FileCode2,GitCompareArrows,Database,FileSpreadsheet,ShieldCheck,Code2,Image,Terminal,Music,SlidersHorizontal,Volume2,Scissors,AudioLines,Split,Gauge,FileAudio,Mic,Globe2,CalendarDays,CalendarClock,Timer,BriefcaseBusiness,CalendarCheck,Cake,Users,CalendarPlus,CalendarHeart,type LucideIcon} from "lucide-react";
+export type Tool={name:string;description:string;href:string;category:string;keywords:string[];icon:LucideIcon;color:"blue"|"green"|"violet"|"rose"|"orange"|"cyan";status?:"available"|"planned"};
+export const tools:Tool[]=[
+{name:"Photo Editor",description:"Edit photos on one canvas with filters, color adjustments, resize, rotate, text, watermarks, and export.",href:"/images/editor",category:"Images",keywords:["image","photo","edit","filter","brightness","contrast","crop","resize","rotate","text","caption","watermark","export"],icon:Image,color:"rose"},
+{name:"Photo Collage Maker",description:"Combine two to four local images into a simple downloadable photo collage.",href:"/images/collage",category:"Images",keywords:["image","photo","collage","combine","grid"],icon:Image,color:"green"},
+{name:"Image Metadata & Privacy",description:"Review image properties and export a copy without embedded metadata.",href:"/images/metadata",category:"Images",keywords:["image","photo","metadata","exif","privacy","remove"],icon:ShieldCheck,color:"green"},
+{name:"Image Color Picker",description:"Sample exact pixel colors from a photo and copy HEX values.",href:"/images/color-picker",category:"Images",keywords:["image","photo","color picker","pixel","hex","rgb"],icon:Image,color:"rose"},
+{name:"Dominant Color Palette",description:"Extract representative HEX colors from an image.",href:"/images/palette",category:"Images",keywords:["image","photo","palette","colors","hex","dominant"],icon:Image,color:"orange"},
+{name:"Image to Base64",description:"Convert a local image into a Base64 data URL.",href:"/images/base64",category:"Images",keywords:["image","base64","data url","encode"],icon:Image,color:"rose"},
+{name:"Base64 to Image",description:"Decode a Base64 image data URL and download the image.",href:"/images/base64-to-image",category:"Images",keywords:["image","base64","decode","data url"],icon:Image,color:"violet"},
+{name:"Image to Favicon",description:"Create a 32×32 PNG favicon from a local image.",href:"/images/favicon",category:"Images",keywords:["image","favicon","icon","website","png"],icon:Image,color:"cyan"},
+{name:"SVG Optimizer",description:"Remove redundant comments and whitespace from SVG source.",href:"/images/svg-optimizer",category:"Images",keywords:["svg","image","optimize","minify","vector"],icon:FileCode2,color:"green"},
+{name:"Image Dimensions Checker",description:"Check image dimensions, aspect ratio, type, and file size.",href:"/images/dimensions",category:"Images",keywords:["image","photo","dimensions","size","resolution"],icon:Image,color:"blue"},
+{name:"DPI & Print Size Calculator",description:"Calculate print size from pixel dimensions and DPI.",href:"/images/print-size",category:"Images",keywords:["image","photo","dpi","print","resolution"],icon:Image,color:"orange"},
+{name:"Audio Editor",description:"Edit local audio with trim, volume, fades, playback, and WAV export.",href:"/audio/editor",category:"Audio",keywords:["audio","sound","editor","waveform","trim","fade","volume"],icon:Music,color:"violet"},
+{name:"Audio Converter",description:"Decode supported audio files in-browser and export WAV audio.",href:"/audio/converter",category:"Audio",keywords:["audio","sound","convert","wav","format"],icon:Music,color:"blue"},
+{name:"Audio Compressor",description:"Reduce WAV output size with sample-rate, channel, and bit-depth options.",href:"/audio/compressor",category:"Audio",keywords:["audio","sound","compress","minify","file size","bitrate"],icon:SlidersHorizontal,color:"green"},
+{name:"Audio Volume Changer",description:"Adjust gain, normalize peak level, and preview audio volume.",href:"/audio/volume",category:"Audio",keywords:["audio","sound","volume","gain","normalize","loudness"],icon:Volume2,color:"orange"},
+{name:"Audio Trimmer & Ringtone Maker",description:"Select a clip by timestamps and export a short WAV ringtone.",href:"/audio/trimmer",category:"Audio",keywords:["audio","trim","ringtone","cut","clip"],icon:Scissors,color:"rose"},
+{name:"Audio Merger",description:"Join multiple local audio files in sequence and export WAV.",href:"/audio/merger",category:"Audio",keywords:["audio","merge","join","combine","mix"],icon:AudioLines,color:"cyan"},
+{name:"Audio Splitter",description:"Split an audio file into equal-duration WAV segments.",href:"/audio/splitter",category:"Audio",keywords:["audio","split","divide","segments"],icon:Split,color:"violet"},
+{name:"Audio Speed Changer",description:"Change playback and export speed for supported audio.",href:"/audio/speed",category:"Audio",keywords:["audio","speed","tempo","slow","fast"],icon:Gauge,color:"orange"},
+{name:"Audio Pitch Changer",description:"Preview pitch changes using browser audio playback controls.",href:"/audio/pitch",category:"Audio",keywords:["audio","pitch","semitone","voice"],icon:AudioLines,color:"rose"},
+{name:"Audio Metadata Viewer",description:"Inspect file type, size, duration, channels, and sample rate.",href:"/audio/metadata",category:"Audio",keywords:["audio","metadata","codec","duration","sample rate"],icon:FileAudio,color:"blue"},
+{name:"Audio Metadata Editor",description:"Edit basic title and artist metadata in a sidecar text export.",href:"/audio/metadata-editor",category:"Audio",keywords:["audio","metadata","tags","artist","title"],icon:FileAudio,color:"green"},
+{name:"Audio to WAV",description:"Decode browser-supported audio and download uncompressed WAV.",href:"/audio/to-wav",category:"Audio",keywords:["audio","wav","convert","pcm"],icon:FileAudio,color:"cyan"},
+{name:"Audio to Base64",description:"Encode a local audio file as a Base64 data URL.",href:"/audio/base64",category:"Audio",keywords:["audio","base64","encode","data url"],icon:Binary,color:"violet"},
+{name:"Base64 to Audio",description:"Decode a Base64 data URL into a downloadable audio file.",href:"/audio/base64-to-audio",category:"Audio",keywords:["audio","base64","decode"],icon:Binary,color:"violet"},
+{name:"Silence Detector",description:"Scan decoded audio for low-volume intervals.",href:"/audio/silence-detector",category:"Audio",keywords:["audio","silence","quiet","detect"],icon:AudioLines,color:"orange"},
+{name:"Audio Waveform Generator",description:"Create a downloadable waveform image from local audio.",href:"/audio/waveform",category:"Audio",keywords:["audio","waveform","visualizer","image"],icon:AudioLines,color:"green"},
+{name:"Audio Frequency Analyzer",description:"Visualize audio frequency spectrum while playing a file.",href:"/audio/frequency",category:"Audio",keywords:["audio","frequency","spectrum","fft","analyzer"],icon:AudioLines,color:"blue"},
+{name:"Microphone Recorder",description:"Record microphone input with browser permission and download it.",href:"/audio/recorder",category:"Audio",keywords:["audio","microphone","record","recorder"],icon:Mic,color:"rose"},
+{name:"World Clock & Time Zone Converter",description:"Compare live city clocks and convert dates between IANA time zones.",href:"/datetime/world-clock",category:"Date & Time",keywords:["world clock","time zone","timezone","city","meeting","utc"],icon:Globe2,color:"blue"},
+{name:"Calendar",description:"Browse monthly calendars and jump to any date.",href:"/datetime/calendar",category:"Date & Time",keywords:["calendar","month","week","date"],icon:CalendarDays,color:"violet"},
+{name:"Date Calculator",description:"Add or subtract days, weeks, months, and years from a date.",href:"/datetime/date-calculator",category:"Date & Time",keywords:["date","calculator","add","subtract","days"],icon:CalendarClock,color:"green"},
+{name:"Date Formatter & Timestamp Converter",description:"Convert Unix timestamps, ISO dates, and locale-formatted date strings.",href:"/datetime/timestamp",category:"Date & Time",keywords:["date","formatter","unix","timestamp","epoch","iso"],icon:Clock3,color:"orange"},
+{name:"Countdown & Event Timer",description:"Count down to an event or count up from a past date.",href:"/datetime/countdown",category:"Date & Time",keywords:["countdown","event","timer","deadline"],icon:Timer,color:"rose"},
+{name:"Date Converter",description:"View a date in Gregorian, Persian, Islamic, Hebrew, and other supported calendars.",href:"/datetime/date-converter",category:"Date & Time",keywords:["date","calendar","persian","jalali","islamic","hebrew","convert"],icon:CalendarDays,color:"violet"},
+{name:"Date Difference Calculator",description:"Calculate elapsed time between two dates in multiple units.",href:"/datetime/date-difference",category:"Date & Time",keywords:["date","difference","duration","elapsed","age"],icon:CalendarClock,color:"green"},
+{name:"Business Days Calculator",description:"Count weekdays between dates with configurable weekend days.",href:"/datetime/business-days",category:"Date & Time",keywords:["business days","working days","weekend","date"],icon:BriefcaseBusiness,color:"blue"},
+{name:"Week Number Calculator",description:"Find ISO week number, week-year, and week boundaries.",href:"/datetime/week-number",category:"Date & Time",keywords:["week","number","iso","calendar"],icon:CalendarDays,color:"orange"},
+{name:"Leap Year Checker",description:"Check leap years and calculate the number of days in a year.",href:"/datetime/leap-year",category:"Date & Time",keywords:["leap year","february","days","year"],icon:CalendarCheck,color:"green"},
+{name:"Age Calculator",description:"Calculate age from a birth date and find the next birthday.",href:"/datetime/age",category:"Date & Time",keywords:["age","birthday","birth date"],icon:Cake,color:"rose"},
+{name:"Time Duration Calculator",description:"Add or subtract durations and calculate elapsed time.",href:"/datetime/duration",category:"Date & Time",keywords:["time","duration","hours","minutes","seconds"],icon:Timer,color:"violet"},
+{name:"Time Zone Meeting Planner",description:"Compare working hours across locations to find meeting windows.",href:"/datetime/meeting-planner",category:"Date & Time",keywords:["meeting","timezone","working hours","world clock"],icon:Users,color:"blue"},
+{name:"Date Format Playground",description:"Preview common date formats and locale-specific representations.",href:"/datetime/date-format",category:"Date & Time",keywords:["date","format","locale","formatting"],icon:CalendarClock,color:"green"},
+{name:"Calendar Generator",description:"Generate a printable monthly or yearly calendar.",href:"/datetime/calendar-generator",category:"Date & Time",keywords:["calendar","print","generator","year"],icon:CalendarDays,color:"cyan"},
+{name:"ICS Calendar Viewer",description:"Open and inspect local .ics calendar event files.",href:"/datetime/ics-viewer",category:"Date & Time",keywords:["ics","ical","calendar","import","event"],icon:CalendarDays,color:"violet"},
+{name:"ICS Event Generator",description:"Create a downloadable .ics event for calendar apps.",href:"/datetime/ics-generator",category:"Date & Time",keywords:["ics","ical","calendar","event","export"],icon:CalendarPlus,color:"green"},
+{name:"Holiday Calendar",description:"Browse a small bundled set of common fixed-date holidays by year.",href:"/datetime/holidays",category:"Date & Time",keywords:["holiday","public holiday","calendar","country"],icon:CalendarHeart,color:"rose"},
+{name:"Date/Time JSON Converter",description:"Convert date and timestamp inputs into JSON-friendly output.",href:"/datetime/json",category:"Date & Time",keywords:["date","time","json","timestamp"],icon:Braces,color:"blue"},
+{name:"Cron Schedule Helper",description:"Explain common cron fields and preview matching minute/hour patterns.",href:"/datetime/cron",category:"Date & Time",keywords:["cron","schedule","expression","jobs"],icon:Clock3,color:"orange"},
+{name:"JSON Formatter",description:"Format, validate, and inspect JSON.",href:"/json/formatter",category:"JSON",keywords:["json","pretty","beautify","validate","viewer"],icon:Braces,color:"blue"},
+{name:"JSON Diff",description:"Compare two JSON documents side by side.",href:"/json/diff",category:"JSON",keywords:["json","compare","difference"],icon:GitCompareArrows,color:"violet",status:"planned"},
+{name:"URL Encoder / Decoder",description:"Encode and decode URL components.",href:"/encoding/url",category:"Encoding",keywords:["url","encode","decode","percent"],icon:Link2,color:"green"},
+{name:"Base64 Encoder / Decoder",description:"Encode and decode text using Base64.",href:"/encoding/base64",category:"Encoding",keywords:["base64","binary","encode","decode"],icon:Binary,color:"violet"},
+{name:"JWT Decoder",description:"Inspect JWT headers, claims, and expiration.",href:"/security/jwt-decoder",category:"Security",keywords:["jwt","token","oauth","claims"],icon:KeyRound,color:"rose"},
+{name:"UUID Generator",description:"Generate UUID v4 identifiers in your browser.",href:"/generators/uuid",category:"Generators",keywords:["uuid","guid","identifier"],icon:Fingerprint,color:"orange"},
+{name:"Hash Generator",description:"Generate SHA-256, SHA-384, and SHA-512 hashes.",href:"/security/hash",category:"Security",keywords:["hash","sha256","sha512","digest"],icon:Hash,color:"cyan",status:"planned"},
+{name:"Regex Tester",description:"Test regular expressions against sample text.",href:"/text/regex",category:"Text",keywords:["regex","regexp","pattern"],icon:Regex,color:"violet",status:"planned"},
+{name:"XML Formatter",description:"Format XML documents for easier reading.",href:"/xml/formatter",category:"Data Formats",keywords:["xml","pretty","format"],icon:FileCode2,color:"green",status:"planned"},
+{name:"SQL Formatter",description:"Make SQL queries easier to read.",href:"/sql/formatter",category:"SQL",keywords:["sql","query","database"],icon:Database,color:"blue",status:"planned"},
+{name:"CSV ↔ JSON",description:"Convert tabular CSV data and JSON arrays.",href:"/data/csv-json",category:"Data Formats",keywords:["csv","json","spreadsheet","convert"],icon:FileSpreadsheet,color:"green",status:"planned"},
+{name:"HTML Formatter",description:"Format HTML markup for readability.",href:"/web/html-formatter",category:"Web & API",keywords:["html","markup","format"],icon:Code2,color:"orange",status:"planned"},
+{name:"cURL Converter",description:"Inspect cURL commands and generate client snippets.",href:"/api/curl-converter",category:"Web & API",keywords:["curl","http","api","fetch"],icon:Terminal,color:"cyan",status:"planned"}];
+export const categories=[{name:"Images",slug:"images",href:"/categories/images",icon:Image},{name:"Audio",slug:"audio",href:"/categories/audio",icon:Music},{name:"Date & Time",slug:"date-time",href:"/categories/date-time",icon:Clock3},{name:"Generators",slug:"generators",href:"/categories/generators",icon:Fingerprint},{name:"JSON",slug:"json-data",href:"/categories/json-data",icon:Braces},{name:"Encoding",slug:"encoding",href:"/categories/encoding",icon:Binary},{name:"Text",slug:"text",href:"/categories/text",icon:Regex},{name:"Security",slug:"security",href:"/categories/security",icon:ShieldCheck},{name:"Web & API",slug:"web-api",href:"/categories/web-api",icon:Code2},{name:"Data Formats",slug:"data-formats",href:"/categories/data-formats",icon:FileSpreadsheet},{name:"SQL",slug:"sql",href:"/categories/sql",icon:Database}];

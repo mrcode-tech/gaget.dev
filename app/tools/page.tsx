@@ -1,0 +1,1 @@
+import type {Metadata} from "next";import {ToolCatalog} from "@/components/tool-catalog";export const metadata:Metadata={title:"All Developer Tools",description:"Browse and search GaGet.dev developer utilities by category." ,alternates:{canonical:"/tools"}};export default function ToolsPage(){return <ToolCatalog/>}
