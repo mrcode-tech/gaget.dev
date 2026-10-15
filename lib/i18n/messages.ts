@@ -111,6 +111,26 @@ const catalogTranslations:Partial<Record<Locale,Record<string,string>>> = {
 };
 
 const additionalLocales=Object.fromEntries(locales.filter(locale=>locale!=="en"&&locale!=="fa"&&locale!=="ar").map(locale=>[locale,{...en,...localizedExtras[locale],...catalogTranslations[locale]}])) as Partial<Record<Locale,Record<string,string>>>;
+
+const englishCatalogDescriptions:Record<string,string>={
+  "toolDescription.JSON Formatter":"Format, validate, and inspect JSON.",
+  "toolDescription.JSON Diff":"Compare two JSON documents side by side.",
+  "toolDescription.URL Encoder / Decoder":"Encode and decode URL components.",
+  "toolDescription.Base64 Encoder / Decoder":"Encode and decode text using Base64.",
+  "toolDescription.JWT Decoder":"Inspect JWT headers, claims, and expiration.",
+  "toolDescription.UUID Generator":"Generate UUID v4 identifiers in your browser.",
+  "toolDescription.Hash Generator":"Generate SHA-256, SHA-384, and SHA-512 hashes.",
+  "toolDescription.Regex Tester":"Test regular expressions against sample text.",
+  "toolDescription.Unix Timestamp Converter":"Convert epoch timestamps to readable dates.",
+  "toolDescription.XML Formatter":"Format XML documents for easier reading.",
+  "toolDescription.SQL Formatter":"Make SQL queries easier to read.",
+  "toolDescription.CSV ↔ JSON":"Convert tabular CSV data and JSON arrays.",
+  "toolDescription.HTML Formatter":"Format HTML markup for readability.",
+  "toolDescription.Image to Base64":"Convert an image into a data URL.",
+  "toolDescription.cURL Converter":"Inspect cURL commands and generate client snippets."
+};
+Object.assign(en,englishCatalogDescriptions);
+
 export const messages:Record<Locale,Record<string,string>>={en,fa:{...fa,...catalogTranslations.fa},ar:{...ar,...catalogTranslations.ar},...additionalLocales} as Record<Locale,Record<string,string>>;
 export function translate(locale:Locale,key:string){return messages[locale]?.[key]??en[key]??key;}
 export function isLocale(value:string):value is Locale{return (locales as readonly string[]).includes(value);}
