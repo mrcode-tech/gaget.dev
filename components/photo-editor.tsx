@@ -240,7 +240,18 @@ export function PhotoEditor() {
       return;
     }
     const mime = doc.format;
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mime, clamp(doc.quality, 10, 100) / 100));
+    let exportCanvas = canvas;
+    if (mime === "image/jpeg") {
+      exportCanvas = document.createElement("canvas");
+      exportCanvas.width = canvas.width;
+      exportCanvas.height = canvas.height;
+      const exportContext = exportCanvas.getContext("2d");
+      if (!exportContext) { setError("Could not prepare the JPEG export."); return; }
+      exportContext.fillStyle = "#FFFFFF";
+      exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+      exportContext.drawImage(canvas, 0, 0);
+    }
+    const blob = await new Promise<Blob | null>((resolve) => exportCanvas.toBlob(resolve, mime, clamp(doc.quality, 10, 100) / 100));
     if (!blob) { setError("Your browser could not export this format. Try PNG or JPEG."); return; }
     const extension = mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
     downloadBlob(blob, fileName + "-edited." + extension);
