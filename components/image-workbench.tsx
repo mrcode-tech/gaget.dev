@@ -131,7 +131,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
     setError(""); setStatus("");
     if (slug === "svg-optimizer") {
       if (!base64Text.trim()) { setError("Select an SVG file or paste SVG source first."); return; }
-      const optimized = base64Text.replace(/<!--[\s\S]*?-->/g, "").replace(/>\s+</g, "><").replace(/[\t\r\n]+/g, " ").replace(/\s{2,}/g, " ").trim();
+      const optimized = base64Text.replace(/<!--[\s\S]*?-->/g, "").replace(/>\s+</g, "><").trim();
       setBase64Text(optimized); setStatus(`SVG source optimized locally (${optimized.length.toLocaleString()} characters).`);
       downloadBlob(new Blob([optimized], { type: "image/svg+xml;charset=utf-8" }), "optimized.svg"); return;
     }
@@ -241,7 +241,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
         if (f.size > maxBytes) throw new Error(`${f.name} exceeds the 25 MB file limit.`);
         const url = URL.createObjectURL(f); try { return await loadImage(url); } finally { URL.revokeObjectURL(url); }
       }));
-      const cellW = 360, cellH = 260, gap = 16, columns = images.length === 2 ? 2 : 2, rows = Math.ceil(images.length / columns);
+      const cellW = 360, cellH = 260, gap = 16, columns = 2, rows = Math.ceil(images.length / columns);
       const canvas = document.createElement("canvas"); canvas.width = columns * cellW + (columns + 1) * gap; canvas.height = rows * cellH + (rows + 1) * gap;
       const ctx = canvas.getContext("2d")!; ctx.fillStyle = "#f1f5f9"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       images.forEach((img, i) => { const x = gap + (i % columns) * (cellW + gap), y = gap + Math.floor(i / columns) * (cellH + gap); const scale = Math.min(cellW / img.naturalWidth, cellH / img.naturalHeight); const w = img.naturalWidth * scale, h = img.naturalHeight * scale; ctx.drawImage(img, x + (cellW - w) / 2, y + (cellH - h) / 2, w, h); });
