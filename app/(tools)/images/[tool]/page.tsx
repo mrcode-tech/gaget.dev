@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ToolLayout } from "@/components/tool-layout";
 import { ImageWorkbench } from "@/components/image-workbench";
 import { PhotoEditor } from "@/components/photo-editor";
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tool: str
 export default async function ImageToolPage({ params }: { params: Promise<{ tool: string }> }) {
   const { tool: slug } = await params;
   const legacyEditorSlugs = ["crop", "resize", "compress", "convert", "rotate-flip", "add-text", "watermark", "annotate", "borders", "grayscale", "blur", "pixelate", "privacy-check"];
-  if (legacyEditorSlugs.includes(slug)) redirect("/images/editor");
+  if (legacyEditorSlugs.includes(slug)) permanentRedirect("/images/editor");
   if (!imageToolSlugs.includes(slug as (typeof imageToolSlugs)[number])) notFound();
   const info = imageToolMeta[slug as keyof typeof imageToolMeta];
   return <ToolLayout category="Images" title={info.title} description={info.description}>{slug === "editor" ? <PhotoEditor /> : <ImageWorkbench slug={slug} />}</ToolLayout>;
