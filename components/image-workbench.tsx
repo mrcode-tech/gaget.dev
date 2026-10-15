@@ -34,6 +34,25 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     image.src = src;
   });
 }
+function supportsCanvasFilters() {
+  const source = document.createElement("canvas");
+  const target = document.createElement("canvas");
+  source.width = source.height = target.width = target.height = 1;
+  const sourceContext = source.getContext("2d");
+  const targetContext = target.getContext("2d", { willReadFrequently: true });
+  if (!sourceContext || !targetContext || !("filter" in targetContext)) return false;
+  sourceContext.fillStyle = "rgb(255, 0, 0)";
+  sourceContext.fillRect(0, 0, 1, 1);
+  try {
+    targetContext.filter = "grayscale(100%)";
+    targetContext.drawImage(source, 0, 0);
+    targetContext.filter = "none";
+    const pixel = targetContext.getImageData(0, 0, 1, 1).data;
+    return Math.abs(pixel[0] - pixel[1]) < 2 && Math.abs(pixel[1] - pixel[2]) < 2;
+  } catch {
+    return false;
+  }
+}
 function applyPixelFilters(canvas: HTMLCanvasElement, brightness: number, contrast: number, saturation: number) {
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Canvas pixel processing is unavailable in this browser.");
@@ -47,10 +66,10 @@ function applyPixelFilters(canvas: HTMLCanvasElement, brightness: number, contra
     const pixels = imageData.data;
     for (let i = 0; i < pixels.length; i += 4) {
       const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
-      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       const nr = Math.max(0, Math.min(255, ((r - 128) * contrastFactor + 128) * brightnessFactor));
       const ng = Math.max(0, Math.min(255, ((g - 128) * contrastFactor + 128) * brightnessFactor));
       const nb = Math.max(0, Math.min(255, ((b - 128) * contrastFactor + 128) * brightnessFactor));
+      const luminance = 0.2126 * nr + 0.7152 * ng + 0.0722 * nb;
       pixels[i] = Math.max(0, Math.min(255, luminance + (nr - luminance) * saturation / 100));
       pixels[i + 1] = Math.max(0, Math.min(255, luminance + (ng - luminance) * saturation / 100));
       pixels[i + 2] = Math.max(0, Math.min(255, luminance + (nb - luminance) * saturation / 100));
@@ -211,7 +230,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
       const requestedSaturation = slug === "grayscale" ? 0 : Number(saturation) || 100;
       const blurAmount = Math.max(0, Math.min(20, slug === "blur" || slug === "editor" ? Number(blur) || 0 : 0));
       // Safari/WebKit may accept ctx.filter assignments without applying the effect.
-      const supportsCanvasFilter = "filter" in ctx;
+      const supportsCanvasFilter = supportsCanvasFilters();
       if (supportsCanvasFilter) {
         ctx.filter = "brightness(" + brightness + "%) contrast(" + contrast + "%) saturate(" + requestedSaturation + "%) blur(" + blurAmount + "px)";
       } else {
