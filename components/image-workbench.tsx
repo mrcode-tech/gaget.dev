@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
-import { Download, ImagePlus, RotateCcw, ShieldCheck, Copy, Palette, WandSparkles, RefreshCw } from "lucide-react";
+import { Download, RotateCcw, ShieldCheck, Copy, Palette, WandSparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -263,7 +263,6 @@ export function ImageWorkbench({ slug }: { slug: string }) {
   const needsResize = slug === "resize";
   const needsRotate = slug === "rotate-flip";
   const needsBorders = slug === "borders";
-  const needsQuality = needsOutputFormat;
   const needsImageFile = !noSourceTool && slug !== "collage";
   const isInfo = ["metadata", "privacy-check", "dimensions", "print-size"].includes(slug);
 
