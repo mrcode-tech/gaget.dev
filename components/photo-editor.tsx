@@ -70,6 +70,78 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+/**
+ * Apply photo adjustments to actual canvas pixels instead of CanvasRenderingContext2D.filter.
+ * The latter is not consistently implemented across Safari/WebKit versions.
+ */
+function applyCanvasAdjustments(canvas: HTMLCanvasElement, state: EditorState) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Your browser could not create a 2D canvas context.");
+
+  // A bounded-memory blur approximation that works without ctx.filter.
+  if (state.blur > 0) {
+    const divisor = clamp(Math.round(state.blur * 1.5), 2, 18);
+    const tiny = document.createElement("canvas");
+    tiny.width = Math.max(1, Math.ceil(canvas.width / divisor));
+    tiny.height = Math.max(1, Math.ceil(canvas.height / divisor));
+    const tinyContext = tiny.getContext("2d");
+    if (!tinyContext) throw new Error("Your browser could not prepare the blur effect.");
+    tinyContext.imageSmoothingEnabled = true;
+    tinyContext.imageSmoothingQuality = "high";
+    tinyContext.drawImage(canvas, 0, 0, tiny.width, tiny.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(tiny, 0, 0, canvas.width, canvas.height);
+  }
+
+  const brightness = state.brightness / 100;
+  const contrast = state.contrast / 100;
+  const saturation = state.saturation / 100;
+  const grayscale = state.grayscale / 100;
+  const sepia = state.sepia / 100;
+  const stripHeight = 128;
+
+  for (let y = 0; y < canvas.height; y += stripHeight) {
+    const height = Math.min(stripHeight, canvas.height - y);
+    const imageData = ctx.getImageData(0, y, canvas.width, height);
+    const pixels = imageData.data;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      let r = clamp(((pixels[i] - 128) * contrast + 128) * brightness, 0, 255);
+      let g = clamp(((pixels[i + 1] - 128) * contrast + 128) * brightness, 0, 255);
+      let b = clamp(((pixels[i + 2] - 128) * contrast + 128) * brightness, 0, 255);
+
+      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      r = luminance + (r - luminance) * saturation;
+      g = luminance + (g - luminance) * saturation;
+      b = luminance + (b - luminance) * saturation;
+
+      if (grayscale > 0) {
+        const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        r += (gray - r) * grayscale;
+        g += (gray - g) * grayscale;
+        b += (gray - b) * grayscale;
+      }
+
+      if (sepia > 0) {
+        const sr = clamp(0.393 * r + 0.769 * g + 0.189 * b, 0, 255);
+        const sg = clamp(0.349 * r + 0.686 * g + 0.168 * b, 0, 255);
+        const sb = clamp(0.272 * r + 0.534 * g + 0.131 * b, 0, 255);
+        r += (sr - r) * sepia;
+        g += (sg - g) * sepia;
+        b += (sb - b) * sepia;
+      }
+
+      pixels[i] = clamp(r, 0, 255);
+      pixels[i + 1] = clamp(g, 0, 255);
+      pixels[i + 2] = clamp(b, 0, 255);
+      // Preserve the original alpha channel.
+    }
+    ctx.putImageData(imageData, 0, y);
+  }
+}
+
 export function PhotoEditor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,7 +178,7 @@ export function PhotoEditor() {
     ctx.translate(outW / 2, outH / 2);
     ctx.rotate(state.rotation * Math.PI / 180);
     ctx.scale(state.flipX ? -1 : 1, state.flipY ? -1 : 1);
-    ctx.filter = "brightness(" + state.brightness + "%) contrast(" + state.contrast + "%) saturate(" + state.saturation + "%) grayscale(" + state.grayscale + "%) sepia(" + state.sepia + "%) blur(" + state.blur + "px)";
+    // Do not use ctx.filter here: some Safari/WebKit versions ignore it.
     const targetW = rotated ? outH : outW;
     const targetH = rotated ? outW : outH;
     const sx = clamp(Math.round(state.cropX), 0, image.naturalWidth - 1);
@@ -120,7 +192,9 @@ export function PhotoEditor() {
     const drawH = sh * scale;
     ctx.drawImage(image, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
-    ctx.filter = "none";
+    // Adjust image pixels explicitly for consistent Safari, Chrome iOS, Android,
+    // and desktop behavior. Apply before text so overlays remain crisp.
+    applyCanvasAdjustments(canvas, state);
     state.texts.forEach((layer) => {
       ctx.save();
       ctx.globalAlpha = layer.opacity / 100;
