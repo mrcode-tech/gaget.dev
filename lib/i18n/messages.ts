@@ -197,5 +197,5 @@ for (const locale of locales) {
   });
 }
 
-export function translate(locale:Locale,key:string){return messages[locale]?.[key]??en[key]??key;}
+export function translate(locale:Locale,key:string){const translated=messages[locale]?.[key]??en[key];if(translated!==undefined)return translated;if(key.startsWith("toolName."))return key.slice("toolName.".length);if(key.startsWith("toolTitle."))return key.slice("toolTitle.".length);return key;}
 export function isLocale(value:string):value is Locale{return (locales as readonly string[]).includes(value);}
