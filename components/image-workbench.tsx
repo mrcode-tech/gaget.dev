@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Image previews use browser-created blob URLs; Next.js image optimization does not apply. */
 
 import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
 import { Download, RotateCcw, ShieldCheck, Copy, Palette, WandSparkles } from "lucide-react";
