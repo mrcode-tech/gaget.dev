@@ -22,6 +22,10 @@ type TextLayer = {
 type EditorState = {
   width: number;
   height: number;
+  cropX: number;
+  cropY: number;
+  cropWidth: number;
+  cropHeight: number;
   brightness: number;
   contrast: number;
   saturation: number;
@@ -38,7 +42,7 @@ type EditorState = {
   selectedText: number | null;
 };
 const defaults = (width = 1200, height = 800): EditorState => ({
-  width, height, brightness: 100, contrast: 100, saturation: 100, blur: 0,
+  width, height, cropX: 0, cropY: 0, cropWidth: width, cropHeight: height, brightness: 100, contrast: 100, saturation: 100, blur: 0,
   grayscale: 0, sepia: 0, rotation: 0, flipX: false, flipY: false,
   quality: 90, format: "image/jpeg", fit: "cover", texts: [], selectedText: null,
 });
@@ -104,12 +108,16 @@ export function PhotoEditor() {
     ctx.filter = "brightness(" + state.brightness + "%) contrast(" + state.contrast + "%) saturate(" + state.saturation + "%) grayscale(" + state.grayscale + "%) sepia(" + state.sepia + "%) blur(" + state.blur + "px)";
     const targetW = rotated ? outH : outW;
     const targetH = rotated ? outW : outH;
+    const sx = clamp(Math.round(state.cropX), 0, image.naturalWidth - 1);
+    const sy = clamp(Math.round(state.cropY), 0, image.naturalHeight - 1);
+    const sw = clamp(Math.round(state.cropWidth), 1, image.naturalWidth - sx);
+    const sh = clamp(Math.round(state.cropHeight), 1, image.naturalHeight - sy);
     const scale = state.fit === "contain"
-      ? Math.min(targetW / image.naturalWidth, targetH / image.naturalHeight)
-      : Math.max(targetW / image.naturalWidth, targetH / image.naturalHeight);
-    const drawW = image.naturalWidth * scale;
-    const drawH = image.naturalHeight * scale;
-    ctx.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
+      ? Math.min(targetW / sw, targetH / sh)
+      : Math.max(targetW / sw, targetH / sh);
+    const drawW = sw * scale;
+    const drawH = sh * scale;
+    ctx.drawImage(image, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
     ctx.filter = "none";
     state.texts.forEach((layer) => {
@@ -318,6 +326,15 @@ export function PhotoEditor() {
             <div className="grid grid-cols-2 gap-3">
               <label className="space-y-1 text-sm">Width (px)<Input type="number" min="1" max="12000" value={doc.width} onChange={(e) => change({ width: clamp(Number(e.target.value) || 1, 1, 12000) })} /></label>
               <label className="space-y-1 text-sm">Height (px)<Input type="number" min="1" max="12000" value={doc.height} onChange={(e) => change({ height: clamp(Number(e.target.value) || 1, 1, 12000) })} /></label>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-sm font-medium">Crop rectangle (source pixels)</p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="space-y-1 text-sm">X<Input type="number" min="0" max={imageRef.current?.naturalWidth ?? 12000} value={doc.cropX} onChange={(e) => change({ cropX: clamp(Number(e.target.value) || 0, 0, (imageRef.current?.naturalWidth ?? 12000) - 1) })} /></label>
+                <label className="space-y-1 text-sm">Y<Input type="number" min="0" max={imageRef.current?.naturalHeight ?? 12000} value={doc.cropY} onChange={(e) => change({ cropY: clamp(Number(e.target.value) || 0, 0, (imageRef.current?.naturalHeight ?? 12000) - 1) })} /></label>
+                <label className="space-y-1 text-sm">Crop width<Input type="number" min="1" max={imageRef.current?.naturalWidth ?? 12000} value={doc.cropWidth} onChange={(e) => change({ cropWidth: clamp(Number(e.target.value) || 1, 1, imageRef.current?.naturalWidth ?? 12000) })} /></label>
+                <label className="space-y-1 text-sm">Crop height<Input type="number" min="1" max={imageRef.current?.naturalHeight ?? 12000} value={doc.cropHeight} onChange={(e) => change({ cropHeight: clamp(Number(e.target.value) || 1, 1, imageRef.current?.naturalHeight ?? 12000) })} /></label>
+              </div>
             </div>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={doc.fit === "contain"} onChange={(e) => change({ fit: e.target.checked ? "contain" : "cover" })} /> Fit whole photo inside output (contain)</label>
             <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => change({ rotation: (doc.rotation + 270) % 360 })}>Rotate left 90°</Button><Button variant="outline" onClick={() => change({ rotation: (doc.rotation + 90) % 360 })}>Rotate right 90°</Button><Button variant="outline" onClick={() => change({ flipX: !doc.flipX })}>Flip horizontal</Button><Button variant="outline" onClick={() => change({ flipY: !doc.flipY })}>Flip vertical</Button></div>
