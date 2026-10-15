@@ -117,9 +117,42 @@ export function ImageWorkbench({ slug }: { slug: string }) {
   const [imageInfo, setImageInfo] = useState<{ width: number; height: number; ratio: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLImageElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => () => { if (sourceUrl) URL.revokeObjectURL(sourceUrl); }, [sourceUrl]);
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
+
+  useEffect(() => {
+    if (!sourceUrl || !["editor", "grayscale", "blur"].includes(slug)) return;
+    let cancelled = false;
+    void loadImage(sourceUrl).then((image) => {
+      if (cancelled) return;
+      const canvas = previewCanvasRef.current;
+      const ctx = canvas?.getContext("2d", { willReadFrequently: true });
+      if (!canvas || !ctx) return;
+      // Keep the interactive preview small on older phones; export still uses
+      // the original full-resolution image.
+      const scale = Math.min(1, 1200 / Math.max(image.naturalWidth, image.naturalHeight));
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      ctx.filter = "none";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const previewSaturation = slug === "grayscale" ? 0 : Number(saturation);
+      applyPixelFilters(
+        canvas,
+        Number(brightness) || 100,
+        Number(contrast) || 100,
+        Number.isFinite(previewSaturation) ? previewSaturation : 100,
+      );
+      if ((slug === "editor" || slug === "blur") && Number(blur) > 0) {
+        approximateBlur(canvas, Math.max(0.5, Math.min(20, Number(blur)) * scale));
+      }
+    }).catch(() => {
+      // The full-size image and processing error are handled by the normal UI.
+    });
+    return () => { cancelled = true; };
+  }, [sourceUrl, slug, brightness, contrast, saturation, blur]);
 
   async function acceptFile(next: File | undefined) {
     if (!next) return;
@@ -322,7 +355,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
     {slug === "color-picker" && sourceUrl && <p className="text-sm text-muted-foreground">Click the image to sample a pixel. {sampleColor && <span className="inline-flex items-center gap-2 font-mono font-semibold text-foreground"><span className="h-4 w-4 rounded border" style={{ backgroundColor: sampleColor }} />{sampleColor}<Button size="sm" variant="outline" onClick={() => void navigator.clipboard?.writeText(sampleColor)}><Copy className="h-3 w-3" /> Copy</Button></span>}</p>}
     {slug === "palette" && palette.length > 0 && <Card><CardHeader><CardTitle className="text-sm">Sampled palette</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">{palette.map((color) => <button key={color} onClick={() => void navigator.clipboard?.writeText(color)} className="overflow-hidden rounded-lg border border-border text-left"><span className="block h-16" style={{ backgroundColor: color }} /><span className="flex items-center justify-between p-2 font-mono text-xs">{color}<Copy className="h-3 w-3" /></span></button>)}</CardContent></Card>}
 
-    {sourceUrl && <Card><CardHeader><CardTitle className="text-sm">{slug === "color-picker" ? "Click to sample a color" : "Original preview"}</CardTitle></CardHeader><CardContent><img ref={previewRef} src={sourceUrl} alt="Locally loaded image preview" onClick={(e) => void sampleAt(e)} style={slug === "editor" || slug === "grayscale" || slug === "blur" ? { filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${slug === "grayscale" ? 0 : saturation}%) blur(${slug === "blur" ? blur : slug === "editor" ? blur : 0}px)` } : undefined} className={`max-h-[520px] w-full rounded-lg border border-border object-contain ${slug === "color-picker" ? "cursor-crosshair" : ""}`} /></CardContent></Card>}
+    {sourceUrl && <Card><CardHeader><CardTitle className="text-sm">{slug === "color-picker" ? "Click to sample a color" : "Original preview"}</CardTitle></CardHeader><CardContent>{["editor", "grayscale", "blur"].includes(slug) ? <canvas ref={previewCanvasRef} aria-label="Live image adjustment preview" className="max-h-[520px] w-full rounded-lg border border-border object-contain" /> : <img ref={previewRef} src={sourceUrl} alt="Locally loaded image preview" onClick={(e) => void sampleAt(e)} className={`max-h-[520px] w-full rounded-lg border border-border object-contain ${slug === "color-picker" ? "cursor-crosshair" : ""}`} />}</CardContent></Card>}
     {showProcessButton && <div className="flex flex-wrap gap-2"><Button onClick={() => void processImage()} disabled={!sourceUrl}><WandSparkles className="h-4 w-4" /> {slug === "palette" ? "Extract colors" : slug === "base64" ? "Convert to Base64" : slug === "metadata" || slug === "privacy-check" ? "Create metadata-free copy" : slug === "favicon" ? "Create 32×32 favicon" : "Apply & preview"}</Button><Button variant="outline" disabled={!resultBlob} onClick={() => resultBlob && downloadBlob(resultBlob, `${(file?.name ?? "image").replace(/\.[^.]+$/, "")}-gaget.${resultBlob.type === "image/jpeg" ? "jpg" : resultBlob.type === "image/webp" ? "webp" : "png"}`)}><Download className="h-4 w-4" /> Download result</Button></div>}
     {resultUrl && <Card><CardHeader className="flex-row items-center justify-between"><CardTitle className="text-sm">Processed result</CardTitle><Button size="sm" variant="outline" onClick={() => resultBlob && downloadBlob(resultBlob, "gaget-image.png")}><Download className="mr-2 h-4 w-4" /> Download</Button></CardHeader><CardContent><img src={resultUrl} alt="Processed image result" className="max-h-[520px] w-full rounded-lg border border-border object-contain" /></CardContent></Card>}
     {error && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
