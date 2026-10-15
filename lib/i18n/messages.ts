@@ -151,5 +151,25 @@ for (const locale of locales) {
   if (locale !== "en") Object.assign(messages[locale], localizedSharedCopy[locale] ?? {});
 }
 
+
+const localizedCategoryEmpty:Record<Locale,string>={
+  en:"No tools in this category yet.",
+  fa:"هنوز ابزاری در این دسته نیست.",
+  ar:"لا توجد أدوات في هذه الفئة بعد.",
+  es:"Todavía no hay herramientas en esta categoría.",
+  "zh-CN":"此分类暂时没有工具。",
+  "pt-BR":"Ainda não há ferramentas nesta categoria.",
+  fr:"Aucun outil dans cette catégorie pour le moment.",
+  de:"In dieser Kategorie gibt es noch keine Tools.",
+  ja:"このカテゴリにはまだツールがありません。",
+  hi:"इस श्रेणी में अभी कोई टूल नहीं है।",
+  ru:"В этой категории пока нет инструментов.",
+  id:"Belum ada alat dalam kategori ini.",
+  ko:"이 카테고리에는 아직 도구가 없습니다.",
+  "zh-TW":"此分類目前還沒有工具。",
+  it:"Non ci sono ancora strumenti in questa categoria."
+};
+for (const locale of locales) messages[locale]["category.empty"] = localizedCategoryEmpty[locale];
+
 export function translate(locale:Locale,key:string){return messages[locale]?.[key]??en[key]??key;}
 export function isLocale(value:string):value is Locale{return (locales as readonly string[]).includes(value);}
