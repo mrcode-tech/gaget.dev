@@ -34,6 +34,67 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     image.src = src;
   });
 }
+function supportsCanvasFilters() {
+  const source = document.createElement("canvas");
+  const target = document.createElement("canvas");
+  source.width = source.height = target.width = target.height = 1;
+  const sourceContext = source.getContext("2d");
+  const targetContext = target.getContext("2d", { willReadFrequently: true });
+  if (!sourceContext || !targetContext || !("filter" in targetContext)) return false;
+  sourceContext.fillStyle = "rgb(255, 0, 0)";
+  sourceContext.fillRect(0, 0, 1, 1);
+  try {
+    targetContext.filter = "grayscale(100%)";
+    targetContext.drawImage(source, 0, 0);
+    targetContext.filter = "none";
+    const pixel = targetContext.getImageData(0, 0, 1, 1).data;
+    return Math.abs(pixel[0] - pixel[1]) < 2 && Math.abs(pixel[1] - pixel[2]) < 2;
+  } catch {
+    return false;
+  }
+}
+function applyPixelFilters(canvas: HTMLCanvasElement, brightness: number, contrast: number, saturation: number) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Canvas pixel processing is unavailable in this browser.");
+  // Process in strips to avoid allocating one huge ImageData buffer on mobile Safari.
+  const stripHeight = 128;
+  const contrastFactor = contrast / 100;
+  const brightnessFactor = brightness / 100;
+  for (let y = 0; y < canvas.height; y += stripHeight) {
+    const height = Math.min(stripHeight, canvas.height - y);
+    const imageData = ctx.getImageData(0, y, canvas.width, height);
+    const pixels = imageData.data;
+    for (let i = 0; i < pixels.length; i += 4) {
+      const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+      const nr = Math.max(0, Math.min(255, ((r - 128) * contrastFactor + 128) * brightnessFactor));
+      const ng = Math.max(0, Math.min(255, ((g - 128) * contrastFactor + 128) * brightnessFactor));
+      const nb = Math.max(0, Math.min(255, ((b - 128) * contrastFactor + 128) * brightnessFactor));
+      const luminance = 0.2126 * nr + 0.7152 * ng + 0.0722 * nb;
+      pixels[i] = Math.max(0, Math.min(255, luminance + (nr - luminance) * saturation / 100));
+      pixels[i + 1] = Math.max(0, Math.min(255, luminance + (ng - luminance) * saturation / 100));
+      pixels[i + 2] = Math.max(0, Math.min(255, luminance + (nb - luminance) * saturation / 100));
+    }
+    ctx.putImageData(imageData, 0, y);
+  }
+}
+
+function approximateBlur(canvas: HTMLCanvasElement, radius: number) {
+  if (radius <= 0) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas blur processing is unavailable in this browser.");
+  // Bounded-memory blur fallback for browsers without CanvasRenderingContext2D.filter.
+  const divisor = Math.max(2, Math.min(32, Math.round(radius * 2)));
+  const tiny = document.createElement("canvas");
+  tiny.width = Math.max(1, Math.ceil(canvas.width / divisor));
+  tiny.height = Math.max(1, Math.ceil(canvas.height / divisor));
+  const tinyContext = tiny.getContext("2d");
+  if (!tinyContext) throw new Error("Canvas blur processing is unavailable in this browser.");
+  tinyContext.drawImage(canvas, 0, 0, tiny.width, tiny.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(tiny, 0, 0, canvas.width, canvas.height);
+}
 function hex(r: number, g: number, b: number) {
   return "#" + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("").toUpperCase();
 }
@@ -166,7 +227,15 @@ export function ImageWorkbench({ slug }: { slug: string }) {
       if (turn) ctx.rotate(turn * Math.PI / 180);
       ctx.scale((flipX ? -1 : 1), (flipY ? -1 : 1));
       const drawW = swap ? outH : outW, drawH = swap ? outW : outH;
-      ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${slug === "grayscale" ? 0 : saturation}%) blur(${Math.max(0, Math.min(20, slug === "blur" ? Number(blur) || 0 : slug === "editor" ? Number(blur) || 0 : 0))}px)`;
+      const requestedSaturation = slug === "grayscale" ? 0 : Number(saturation);
+      const blurAmount = Math.max(0, Math.min(20, slug === "blur" || slug === "editor" ? Number(blur) || 0 : 0));
+      // Safari/WebKit may accept ctx.filter assignments without applying the effect.
+      const supportsCanvasFilter = supportsCanvasFilters();
+      if (supportsCanvasFilter) {
+        ctx.filter = "brightness(" + brightness + "%) contrast(" + contrast + "%) saturate(" + requestedSaturation + "%) blur(" + blurAmount + "px)";
+      } else {
+        ctx.filter = "none";
+      }
       if (usePixelate) {
         const tiny = document.createElement("canvas"); tiny.width = Math.max(1, Math.round(drawW / Math.max(2, Number(pixelSize) || 12))); tiny.height = Math.max(1, Math.round(drawH / Math.max(2, Number(pixelSize) || 12)));
         tiny.getContext("2d")!.drawImage(image, sx, sy, sw, sh, 0, 0, tiny.width, tiny.height);
@@ -177,6 +246,10 @@ export function ImageWorkbench({ slug }: { slug: string }) {
         ctx.drawImage(image, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
       }
       ctx.restore(); ctx.filter = "none";
+      if (!supportsCanvasFilter) {
+        if (blurAmount > 0) approximateBlur(canvas, blurAmount);
+        applyPixelFilters(canvas, Number(brightness) || 100, Number(contrast) || 100, Number.isFinite(requestedSaturation) ? requestedSaturation : 100);
+      }
       if (useBorder && Number(radius) > 0) {
         const r = Math.min(Number(radius), canvas.width / 2, canvas.height / 2);
         ctx.globalCompositeOperation = "destination-in"; ctx.beginPath(); ctx.roundRect(0, 0, canvas.width, canvas.height, r); ctx.fill(); ctx.globalCompositeOperation = "source-over";
