@@ -34,25 +34,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     image.src = src;
   });
 }
-function supportsCanvasFilters() {
-  const source = document.createElement("canvas");
-  const target = document.createElement("canvas");
-  source.width = source.height = target.width = target.height = 1;
-  const sourceContext = source.getContext("2d");
-  const targetContext = target.getContext("2d", { willReadFrequently: true });
-  if (!sourceContext || !targetContext || !("filter" in targetContext)) return false;
-  sourceContext.fillStyle = "rgb(255, 0, 0)";
-  sourceContext.fillRect(0, 0, 1, 1);
-  try {
-    targetContext.filter = "grayscale(100%)";
-    targetContext.drawImage(source, 0, 0);
-    targetContext.filter = "none";
-    const pixel = targetContext.getImageData(0, 0, 1, 1).data;
-    return Math.abs(pixel[0] - pixel[1]) < 2 && Math.abs(pixel[1] - pixel[2]) < 2;
-  } catch {
-    return false;
-  }
-}
 function applyPixelFilters(canvas: HTMLCanvasElement, brightness: number, contrast: number, saturation: number) {
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Canvas pixel processing is unavailable in this browser.");
@@ -229,13 +210,10 @@ export function ImageWorkbench({ slug }: { slug: string }) {
       const drawW = swap ? outH : outW, drawH = swap ? outW : outH;
       const requestedSaturation = slug === "grayscale" ? 0 : Number(saturation);
       const blurAmount = Math.max(0, Math.min(20, slug === "blur" || slug === "editor" ? Number(blur) || 0 : 0));
-      // Safari/WebKit may accept ctx.filter assignments without applying the effect.
-      const supportsCanvasFilter = supportsCanvasFilters();
-      if (supportsCanvasFilter) {
-        ctx.filter = "brightness(" + brightness + "%) contrast(" + contrast + "%) saturate(" + requestedSaturation + "%) blur(" + blurAmount + "px)";
-      } else {
-        ctx.filter = "none";
-      }
+      // Use the same pixel-based adjustment path on every browser. Some mobile
+      // browsers accept CanvasRenderingContext2D.filter assignments but do not
+      // reliably apply them, so feature detection is not enough here.
+      ctx.filter = "none";
       if (usePixelate) {
         const tiny = document.createElement("canvas"); tiny.width = Math.max(1, Math.round(drawW / Math.max(2, Number(pixelSize) || 12))); tiny.height = Math.max(1, Math.round(drawH / Math.max(2, Number(pixelSize) || 12)));
         tiny.getContext("2d")!.drawImage(image, sx, sy, sw, sh, 0, 0, tiny.width, tiny.height);
@@ -246,10 +224,16 @@ export function ImageWorkbench({ slug }: { slug: string }) {
         ctx.drawImage(image, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
       }
       ctx.restore(); ctx.filter = "none";
-      if (!supportsCanvasFilter) {
-        if (blurAmount > 0) approximateBlur(canvas, blurAmount);
-        applyPixelFilters(canvas, Number(brightness) || 100, Number(contrast) || 100, Number.isFinite(requestedSaturation) ? requestedSaturation : 100);
-      }
+      // Avoid relying on CSS or Canvas filter implementations for the exported
+      // image. These operations run directly on the canvas pixels on iOS Safari,
+      // iOS Chrome, and desktop browsers alike.
+      if (blurAmount > 0) approximateBlur(canvas, blurAmount);
+      applyPixelFilters(
+        canvas,
+        Number(brightness) || 100,
+        Number(contrast) || 100,
+        Number.isFinite(requestedSaturation) ? requestedSaturation : 100,
+      );
       if (useBorder && Number(radius) > 0) {
         const r = Math.min(Number(radius), canvas.width / 2, canvas.height / 2);
         ctx.globalCompositeOperation = "destination-in"; ctx.beginPath(); ctx.roundRect(0, 0, canvas.width, canvas.height, r); ctx.fill(); ctx.globalCompositeOperation = "source-over";
