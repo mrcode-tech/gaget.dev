@@ -270,9 +270,9 @@ export function ImageWorkbench({ slug }: { slug: string }) {
     {error && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
     {status && <div role="status" className="rounded-lg border border-emerald-600/20 bg-emerald-500/5 p-3 text-sm text-foreground">{status}</div>}
     {slug === "metadata" && <p className="text-xs leading-5 text-muted-foreground">Browser security intentionally limits access to some original-file metadata. This viewer reports browser-readable properties; the re-encoded output removes embedded EXIF/IPTC metadata rather than attempting to preserve it.</p>}
-    {slug === "privacy-check" && <p className="text-xs leading-5 text-muted-foreground">A fresh canvas export contains rendered pixels, not the source file's original EXIF metadata. Animated formats and uncommon image formats may be flattened to a single PNG frame.</p>}
+    {slug === "privacy-check" && <p className="text-xs leading-5 text-muted-foreground">A fresh canvas export contains rendered pixels, not the source file&apos;s original EXIF metadata. Animated formats and uncommon image formats may be flattened to a single PNG frame.</p>}
     {slug === "editor" && <p className="text-xs text-muted-foreground"><Palette className="mr-1 inline h-3.5 w-3.5" />Changes are non-destructive until you download the result. Adjust controls and apply again to export a new version.</p>}
-    <p className="text-xs text-muted-foreground">Local processing only. The selected image is not uploaded to GaGet.dev. Files remain in this page's browser memory and are not stored by the service.</p>
+    <p className="text-xs text-muted-foreground">Local processing only. The selected image is not uploaded to GaGet.dev. Files remain in this page&apos;s browser memory and are not stored by the service.</p>
   </div>;
 }
 
