@@ -227,7 +227,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
       if (turn) ctx.rotate(turn * Math.PI / 180);
       ctx.scale((flipX ? -1 : 1), (flipY ? -1 : 1));
       const drawW = swap ? outH : outW, drawH = swap ? outW : outH;
-      const requestedSaturation = slug === "grayscale" ? 0 : Number(saturation) || 100;
+      const requestedSaturation = slug === "grayscale" ? 0 : Number(saturation);
       const blurAmount = Math.max(0, Math.min(20, slug === "blur" || slug === "editor" ? Number(blur) || 0 : 0));
       // Safari/WebKit may accept ctx.filter assignments without applying the effect.
       const supportsCanvasFilter = supportsCanvasFilters();
@@ -248,7 +248,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
       ctx.restore(); ctx.filter = "none";
       if (!supportsCanvasFilter) {
         if (blurAmount > 0) approximateBlur(canvas, blurAmount);
-        applyPixelFilters(canvas, Number(brightness) || 100, Number(contrast) || 100, requestedSaturation);
+        applyPixelFilters(canvas, Number(brightness) || 100, Number(contrast) || 100, Number.isFinite(requestedSaturation) ? requestedSaturation : 100);
       }
       if (useBorder && Number(radius) > 0) {
         const r = Math.min(Number(radius), canvas.width / 2, canvas.height / 2);
