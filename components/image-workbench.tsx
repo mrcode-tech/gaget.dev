@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const maxBytes = 25 * 1024 * 1024;
+const maxPixels = 50_000_000;
 const outputTypes = [
   { value: "image/png", label: "PNG" },
   { value: "image/jpeg", label: "JPEG" },
@@ -90,6 +91,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
     const url = URL.createObjectURL(next);
     try {
       const image = await loadImage(url);
+      if (image.naturalWidth * image.naturalHeight > maxPixels) { URL.revokeObjectURL(url); setError("This image has more than 50 megapixels. Choose a smaller image to avoid exhausting browser memory."); return; }
       setFile(next); setSourceUrl(url); setWidth(String(image.naturalWidth)); setHeight(String(image.naturalHeight));
       setCropW(String(image.naturalWidth)); setCropH(String(image.naturalHeight));
       setImageInfo({ width: image.naturalWidth, height: image.naturalHeight, ratio: (image.naturalWidth / image.naturalHeight).toFixed(4) });
@@ -149,6 +151,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
       let outW = resizing ? Math.max(1, Math.min(12000, Number(width) || sourceW)) : crop ? sw : sourceW;
       let outH = resizing ? Math.max(1, Math.min(12000, Number(height) || sourceH)) : crop ? sh : sourceH;
       if (useFavicon) { outW = 32; outH = 32; }
+      if (outW * outH > maxPixels) throw new Error("Output exceeds 50 megapixels. Choose smaller dimensions to protect browser memory.");
       const turn = rotate ? ((Number(rotation) || 0) % 360 + 360) % 360 : 0;
       const swap = turn === 90 || turn === 270;
       if (swap) [outW, outH] = [outH, outW];
@@ -209,7 +212,9 @@ export function ImageWorkbench({ slug }: { slug: string }) {
     try {
       const images = await Promise.all(extraFiles.slice(0, 4).map(async (f) => {
         if (f.size > maxBytes) throw new Error(`${f.name} exceeds the 25 MB file limit.`);
-        const url = URL.createObjectURL(f); try { return await loadImage(url); } finally { URL.revokeObjectURL(url); }
+        const url = URL.createObjectURL(f);
+        try { const img = await loadImage(url); if (img.naturalWidth * img.naturalHeight > maxPixels) throw new Error(`${f.name} exceeds the 50 megapixel safety limit.`); return img; }
+        finally { URL.revokeObjectURL(url); }
       }));
       const cellW = 360, cellH = 260, gap = 16, columns = 2, rows = Math.ceil(images.length / columns);
       const canvas = document.createElement("canvas"); canvas.width = columns * cellW + (columns + 1) * gap; canvas.height = rows * cellH + (rows + 1) * gap;
