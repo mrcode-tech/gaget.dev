@@ -226,7 +226,6 @@ export function ImageWorkbench({ slug }: { slug: string }) {
   function reset() {
     setFile(null); setSourceUrl(""); setResultUrl(""); setResultBlob(null); setImageInfo(null); setError(""); setStatus(""); setPalette([]); setSampleColor(""); setBase64Text(""); setExtraFiles([]);
   }
-  const noSourceTool = slug === "base64-to-image" || slug === "svg-optimizer";
   const needsOverlay = ["add-text", "watermark", "annotate"].includes(slug);
   const needsFilters = ["editor", "grayscale", "blur", "pixelate"].includes(slug);
   const needsOutputFormat = ["compress", "convert"].includes(slug);
@@ -234,7 +233,7 @@ export function ImageWorkbench({ slug }: { slug: string }) {
   const needsResize = slug === "resize";
   const needsRotate = slug === "rotate-flip";
   const needsBorders = slug === "borders";
-  const needsImageFile = !noSourceTool && slug !== "collage";
+  const needsImageFile = slug !== "base64-to-image" && slug !== "collage";
   const isInfo = ["metadata", "privacy-check", "dimensions", "print-size"].includes(slug);
   const showProcessButton = !["collage", "svg-optimizer", "base64-to-image", "color-picker", "dimensions", "print-size"].includes(slug);
 
