@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ToolLayout } from "@/components/tool-layout";
 import { ImageWorkbench } from "@/components/image-workbench";
+import { PhotoEditor } from "@/components/photo-editor";
 import { imageToolMeta, imageToolSlugs } from "@/lib/tools/image-tools";
 
 export function generateStaticParams() {
@@ -25,5 +26,5 @@ export default async function ImageToolPage({ params }: { params: Promise<{ tool
   const { tool: slug } = await params;
   if (!imageToolSlugs.includes(slug as (typeof imageToolSlugs)[number])) notFound();
   const info = imageToolMeta[slug as keyof typeof imageToolMeta];
-  return <ToolLayout category="Images" title={info.title} description={info.description}><ImageWorkbench slug={slug} /></ToolLayout>;
+  return <ToolLayout category="Images" title={info.title} description={info.description}>{slug === "editor" ? <PhotoEditor /> : <ImageWorkbench slug={slug} />}</ToolLayout>;
 }
