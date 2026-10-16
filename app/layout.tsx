@@ -25,7 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
       shortcut: ["/icon.svg"],
-      apple: [{ url: "/gaget-mark.svg", type: "image/svg+xml" }],
     },
     openGraph: {
       type: "website",
@@ -33,7 +32,6 @@ export async function generateMetadata(): Promise<Metadata> {
       title: brandTitle,
       description: brandDescription,
       url: siteUrl,
-      images: [{ url: "/gaget-mark.svg", alt: "GaGet.dev" }],
     },
     twitter: {
       card: "summary",
