@@ -574,6 +574,25 @@ export function PhotoEditor() {
     event.target.value = "";
   }
   const selectedText = doc.texts.find((layer) => layer.id === doc.selectedText) ?? null;
+  const siteNavItems = [
+    { id: "home", label: "Home", Icon: Home },
+    { id: "popular", label: "Popular", Icon: Sparkles },
+    { id: "all-tools", label: "All tools", Icon: Grid2X2 },
+    { id: "favorites", label: "Favorites", Icon: Heart },
+    ...categories.map((category) => ({ id: `category:${category.slug}`, label: category.name, Icon: category.icon })),
+  ];
+  const activeNavCategory = activeNavPanel?.startsWith("category:")
+    ? categories.find((category) => `category:${category.slug}` === activeNavPanel)
+    : undefined;
+  const navPanelTitle = activeNavPanel === "home" ? "Explore GaGet.dev"
+    : activeNavPanel === "popular" ? "Popular tools"
+    : activeNavPanel === "all-tools" ? "All tools"
+    : activeNavPanel === "favorites" ? "Favorites"
+    : activeNavCategory?.name ?? "GaGet.dev";
+  const navPanelTools = activeNavPanel === "all-tools" ? tools
+    : activeNavPanel === "popular" || activeNavPanel === "home" ? tools.slice(0, 8)
+    : activeNavCategory ? tools.filter((tool) => tool.category === activeNavCategory.name)
+    : [];
 
   return <div className="flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
@@ -630,21 +649,8 @@ export function PhotoEditor() {
     </div>
 
     <div className="relative flex min-h-0 flex-1 overflow-hidden">
-      <aside aria-label="GaGet.dev editing capabilities" className="hidden w-12 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-border bg-card py-3 md:flex">
-        {([
-          ["Crop & resize", "transform", Crop],
-          ["Color & filters", "adjust", SlidersHorizontal],
-          ["Color picker", "color", Pipette],
-          ["Text & watermark", "text", Type],
-          ["Image details", "metadata", Info],
-          ["Export & convert", "convert", FileOutput],
-          ["Print size", "print", Ruler],
-          ["Image to Base64", "base64", Code2],
-          ["Base64 to image", "base64decode", FileImage],
-          ["Favicon generator", "favicon", ImageIcon],
-          ["Collage maker", "collage", Grid2X2],
-          ["SVG optimizer", "svg", Code2],
-        ] as const).map(([label, panel, Icon]) => <button key={panel} type="button" aria-label={label} title={label} aria-pressed={activePanel === panel} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activePanel === panel ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setActivePanel(panel); setCropMode(panel === "transform"); setMenuOpen(null); }}><Icon className="h-4 w-4" /></button>)}
+      <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-border bg-card py-3 md:flex">
+        {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setActivePanel("none"); setCropMode(false); setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
       </aside>
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
