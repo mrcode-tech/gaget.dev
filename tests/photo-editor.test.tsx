@@ -39,7 +39,7 @@ afterEach(() => {
 });
 
 describe("PhotoEditor workspace UX acceptance", () => {
-  it("renders a two-level navigation, categorized feature menus, and a theme-aware empty canvas", () => {
+  it("renders categorized editor menus and a theme-aware empty canvas", () => {
     render(<PhotoEditor />);
 
     expect(screen.getAllByRole("button", { name: "File" }).length).toBeGreaterThan(0);
