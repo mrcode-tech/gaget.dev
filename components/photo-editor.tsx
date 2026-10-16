@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, Palette, FileImage, Image as ImageIcon } from "lucide-react";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon } from "lucide-react";
 import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -646,18 +646,37 @@ export function PhotoEditor() {
       </aside>
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
-          <div data-testid="canvas-scroll-area" className={"flex min-h-0 flex-1 overflow-auto bg-[#1e1e1e] p-3 sm:p-5 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center")}>
-            {hasImage
-              ? <canvas ref={canvasRef} onClick={handleCanvasClick} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.28)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
-              : <div className="max-w-sm py-12 text-center text-white"><ImagePlus className="mx-auto h-12 w-12 text-slate-400" /><p className="mt-3 font-medium">Your canvas is ready</p><p className="mt-1 text-sm text-slate-400">Open a photo to crop, adjust color, rotate, add text, and export from one workspace.</p><Button className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose image</Button><p className="mt-3 text-xs text-slate-500">PNG · JPEG · WebP · GIF · AVIF</p></div>}
+          <div data-testid="canvas-scroll-area" onClick={(event) => {
+            if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
+            else if (hasImage && activePanel !== "none" && event.target === event.currentTarget && window.matchMedia("(min-width: 768px)").matches) { setActivePanel("none"); setCropMode(false); }
+          }} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={(event) => { if (event.target === event.currentTarget) setDragOver(false); }} onDrop={(event) => {
+            event.preventDefault(); setDragOver(false);
+            const dropped = Array.from(event.dataTransfer.files).find((file) => file.type.startsWith("image/"));
+            if (dropped) void chooseFile(dropped); else setError("Drop an image file such as PNG, JPEG, WebP, GIF, or AVIF.");
+          }} className={"relative flex min-h-0 flex-1 overflow-auto bg-muted/25 p-6 sm:p-8 lg:p-10 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center") + (dragOver ? " ring-2 ring-inset ring-primary bg-primary/5" : "")}>
+            {activePanel === "collage" && collageFiles.length > 0
+              ? <div data-testid="collage-canvas-preview" aria-label="Collage preview in selection order" className="grid w-[90%] max-w-4xl gap-2 rounded-lg border border-border bg-background p-3 shadow-sm" style={{ gridTemplateColumns: `repeat(${collageLayout === "row" ? collageFiles.length : collageLayout === "column" ? 1 : Math.min(collageColumns, collageFiles.length)}, minmax(0, 1fr))` }}>
+                  {collageFiles.map((file, index) => <div key={file.name + file.size + file.lastModified} className="relative aspect-square min-w-0 overflow-hidden rounded-md bg-muted"><img src={collagePreviewUrls[index] ?? ""} alt={file.name} className="h-full w-full object-cover" /><span className="absolute left-1.5 top-1.5 rounded bg-background/90 px-1.5 py-0.5 text-xs font-semibold text-foreground">{index + 1}</span></div>)}
+                </div>
+              : hasImage
+                ? <canvas ref={canvasRef} onClick={(event) => {
+                    handleCanvasClick(event);
+                    if (activePanel !== "none" && !cropMode && window.matchMedia("(min-width: 768px)").matches) { setActivePanel("none"); setCropMode(false); }
+                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
+                : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
+                    <p className="text-lg font-semibold">Drop your photo here</p>
+                    <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">Or click anywhere in this workspace to browse. Your original stays on this device while you crop, adjust, and export.</p>
+                    <Button className="mt-5" onClick={() => fileInputRef.current?.click()}>Choose image</Button>
+                    <p className="mt-3 text-xs text-muted-foreground">PNG · JPEG · WebP · GIF · AVIF · up to 25 MB</p>
+                  </div>}
           </div>
-          {hasImage && <div className="flex items-center justify-between border-t border-slate-800 px-3 py-2 text-[11px] text-slate-400"><span>{cropMode ? "Drag inside the crop to move it; drag edges or corners to resize." : activePanel === "text" && selectedText ? "Click the photo to position the selected text." : "Edits remain reversible until you export."}</span><span>{imageRef.current?.naturalWidth} × {imageRef.current?.naturalHeight} px</span></div>}
         </CardContent>
       </Card>
 
       <div className={(activePanel === "none" ? "hidden " : "absolute inset-0 z-20 flex ") + "bg-background/95 backdrop-blur-sm md:inset-y-0 md:left-auto md:right-0 md:w-[360px] md:border-l md:border-border"} data-testid="feature-panel" aria-label="Editing feature panel">
         <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card shadow-xl">
-          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><p className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & transform",text:"Text & watermark",color:"Color picker & palette",metadata:"Image information",convert:"Export & format",print:"Print size & DPI",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</p><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => { setActivePanel("none"); setCropMode(false); }}>×</button></div>
+          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><p className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & transform",text:"Text & watermark",color:"Color picker & palette",metadata:"Image information",convert:"Export & format",print:"Print size & DPI",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</p><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => { setActivePanel("none"); setCropMode(false); }}>×</button></div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
@@ -736,7 +755,6 @@ export function PhotoEditor() {
           {hasImage && activePanel === "convert" && <div className="space-y-3"><label className="block space-y-1 text-sm">Output format<select aria-label="Output format" className="h-10 w-full rounded-md border border-input bg-background px-3" value={doc.format} onChange={(e) => change({ format: e.target.value })}><option value="image/jpeg">JPEG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select></label>{doc.format !== "image/png" && <label className="block space-y-1 text-sm">Quality <span className="float-right text-xs text-muted-foreground">{doc.quality}%</span><input aria-label="Export quality" className="w-full accent-primary" type="range" min="10" max="100" value={doc.quality} onChange={(e) => change({ quality: Number(e.target.value) })} /></label>}<Button className="w-full" disabled={cropMode} onClick={() => void exportImage()}><Download className="mr-2 h-4 w-4" />Export photo</Button></div>}
           {hasImage && activePanel === "print" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Print size is estimated from output pixels and the selected DPI.</p><label className="block space-y-1 text-sm">Resolution (DPI)<select aria-label="Print resolution" className="h-10 w-full rounded-md border border-input bg-background px-3" value={printDpi} onChange={(e) => setPrintDpi(Number(e.target.value))}><option value="72">72 DPI · screen</option><option value="150">150 DPI · draft print</option><option value="300">300 DPI · print</option><option value="600">600 DPI · high detail</option></select></label><div className="rounded-lg border border-border p-3"><p className="text-sm font-medium">Estimated print size</p><p className="mt-1 text-lg tabular-nums">{(doc.width/printDpi).toFixed(2)} × {(doc.height/printDpi).toFixed(2)} inches</p><p className="text-xs text-muted-foreground">{(doc.width/printDpi*2.54).toFixed(1)} × {(doc.height/printDpi*2.54).toFixed(1)} cm</p></div></div>}
         </div>
-        <div className="shrink-0 border-t border-border p-3"><Button variant="outline" className="w-full" onClick={() => { setActivePanel("none"); setCropMode(false); }}>Done</Button></div>
       </div>
 
     </div>
