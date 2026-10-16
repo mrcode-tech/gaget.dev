@@ -57,7 +57,7 @@ describe("AppSidebar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
 
-    const languageCaption = screen.getByText("Language", { selector: "span" });
+    const languageCaption = screen.getAllByText("Language", { selector: "span" })[0];
     const appearanceCaption = screen.getByText("Appearance", { selector: "span" });
     expect(screen.getByRole("combobox", { name: "Language" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
@@ -68,8 +68,8 @@ describe("AppSidebar", () => {
     expect(appearanceRow?.className).toContain("min-h-10");
     expect(languageRow).not.toBe(appearanceRow);
     expect(languageRow?.parentElement).toBe(appearanceRow?.parentElement);
-    expect(languageRow?.parentElement?.parentElement?.className).toContain("border-t");
-    fireEvent.click(screen.getByRole("combobox", { name: "Language" }));
+    expect(languageRow?.parentElement?.className).toContain("border-t");
+    fireEvent.pointerDown(screen.getByRole("combobox", { name: "Language" }), { button: 0, ctrlKey: false, pointerType: "mouse" });
     expect(screen.getByRole("option", { name: "Español" })).toBeTruthy();
   });
 
