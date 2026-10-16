@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, LayoutGrid } from "lucide-react";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, Palette, FileImage, Image as ImageIcon } from "lucide-react";
 import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -164,6 +164,10 @@ export function PhotoEditor() {
   const [base64Input, setBase64Input] = useState("");
   const [svgOutput, setSvgOutput] = useState("");
   const [collageFiles, setCollageFiles] = useState<File[]>([]);
+  const [collagePreviewUrls, setCollagePreviewUrls] = useState<string[]>([]);
+  const [collageLayout, setCollageLayout] = useState<"matrix" | "row" | "column">("matrix");
+  const [collageColumns, setCollageColumns] = useState(2);
+  const [dragOver, setDragOver] = useState(false);
   const svgInputRef = useRef<HTMLInputElement>(null);
   const collageInputRef = useRef<HTMLInputElement>(null);
   const sourceFileRef = useRef<File | null>(null);
@@ -258,6 +262,19 @@ export function PhotoEditor() {
 
   useEffect(() => { if (hasImage) draw(doc); }, [doc, hasImage, draw]);
   useEffect(() => () => { if (sourceUrlRef.current) URL.revokeObjectURL(sourceUrlRef.current); }, []);
+  useEffect(() => {
+    const urls = collageFiles.map((file) => URL.createObjectURL(file));
+    setCollagePreviewUrls(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [collageFiles]);
+  useEffect(() => {
+    if (activePanel === "none") return;
+    const closePanelOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setActivePanel("none"); setCropMode(false); }
+    };
+    document.addEventListener("keydown", closePanelOnEscape);
+    return () => document.removeEventListener("keydown", closePanelOnEscape);
+  }, [activePanel]);
   useEffect(() => {
     if (!menuOpen) return;
     const closeOnOutsidePointer = (event: PointerEvent) => {
@@ -502,17 +519,39 @@ export function PhotoEditor() {
     const optimized = source.replace(/<!--[\s\S]*?-->/g, "").replace(/>\s+</g, "><").replace(/[\t\r\n]+/g, " ").replace(/ {2,}/g, " ").trim();
     setSvgOutput(optimized); setError(""); setStatus("SVG whitespace and comments optimized locally. Review the result before using it.");
   }
+  function addCollageFiles(incoming: File[]) {
+    const next = [...collageFiles];
+    const seen = new Set(next.map((file) => `${file.name}:${file.size}:${file.lastModified}`));
+    for (const file of incoming) {
+      const key = `${file.name}:${file.size}:${file.lastModified}`;
+      if (seen.has(key)) continue;
+      if (next.length >= 9) {
+        setError("A collage can contain up to nine unique images.");
+        break;
+      }
+      seen.add(key);
+      next.push(file);
+    }
+    setCollageFiles(next);
+    if (next.length > collageFiles.length) {
+      setError("");
+      setStatus(`Added ${next.length - collageFiles.length} image(s) to the collage in selection order.`);
+    }
+  }
+
   async function createCollage() {
     if (collageFiles.length < 2) { setError("Choose at least two images to create a collage."); return; }
     if (collageFiles.length > 9) { setError("Choose no more than nine images for a collage."); return; }
     try {
-      const images = await Promise.all(collageFiles.slice(0, 9).map(async file => {
+      const images = await Promise.all(collageFiles.map(async file => {
         if (!file.type.startsWith("image/") || file.type === "image/svg+xml") throw new Error("Choose raster images for a collage.");
         if (file.size > maxBytes) throw new Error("Each collage image must be smaller than 25 MB.");
         const url = URL.createObjectURL(file);
         try { return await loadImage(url); } finally { URL.revokeObjectURL(url); }
       }));
-      const cell = 480, columns = Math.ceil(Math.sqrt(images.length)), rows = Math.ceil(images.length / columns);
+      const cell = 480;
+      const columns = collageLayout === "row" ? images.length : collageLayout === "column" ? 1 : clamp(collageColumns, 1, images.length);
+      const rows = Math.ceil(images.length / columns);
       const collage = document.createElement("canvas"); collage.width = columns * cell; collage.height = rows * cell;
       const ctx = collage.getContext("2d");
       if (!ctx) throw new Error("Could not create the collage canvas.");
@@ -537,7 +576,7 @@ export function PhotoEditor() {
   return <div className="flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
     <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
-    <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => setCollageFiles(Array.from(event.target.files ?? []))} className="hidden" />
+    <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
     <div ref={menuBarRef} className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
       <LocaleLink href="/" aria-label="Back to GaGet.dev home" title="Back to GaGet.dev home" className="mr-1 inline-flex h-8 shrink-0 items-center gap-2 rounded-md px-2 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Home className="h-4 w-4" /><span className="hidden sm:inline">GaGet.dev</span></LocaleLink>
       <span className="mr-1 hidden h-5 border-l border-border md:block" />
