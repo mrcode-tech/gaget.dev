@@ -70,7 +70,7 @@ describe("AppSidebar", () => {
     expect(languageRow?.parentElement).toBe(appearanceRow?.parentElement);
     expect(languageRow?.parentElement?.parentElement?.className).toContain("border-t");
     fireEvent.click(screen.getByRole("combobox", { name: "Language" }));
-    expect(screen.getByRole("option", { name: "Spanish" })).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Español" })).toBeTruthy();
   });
 
   it("marks the current route as active", () => {
