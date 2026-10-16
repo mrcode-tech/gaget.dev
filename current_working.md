@@ -224,3 +224,36 @@ The follow-up CI run completed successfully:
 - The earlier TypeScript test-query issue was fixed in `2848b8b`; the successful run includes that correction.
 
 This verifies the PR merge commit tested by run #58. Any subsequent commit should be validated by its own latest CI run before merging.
+
+
+## Photo Editor UX overhaul — acceptance plan (2026-10-16)
+
+### Design rules
+- Keep a single image-editor route and one image app in GaGet.dev discovery/navigation.
+- Use a compact app menu plus one contextual toolbar. Do not keep three stacked navigation bars.
+- Do not show a hamburger inside the editor file-menu row; use the GaGet.dev brand/home affordance and the site navigation only where appropriate.
+- Put all editing features in logical top menus; choosing a feature opens a contextual panel within the editor workspace. No permanent right-side “PROPERTIES” panel.
+- On mobile, a selected feature uses a full-width/full-height workspace view with an obvious Back/Done action; never split the canvas into two cramped panes.
+- Zoom changes the actual canvas display size. Zoom above fit must remain scrollable in both directions; no max-width/max-height rule may silently clamp zoom.
+- Crop side/corner hit targets must be forgiving on touch, visually clear, and expose directional resize cursors on pointer devices.
+- Keep the original local and never upload it as part of editing.
+
+### UX acceptance tests to write and pass
+1. Menus are keyboard accessible; Escape/outside pointer closes menus.
+2. File menu owns open, export, and reset actions; export is not an always-visible feature button.
+3. Undo/redo live in the contextual toolbar and correctly reflect history state.
+4. No persistent “PROPERTIES” header or permanently visible feature sidebar.
+5. Selecting a feature opens only its contextual panel; closing it restores canvas space.
+6. Mobile feature panel occupies the available workspace and provides a clear way back to the canvas.
+7. Fit-to-canvas sets a sensible initial zoom; zoom-in above 100% removes fit constraints and allows horizontal/vertical scrolling.
+8. Canvas caption/dimensions are part of the compact toolbar/status line, not a third navigation row.
+9. Crop edges/corners have larger hit regions, side handles are easier to target, and touch pointers can move/resize the crop.
+10. Keyboard focus is visible and every icon-only action has an accessible name.
+11. Each migrated image capability has an independent positive test and at least one validation/error-path test.
+12. Legacy image-tool routes redirect to the unified editor; discovery/catalog exposes one Image app only.
+13. Unit tests, component/acceptance tests, ESLint, TypeScript, production build, and HTTP smoke tests pass on the final commit.
+
+### Implementation checkpoint
+- CI baseline from workflow run #60: all jobs passed on commit `7b72d40` before this UX overhaul.
+- This is a pre-development acceptance checklist, not a claim that the above requirements are already implemented.
+- Do not retire legacy routes/files until their capability has a tested equivalent in the unified editor and inbound links have been checked.
