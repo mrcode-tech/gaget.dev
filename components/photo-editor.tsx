@@ -503,7 +503,8 @@ export function PhotoEditor() {
     setSvgOutput(optimized); setError(""); setStatus("SVG whitespace and comments optimized locally. Review the result before using it.");
   }
   async function createCollage() {
-    if (collageFiles.length < 2) { setError("Choose at least two images to create a collage."); return; }\n    if (collageFiles.length > 9) { setError("Choose no more than nine images for a collage."); return; }
+    if (collageFiles.length < 2) { setError("Choose at least two images to create a collage."); return; }
+    if (collageFiles.length > 9) { setError("Choose no more than nine images for a collage."); return; }
     try {
       const images = await Promise.all(collageFiles.slice(0, 9).map(async file => {
         if (!file.type.startsWith("image/") || file.type === "image/svg+xml") throw new Error("Choose raster images for a collage.");
