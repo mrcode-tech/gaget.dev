@@ -296,3 +296,11 @@ Component tests now cover:
 - [ ] Fix every CI failure and rerun until green.
 - [ ] Check the catalog still lists exactly one Images app and all legacy image routes redirect to /images/editor without loops.
 - [ ] Verify 100%+ zoom scrolling, crop side handles on touch devices, and full-workspace mobile panels in a real browser.
+
+
+### Final capability consolidation follow-up
+- Added Base64-to-image decoding for supported image data URLs, with invalid-input feedback.
+- Extended the image information panel with source MIME type, file size, aspect ratio, and a metadata-free export action. The export is a fresh canvas-rendered copy; it does not modify the original.
+- Changed every former standalone image-tool slug (collage, metadata, palette, color-picker, base64, base64-to-image, favicon, svg-optimizer, dimensions, and print-size) to a permanent redirect to /images/editor. The editor slug is the only image route that renders an app; old paths are intentionally retained as redirects for bookmarks and inbound links.
+- Updated production smoke tests to assert HTTP 308 and the /images/editor destination for each retired image route.
+- The latest full CI run must be checked after the last implementation/test/documentation commit. Earlier overlapping runs were cancelled by the workflow concurrency policy and are not evidence of failure or success.
