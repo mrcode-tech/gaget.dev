@@ -76,7 +76,8 @@ describe("PhotoEditor workspace", () => {
     render(<PhotoEditor />);
 
     const capabilities = [
-      ["Base64 converter…", "Base64 converter"],
+      ["Image to Base64…", "Image to Base64"],
+      ["Base64 to image…", "Base64 to image"],
       ["Favicon generator…", "Favicon generator"],
       ["Collage maker…", "Collage maker"],
       ["SVG optimizer…", "SVG optimizer"],
