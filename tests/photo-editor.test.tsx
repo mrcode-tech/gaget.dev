@@ -114,12 +114,12 @@ describe("PhotoEditor workspace UX acceptance", () => {
     openFeature("Crop & resize");
 
     const panel = screen.getByTestId("feature-panel");
-    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
     fireEvent.click(screen.getByRole("button", { name: "Expand editing panel" }));
-    expect(panel.className).toContain("h-[min(68dvh,560px)]");
+    expect(panel.className).toContain("h-[min(52dvh,420px)]");
     expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
-    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
