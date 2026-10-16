@@ -439,7 +439,8 @@ Implemented on `feat/brand-and-user-experience`:
 
 ### Verification status
 
-- [ ] Awaiting GitHub Actions for the latest branch commit; do not mark CI green until unit tests, component tests, lint, TypeScript, production build, route smoke tests, and Playwright/axe checks all pass.
-- The first browser run found two real WCAG issues in the editor: insufficient contrast for the success/status message and a zoom reset button whose accessible name omitted its visible percentage. Both are fixed; rerun the full suite on the next commit to verify.
+- [x] GitHub Actions run #265 passed on commit `73b5551435a45964b83a71439da3729f8640fa81`: unit tests, component tests, ESLint, TypeScript, production build, production route smoke tests, and Playwright/axe checks across all six viewports.
+- The first browser run exposed two WCAG issues (status-message contrast and the zoom reset button's accessible name); both were corrected and the final browser suite passed.
+- CI run: https://github.com/mrcode-tech/gaget.dev/actions/runs/38943817043
 - [ ] Real-device manual check remains necessary for touch crop handles, sheet drag feel (the current accessible handle is a tap-to-expand/collapse control), on-screen keyboard behavior, and VoiceOver/TalkBack screen-reader behavior.
 - [ ] No merge performed; continue work only on `feat/brand-and-user-experience`.
