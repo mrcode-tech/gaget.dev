@@ -80,7 +80,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
-    expect(screen.getByTestId("feature-panel").className).toContain("hidden");
+    expect(screen.getByTestId("feature-panel").className).toContain("translate-x-full");
+    expect(screen.getByTestId("feature-panel").className).toContain("pointer-events-none");
   });
 
   it("dismisses an open desktop panel when the user clicks the workspace outside it", () => {
@@ -91,7 +92,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(within(screen.getByTestId("feature-panel")).getByText("Color & filters")).toBeTruthy();
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
-    expect(screen.getByTestId("feature-panel").className).toContain("hidden");
+    expect(screen.getByTestId("feature-panel").className).toContain("translate-x-full");
+    expect(screen.getByTestId("feature-panel").className).toContain("pointer-events-none");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
