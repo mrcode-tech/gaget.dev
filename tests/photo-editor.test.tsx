@@ -104,7 +104,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
     expect(screen.getByTestId("feature-panel")).toBe(panel);
-    expect(panel.className).toContain("md:block");
+    expect(panel.className).toContain("md:flex");
     expect(panel.className).not.toContain("md:hidden");
   });
 
