@@ -77,7 +77,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
 
     const menuChecks = [
-      ["Edit", ["Crop & resize", "Text & watermark"]],
+      ["Edit", ["Crop", "Resize", "Text & watermark"]],
       ["Image", ["Color & filters", "Color picker", "Image details", "Export & convert", "Print size", "Image to Base64", "Base64 to image"]],
       ["Create", ["Favicon", "Collage", "SVG optimize"]],
     ] as const;
@@ -138,7 +138,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
   it("supports expanding and collapsing the mobile editing bottom sheet", () => {
     render(<PhotoEditor />);
-    openFeature("Crop & resize");
+    openFeature("Resize");
 
     const panel = screen.getByTestId("feature-panel");
     expect(panel.className).toContain("h-[min(24dvh,200px)]");
@@ -152,7 +152,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
     render(<PhotoEditor />);
     const featureCases = [
-      ["Crop & resize", "Crop & resize"],
+      ["Resize", "Resize"],
       ["Color & filters", "Color & filters"],
       ["Color picker", "Color picker & palette"],
       ["Text & watermark", "Text & watermark"],
