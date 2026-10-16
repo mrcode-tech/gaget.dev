@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { categories, tools } from "@/lib/tools/registry";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AppHeader } from "@/components/app-header";
 
 type TextLayer = {
   id: number;
@@ -606,21 +607,11 @@ export function PhotoEditor() {
     setActiveNavPanel(null);
   };
 
-  return <div className="flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-background text-foreground">
+  return <div className="flex h-[calc(100dvh-68px)] min-h-[492px] flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
     <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
     <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
-    <header data-testid="site-navbar" className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-3 sm:px-5">
-      <LocaleLink href="/" aria-label="GaGet.dev home" className="inline-flex items-center gap-2 rounded-md font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">G</span>
-        <span>GaGet.dev</span>
-      </LocaleLink>
-      <div className="flex items-center gap-2">
-        <span className="hidden text-sm text-muted-foreground sm:inline">Photo Editor</span>
-        <span className="hidden h-5 border-l border-border sm:block" />
-        <LocaleLink href="/tools" className="rounded-md px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">All tools</LocaleLink>
-      </div>
-    </header>
+    <AppHeader sidebarCollapsed standalone />
 
     <div ref={menuBarRef} data-testid="editor-menubar" className="relative z-40 flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
       <button type="button" aria-expanded={menuOpen === "File"} className={"rounded-md px-3 py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
