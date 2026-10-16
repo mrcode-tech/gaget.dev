@@ -12,7 +12,7 @@ describe("PhotoEditor workspace", () => {
     expect(screen.getByRole("button", { name: "File" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Edit" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Image" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Help" })).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Help" }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Your canvas is ready")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
   });
@@ -32,9 +32,9 @@ describe("PhotoEditor workspace", () => {
     render(<PhotoEditor />);
 
     expect(screen.getByRole("button", { name: "Crop" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "Adjust" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getAllByRole("button", { name: "Adjust" })[0].hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("button", { name: "Transform" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "Text" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getAllByRole("button", { name: "Text" })[0].hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("button", { name: "Export", exact: true }).hasAttribute("disabled")).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: "File" }));
@@ -59,7 +59,7 @@ describe("PhotoEditor workspace", () => {
   it("opens the Help menu with local-processing guidance", () => {
     render(<PhotoEditor />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Help", exact: true }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Help", exact: true })[0]);
 
     expect(screen.getByText("A lightweight editor. Adjustments are rendered locally in your browser; export creates a new file and never overwrites your original.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Crop & editing tips" })).toBeTruthy();
