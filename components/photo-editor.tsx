@@ -671,6 +671,7 @@ export function PhotoEditor() {
       </div>
 
     </div>
+    </div>
 
     {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></div>}
   </div>;
