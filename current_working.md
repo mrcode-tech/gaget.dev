@@ -369,3 +369,23 @@ Implemented on `feat/brand-and-user-experience`:
 - [ ] Favorites remains a placeholder empty state until a favorites persistence model exists.
 - [ ] Run CI once more on the documentation-updated final branch commit before considering it merge-ready.
 
+
+
+## Two-level editor navigation refinement — 2026-10-16
+
+### User-requested UX changes implemented
+- Added a dedicated GaGet.dev site-navigation header above the Photo Editor command bar, creating the requested two-level top navigation.
+- Removed the horizontal-scrolling strip of twelve feature buttons. Desktop commands are grouped into **File**, **Edit**, **Image**, **Create**, **History**, and **Help** menus; editing capabilities are nested under their relevant groups.
+- On narrow screens, the editor command bar collapses feature access into a hamburger-style **Features** menu with labeled Edit / Image / Create sections. File actions remain available from a separate File menu.
+- Reworked the GaGet.dev icon rail to use the shadcn `ScrollArea` component.
+- Expanded the GaGet.dev tool drawer from the left beside the canvas instead of placing it over the right-side feature panel. Opening a site category no longer clears the selected editing feature; the right panel remains dedicated to editing.
+- Kept navigation responsibilities distinct: selecting a GaGet.dev icon browses site tools, selecting a tool link navigates, and selecting an editor capability opens the contextual feature panel.
+
+### Acceptance coverage updated
+- Tests now verify the two-level header, categorized editor menus, no horizontal-scroll command strip, mobile feature hamburger, shadcn scrollable navigation rail, and opening GaGet navigation without replacing the active right-side feature panel.
+- Existing collage, drag/drop, theme-aware empty state, crop panel, and local-processing acceptance checks remain in place.
+
+### Verification state
+- The changes have been committed on `feat/brand-and-user-experience`; no merge has been performed.
+- A fresh full CI run on the latest commit is required before treating this revision as verified. Do not rely on the earlier green run for this new navigation change.
+- Manual follow-up remains: inspect the layout at narrow phone widths and desktop widths where both the expanded site drawer and right feature panel are open; verify keyboard and screen-reader behavior in a real browser.
