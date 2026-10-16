@@ -79,7 +79,7 @@ describe("AppSidebar", () => {
       setPointerCapture: { configurable: true, value: () => undefined },
       releasePointerCapture: { configurable: true, value: () => undefined },
     });
-    fireEvent.pointerDown(screen.getByRole("combobox", { name: "Language" }), { button: 0, ctrlKey: false, pointerType: "mouse" });
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Language" }), { key: "ArrowDown" });
     expect(screen.getByRole("option", { name: "Español" })).toBeTruthy();
   });
 
