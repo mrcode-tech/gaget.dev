@@ -638,7 +638,7 @@ export function PhotoEditor() {
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
       <Button size="icon" variant="outline" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 className="h-4 w-4" /></Button>
-      
+      {hasImage && cropMode && activePanel === "none" && <><Button size="sm" onClick={() => { change({ width: doc.cropWidth, height: doc.cropHeight }); setCropMode(false); setStatus(`Crop applied: ${doc.cropWidth} × ${doc.cropHeight} pixels. Export when ready.`); }}>Apply crop</Button><Button size="sm" variant="ghost" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); setCropMode(false); }}>Cancel crop</Button></>}
       <div className="ml-auto flex items-center gap-1">
         
         <Button size="icon" variant="ghost" aria-label="Zoom out" title="Zoom out" disabled={zoom <= 25} onClick={() => setZoom((value) => Math.max(25, value - 25))}><ZoomOut className="h-4 w-4" /></Button>
@@ -657,7 +657,7 @@ export function PhotoEditor() {
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <div data-testid="canvas-scroll-area" onClick={(event) => {
             if (activeNavPanel !== null && event.target === event.currentTarget && window.innerWidth >= 768) setActiveNavPanel(null);
-            else if (activePanel !== "none" && event.target === event.currentTarget && window.innerWidth >= 768) { setActivePanel("none"); setCropMode(false); }
+            else if (activePanel !== "none" && event.target === event.currentTarget && window.innerWidth >= 768) setActivePanel("none");
             else if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
           }} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={(event) => { if (event.target === event.currentTarget) setDragOver(false); }} onDrop={(event) => {
             event.preventDefault(); setDragOver(false);
@@ -672,7 +672,7 @@ export function PhotoEditor() {
                 ? <canvas ref={canvasRef} onClick={(event) => {
                     handleCanvasClick(event);
                     if (activeNavPanel !== null && window.innerWidth >= 768) setActiveNavPanel(null);
-                    else if (activePanel !== "none" && !cropMode && window.innerWidth >= 768) { setActivePanel("none"); setCropMode(false); }
+                    else if (activePanel !== "none" && window.innerWidth >= 768) setActivePanel("none");
                   }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
                 : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
