@@ -36,6 +36,7 @@ afterEach(() => {
   if (originalRevokeObjectURL) Object.defineProperty(URL, "revokeObjectURL", { configurable: true, writable: true, value: originalRevokeObjectURL });
   else Reflect.deleteProperty(URL, "revokeObjectURL");
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("PhotoEditor workspace UX acceptance", () => {
