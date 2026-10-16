@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
-import { Download, Undo2, Redo2, RotateCcw, ShieldCheck, Type, ImagePlus, Crop, SlidersHorizontal, ZoomIn, ZoomOut, Maximize2, HelpCircle, Info, FileImage, Check, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { Download, Undo2, Redo2, RotateCcw, ShieldCheck, Type, ImagePlus, Crop, SlidersHorizontal, ZoomIn, ZoomOut, Maximize2, HelpCircle, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -327,7 +327,7 @@ export function PhotoEditor() {
     change({ texts: [...doc.texts, layer], selectedText: layer.id });
     setActivePanel("text");
   }
-  function handleCropPointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
+  function handleCropPointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
     if (!cropMode || !imageRef.current) return;
     const canvas = event.currentTarget; const rect = canvas.getBoundingClientRect();
     const x = clamp((event.clientX - rect.left) / rect.width * canvas.width, 0, canvas.width);
@@ -341,7 +341,7 @@ export function PhotoEditor() {
     historyRef.current = [...historyRef.current.slice(-49), doc]; futureRef.current = []; setCanUndo(true); setCanRedo(false);
     canvas.setPointerCapture(event.pointerId); event.preventDefault();
   }
-  function handleCropPointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
+  function handleCropPointerMove(event: ReactPointerEvent<HTMLCanvasElement>) {
     const drag = cropDragRef.current; if (!cropMode || !drag || !imageRef.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = clamp((event.clientX - rect.left) / rect.width * event.currentTarget.width, 0, drag.sourceW);
@@ -502,7 +502,7 @@ export function PhotoEditor() {
           </div>}
 
           {hasImage && activePanel === "transform" && <div className="space-y-4">
-            {cropMode && <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-3"><p className="text-sm font-medium">Interactive crop</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Drag inside the selection to move it. Drag any edge or corner to resize the crop. The export will contain only the selected area.</p><Button className="mt-3 w-full" onClick={() => { setCropMode(false); setStatus(`Crop selected: ${doc.cropWidth} × ${doc.cropHeight} pixels. Export when ready.`); }}><Check className="h-4 w-4" />Apply crop</Button><Button variant="ghost" className="mt-1 w-full" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); }}><X className="h-4 w-4" />Reset crop selection</Button></div>}
+            {cropMode && <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-3"><p className="text-sm font-medium">Interactive crop</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Drag inside the selection to move it. Drag any edge or corner to resize the crop. The export will contain only the selected area.</p><Button className="mt-3 w-full" onClick={() => { change({ width: doc.cropWidth, height: doc.cropHeight }); setCropMode(false); setStatus(`Crop applied: ${doc.cropWidth} × ${doc.cropHeight} pixels. Export when ready.`); }}><Check className="h-4 w-4" />Apply crop</Button><Button variant="ghost" className="mt-1 w-full" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); }}><X className="h-4 w-4" />Reset crop selection</Button></div>}
             <div className="grid grid-cols-2 gap-3">
               <label className="space-y-1 text-sm">Width (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.height))} value={doc.width} onChange={(e) => change({ width: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.height))) })} /></label>
               <label className="space-y-1 text-sm">Height (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.width))} value={doc.height} onChange={(e) => change({ height: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.width))) })} /></label>

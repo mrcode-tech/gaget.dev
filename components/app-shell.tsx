@@ -10,7 +10,7 @@ import { useI18n } from "@/components/i18n-provider";
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  if (pathname.replace(/\\/$/, "") === "/images/editor") return <>{children}</>;
+  if (pathname === "/images/editor" || pathname === "/images/editor/") return <>{children}</>;
   const { locale } = useI18n();
   const direction = localeDirections[locale];
 
