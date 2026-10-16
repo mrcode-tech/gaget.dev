@@ -440,5 +440,6 @@ Implemented on `feat/brand-and-user-experience`:
 ### Verification status
 
 - [ ] Awaiting GitHub Actions for the latest branch commit; do not mark CI green until unit tests, component tests, lint, TypeScript, production build, route smoke tests, and Playwright/axe checks all pass.
+- The first browser run found two real WCAG issues in the editor: insufficient contrast for the success/status message and a zoom reset button whose accessible name omitted its visible percentage. Both are fixed; rerun the full suite on the next commit to verify.
 - [ ] Real-device manual check remains necessary for touch crop handles, sheet drag feel (the current accessible handle is a tap-to-expand/collapse control), on-screen keyboard behavior, and VoiceOver/TalkBack screen-reader behavior.
 - [ ] No merge performed; continue work only on `feat/brand-and-user-experience`.
