@@ -49,6 +49,18 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Categories")).toBeTruthy();
   });
 
+  it("places language and theme controls inside the mobile navigation drawer", () => {
+    render(<SidebarHarness />);
+
+    expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Switch to dark mode" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
+
+    expect(screen.getByRole("combobox", { name: "Language" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
+  });
+
   it("marks the current route as active", () => {
     navigation.pathname = "/tools";
     render(<SidebarHarness />);
