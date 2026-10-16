@@ -579,22 +579,40 @@ export function PhotoEditor() {
     <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
     <div ref={menuBarRef} className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
       <LocaleLink href="/" aria-label="Back to GaGet.dev home" title="Back to GaGet.dev home" className="mr-1 inline-flex h-8 shrink-0 items-center gap-2 rounded-md px-2 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Home className="h-4 w-4" /><span className="hidden sm:inline">GaGet.dev</span></LocaleLink>
-      <span className="mr-1 hidden h-5 border-l border-border md:block" />
-      
-      <span className="mr-2 hidden font-medium text-muted-foreground sm:inline">Photo Editor</span>
-      {(["File", "Edit", "Image", "Adjust", "Tools", "Help"] as const).map((menu) => <div key={menu} className="relative"><button type="button" className={"rounded-md px-3 py-1.5 hover:bg-accent " + (menuOpen === menu ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === menu ? null : menu)}>{menu}</button>{menuOpen === menu && <div className="absolute left-0 top-9 z-50 min-w-48 rounded-lg border border-border bg-popover p-1.5 shadow-xl">
-        {menu === "File" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border" /><p className="px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></>}
-        {menu === "Edit" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button></>}
-        {menu === "Image" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" onClick={() => { setCropMode(true); setActivePanel("transform"); setMenuOpen(null); }}>Crop…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" onClick={() => { setCropMode(false); setActivePanel("transform"); setMenuOpen(null); }}>Resize & rotate…</button></>}
-        {menu === "Adjust" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" onClick={() => { setActivePanel("adjust"); setCropMode(false); setMenuOpen(null); }}>Color & filters…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" onClick={() => { setActivePanel("color"); setCropMode(false); setMenuOpen(null); }}>Color picker…</button></>}
-        {menu === "Tools" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("text"); setCropMode(false); setMenuOpen(null); }}>Text & watermark…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("metadata"); setCropMode(false); setMenuOpen(null); }}>Image information…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("convert"); setCropMode(false); setMenuOpen(null); }}>Export & format…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("print"); setCropMode(false); setMenuOpen(null); }}>Print size & DPI…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("base64"); setCropMode(false); setMenuOpen(null); }}>Image to Base64…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("base64decode"); setCropMode(false); setMenuOpen(null); }}>Base64 to image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("favicon"); setCropMode(false); setMenuOpen(null); }}>Favicon generator…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("collage"); setCropMode(false); setMenuOpen(null); }}>Collage maker…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setActivePanel("svg"); setCropMode(false); setMenuOpen(null); }}>SVG optimizer…</button></>}
-        {menu === "Help" && <><p className="px-3 py-2 text-sm font-medium">GaGet Photo Editor</p><p className="max-w-64 px-3 pb-2 text-xs leading-5 text-muted-foreground">A lightweight editor. Adjustments are rendered locally in your browser; export creates a new file and never overwrites your original.</p><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: select Crop, drag any edge or corner to refine the selection, then choose Apply crop."); }}>Crop & editing tips</button></>}
-      </div>}</div>)}
-      <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span className="hidden sm:inline">Private · processed in your browser</span></div>
+      <span className="hidden h-5 border-l border-border sm:block" />
+      <span className="mr-1 hidden shrink-0 font-medium text-muted-foreground lg:inline">Photo Editor</span>
+      <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto whitespace-nowrap">
+        {(["File", "History"] as const).map((menu) => <div key={menu} className="relative shrink-0">
+          <button type="button" aria-expanded={menuOpen === menu} className={"rounded-md px-2.5 py-1.5 hover:bg-accent " + (menuOpen === menu ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === menu ? null : menu)}>{menu}</button>
+          {menuOpen === menu && <div className="absolute left-0 top-9 z-50 min-w-48 rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+            {menu === "File" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border" /><p className="px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></>}
+            {menu === "History" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button></>}
+          </div>}
+        </div>)}
+        {([
+          ["Crop & resize", "transform", Crop],
+          ["Color & filters", "adjust", SlidersHorizontal],
+          ["Color picker", "color", Pipette],
+          ["Text & watermark", "text", Type],
+          ["Image details", "metadata", Info],
+          ["Export & convert", "convert", FileOutput],
+          ["Print size", "print", Ruler],
+          ["Image to Base64", "base64", Code2],
+          ["Base64 to image", "base64decode", FileImage],
+          ["Favicon", "favicon", ImageIcon],
+          ["Collage", "collage", Grid2X2],
+          ["SVG optimize", "svg", Code2],
+        ] as const).map(([label, panel, Icon]) => <button key={panel} type="button" aria-label={label} aria-pressed={activePanel === panel} title={label} className={"inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activePanel === panel ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setActivePanel(panel); setCropMode(panel === "transform"); setMenuOpen(null); }}><Icon className="h-3.5 w-3.5" /><span>{label}</span></button>)}
+        <div className="relative shrink-0">
+          <button type="button" aria-expanded={menuOpen === "Help"} className={"rounded-md px-2.5 py-1.5 hover:bg-accent " + (menuOpen === "Help" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Help" ? null : "Help")}>Help</button>
+          {menuOpen === "Help" && <div className="absolute right-0 top-9 z-50 min-w-52 rounded-lg border border-border bg-popover p-1.5 shadow-xl"><p className="px-3 py-2 text-sm font-medium">GaGet Photo Editor</p><p className="max-w-64 px-3 pb-2 text-xs leading-5 text-muted-foreground">Adjustments are rendered locally. Export creates a new file and never overwrites your original.</p><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: drag a crop edge or corner to refine the selection, then choose Apply crop."); }}>Crop & editing tips</button></div>}
+        </div>
+      </div>
+      <div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span>Private · local processing</span></div>
     </div>
 
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
-      <span className="max-w-48 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "No image open"}</span>
+      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status ? ` · ${status}` : ""}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
       <Button size="icon" variant="outline" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 className="h-4 w-4" /></Button>
@@ -610,9 +628,21 @@ export function PhotoEditor() {
     </div>
 
     <div className="relative flex min-h-0 flex-1 overflow-hidden">
-      <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center gap-2 border-r border-border bg-card py-3 md:flex">
-        <LocaleLink href="/" aria-label="GaGet.dev home" title="GaGet.dev home" className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Home className="h-4 w-4" /></LocaleLink>
-        <LocaleLink href="/tools" aria-label="Browse all GaGet.dev tools" title="Browse all GaGet.dev tools" className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><LayoutGrid className="h-4 w-4" /></LocaleLink>
+      <aside aria-label="GaGet.dev editing capabilities" className="hidden w-12 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-border bg-card py-3 md:flex">
+        {([
+          ["Crop & resize", "transform", Crop],
+          ["Color & filters", "adjust", SlidersHorizontal],
+          ["Color picker", "color", Pipette],
+          ["Text & watermark", "text", Type],
+          ["Image details", "metadata", Info],
+          ["Export & convert", "convert", FileOutput],
+          ["Print size", "print", Ruler],
+          ["Image to Base64", "base64", Code2],
+          ["Base64 to image", "base64decode", FileImage],
+          ["Favicon generator", "favicon", ImageIcon],
+          ["Collage maker", "collage", Grid2X2],
+          ["SVG optimizer", "svg", Code2],
+        ] as const).map(([label, panel, Icon]) => <button key={panel} type="button" aria-label={label} title={label} aria-pressed={activePanel === panel} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activePanel === panel ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setActivePanel(panel); setCropMode(panel === "transform"); setMenuOpen(null); }}><Icon className="h-4 w-4" /></button>)}
       </aside>
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
