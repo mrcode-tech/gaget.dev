@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Heart,
@@ -58,7 +59,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           className={cn("flex min-w-0 items-center gap-3", isCollapsed && "justify-center")}
           onClick={mobile ? () => setMobileOpen(false) : undefined}
         >
-          <img src="/gaget-mark.svg" alt="" aria-hidden="true" className="h-8 w-8 shrink-0 rounded-xl" />
+          <Image src="/gaget-mark.svg" alt="" aria-hidden="true" width={32} height={32} priority className="h-8 w-8 shrink-0 rounded-xl" />
           {!isCollapsed && (
             <span className="whitespace-nowrap text-base font-bold tracking-tight">
               GaGet<span className="text-primary">.dev</span>
