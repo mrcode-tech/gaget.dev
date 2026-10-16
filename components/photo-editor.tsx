@@ -262,6 +262,9 @@ export function PhotoEditor() {
     const drawH = sh * scale;
     ctx.drawImage(image, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
+    // Pixel processing is reserved for full-resolution exports and happens before
+    // text overlays so labels/watermarks stay sharp and readable.
+    if (fullResolution) applyCanvasAdjustments(canvas, state);
     // Keep interactive previews cheap: CSS filters update without synchronously
     // rewriting every pixel. Full-resolution pixel adjustments run only on export.
     ctx.save();
@@ -502,7 +505,6 @@ export function PhotoEditor() {
     // Re-render at the requested output dimensions; never export the lightweight preview.
     const renderedCanvas = document.createElement("canvas");
     draw(doc, renderedCanvas, true);
-    applyCanvasAdjustments(renderedCanvas, doc);
     let exportCanvas = renderedCanvas;
     if (mime === "image/jpeg") {
       exportCanvas = document.createElement("canvas");
