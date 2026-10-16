@@ -476,3 +476,29 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 
 ### Verification
 - CI has not yet been verified for this commit. Do not claim the fix is tested until the GitHub Actions result is checked.
+
+
+## Mobile Photo Editor and navigation bug-fix iteration — 2026-10-17
+
+### Branch
+- `feat/mobile-photo-editor-ux-fixes`, created from `main`.
+- Scope is limited to regressions and mobile UX: reliable rendering of tall photos, compact touch-friendly editing controls, and the mobile drawer language/theme controls.
+
+### Acceptance criteria
+1. After selecting a tall/portrait image, the canvas renders without requiring a parameter change; image loading and canvas redraw must not depend on a later state update.
+2. On mobile, the editing sheet is compact (target maximum around 25dvh when collapsed), with controls organized into titled horizontal groups that can be swiped horizontally. The canvas retains enough height to reach crop edges and corners.
+3. Crop/resize controls must not consume the canvas viewport vertically; remove redundant Apply Crop action if crop changes are already represented in undo/history, while preserving a clear way to leave crop mode.
+4. Color/filter and text/watermark parameters should use compact, titled horizontal groups rather than long vertical stacks where appropriate.
+5. Mobile language selection opens reliably without parent/overlay click conflicts. Language and appearance controls sit at the end of the scrollable drawer content, use a minimal divider and compact rows, and are not pinned to the viewport.
+6. Add regression tests for portrait/tall-image canvas rendering, mobile panel geometry/control grouping, crop action layout, language selector interaction, and preference placement.
+7. CI runs on all branches and PRs; validate tests, lint, typecheck, production build, smoke checks, and browser tests on this branch before merge.
+8. Update this log with actual changes, commit links, and observed CI results. Never report unrun tests as passing.
+
+### Initial inspection
+- Main already contains the shared editor shell, responsive editor panel, component tests, Playwright/axe coverage, and a CI workflow.
+- Existing panel uses a 44dvh collapsed sheet / 68dvh expanded sheet; the mobile preference section is outside the navigation ScrollArea and therefore consumes fixed viewport space.
+- Existing canvas draw effect is tied to `doc`, `hasImage`, and `draw`; image loading sets state, but very tall image fit/viewport layout and canvas redraw timing need targeted review.
+- CI still uses `npm install` because the committed lockfile is described as stale; do not change dependency installation without confirming the lockfile situation.
+
+### Verification
+- Not run yet for this branch. Record results after implementation and CI execution.
