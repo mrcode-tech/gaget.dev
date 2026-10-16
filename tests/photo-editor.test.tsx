@@ -21,7 +21,7 @@ async function loadTestPhoto() {
     clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
     rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
     strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
-    stroke: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
+    stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
   };
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
     () => context as unknown as CanvasRenderingContext2D,
@@ -322,7 +322,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
       clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
       rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
       strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
-      stroke: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
+      stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
     };
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
       () => context as unknown as CanvasRenderingContext2D,
