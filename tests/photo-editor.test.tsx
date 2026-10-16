@@ -52,22 +52,36 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
   });
 
-  it("uses the complete capability icon rail to open panels without navigating away", () => {
+  it("uses the complete GaGet.dev icon rail to open a category drawer without navigating away", () => {
     render(<PhotoEditor />);
-    const rail = screen.getByRole("complementary", { name: "GaGet.dev editing capabilities" });
+    const rail = screen.getByRole("complementary", { name: "GaGet.dev navigation" });
 
-    expect(within(rail).getAllByRole("button").length).toBeGreaterThanOrEqual(12);
+    expect(within(rail).getAllByRole("button").length).toBeGreaterThanOrEqual(15);
     expect(within(rail).queryByRole("link")).toBeNull();
     expect(screen.queryByRole("link", { name: "Browse all GaGet.dev tools" })).toBeNull();
 
-    fireEvent.click(within(rail).getByRole("button", { name: "Collage maker" }));
-    expect(within(screen.getByTestId("feature-panel")).getByText("Collage maker")).toBeTruthy();
-    expect(screen.getByTestId("feature-panel").className).not.toContain("hidden");
-
-    fireEvent.click(within(rail).getByRole("button", { name: "Image details" }));
-    expect(within(screen.getByTestId("feature-panel")).getByText("Image details")).toBeTruthy();
+    fireEvent.click(within(rail).getByRole("button", { name: "Images" }));
+    const navPanel = screen.getByTestId("site-navigation-panel");
+    expect(within(navPanel).getByText("Images")).toBeTruthy();
+    expect(within(navPanel).getByRole("link", { name: /Photo Editor/ })).toBeTruthy();
+    expect(navPanel.className).toContain("translate-x-0");
     expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Back to GaGet.dev home" })).toBeTruthy();
+
+    fireEvent.click(within(rail).getByRole("button", { name: "Audio" }));
+    expect(within(screen.getByTestId("site-navigation-panel")).getByText("Audio")).toBeTruthy();
+    expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
+  });
+
+  it("opens the full GaGet.dev menu on mobile without a hamburger in the File menu bar", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
+    render(<PhotoEditor />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open GaGet.dev navigation" }));
+    const navPanel = screen.getByTestId("site-navigation-panel");
+    expect(within(navPanel).getByText("All tools")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Close GaGet.dev navigation" }).className).toContain("md:hidden");
+    expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
   });
 
   it("opens a contextual feature panel without a Done footer and closes it with the mobile X", () => {
