@@ -428,7 +428,7 @@ export function PhotoEditor() {
       </div>
     </div>
 
-    <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] sm:grid-cols-[48px_minmax(0,1fr)] sm:grid-rows-1 xl:grid-cols-[52px_minmax(0,1fr)_320px]">
+    <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(220px,1fr)_minmax(180px,32vh)] sm:grid-cols-[48px_minmax(0,1fr)] sm:grid-rows-[auto_minmax(0,1fr)_minmax(180px,32vh)] xl:grid-cols-[52px_minmax(0,1fr)_320px] xl:grid-rows-1">
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => fileInputRef.current?.click()}><ImagePlus className="mr-2 h-4 w-4" /> {hasImage ? "Change photo" : "Open photo"}</Button>
         <Input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
@@ -463,9 +463,9 @@ export function PhotoEditor() {
         </CardContent>
       </Card>
 
-      <Card className="min-h-0 min-w-0 rounded-none border-y-0 border-r-0 shadow-none">
-        <CardHeader><CardTitle className="text-sm">Edit photo</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
+      <Card className="col-span-1 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-y-0 border-r-0 shadow-none sm:col-span-2 xl:col-span-1">
+        <CardHeader className="shrink-0"><CardTitle className="text-sm">Edit photo</CardTitle></CardHeader>
+        <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
             <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "adjust" && !cropMode ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => { setActivePanel("adjust"); setCropMode(false); }}><SlidersHorizontal className="mx-auto mb-1 h-4 w-4" />Adjust</button>
             <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "transform" && !cropMode ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => { setActivePanel("transform"); setCropMode(false); }}><Crop className="mx-auto mb-1 h-4 w-4" />Size & rotate</button>
