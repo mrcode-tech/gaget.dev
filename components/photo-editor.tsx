@@ -156,6 +156,7 @@ export function PhotoEditor() {
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("none");
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [cropMode, setCropMode] = useState(false);
   const panelReturnFocusRef = useRef<HTMLElement | null>(null);
   const panelHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const closeFeaturePanel = useCallback(() => {
@@ -164,7 +165,6 @@ export function PhotoEditor() {
     setCropMode(false);
     panelReturnFocusRef.current?.focus();
   }, []);
-  const [cropMode, setCropMode] = useState(false);
   const [zoom, setZoom] = useState(90);
   const [printDpi, setPrintDpi] = useState(300);
   const [paletteColors, setPaletteColors] = useState<string[]>([]);
