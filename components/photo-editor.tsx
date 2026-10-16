@@ -1,14 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Heart, Sparkles, ChevronRight, Menu } from "lucide-react";
-import { LocaleLink } from "@/components/locale-link";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { categories, tools } from "@/lib/tools/registry";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AppHeader } from "@/components/app-header";
 
 type TextLayer = {
   id: number;
@@ -159,7 +156,6 @@ export function PhotoEditor() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("none");
-  const [activeNavPanel, setActiveNavPanel] = useState<string | null>(null);
   const [cropMode, setCropMode] = useState(false);
   const [zoom, setZoom] = useState(90);
   const [printDpi, setPrintDpi] = useState(300);
@@ -576,25 +572,6 @@ export function PhotoEditor() {
     event.target.value = "";
   }
   const selectedText = doc.texts.find((layer) => layer.id === doc.selectedText) ?? null;
-  const siteNavItems = [
-    { id: "home", label: "Home", Icon: Home },
-    { id: "popular", label: "Popular", Icon: Sparkles },
-    { id: "all-tools", label: "All tools", Icon: Grid2X2 },
-    { id: "favorites", label: "Favorites", Icon: Heart },
-    ...categories.map((category) => ({ id: `category:${category.slug}`, label: category.name, Icon: category.icon })),
-  ];
-  const activeNavCategory = activeNavPanel?.startsWith("category:")
-    ? categories.find((category) => `category:${category.slug}` === activeNavPanel)
-    : undefined;
-  const navPanelTitle = activeNavPanel === "home" ? "Explore GaGet.dev"
-    : activeNavPanel === "popular" ? "Popular tools"
-    : activeNavPanel === "all-tools" ? "All tools"
-    : activeNavPanel === "favorites" ? "Favorites"
-    : activeNavCategory?.name ?? "GaGet.dev";
-  const navPanelTools = activeNavPanel === "all-tools" ? tools
-    : activeNavPanel === "popular" || activeNavPanel === "home" ? tools.slice(0, 8)
-    : activeNavCategory ? tools.filter((tool) => tool.category === activeNavCategory.name)
-    : [];
   const featureMenuGroups = [
     { label: "Edit", items: [["Crop & resize", "transform", Crop], ["Text & watermark", "text", Type]] },
     { label: "Image", items: [["Color & filters", "adjust", SlidersHorizontal], ["Color picker", "color", Pipette], ["Image details", "metadata", Info], ["Export & convert", "convert", FileOutput], ["Print size", "print", Ruler], ["Image to Base64", "base64", Code2], ["Base64 to image", "base64decode", FileImage]] },
@@ -611,8 +588,6 @@ export function PhotoEditor() {
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
     <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
     <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
-    <AppHeader sidebarCollapsed standalone />
-
     <div ref={menuBarRef} data-testid="editor-menubar" className="relative z-40 flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
       <button type="button" aria-expanded={menuOpen === "File"} className={"rounded-md px-3 py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
       {menuOpen === "File" && <div className="absolute left-2 top-9 z-50 min-w-52 rounded-lg border border-border bg-popover p-1.5 shadow-xl"><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border md:hidden" /><div className="md:hidden"><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: drag a crop edge or corner to refine the selection, then choose Apply crop."); }}>Help & editing tips</button></div><p className="mt-1 border-t border-border px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></div>}
@@ -655,31 +630,10 @@ export function PhotoEditor() {
     </div>
 
     <div className="relative flex min-h-0 flex-1 overflow-hidden">
-      <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center border-r border-border bg-card py-2 md:flex">
-        <ScrollArea className="h-full w-full">
-          <div className="flex flex-col items-center gap-1.5 py-1">
-            {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
-          </div>
-        </ScrollArea>
-      </aside>
-      <div className={"relative z-10 flex h-full shrink-0 overflow-hidden border-r border-border bg-background transition-[width] duration-200 ease-out " + (activeNavPanel === null ? "pointer-events-none w-0 border-r-0" : "w-[min(320px,calc(100vw-48px))] md:w-[320px]")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
-        <div className="flex h-full min-h-0 w-[320px] min-w-[min(320px,calc(100vw-48px))] flex-col bg-card shadow-xl">
-          <div className="flex min-h-12 shrink-0 items-center justify-between border-b border-border px-4">
-            <div className="flex items-center gap-2"><Grid2X2 className="h-4 w-4 text-muted-foreground" /><p className="text-sm font-semibold">{navPanelTitle}</p></div>
-            <button type="button" tabIndex={activeNavPanel === null ? -1 : 0} aria-label="Close GaGet.dev navigation" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setActiveNavPanel(null)}>×</button>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {activeNavPanel === "home" && <div className="mb-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Browse by category</p><div className="grid grid-cols-2 gap-2">{categories.map((category) => { const Icon = category.icon; return <button key={category.slug} type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="flex min-w-0 items-center gap-2 rounded-lg border border-border p-2 text-left text-sm hover:bg-accent" onClick={() => setActiveNavPanel(`category:${category.slug}`)}><Icon className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="truncate">{category.name}</span></button>; })}</div></div>}
-            {activeNavPanel === "favorites" ? <div className="rounded-xl border border-dashed border-border p-5 text-center"><Heart className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm font-medium">No saved tools here yet</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Browse the catalog to find a tool for your next task.</p><button type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="mt-3 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground" onClick={() => setActiveNavPanel("all-tools")}>Browse all tools</button></div>
-              : <div className="space-y-1">{navPanelTools.map((tool) => { const Icon = tool.icon; return <LocaleLink key={tool.href} href={tool.href} tabIndex={activeNavPanel === null ? -1 : 0} onClick={() => setActiveNavPanel(null)} className="flex items-start gap-3 rounded-lg p-3 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{tool.name}</span><span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{tool.description}</span></span><ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /></LocaleLink>; })}</div>}
-          </div>
-        </div>
-      </div>
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <div data-testid="canvas-scroll-area" onClick={(event) => {
-            if (activeNavPanel !== null && event.target === event.currentTarget && window.innerWidth >= 768) setActiveNavPanel(null);
-            else if (activePanel !== "none" && event.target === event.currentTarget && window.innerWidth >= 768) setActivePanel("none");
+            if (activePanel !== "none" && event.target === event.currentTarget && window.innerWidth >= 768) setActivePanel("none");
             else if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
           }} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={(event) => { if (event.target === event.currentTarget) setDragOver(false); }} onDrop={(event) => {
             event.preventDefault(); setDragOver(false);
@@ -693,7 +647,6 @@ export function PhotoEditor() {
               : hasImage
                 ? <canvas ref={canvasRef} onClick={(event) => {
                     handleCanvasClick(event);
-                    if (activeNavPanel !== null && window.innerWidth >= 768) setActiveNavPanel(null);
                     else if (activePanel !== "none" && window.innerWidth >= 768) setActivePanel("none");
                   }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
                 : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
