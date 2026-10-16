@@ -15,7 +15,7 @@ const onePixelPng = Buffer.from(
   "base64",
 );
 
-async function openFeature(page: Page, width: number, feature: "Crop & resize" | "Text & watermark") {
+async function openFeature(page: Page, width: number, feature: "Crop" | "Text & watermark") {
   if (width < 768) {
     await page.getByRole("button", { name: "Open photo editor features" }).click();
   } else {
@@ -97,8 +97,8 @@ for (const viewport of viewports) {
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
 
-    await openFeature(page, viewport.width, "Crop & resize");
-    await expect(panel.getByRole("heading", { name: "Crop & resize" })).toBeVisible();
+    await openFeature(page, viewport.width, "Crop");
+    await expect(panel.getByRole("heading", { name: "Crop" })).toBeVisible();
     await canvas.focus();
     await page.keyboard.press("ArrowRight");
     await expect(panel).toBeVisible();
