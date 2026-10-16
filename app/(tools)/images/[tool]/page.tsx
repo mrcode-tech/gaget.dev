@@ -28,5 +28,5 @@ export default async function ImageToolPage({ params }: { params: Promise<{ tool
   if (legacyEditorSlugs.includes(slug)) permanentRedirect("/images/editor");
   if (!imageToolSlugs.includes(slug as (typeof imageToolSlugs)[number])) notFound();
   const info = imageToolMeta[slug as keyof typeof imageToolMeta];
-  return <ToolLayout category="Images" title={info.title} description={info.description}>{slug === "editor" ? <PhotoEditor /> : <ImageWorkbench slug={slug} />}</ToolLayout>;
+  return slug === "editor" ? <PhotoEditor /> : <ToolLayout category="Images" title={info.title} description={info.description}><ImageWorkbench slug={slug} /></ToolLayout>;
 }

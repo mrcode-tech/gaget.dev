@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
-import { Download, Undo2, Redo2, RotateCcw, ShieldCheck, Type, ImagePlus, Crop, SlidersHorizontal } from "lucide-react";
+import { Download, Undo2, Redo2, RotateCcw, ShieldCheck, Type, ImagePlus, Crop, SlidersHorizontal, ZoomIn, ZoomOut, Maximize2, HelpCircle, Info, FileImage, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,6 +155,10 @@ export function PhotoEditor() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("adjust");
+  const [cropMode, setCropMode] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const cropDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number; originW: number; originH: number; sourceW: number; sourceH: number; mode: "new" | "move" | "resize"; left: boolean; right: boolean; top: boolean; bottom: boolean } | null>(null);
   const [filterPreset, setFilterPreset] = useState("custom");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -164,6 +168,32 @@ export function PhotoEditor() {
     const canvas = canvasRef.current;
     const image = imageRef.current;
     if (!canvas || !image) return;
+    if (cropMode) {
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const cropContext = canvas.getContext("2d", { willReadFrequently: true });
+      if (!cropContext) return;
+      cropContext.clearRect(0, 0, canvas.width, canvas.height);
+      cropContext.drawImage(image, 0, 0);
+      applyCanvasAdjustments(canvas, state);
+      const x = clamp(Math.round(state.cropX), 0, image.naturalWidth - 1);
+      const y = clamp(Math.round(state.cropY), 0, image.naturalHeight - 1);
+      const w = clamp(Math.round(state.cropWidth), 1, image.naturalWidth - x);
+      const h = clamp(Math.round(state.cropHeight), 1, image.naturalHeight - y);
+      cropContext.fillStyle = "rgba(7, 12, 24, .58)";
+      cropContext.fillRect(0, 0, canvas.width, y);
+      cropContext.fillRect(0, y + h, canvas.width, canvas.height - y - h);
+      cropContext.fillRect(0, y, x, h);
+      cropContext.fillRect(x + w, y, canvas.width - x - w, h);
+      cropContext.strokeStyle = "#ffffff"; cropContext.lineWidth = Math.max(2, canvas.width / 900);
+      cropContext.strokeRect(x, y, w, h);
+      cropContext.strokeStyle = "#38bdf8"; cropContext.lineWidth = Math.max(1, canvas.width / 1800);
+      cropContext.beginPath(); cropContext.moveTo(x + w / 3, y); cropContext.lineTo(x + w / 3, y + h); cropContext.moveTo(x + 2 * w / 3, y); cropContext.lineTo(x + 2 * w / 3, y + h); cropContext.moveTo(x, y + h / 3); cropContext.lineTo(x + w, y + h / 3); cropContext.moveTo(x, y + 2 * h / 3); cropContext.lineTo(x + w, y + 2 * h / 3); cropContext.stroke();
+      const handle = Math.max(6, canvas.width / 140);
+      cropContext.fillStyle = "#ffffff";
+      [[x,y],[x+w/2,y],[x+w,y],[x,y+h/2],[x+w,y+h/2],[x,y+h],[x+w/2,y+h],[x+w,y+h]].forEach(([hx,hy]) => cropContext.fillRect(hx-handle/2, hy-handle/2, handle, handle));
+      return;
+    }
     const rotated = Math.abs(state.rotation % 180) === 90;
     const width = clamp(Math.round(Number(state.width) || image.naturalWidth), 1, 12000);
     const height = clamp(Math.round(Number(state.height) || image.naturalHeight), 1, 12000);
@@ -213,7 +243,7 @@ export function PhotoEditor() {
       ctx.fillText(layer.text, 0, 0, outW * 0.9);
       ctx.restore();
     });
-  }, []);
+  }, [cropMode]);
 
   useEffect(() => { if (hasImage) draw(doc); }, [doc, hasImage, draw]);
   useEffect(() => () => { if (sourceUrlRef.current) URL.revokeObjectURL(sourceUrlRef.current); }, []);
@@ -297,6 +327,38 @@ export function PhotoEditor() {
     change({ texts: [...doc.texts, layer], selectedText: layer.id });
     setActivePanel("text");
   }
+  function handleCropPointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!cropMode || !imageRef.current) return;
+    const canvas = event.currentTarget; const rect = canvas.getBoundingClientRect();
+    const x = clamp((event.clientX - rect.left) / rect.width * canvas.width, 0, canvas.width);
+    const y = clamp((event.clientY - rect.top) / rect.height * canvas.height, 0, canvas.height);
+    const edge = Math.max(10, canvas.width / rect.width * 12);
+    const left = Math.abs(x - doc.cropX) <= edge; const right = Math.abs(x - (doc.cropX + doc.cropWidth)) <= edge;
+    const top = Math.abs(y - doc.cropY) <= edge; const bottom = Math.abs(y - (doc.cropY + doc.cropHeight)) <= edge;
+    const inside = x >= doc.cropX && x <= doc.cropX + doc.cropWidth && y >= doc.cropY && y <= doc.cropY + doc.cropHeight;
+    const mode = !inside ? "new" : (left || right || top || bottom) ? "resize" : "move";
+    cropDragRef.current = { startX: x, startY: y, originX: doc.cropX, originY: doc.cropY, originW: doc.cropWidth, originH: doc.cropHeight, sourceW: canvas.width, sourceH: canvas.height, mode, left: mode === "resize" && left && !right, right: mode === "resize" && right && !left, top: mode === "resize" && top && !bottom, bottom: mode === "resize" && bottom && !top };
+    historyRef.current = [...historyRef.current.slice(-49), doc]; futureRef.current = []; setCanUndo(true); setCanRedo(false);
+    canvas.setPointerCapture(event.pointerId); event.preventDefault();
+  }
+  function handleCropPointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
+    const drag = cropDragRef.current; if (!cropMode || !drag || !imageRef.current) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = clamp((event.clientX - rect.left) / rect.width * event.currentTarget.width, 0, drag.sourceW);
+    const y = clamp((event.clientY - rect.top) / rect.height * event.currentTarget.height, 0, drag.sourceH);
+    const dx = x - drag.startX, dy = y - drag.startY; let cropX = drag.originX, cropY = drag.originY, cropWidth = drag.originW, cropHeight = drag.originH;
+    if (drag.mode === "new") { cropX = Math.min(drag.startX, x); cropY = Math.min(drag.startY, y); cropWidth = Math.abs(dx); cropHeight = Math.abs(dy); }
+    else if (drag.mode === "move") { cropX = clamp(drag.originX + dx, 0, drag.sourceW - drag.originW); cropY = clamp(drag.originY + dy, 0, drag.sourceH - drag.originH); }
+    else {
+      if (drag.left) { cropX = clamp(drag.originX + dx, 0, drag.originX + drag.originW - 1); cropWidth = drag.originW + drag.originX - cropX; }
+      if (drag.right) cropWidth = clamp(drag.originW + dx, 1, drag.sourceW - drag.originX);
+      if (drag.top) { cropY = clamp(drag.originY + dy, 0, drag.originY + drag.originH - 1); cropHeight = drag.originH + drag.originY - cropY; }
+      if (drag.bottom) cropHeight = clamp(drag.originH + dy, 1, drag.sourceH - drag.originY);
+    }
+    setDoc({ ...doc, cropX: Math.round(cropX), cropY: Math.round(cropY), cropWidth: Math.max(1, Math.round(cropWidth)), cropHeight: Math.max(1, Math.round(cropHeight)) });
+  }
+  function handleCropPointerUp() { cropDragRef.current = null; }
+
   function handleCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
     if (activePanel === "text" && doc.selectedText !== null) {
       const rect = event.currentTarget.getBoundingClientRect();
@@ -337,13 +399,36 @@ export function PhotoEditor() {
   }
   const selectedText = doc.texts.find((layer) => layer.id === doc.selectedText) ?? null;
 
-  return <div className="space-y-5">
-    <div className="flex items-start gap-3 rounded-xl border border-emerald-600/20 bg-emerald-500/5 p-4">
-      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-      <div><p className="text-sm font-semibold">Private photo editing — right in your browser</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Your photo is never uploaded to GaGet.dev. Editing happens on this device. Your original file remains unchanged; only the exported copy contains your edits.</p></div>
+  return <div className="flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-background text-foreground">
+    <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
+    <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-3 text-sm">
+      <div className="mr-2 flex items-center gap-2 font-semibold"><span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-950 text-xs font-bold text-cyan-300">G</span><span>GaGet Photo</span></div>
+      {(["File", "Edit", "Image", "Help"] as const).map((menu) => <div key={menu} className="relative"><button type="button" className={"rounded-md px-3 py-1.5 hover:bg-accent " + (menuOpen === menu ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === menu ? null : menu)}>{menu}</button>{menuOpen === menu && <div className="absolute left-0 top-9 z-50 min-w-48 rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+        {menu === "File" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border" /><p className="px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></>}
+        {menu === "Edit" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button></>}
+        {menu === "Image" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { change({ rotation: (doc.rotation + 270) % 360 }); setMenuOpen(null); }}>Rotate left 90°</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { change({ rotation: (doc.rotation + 90) % 360 }); setMenuOpen(null); }}>Rotate right 90°</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { setCropMode(true); setActivePanel("transform"); setMenuOpen(null); }}>Crop image</button></>}
+        {menu === "Help" && <><p className="px-3 py-2 text-sm font-medium">GaGet Photo Editor</p><p className="max-w-64 px-3 pb-2 text-xs leading-5 text-muted-foreground">A lightweight editor. Adjustments are rendered locally in your browser; export creates a new file and never overwrites your original.</p><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: select Crop, drag any edge or corner to refine the selection, then choose Apply crop."); }}>Crop & editing tips</button></>}
+      </div>}</div>)}
+      <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span className="hidden sm:inline">Private · processed in your browser</span></div>
     </div>
 
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b border-border bg-background px-3 py-2">
+      <Button size="sm" onClick={() => fileInputRef.current?.click()}><ImagePlus className="h-4 w-4" />{hasImage ? "Replace photo" : "Open photo"}</Button>
+      <div className="mx-1 hidden h-6 border-l border-border sm:block" />
+      <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
+      <Button size="icon" variant="outline" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 className="h-4 w-4" /></Button>
+      <Button size="sm" variant="outline" onClick={resetEdits} disabled={!hasImage}><RotateCcw className="h-4 w-4" /><span className="hidden sm:inline">Reset</span></Button>
+      <div className="ml-auto flex items-center gap-1">
+        <span className="mr-2 hidden max-w-40 truncate text-xs text-muted-foreground md:inline">{hasImage ? `${fileName} · ${doc.width} × ${doc.height}` : "No image open"}</span>
+        <Button size="icon" variant="ghost" aria-label="Zoom out" title="Zoom out" disabled={zoom <= 25} onClick={() => setZoom((value) => Math.max(25, value - 25))}><ZoomOut className="h-4 w-4" /></Button>
+        <button className="min-w-12 rounded-md px-1 py-2 text-xs tabular-nums hover:bg-accent" onClick={() => setZoom(100)} title="Reset zoom">{zoom}%</button>
+        <Button size="icon" variant="ghost" aria-label="Zoom in" title="Zoom in" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))}><ZoomIn className="h-4 w-4" /></Button>
+        <Button size="icon" variant="ghost" aria-label="Fit canvas" title="Fit canvas" onClick={() => setZoom(100)}><Maximize2 className="h-4 w-4" /></Button>
+        <Button onClick={() => void exportImage()} disabled={!hasImage} size="sm"><Download className="h-4 w-4" />Export</Button>
+      </div>
+    </div>
+
+    <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] sm:grid-cols-[48px_minmax(0,1fr)] sm:grid-rows-1 xl:grid-cols-[52px_minmax(0,1fr)_320px]">
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => fileInputRef.current?.click()}><ImagePlus className="mr-2 h-4 w-4" /> {hasImage ? "Change photo" : "Open photo"}</Button>
         <Input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
@@ -355,28 +440,36 @@ export function PhotoEditor() {
     </div>
 
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <Card className="min-w-0">
-        <CardHeader className="flex-row items-center justify-between gap-3">
+      <div className="flex flex-row gap-1 border-b border-border bg-card p-1 sm:flex-col sm:border-b-0 sm:border-r sm:p-2">
+        <button className={"flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 text-[10px] sm:flex-none sm:py-3 " + (cropMode ? "bg-primary text-primary-foreground" : "hover:bg-accent")} onClick={() => { setActivePanel("transform"); setCropMode(true); }} disabled={!hasImage} title="Crop"><Crop className="h-5 w-5" />Crop</button>
+        <button className={"flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 text-[10px] sm:flex-none sm:py-3 " + (activePanel === "adjust" && !cropMode ? "bg-primary text-primary-foreground" : "hover:bg-accent")} onClick={() => { setActivePanel("adjust"); setCropMode(false); }} disabled={!hasImage} title="Adjust"><SlidersHorizontal className="h-5 w-5" />Adjust</button>
+        <button className={"flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 text-[10px] sm:flex-none sm:py-3 " + (activePanel === "transform" && !cropMode ? "bg-primary text-primary-foreground" : "hover:bg-accent")} onClick={() => { setActivePanel("transform"); setCropMode(false); }} disabled={!hasImage} title="Resize and rotate"><RotateCcw className="h-5 w-5" />Transform</button>
+        <button className={"flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 text-[10px] sm:flex-none sm:py-3 " + (activePanel === "text" ? "bg-primary text-primary-foreground" : "hover:bg-accent")} onClick={() => { setActivePanel("text"); setCropMode(false); }} disabled={!hasImage} title="Add text"><Type className="h-5 w-5" />Text</button>
+        <div className="hidden border-t border-border sm:block" />
+        <button className="hidden flex-col items-center justify-center gap-1 rounded-lg px-1 py-3 text-[10px] hover:bg-accent sm:flex" onClick={() => setMenuOpen("Help")} title="Help"><HelpCircle className="h-5 w-5" />Help</button>
+      </div>
+      <Card className="flex min-h-0 min-w-0 flex-col rounded-none border-x-0 shadow-none">
+        <CardHeader className="flex-row items-center justify-between gap-3 border-b border-border py-3">
           <CardTitle className="text-sm">{hasImage ? fileName : "Your photo canvas"}</CardTitle>
-          {hasImage && <span className="text-xs text-muted-foreground">{doc.width} × {doc.height} px</span>}
+          {hasImage && <span className="text-xs text-muted-foreground">{cropMode ? `${doc.cropWidth} × ${doc.cropHeight} crop` : `${doc.width} × ${doc.height} px`}</span>}
         </CardHeader>
-        <CardContent>
-          <div className="flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-muted/40 p-3 sm:min-h-[460px]">
+        <CardContent className="flex min-h-0 flex-1 flex-col p-0">
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-slate-950 p-4 sm:p-6">
             {hasImage
-              ? <canvas ref={canvasRef} onClick={handleCanvasClick} aria-label="Photo editing canvas. In text mode, click to position the selected text." className={"max-h-[72vh] max-w-full object-contain " + (activePanel === "text" && selectedText ? "cursor-crosshair" : "")} style={{ width: "auto", height: "auto" }} />
-              : <div className="max-w-sm py-12 text-center"><ImagePlus className="mx-auto h-10 w-10 text-muted-foreground" /><p className="mt-3 font-medium">Start with a photo</p><p className="mt-1 text-sm text-muted-foreground">Open an image to crop, adjust colors, add text, and export from one canvas.</p><Button className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose image</Button></div>}
+              ? <canvas ref={canvasRef} onClick={handleCanvasClick} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
+              : <div className="max-w-sm py-12 text-center text-white"><ImagePlus className="mx-auto h-12 w-12 text-slate-400" /><p className="mt-3 font-medium">Your canvas is ready</p><p className="mt-1 text-sm text-slate-400">Open a photo to crop, adjust color, rotate, add text, and export from one workspace.</p><Button className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose image</Button><p className="mt-3 text-xs text-slate-500">PNG · JPEG · WebP · GIF · AVIF</p></div>}
           </div>
-          {hasImage && <p className="mt-2 text-xs text-muted-foreground">{activePanel === "text" && selectedText ? "Click the photo to move the selected text." : "One canvas, non-destructive controls, and undo/redo history."}</p>}
+          {hasImage && <div className="flex items-center justify-between border-t border-slate-800 px-3 py-2 text-[11px] text-slate-400"><span>{cropMode ? "Drag inside the crop to move it; drag edges or corners to resize." : activePanel === "text" && selectedText ? "Click the photo to position the selected text." : "Edits remain reversible until you export."}</span><span>{imageRef.current?.naturalWidth} × {imageRef.current?.naturalHeight} px</span></div>}
         </CardContent>
       </Card>
 
-      <Card className="min-w-0">
+      <Card className="min-h-0 min-w-0 rounded-none border-y-0 border-r-0 shadow-none">
         <CardHeader><CardTitle className="text-sm">Edit photo</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
-            <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "adjust" ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => setActivePanel("adjust")}><SlidersHorizontal className="mx-auto mb-1 h-4 w-4" />Adjust</button>
-            <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "transform" ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => setActivePanel("transform")}><Crop className="mx-auto mb-1 h-4 w-4" />Size & rotate</button>
-            <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "text" ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => setActivePanel("text")}><Type className="mx-auto mb-1 h-4 w-4" />Text</button>
+            <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "adjust" && !cropMode ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => { setActivePanel("adjust"); setCropMode(false); }}><SlidersHorizontal className="mx-auto mb-1 h-4 w-4" />Adjust</button>
+            <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "transform" && !cropMode ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => { setActivePanel("transform"); setCropMode(false); }}><Crop className="mx-auto mb-1 h-4 w-4" />Size & rotate</button>
+            <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "text" ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => { setActivePanel("text"); setCropMode(false); }}><Type className="mx-auto mb-1 h-4 w-4" />Text</button>
           </div>
 
           {!hasImage && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
@@ -409,6 +502,7 @@ export function PhotoEditor() {
           </div>}
 
           {hasImage && activePanel === "transform" && <div className="space-y-4">
+            {cropMode && <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-3"><p className="text-sm font-medium">Interactive crop</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Drag inside the selection to move it. Drag any edge or corner to resize the crop. The export will contain only the selected area.</p><Button className="mt-3 w-full" onClick={() => { setCropMode(false); setStatus(`Crop selected: ${doc.cropWidth} × ${doc.cropHeight} pixels. Export when ready.`); }}><Check className="h-4 w-4" />Apply crop</Button><Button variant="ghost" className="mt-1 w-full" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); }}><X className="h-4 w-4" />Reset crop selection</Button></div>}
             <div className="grid grid-cols-2 gap-3">
               <label className="space-y-1 text-sm">Width (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.height))} value={doc.width} onChange={(e) => change({ width: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.height))) })} /></label>
               <label className="space-y-1 text-sm">Height (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.width))} value={doc.height} onChange={(e) => change({ height: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.width))) })} /></label>
@@ -455,7 +549,6 @@ export function PhotoEditor() {
       </Card>
     </div>
 
-    {error && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
-    {status && <div role="status" className="rounded-lg border border-emerald-600/20 bg-emerald-500/5 p-3 text-sm">{status}</div>}
+    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></div>}
   </div>;
 }
