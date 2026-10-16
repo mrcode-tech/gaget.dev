@@ -1,7 +1,10 @@
 name: Mobile Photo Editor CI
 
 on:
-  # Run the full pipeline only when explicitly requested after a work batch is complete.
+  # Verify every branch update and pull request automatically.
+  push:
+  pull_request:
+  # Keep manual runs available for deliberate full verification.
   workflow_dispatch:
 
 concurrency:
