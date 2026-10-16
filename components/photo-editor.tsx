@@ -448,6 +448,25 @@ export function PhotoEditor() {
       if (drag.top) { cropY = clamp(drag.originY + dy, 0, drag.originY + drag.originH - 1); cropHeight = drag.originH + drag.originY - cropY; }
       if (drag.bottom) cropHeight = clamp(drag.originH + dy, 1, drag.sourceH - drag.originY);
     }
+    if (cropAspectRatio !== null && drag.mode !== "move") {
+      if (drag.mode === "new") {
+        if (cropWidth / Math.max(1, cropHeight) > cropAspectRatio) cropWidth = cropHeight * cropAspectRatio;
+        else cropHeight = cropWidth / cropAspectRatio;
+        cropX = dx < 0 ? drag.startX - cropWidth : drag.startX;
+        cropY = dy < 0 ? drag.startY - cropHeight : drag.startY;
+      } else {
+        if (drag.left || drag.right) cropHeight = cropWidth / cropAspectRatio;
+        else cropWidth = cropHeight * cropAspectRatio;
+        if (drag.left) cropX = drag.originX + drag.originW - cropWidth;
+        if (drag.right) cropX = drag.originX;
+        if (drag.top) cropY = drag.originY + drag.originH - cropHeight;
+        if (drag.bottom) cropY = drag.originY;
+      }
+      cropWidth = clamp(cropWidth, 1, drag.sourceW);
+      cropHeight = clamp(cropHeight, 1, drag.sourceH);
+      cropX = clamp(cropX, 0, drag.sourceW - cropWidth);
+      cropY = clamp(cropY, 0, drag.sourceH - cropHeight);
+    }
     setDoc({ ...doc, cropX: Math.round(cropX), cropY: Math.round(cropY), cropWidth: Math.max(1, Math.round(cropWidth)), cropHeight: Math.max(1, Math.round(cropHeight)) });
   }
   function handleCropPointerUp() { cropDragRef.current = null; }
@@ -766,7 +785,6 @@ export function PhotoEditor() {
             </div>
           </div>}
           {hasImage && activePanel === "resize" && <div data-testid="resize-controls" className="min-w-0 space-y-3 pb-1">
-            {cropMode && <div className="min-w-[78vw] rounded-lg border border-sky-500/30 bg-sky-500/5 p-3 md:min-w-0"><p className="text-sm font-medium">Interactive crop</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Drag inside the selection to move it. Close this panel to finish; Undo restores the previous state.</p><Button variant="ghost" className="mt-2" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); }}><X className="mr-1 h-4 w-4" />Reset crop selection</Button></div>}
             <div className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3">
               <label className="space-y-1 text-sm">Width (px)<Input aria-label="Output width" type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.height))} value={doc.width} onChange={(e) => { const width = clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.height))); const height = resizeAspectLocked ? clamp(Math.round(width * doc.height / Math.max(1, doc.width)), 1, Math.min(12000, Math.floor(maxPixels / width))) : doc.height; change({width,height}); }} /></label>
               <label className="space-y-1 text-sm">Height (px)<Input aria-label="Output height" type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.width))} value={doc.height} onChange={(e) => { const height = clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.width))); const width = resizeAspectLocked ? clamp(Math.round(height * doc.width / Math.max(1, doc.height)), 1, Math.min(12000, Math.floor(maxPixels / height))) : doc.width; change({height,width}); }} /></label>
