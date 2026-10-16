@@ -23,8 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: brandDescription,
     applicationName: "GaGet.dev",
     icons: {
-      icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-      shortcut: ["/icon.svg"],
+      icon: [{ url: "/icon.png", type: "image/png" }],
+      shortcut: ["/icon.png"],
     },
     openGraph: {
       type: "website",
