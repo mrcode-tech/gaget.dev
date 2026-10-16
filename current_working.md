@@ -310,5 +310,12 @@ Component tests now cover:
 - Added a minimal desktop-only GaGet.dev navigation rail with Home and All tools links. It contains no image-editing controls; mobile hides it to maximize the editing workspace.
 - Added the reverse Base64 workflow: paste a supported image data URL and download the decoded image. Invalid data URLs produce validation feedback.
 - The unified metadata panel now reports source MIME type, file size, source/output dimensions, aspect ratio, pixel count, and output format, and offers a metadata-free rendered export.
-- Current component acceptance suite contains 13 tests for workspace/navigation, menus, contextual panels, zoom controls, image-feature panel routing, SVG panel availability, and menu dismissal. Production smoke tests also check the 10 legacy image routes for permanent redirects.
+- Current PhotoEditor component suite contains 12 acceptance tests (15 component tests total including 3 existing AppSidebar tests) for workspace/navigation, menus, contextual panels, zoom controls, image-feature panel routing, SVG panel availability, and menu dismissal. Production smoke tests also check the 10 legacy image routes for permanent redirects.
 - **Verification state:** waiting for the latest GitHub Actions run on the final commit. Do not merge unless component tests, lint, typecheck, build, and production smoke tests all pass.
+
+
+### CI-driven corrections
+- CI found and we corrected a literal escaped newline in collage validation, a missing workspace closing tag, and a Reset action that was enabled with no photo.
+- Unit tests and all 15 component tests passed in the next run. ESLint then identified one unescaped apostrophe in the metadata panel, which was corrected.
+- Legacy redirect paths are tested separately from regular page-body smoke tests so an intentional HTTP 308 is not treated as an empty page.
+- Re-run the full workflow on the latest commit to verify lint, TypeScript, production build, and route smoke tests after the final fixes.
