@@ -210,3 +210,17 @@ GitHub Actions run #54 executed the unit and component tests and ESLint successf
 - Follow-up GitHub Actions run: #56 (`38899678652`) was queued/in progress when last checked.
 - Run link: https://github.com/mrcode-tech/gaget.dev/actions/runs/38899678652
 - Do not consider the branch fully verified until the follow-up run passes TypeScript, production build, and HTTP smoke tests.
+
+
+## Final GitHub Actions verification — 2026-10-16
+
+The follow-up CI run completed successfully:
+- Run: #58
+- URL: https://github.com/mrcode-tech/gaget.dev/actions/runs/38899718508
+- Result: **success**
+- Passed steps: dependency install, unit tests, component tests, ESLint, TypeScript typecheck, production build, and production HTTP smoke tests.
+- Unit tests: 5 passed, 0 failed.
+- Component tests: 10 passed, 0 failed.
+- The earlier TypeScript test-query issue was fixed in `2848b8b`; the successful run includes that correction.
+
+This verifies the PR merge commit tested by run #58. Any subsequent commit should be validated by its own latest CI run before merging.
