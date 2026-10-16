@@ -454,3 +454,10 @@ Scope and acceptance criteria:
 - Preserve the existing desktop header controls and shared sidebar behavior, including RTL layout.
 - Add regression tests for the mobile drawer controls and verify desktop header controls remain available.
 - Run component tests, lint, typecheck, production build, smoke tests, and the responsive/accessibility browser suite; record actual results before calling the change complete.
+
+Implementation started:
+- `components/app-header.tsx`: hide language/theme controls below the desktop breakpoint while keeping the desktop controls.
+- `components/app-sidebar.tsx`: add language and theme controls to the mobile navigation drawer footer.
+- `tests/app-sidebar.test.tsx`: assert the controls are available after opening the mobile drawer.
+- `tests/app-shell.test.tsx`: assert the header preferences are desktop-only.
+- Latest implementation commit: `39925ed77cfef8392cb05cf30e6caad6d0c70d12`. CI verification is pending.
