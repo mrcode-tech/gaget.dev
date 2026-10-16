@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Menu } from "lucide-react";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, X, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -723,14 +723,16 @@ export function PhotoEditor() {
                 <option value="custom">Choose a preset…</option><option value="original">Original</option><option value="vivid">Vivid</option><option value="warm">Warm</option><option value="vintage">Vintage</option><option value="mono">Black & white</option><option value="dramatic">Dramatic</option>
               </select>
             </label>
-            {([
-              ["Brightness", "brightness", 0, 200, "%"],
-              ["Contrast", "contrast", 0, 200, "%"],
-              ["Saturation", "saturation", 0, 200, "%"],
-              ["Grayscale", "grayscale", 0, 100, "%"],
-              ["Sepia", "sepia", 0, 100, "%"],
-              ["Blur", "blur", 0, 12, "px"],
-            ] as const).map(([label, key, min, max, unit]) => <label key={key} className="block space-y-1.5 text-sm">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
+            <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-1 md:overflow-visible">
+              {([
+                ["Brightness", "brightness", 0, 200, "%"],
+                ["Contrast", "contrast", 0, 200, "%"],
+                ["Saturation", "saturation", 0, 200, "%"],
+                ["Grayscale", "grayscale", 0, 100, "%"],
+                ["Sepia", "sepia", 0, 100, "%"],
+                ["Blur", "blur", 0, 12, "px"],
+              ] as const).map(([label, key, min, max, unit]) => <label key={key} className="min-w-[132px] shrink-0 space-y-1.5 rounded-lg border border-border p-2 text-sm md:min-w-0 md:border-0 md:p-0">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
+            </div>
           </div>}
 
           {hasImage && activePanel === "transform" && <div className="min-w-[78vw] space-y-4 md:min-w-0">
