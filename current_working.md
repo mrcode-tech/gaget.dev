@@ -186,3 +186,17 @@ Verification:
 - [ ] Confirm desktop and mobile home navigation behavior.
 - [ ] Check fit-to-canvas behavior for portrait, landscape, and very large aspect ratios.
 - [ ] Integrate the remaining image utilities into the editor before deleting old routes.
+
+
+## Final review update — 2026-10-16
+
+Additional commits:
+- `62b7e6a` — Reset zoom to the fitted-canvas value.
+- `d69267f` — Select numeric input values on focus.
+- `7aab4e2` — Add a regression test that enforces one Images catalog entry.
+
+The final implementation changes include compact shared inputs, select-on-focus for numeric inputs, a home/back link, desktop application-menu icon, outside-click/Escape menu dismissal, a reduced canvas header, a dark neutral canvas work area, 90% initial/reset zoom, and a single Photo Editor entry in the Images tool registry.
+
+**CI verification is still pending.** GitHub's commit-status endpoint returned no statuses for the latest commit at the time of review, and the available workflow-run lookup did not return push-triggered runs. Do not mark this branch as passing until the corresponding run is visible in the repository's Actions UI.
+
+Known scope gap: only the catalog is consolidated so far. The remaining image utility capabilities must be integrated into Photo Editor before their old route implementations are removed; this is explicitly retained as follow-up work to avoid silently losing functionality.
