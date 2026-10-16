@@ -581,7 +581,6 @@ export function PhotoEditor() {
     setActivePanel(panel);
     setCropMode(panel === "transform");
     setMenuOpen(null);
-    setActiveNavPanel(null);
   };
 
   return <div className="flex h-[calc(100dvh-68px)] min-h-[492px] flex-col overflow-hidden bg-background text-foreground">
@@ -613,7 +612,6 @@ export function PhotoEditor() {
     </div>
 
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
-      <Button size="icon" variant="ghost" className="md:hidden" aria-label="Open GaGet.dev navigation" title="Browse GaGet.dev" onClick={() => { setActiveNavPanel("all-tools"); }}><Grid2X2 className="h-4 w-4" /></Button>
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status ? ` · ${status}` : ""}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
