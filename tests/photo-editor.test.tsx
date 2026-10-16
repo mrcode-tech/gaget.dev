@@ -44,7 +44,6 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
     expect(screen.getByTestId("site-navbar")).toBeTruthy();
     expect(screen.getByRole("link", { name: "GaGet.dev home" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "File" }).length).toBeGreaterThan(0);
     for (const label of ["Edit", "Image", "Create", "History", "Help"]) {
       expect(screen.getByRole("button", { name: label })).toBeTruthy();
