@@ -4,7 +4,8 @@
     "deploymentEnabled": {
       "feat/**": false,
       "fix/**": false,
-      "feature": false
+      "feature": false,
+      "stage": true
     }
   }
 }
