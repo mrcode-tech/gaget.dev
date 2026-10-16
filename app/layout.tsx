@@ -10,6 +10,8 @@ import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gaget.dev";
+const brandTitle = "GaGet.dev — Useful Tools, Made Simple";
+const brandDescription = "Simple, free online tools for images, text, dates, files, and everyday tasks.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();
@@ -17,20 +19,24 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale: Locale = isLocale(raw) ? raw : "en";
   return {
     metadataBase: new URL(siteUrl),
-    title: { default: "GaGet.dev — Developer Tools in One Place", template: "%s | GaGet.dev" },
-    description: "Free online developer utilities to format, validate, decode, compare, and generate data. Fast browser-based tools with privacy in mind.",
+    title: { default: brandTitle, template: "%s | GaGet.dev" },
+    description: brandDescription,
     applicationName: "GaGet.dev",
+    icons: {
+      icon: [{ url: "/icon.png", type: "image/png" }],
+      shortcut: ["/icon.png"],
+    },
     openGraph: {
       type: "website",
       siteName: "GaGet.dev",
-      title: "GaGet.dev — Developer Tools in One Place",
-      description: "Simple, fast developer utilities for everyday work.",
+      title: brandTitle,
+      description: brandDescription,
       url: siteUrl,
     },
     twitter: {
-      card: "summary_large_image",
-      title: "GaGet.dev — Developer Tools in One Place",
-      description: "Simple, fast developer utilities for everyday work.",
+      card: "summary",
+      title: brandTitle,
+      description: brandDescription,
     },
     robots: { index: locale === "en", follow: true },
   };

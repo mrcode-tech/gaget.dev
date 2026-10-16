@@ -10,7 +10,6 @@ const routes = [
   "/encoding/base64",
   "/security/jwt-decoder",
   "/images/editor",
-  "/images/collage",
   "/audio/editor",
   "/datetime/world-clock",
   "/robots.txt",
@@ -27,5 +26,27 @@ for (const route of routes) {
     if (route.endsWith(".xml") || route.endsWith(".txt")) return;
     const body = await response.text();
     assert.ok(body.length > 0, `${route} returned an empty response`);
+  });
+}
+
+
+const retiredImageRoutes = [
+  "/images/collage",
+  "/images/metadata",
+  "/images/palette",
+  "/images/color-picker",
+  "/images/base64",
+  "/images/base64-to-image",
+  "/images/favicon",
+  "/images/svg-optimizer",
+  "/images/dimensions",
+  "/images/print-size",
+];
+
+for (const route of retiredImageRoutes) {
+  test(`legacy image route permanently redirects to the unified editor: ${route}`, async () => {
+    const response = await fetch(new URL(route, baseUrl), { redirect: "manual" });
+    assert.equal(response.status, 308, `${route} should return a permanent redirect`);
+    assert.equal(new URL(response.headers.get("location"), baseUrl).pathname, "/images/editor");
   });
 }

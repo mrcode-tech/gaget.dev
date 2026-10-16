@@ -1,10 +1,13 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [main, stage]
+  # Run validation for every branch, including feature and fix branches.
   push:
-    branches: [main, stage]
+    branches:
+      - "**"
+  # Validate proposed changes regardless of the PR's target branch.
+  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -12,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Unit tests, lint, typecheck, and production build
+    name: Unit tests, component tests, lint, typecheck, build, smoke, and accessibility tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -26,9 +29,12 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # The repository lockfile currently omits @radix-ui/react-select and its transitive dependencies.
-        # npm install refreshes that stale lockfile in the runner; commit the regenerated lockfile separately.
+        # npm install is used because the current lockfile is stale and omits dependencies.
+        # Once package-lock.json is regenerated and committed, switch this to npm ci.
         run: npm install --no-audit --no-fund
+
+      - name: Install Chromium for responsive and accessibility tests
+        run: npx playwright install --with-deps chromium
 
       - name: Run unit tests
         run: npm run test:unit
@@ -45,10 +51,10 @@ jobs:
       - name: Build production app
         run: npm run build
 
-      - name: Start production server and smoke-test routes
+      - name: Start production server, smoke-test routes, and run responsive accessibility tests
         shell: bash
         run: |
-          npm run start > /tmp/gaget-next.log 2>&1 &
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 > /tmp/gaget-next.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
 
@@ -67,3 +73,4 @@ jobs:
           fi
 
           SMOKE_BASE_URL=http://127.0.0.1:3000 node --test tests/smoke.test.mjs
+          npm run test:e2e

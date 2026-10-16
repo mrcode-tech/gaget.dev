@@ -23,3 +23,11 @@ test("tool registry has unique names and routes", () => {
     assert.ok(Array.isArray(tool.keywords), `${tool.name} needs a keyword list`);
   }
 });
+
+
+test("the Images category promotes the unified Photo Editor instead of duplicate image apps", () => {
+  const imageTools = tools.filter((tool) => tool.category === "Images");
+  assert.equal(imageTools.length, 1, "all image editing capabilities should converge on one Photo Editor entry");
+  assert.equal(imageTools[0].name, "Photo Editor");
+  assert.equal(imageTools[0].href, "/images/editor");
+});

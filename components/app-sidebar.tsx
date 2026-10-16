@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  Code2,
   Heart,
   Home,
   Menu,
@@ -20,6 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LocaleLink } from "@/components/locale-link";
 import { useI18n } from "@/components/i18n-provider";
 import { localeDirections } from "@/lib/i18n/messages";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -52,21 +54,20 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           isCollapsed ? "justify-center px-2" : "gap-3 px-5"
         )}
       >
-        {!isCollapsed && (
-          <LocaleLink
-            href="/"
-            aria-label="GaGet.dev home"
-            className="flex min-w-0 items-center gap-3"
-            onClick={mobile ? () => setMobileOpen(false) : undefined}
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              <Code2 className="h-4 w-4" />
-            </span>
+        <LocaleLink
+          href="/"
+          aria-label="GaGet.dev home"
+          title={isCollapsed ? "GaGet.dev home" : undefined}
+          className={cn("flex min-w-0 items-center gap-3", isCollapsed && "justify-center")}
+          onClick={mobile ? () => setMobileOpen(false) : undefined}
+        >
+          <Image src="/gaget-mark.svg" alt="" aria-hidden="true" width={32} height={32} priority className="h-8 w-8 shrink-0 rounded-xl" />
+          {!isCollapsed && (
             <span className="whitespace-nowrap text-base font-bold tracking-tight">
               GaGet<span className="text-primary">.dev</span>
             </span>
-          </LocaleLink>
-        )}
+          )}
+        </LocaleLink>
         {!mobile && (
           <Button
             variant="ghost"
@@ -156,6 +157,30 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           </div>
         </nav>
       </ScrollArea>
+
+      {mobile && (
+        <section
+          aria-label="Preferences"
+          className="shrink-0 space-y-4 border-t border-border px-4 py-4"
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Preferences
+          </h2>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">{t("nav.language")}</p>
+            <div className="flex min-w-0 items-center">
+              <LanguageSwitcher />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">{t("nav.appearance")}</p>
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+              <span className="text-sm text-muted-foreground">Light / dark theme</span>
+              <ThemeToggle />
+            </div>
+          </div>
+        </section>
+      )}
 
       <div
         className={cn(
