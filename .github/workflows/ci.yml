@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Unit tests, component tests, lint, typecheck, build, and smoke tests
+    name: Unit tests, component tests, lint, typecheck, build, smoke, and accessibility tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -51,10 +51,10 @@ jobs:
       - name: Build production app
         run: npm run build
 
-      - name: Start production server and smoke-test routes
+      - name: Start production server, smoke-test routes, and run responsive accessibility tests
         shell: bash
         run: |
-          npm run start > /tmp/gaget-next.log 2>&1 &
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 > /tmp/gaget-next.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
 
@@ -73,6 +73,4 @@ jobs:
           fi
 
           SMOKE_BASE_URL=http://127.0.0.1:3000 node --test tests/smoke.test.mjs
-
-      - name: Run responsive and accessibility browser tests
-        run: npm run test:e2e
+          npm run test:e2e
