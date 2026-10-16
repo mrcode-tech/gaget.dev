@@ -84,7 +84,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     openFeature("Color & filters");
     expect(screen.getByTestId("feature-panel")).toBeTruthy();
     expect(screen.getByText("Changes are previewed on the canvas")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Close feature panel" }).className).toContain("md:hidden");
+    expect(screen.getByRole("button", { name: "Close feature panel" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
@@ -92,16 +92,33 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByTestId("feature-panel").className).toContain("pointer-events-none");
   });
 
-  it("dismisses an open desktop panel when the user clicks the workspace outside it", () => {
+  it("keeps the desktop inspector open when the user interacts with the canvas workspace", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1280 });
     render(<PhotoEditor />);
 
     openFeature("Color & filters");
-    expect(within(screen.getByTestId("feature-panel")).getByText("Color & filters")).toBeTruthy();
+    const panel = screen.getByTestId("feature-panel");
+    expect(within(panel).getByText("Color & filters")).toBeTruthy();
+    expect(panel.className).toContain("md:w-[320px]");
+    expect(panel.className).toContain("md:border-l");
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
-    expect(screen.getByTestId("feature-panel").className).toContain("translate-x-full");
-    expect(screen.getByTestId("feature-panel").className).toContain("pointer-events-none");
+    expect(screen.getByTestId("feature-panel")).toBe(panel);
+    expect(panel.className).toContain("md:block");
+    expect(panel.className).not.toContain("md:hidden");
+  });
+
+  it("supports expanding and collapsing the mobile editing bottom sheet", () => {
+    render(<PhotoEditor />);
+    openFeature("Crop & resize");
+
+    const panel = screen.getByTestId("feature-panel");
+    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    fireEvent.click(screen.getByRole("button", { name: "Expand editing panel" }));
+    expect(panel.className).toContain("h-[min(68dvh,560px)]");
+    expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
+    expect(panel.className).toContain("h-[min(44dvh,360px)]");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
