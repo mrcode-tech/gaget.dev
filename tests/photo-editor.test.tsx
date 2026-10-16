@@ -88,7 +88,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Edit" }));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Image" }));
     expect(screen.getByTestId("feature-panel").className).toContain("translate-y-full");
     expect(screen.getByTestId("feature-panel").className).toContain("pointer-events-none");
   });
