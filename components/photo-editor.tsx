@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, RotateCcw, ShieldCheck, Type, ImagePlus, Crop, SlidersHorizontal, ZoomIn, ZoomOut, Maximize2, HelpCircle, Check, X, Home } from "lucide-react";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home } from "lucide-react";
 import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
