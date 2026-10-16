@@ -49,7 +49,7 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Categories")).toBeTruthy();
   });
 
-  it("places language and theme controls inside the mobile navigation drawer", () => {
+  it("shows language and appearance as separately captioned rows in the mobile drawer", () => {
     render(<SidebarHarness />);
 
     expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull();
@@ -57,8 +57,18 @@ describe("AppSidebar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
 
+    expect(screen.getByRole("heading", { name: "Preferences" })).toBeTruthy();
+    const languageCaption = screen.getByText("Language", { selector: "p" });
+    const appearanceCaption = screen.getByText("Appearance", { selector: "p" });
     expect(screen.getByRole("combobox", { name: "Language" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
+
+    const languageRow = languageCaption.parentElement;
+    const appearanceRow = appearanceCaption.parentElement;
+    expect(languageRow?.className).toContain("space-y-2");
+    expect(appearanceRow?.className).toContain("space-y-2");
+    expect(languageRow).not.toBe(appearanceRow);
+    expect(languageRow?.parentElement).toBe(appearanceRow?.parentElement);
   });
 
   it("marks the current route as active", () => {
