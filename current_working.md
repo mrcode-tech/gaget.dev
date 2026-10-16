@@ -410,3 +410,11 @@ Implemented on `feat/brand-and-user-experience`:
 - Remove the standalone `/images/editor` bypass from `AppShell` so the common `AppSidebar` and `AppHeader` wrap the editor route too.
 - Remove the duplicate site-navigation rail/drawer and its mobile browse button from `PhotoEditor`; preserve only the editor feature menus and right-side contextual panel.
 - Update acceptance tests for the shared shell/sidebar and command-bar placement, then run the full CI workflow before considering this revision verified.
+
+
+### Implementation update
+- Removed the standalone route bypass in `AppShell`, so `/images/editor` now uses the shared full-size GaGet.dev sidebar, its standard collapse/expand control, mobile hamburger drawer, and the shared site header just like other routes.
+- Removed the editor's duplicate narrow icon rail, site-tools drawer, and extra mobile browse button. The File/Edit/Image/Create/History/Help command bar remains inside the shell's content column, after the sidebar's reserved 248px width (or 64px when collapsed on desktop).
+- The right-side contextual panel remains the only editor-specific side panel; site navigation is owned by `AppSidebar` and does not replace it.
+- Added `tests/app-shell.test.tsx` on this branch to check that the shared sidebar/header render on the editor route and the command area follows the shell's sidebar offset. Updated PhotoEditor acceptance tests to assert there is no duplicate site-navigation rail.
+- Verification is not yet confirmed for this revision. GitHub CI must be run against the latest branch commit before merge; browser checks should include desktop expanded/collapsed sidebar, mobile hamburger overlay, and the File menu's left alignment at both widths.
