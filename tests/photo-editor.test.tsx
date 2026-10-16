@@ -39,11 +39,9 @@ afterEach(() => {
 });
 
 describe("PhotoEditor workspace UX acceptance", () => {
-  it("renders a two-level navigation, categorized feature menus, and a theme-aware empty canvas", () => {
+  it("renders categorized editor menus and a theme-aware empty canvas", () => {
     render(<PhotoEditor />);
 
-    expect(screen.getByTestId("site-navbar")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "GaGet.dev home" })).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "File" }).length).toBeGreaterThan(0);
     for (const label of ["Edit", "Image", "Create", "History", "Help"]) {
       expect(screen.getByRole("button", { name: label })).toBeTruthy();
@@ -72,47 +70,12 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
   });
 
-  it("uses the complete GaGet.dev icon rail to open a category drawer without navigating away", () => {
+  it("keeps site navigation outside the editor workspace and uses the shared shell", () => {
     render(<PhotoEditor />);
-    const rail = screen.getByRole("complementary", { name: "GaGet.dev navigation" });
-
-    expect(within(rail).getAllByRole("button").length).toBeGreaterThanOrEqual(15);
-    expect(within(rail).queryByRole("link")).toBeNull();
-    expect(screen.queryByRole("link", { name: "Browse all GaGet.dev tools" })).toBeNull();
-
-    fireEvent.click(within(rail).getByRole("button", { name: "Images" }));
-    const navPanel = screen.getByTestId("site-navigation-panel");
-    expect(within(navPanel).getByText("Images")).toBeTruthy();
-    expect(within(navPanel).getByRole("link", { name: /Photo Editor/ })).toBeTruthy();
-    expect(navPanel.className).toContain("md:w-[320px]");
-    expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "GaGet.dev home" })).toBeTruthy();
-
-    fireEvent.click(within(rail).getByRole("button", { name: "Audio" }));
-    expect(within(screen.getByTestId("site-navigation-panel")).getByText("Audio")).toBeTruthy();
-    expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
-  });
-
-  it("expands GaGet navigation on the left without replacing the right feature panel", () => {
-    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1280 });
-    render(<PhotoEditor />);
-    openFeature("Color & filters");
-    fireEvent.click(within(screen.getByRole("complementary", { name: "GaGet.dev navigation" })).getByRole("button", { name: "Images" }));
-
-    expect(screen.getByTestId("site-navigation-panel").className).toContain("md:w-[320px]");
-    expect(screen.getByTestId("feature-panel").className).toContain("translate-x-0");
-    expect(within(screen.getByTestId("feature-panel")).getByText("Color & filters")).toBeTruthy();
-  });
-
-  it("opens the GaGet.dev browse drawer on mobile while keeping the editor feature menu separate", () => {
-    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
-    render(<PhotoEditor />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Open GaGet.dev navigation" }));
-    const navPanel = screen.getByTestId("site-navigation-panel");
-    expect(within(navPanel).getByText("All tools")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Close GaGet.dev navigation" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
+    expect(screen.queryByRole("complementary", { name: "GaGet.dev navigation" })).toBeNull();
+    expect(screen.queryByTestId("site-navigation-panel")).toBeNull();
+    expect(screen.getByTestId("editor-menubar")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "File" })).toBeTruthy();
   });
 
   it("opens a contextual feature panel without a Done footer and closes it with the mobile X", () => {
@@ -121,24 +84,42 @@ describe("PhotoEditor workspace UX acceptance", () => {
     openFeature("Color & filters");
     expect(screen.getByTestId("feature-panel")).toBeTruthy();
     expect(screen.getByText("Changes are previewed on the canvas")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Close feature panel" }).className).toContain("md:hidden");
+    expect(screen.getByRole("button", { name: "Close feature panel" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
-    expect(screen.getByTestId("feature-panel").className).toContain("translate-x-full");
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Image" }));
+    expect(screen.getByTestId("feature-panel").className).toContain("translate-y-full");
     expect(screen.getByTestId("feature-panel").className).toContain("pointer-events-none");
   });
 
-  it("dismisses an open desktop panel when the user clicks the workspace outside it", () => {
+  it("keeps the desktop inspector open when the user interacts with the canvas workspace", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1280 });
     render(<PhotoEditor />);
 
     openFeature("Color & filters");
-    expect(within(screen.getByTestId("feature-panel")).getByText("Color & filters")).toBeTruthy();
+    const panel = screen.getByTestId("feature-panel");
+    expect(within(panel).getByText("Color & filters")).toBeTruthy();
+    expect(panel.className).toContain("md:w-[320px]");
+    expect(panel.className).toContain("md:border-l");
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
-    expect(screen.getByTestId("feature-panel").className).toContain("translate-x-full");
-    expect(screen.getByTestId("feature-panel").className).toContain("pointer-events-none");
+    expect(screen.getByTestId("feature-panel")).toBe(panel);
+    expect(panel.className).toContain("md:flex");
+    expect(panel.className).not.toContain("md:hidden");
+  });
+
+  it("supports expanding and collapsing the mobile editing bottom sheet", () => {
+    render(<PhotoEditor />);
+    openFeature("Crop & resize");
+
+    const panel = screen.getByTestId("feature-panel");
+    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    fireEvent.click(screen.getByRole("button", { name: "Expand editing panel" }));
+    expect(panel.className).toContain("h-[min(68dvh,560px)]");
+    expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
+    expect(panel.className).toContain("h-[min(44dvh,360px)]");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
@@ -210,7 +191,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
     expect(screen.getByText("90%")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
-    fireEvent.click(screen.getByRole("button", { name: "Reset zoom" }));
+    fireEvent.click(screen.getByRole("button", { name: /Reset zoom/ }));
     expect(screen.getByText("90%")).toBeTruthy();
     expect(screen.getByTestId("canvas-scroll-area").className).toContain("overflow-auto");
   });

@@ -397,3 +397,82 @@ Implemented on `feat/brand-and-user-experience`:
 - Full CI run #191 passed on commit `c031b1e87ce833a631e80248bfb07d42d1177a47`: unit tests, component tests (19/19), ESLint, TypeScript, production build, and production route smoke tests.
 - Run URL: https://github.com/mrcode-tech/gaget.dev/actions/runs/38917262996
 - The final documentation-only commit will trigger CI again; confirm its run before merging.
+
+
+## Shared site sidebar restoration for Photo Editor — 2026-10-16
+
+### Requested behavior
+- Photo Editor must use the exact shared GaGet.dev site sidebar and mobile navigation hamburger used on the homepage and other tools, rather than a second editor-specific icon rail or browse drawer.
+- The editor's File/Edit/Image/Create/History/Help command bar belongs below the shared site header and must begin after the sidebar's reserved width; it must not stretch underneath or overlap the sidebar.
+- The editor-specific right panel remains dedicated to image-editing features.
+
+### Implementation plan
+- Remove the standalone `/images/editor` bypass from `AppShell` so the common `AppSidebar` and `AppHeader` wrap the editor route too.
+- Remove the duplicate site-navigation rail/drawer and its mobile browse button from `PhotoEditor`; preserve only the editor feature menus and right-side contextual panel.
+- Update acceptance tests for the shared shell/sidebar and command-bar placement, then run the full CI workflow before considering this revision verified.
+
+
+### Implementation update
+- Removed the standalone route bypass in `AppShell`, so `/images/editor` now uses the shared full-size GaGet.dev sidebar, its standard collapse/expand control, mobile hamburger drawer, and the shared site header just like other routes.
+- Removed the editor's duplicate narrow icon rail, site-tools drawer, and extra mobile browse button. The File/Edit/Image/Create/History/Help command bar remains inside the shell's content column, after the sidebar's reserved 248px width (or 64px when collapsed on desktop).
+- The right-side contextual panel remains the only editor-specific side panel; site navigation is owned by `AppSidebar` and does not replace it.
+- Added `tests/app-shell.test.tsx` on this branch to check that the shared sidebar/header render on the editor route and the command area follows the shell's sidebar offset. Updated PhotoEditor acceptance tests to assert there is no duplicate site-navigation rail.
+- Verification is not yet confirmed for this revision. GitHub CI must be run against the latest branch commit before merge; browser checks should include desktop expanded/collapsed sidebar, mobile hamburger overlay, and the File menu's left alignment at both widths.
+
+
+### Final verification — 2026-10-16
+- The first CI attempt caught a syntax error left by removing the old navigation-dismiss branch from the canvas click handler. Removed the dangling `else if` and reran CI.
+- GitHub Actions run #211 passed on the implementation commit `a748a61bd910bbdf8ded9cb5f578d34110aa486b`: 5/5 unit tests, all component tests, ESLint, TypeScript, production build, and production route smoke tests.
+- Run URL: https://github.com/mrcode-tech/gaget.dev/actions/runs/38936763766
+- Draft PR #12 remains open and unmerged for review: https://github.com/mrcode-tech/gaget.dev/pull/12
+- Still requires real-browser visual review for expanded/collapsed desktop sidebar, mobile hamburger overlay, and editor command-bar alignment. Automated tests verify shell integration and menu behavior, not screenshot-level layout fidelity.
+
+
+## Responsive Photo Editor and accessibility implementation — 2026-10-16
+
+### Four phases implemented on `feat/brand-and-user-experience`
+
+1. **Layout foundation:** converted the editor root to a named main landmark, changed the workspace to a responsive flex layout, reserved a 320px right inspector on desktop instead of overlaying the canvas, tightened workspace padding, and constrained the canvas to the available viewport when zoom is at or below 100%.
+2. **Mobile bottom sheet:** editing controls now slide up from the bottom with compact and expanded heights; the canvas workspace occupies the remaining space above it. The sheet has an accessible expand/collapse control, an explicit close control, internal scrolling, dynamic-viewport sizing, safe-area bottom padding, and reduced-motion support.
+3. **Consistent interactions:** canvas clicks no longer dismiss the active inspector. Crop/Text controls stay open during canvas interaction. Opening a tool returns an over-100% zoom to fit mode. The canvas is keyboard-focusable; arrow keys move crop bounds or nudge selected text, with Shift for larger steps. Instructions are associated with the canvas using `aria-describedby`. Opening a tool focuses its labelled inspector heading; closing with X or Escape returns focus to the relevant stable editor menu trigger. The mobile sheet toggle exposes `aria-expanded` and `aria-controls`.
+4. **Regression and accessibility coverage:** updated component tests for persistent desktop inspector and mobile sheet states; added Playwright + axe-core browser tests at 360×800, 390×844, 844×390, 768×1024, 1280×800, and 1440×900. The browser suite uploads a tiny local image, checks panel/canvas geometry, tests Text and Crop interactions, runs WCAG 2.1 A/AA axe checks, and verifies Escape closes the panel. CI installs Chromium and runs this suite after the existing unit/component/lint/typecheck/build/route smoke checks.
+
+### Verification status
+
+- [x] GitHub Actions run #265 passed on commit `73b5551435a45964b83a71439da3729f8640fa81`: unit tests, component tests, ESLint, TypeScript, production build, production route smoke tests, and Playwright/axe checks across all six viewports.
+- The first browser run exposed two WCAG issues (status-message contrast and the zoom reset button's accessible name); both were corrected and the final browser suite passed.
+- CI run: https://github.com/mrcode-tech/gaget.dev/actions/runs/38943817043
+- [ ] Real-device manual check remains necessary for touch crop handles, sheet drag feel (the current accessible handle is a tap-to-expand/collapse control), on-screen keyboard behavior, and VoiceOver/TalkBack screen-reader behavior.
+- [ ] No merge performed; continue work only on `feat/brand-and-user-experience`.
+
+
+## Mobile navigation preferences refinement — 2026-10-16
+
+Scope and acceptance criteria:
+- Keep the mobile top bar focused on the hamburger and tool search; hide language and theme controls from that narrow header.
+- Add language selection and light/dark theme toggle to the mobile navigation drawer, in a clearly separated preferences row near the bottom.
+- Preserve the existing desktop header controls and shared sidebar behavior, including RTL layout.
+- Add regression tests for the mobile drawer controls and verify desktop header controls remain available.
+- Run component tests, lint, typecheck, production build, smoke tests, and the responsive/accessibility browser suite; record actual results before calling the change complete.
+
+Implementation started:
+- `components/app-header.tsx`: hide language/theme controls below the desktop breakpoint while keeping the desktop controls.
+- `components/app-sidebar.tsx`: add language and theme controls to the mobile navigation drawer footer.
+- `tests/app-sidebar.test.tsx`: assert the controls are available after opening the mobile drawer.
+- `tests/app-shell.test.tsx`: assert the header preferences are desktop-only.
+- Latest implementation commit: `39925ed77cfef8392cb05cf30e6caad6d0c70d12`. CI verification is pending.
+
+
+## Mobile drawer preferences layout fix — 2026-10-16
+
+### Reported issue
+The mobile drawer showed language selection and theme toggle side by side, without visible **Language** and **Appearance** captions.
+
+### Fix implemented
+- Replaced the single horizontal preferences row with a clearly titled **Preferences** section.
+- Added a **Language** caption above the language selector and an **Appearance** caption above the theme control; these are separate vertically stacked rows.
+- Kept language/theme settings inside the mobile drawer and desktop preferences in the desktop header.
+- Added regression assertions for both captions and separate row containers.
+
+### Verification
+- CI has not yet been verified for this commit. Do not claim the fix is tested until the GitHub Actions result is checked.

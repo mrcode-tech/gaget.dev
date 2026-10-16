@@ -1,14 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Heart, Sparkles, ChevronRight, Menu } from "lucide-react";
-import { LocaleLink } from "@/components/locale-link";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { categories, tools } from "@/lib/tools/registry";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AppHeader } from "@/components/app-header";
 
 type TextLayer = {
   id: number;
@@ -159,8 +155,16 @@ export function PhotoEditor() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("none");
-  const [activeNavPanel, setActiveNavPanel] = useState<string | null>(null);
+  const [sheetExpanded, setSheetExpanded] = useState(false);
   const [cropMode, setCropMode] = useState(false);
+  const panelReturnFocusRef = useRef<HTMLElement | null>(null);
+  const panelHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const closeFeaturePanel = useCallback(() => {
+    setActivePanel("none");
+    setSheetExpanded(false);
+    setCropMode(false);
+    panelReturnFocusRef.current?.focus();
+  }, []);
   const [zoom, setZoom] = useState(90);
   const [printDpi, setPrintDpi] = useState(300);
   const [paletteColors, setPaletteColors] = useState<string[]>([]);
@@ -274,10 +278,13 @@ export function PhotoEditor() {
   useEffect(() => {
     if (activePanel === "none") return;
     const closePanelOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setActivePanel("none"); setCropMode(false); }
+      if (event.key === "Escape") { event.preventDefault(); closeFeaturePanel(); }
     };
     document.addEventListener("keydown", closePanelOnEscape);
     return () => document.removeEventListener("keydown", closePanelOnEscape);
+  }, [activePanel, closeFeaturePanel]);
+  useEffect(() => {
+    if (activePanel !== "none") panelHeadingRef.current?.focus();
   }, [activePanel]);
   useEffect(() => {
     if (!menuOpen) return;
@@ -576,43 +583,27 @@ export function PhotoEditor() {
     event.target.value = "";
   }
   const selectedText = doc.texts.find((layer) => layer.id === doc.selectedText) ?? null;
-  const siteNavItems = [
-    { id: "home", label: "Home", Icon: Home },
-    { id: "popular", label: "Popular", Icon: Sparkles },
-    { id: "all-tools", label: "All tools", Icon: Grid2X2 },
-    { id: "favorites", label: "Favorites", Icon: Heart },
-    ...categories.map((category) => ({ id: `category:${category.slug}`, label: category.name, Icon: category.icon })),
-  ];
-  const activeNavCategory = activeNavPanel?.startsWith("category:")
-    ? categories.find((category) => `category:${category.slug}` === activeNavPanel)
-    : undefined;
-  const navPanelTitle = activeNavPanel === "home" ? "Explore GaGet.dev"
-    : activeNavPanel === "popular" ? "Popular tools"
-    : activeNavPanel === "all-tools" ? "All tools"
-    : activeNavPanel === "favorites" ? "Favorites"
-    : activeNavCategory?.name ?? "GaGet.dev";
-  const navPanelTools = activeNavPanel === "all-tools" ? tools
-    : activeNavPanel === "popular" || activeNavPanel === "home" ? tools.slice(0, 8)
-    : activeNavCategory ? tools.filter((tool) => tool.category === activeNavCategory.name)
-    : [];
   const featureMenuGroups = [
     { label: "Edit", items: [["Crop & resize", "transform", Crop], ["Text & watermark", "text", Type]] },
     { label: "Image", items: [["Color & filters", "adjust", SlidersHorizontal], ["Color picker", "color", Pipette], ["Image details", "metadata", Info], ["Export & convert", "convert", FileOutput], ["Print size", "print", Ruler], ["Image to Base64", "base64", Code2], ["Base64 to image", "base64decode", FileImage]] },
     { label: "Create", items: [["Favicon", "favicon", ImageIcon], ["Collage", "collage", Grid2X2], ["SVG optimize", "svg", Code2]] },
   ] as const;
   const selectFeature = (panel: string) => {
+    const group = panel === "transform" || panel === "text" ? "Edit" : ["adjust", "color", "metadata", "convert", "print", "base64", "base64decode"].includes(panel) ? "Image" : "Create";
+    const mobileTrigger = menuBarRef.current?.querySelector<HTMLButtonElement>('button[aria-label="Open photo editor features"]');
+    const desktopTrigger = Array.from(menuBarRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []).find((button) => button.textContent?.trim() === group);
+    panelReturnFocusRef.current = window.innerWidth < 768 ? mobileTrigger ?? null : desktopTrigger ?? null;
     setActivePanel(panel);
+    setSheetExpanded(false);
+    setZoom((current) => current > 100 ? 90 : current);
     setCropMode(panel === "transform");
     setMenuOpen(null);
-    setActiveNavPanel(null);
   };
 
-  return <div className="flex h-[calc(100dvh-68px)] min-h-[492px] flex-col overflow-hidden bg-background text-foreground">
+  return <main aria-label="GaGet Photo Editor" data-testid="photo-editor" className="flex h-[calc(100dvh-68px)] min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
     <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
     <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
-    <AppHeader sidebarCollapsed standalone />
-
     <div ref={menuBarRef} data-testid="editor-menubar" className="relative z-40 flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
       <button type="button" aria-expanded={menuOpen === "File"} className={"rounded-md px-3 py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
       {menuOpen === "File" && <div className="absolute left-2 top-9 z-50 min-w-52 rounded-lg border border-border bg-popover p-1.5 shadow-xl"><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border md:hidden" /><div className="md:hidden"><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: drag a crop edge or corner to refine the selection, then choose Apply crop."); }}>Help & editing tips</button></div><p className="mt-1 border-t border-border px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></div>}
@@ -638,7 +629,6 @@ export function PhotoEditor() {
     </div>
 
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
-      <Button size="icon" variant="ghost" className="md:hidden" aria-label="Open GaGet.dev navigation" title="Browse GaGet.dev" onClick={() => { setActiveNavPanel("all-tools"); }}><Grid2X2 className="h-4 w-4" /></Button>
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status ? ` · ${status}` : ""}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
@@ -647,55 +637,48 @@ export function PhotoEditor() {
       <div className="ml-auto flex items-center gap-1">
         
         <Button size="icon" variant="ghost" aria-label="Zoom out" title="Zoom out" disabled={zoom <= 25} onClick={() => setZoom((value) => Math.max(25, value - 25))}><ZoomOut className="h-4 w-4" /></Button>
-        <button className="min-w-12 rounded-md px-1 py-2 text-xs tabular-nums hover:bg-accent" onClick={() => setZoom(90)} aria-label="Reset zoom" title="Reset zoom">{zoom}%</button>
+        <button className="min-w-12 rounded-md px-1 py-2 text-xs tabular-nums hover:bg-accent" onClick={() => setZoom(90)} aria-label={`Reset zoom ${zoom}%`} title="Reset zoom">{zoom}%</button>
         <Button size="icon" variant="ghost" aria-label="Zoom in" title="Zoom in" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))}><ZoomIn className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Fit canvas" title="Fit canvas" onClick={() => setZoom(90)}><Maximize2 className="h-4 w-4" /></Button>
         
       </div>
     </div>
 
-    <div className="relative flex min-h-0 flex-1 overflow-hidden">
-      <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center border-r border-border bg-card py-2 md:flex">
-        <ScrollArea className="h-full w-full">
-          <div className="flex flex-col items-center gap-1.5 py-1">
-            {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
-          </div>
-        </ScrollArea>
-      </aside>
-      <div className={"relative z-10 flex h-full shrink-0 overflow-hidden border-r border-border bg-background transition-[width] duration-200 ease-out " + (activeNavPanel === null ? "pointer-events-none w-0 border-r-0" : "w-[min(320px,calc(100vw-48px))] md:w-[320px]")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
-        <div className="flex h-full min-h-0 w-[320px] min-w-[min(320px,calc(100vw-48px))] flex-col bg-card shadow-xl">
-          <div className="flex min-h-12 shrink-0 items-center justify-between border-b border-border px-4">
-            <div className="flex items-center gap-2"><Grid2X2 className="h-4 w-4 text-muted-foreground" /><p className="text-sm font-semibold">{navPanelTitle}</p></div>
-            <button type="button" tabIndex={activeNavPanel === null ? -1 : 0} aria-label="Close GaGet.dev navigation" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setActiveNavPanel(null)}>×</button>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {activeNavPanel === "home" && <div className="mb-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Browse by category</p><div className="grid grid-cols-2 gap-2">{categories.map((category) => { const Icon = category.icon; return <button key={category.slug} type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="flex min-w-0 items-center gap-2 rounded-lg border border-border p-2 text-left text-sm hover:bg-accent" onClick={() => setActiveNavPanel(`category:${category.slug}`)}><Icon className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="truncate">{category.name}</span></button>; })}</div></div>}
-            {activeNavPanel === "favorites" ? <div className="rounded-xl border border-dashed border-border p-5 text-center"><Heart className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm font-medium">No saved tools here yet</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Browse the catalog to find a tool for your next task.</p><button type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="mt-3 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground" onClick={() => setActiveNavPanel("all-tools")}>Browse all tools</button></div>
-              : <div className="space-y-1">{navPanelTools.map((tool) => { const Icon = tool.icon; return <LocaleLink key={tool.href} href={tool.href} tabIndex={activeNavPanel === null ? -1 : 0} onClick={() => setActiveNavPanel(null)} className="flex items-start gap-3 rounded-lg p-3 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{tool.name}</span><span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{tool.description}</span></span><ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /></LocaleLink>; })}</div>}
-          </div>
-        </div>
-      </div>
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <div data-testid="canvas-scroll-area" onClick={(event) => {
-            if (activeNavPanel !== null && event.target === event.currentTarget && window.innerWidth >= 768) setActiveNavPanel(null);
-            else if (activePanel !== "none" && event.target === event.currentTarget && window.innerWidth >= 768) setActivePanel("none");
-            else if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
+            if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
           }} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={(event) => { if (event.target === event.currentTarget) setDragOver(false); }} onDrop={(event) => {
             event.preventDefault(); setDragOver(false);
             const dropped = Array.from(event.dataTransfer.files).find((file) => file.type.startsWith("image/"));
             if (dropped) void chooseFile(dropped); else setError("Drop an image file such as PNG, JPEG, WebP, GIF, or AVIF.");
-          }} className={"relative flex min-h-0 flex-1 overflow-auto bg-muted/25 p-6 sm:p-8 lg:p-10 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center") + (dragOver ? " ring-2 ring-inset ring-primary bg-primary/5" : "")}>
+          }} className={"relative flex min-h-0 flex-1 overflow-auto bg-muted/25 p-3 sm:p-6 lg:p-8 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center") + (dragOver ? " ring-2 ring-inset ring-primary bg-primary/5" : "")}>
             {activePanel === "collage" && collageFiles.length > 0
               ? <div data-testid="collage-canvas-preview" aria-label="Collage preview in selection order" className="grid w-[90%] max-w-4xl gap-2 rounded-lg border border-border bg-background p-3 shadow-sm" style={{ gridTemplateColumns: `repeat(${collageLayout === "row" ? collageFiles.length : collageLayout === "column" ? 1 : Math.min(collageColumns, collageFiles.length)}, minmax(0, 1fr))` }}>
                   {collageFiles.map((file, index) => <div key={file.name + file.size + file.lastModified} className="relative aspect-square min-w-0 overflow-hidden rounded-md bg-muted"><img src={collagePreviewUrls[index] || undefined} alt={file.name} className="h-full w-full object-cover" /><span className="absolute left-1.5 top-1.5 rounded bg-background/90 px-1.5 py-0.5 text-xs font-semibold text-foreground">{index + 1}</span></div>)}
                 </div>
               : hasImage
-                ? <canvas ref={canvasRef} onClick={(event) => {
+                ? <canvas ref={canvasRef} role="img" tabIndex={0} aria-describedby="canvas-keyboard-help" onKeyDown={(event) => {
+                    const arrows = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+                    if (cropMode && arrows.includes(event.key) && imageRef.current) {
+                      event.preventDefault();
+                      const step = event.shiftKey ? 10 : 1;
+                      change({
+                        cropX: clamp(doc.cropX + (event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0), 0, Math.max(0, imageRef.current.naturalWidth - doc.cropWidth)),
+                        cropY: clamp(doc.cropY + (event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0), 0, Math.max(0, imageRef.current.naturalHeight - doc.cropHeight)),
+                      });
+                    } else if (activePanel === "text" && doc.selectedText !== null && arrows.includes(event.key)) {
+                      event.preventDefault();
+                      const selected = doc.texts.find((layer) => layer.id === doc.selectedText);
+                      if (selected) updateText(selected.id, {
+                        x: clamp(selected.x + (event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0) * (event.shiftKey ? 0.02 : 0.005), 0.02, 0.98),
+                        y: clamp(selected.y + (event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0) * (event.shiftKey ? 0.02 : 0.005), 0.02, 0.98),
+                      });
+                    }
+                  }} onClick={(event) => {
                     handleCanvasClick(event);
-                    if (activeNavPanel !== null && window.innerWidth >= 768) setActiveNavPanel(null);
-                    else if (activePanel !== "none" && window.innerWidth >= 768) setActivePanel("none");
-                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
+                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize. Focus the canvas and use arrow keys to move the crop; hold Shift to move faster." : "Photo editing canvas. In text mode, click to position the selected text, or focus the canvas and use arrow keys to nudge it."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: zoom > 100 ? "none" : "100%", maxHeight: zoom > 100 ? "none" : "100%" }} />
                 : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
                     <p className="text-lg font-semibold">Drop your photo here</p>
@@ -707,9 +690,10 @@ export function PhotoEditor() {
         </CardContent>
       </Card>
 
-      <div className={"absolute inset-y-0 right-0 z-20 flex w-full transform bg-background/95 backdrop-blur-sm transition-[transform,opacity] duration-200 ease-out md:w-[360px] md:border-l md:border-border " + (activePanel === "none" ? "pointer-events-none translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="feature-panel" aria-label="Editing feature panel" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
-        <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card shadow-xl">
-          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><p className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</p><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => { setActivePanel("none"); setCropMode(false); }}>×</button></div>
+      <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm max-h-[calc(100dvh_-_6rem)] transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:w-[320px] md:border-l md:border-t-0 md:pb-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(68dvh,560px)] translate-y-0 md:flex" : "h-[min(44dvh,360px)] translate-y-0 md:flex")} id="feature-panel" data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
+        <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card md:shadow-none">
+          <button type="button" aria-label={sheetExpanded ? "Collapse editing panel" : "Expand editing panel"} aria-controls="feature-panel" aria-expanded={sheetExpanded} className="mx-auto mt-1 flex h-6 w-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setSheetExpanded((expanded) => !expanded)}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></button>
+          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 ref={panelHeadingRef} id="feature-panel-title" tabIndex={-1} className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={closeFeaturePanel}>×</button></div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
@@ -808,11 +792,9 @@ export function PhotoEditor() {
           {hasImage && activePanel === "print" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Print size is estimated from output pixels and the selected DPI.</p><label className="block space-y-1 text-sm">Resolution (DPI)<select aria-label="Print resolution" className="h-10 w-full rounded-md border border-input bg-background px-3" value={printDpi} onChange={(e) => setPrintDpi(Number(e.target.value))}><option value="72">72 DPI · screen</option><option value="150">150 DPI · draft print</option><option value="300">300 DPI · print</option><option value="600">600 DPI · high detail</option></select></label><div className="rounded-lg border border-border p-3"><p className="text-sm font-medium">Estimated print size</p><p className="mt-1 text-lg tabular-nums">{(doc.width/printDpi).toFixed(2)} × {(doc.height/printDpi).toFixed(2)} inches</p><p className="text-xs text-muted-foreground">{(doc.width/printDpi*2.54).toFixed(1)} × {(doc.height/printDpi*2.54).toFixed(1)} cm</p></div></div>}
         </div>
       </div>
-      </div>
-
-
+      </section>
     </div>
 
-    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></div>}
-  </div>;
+    <p id="canvas-keyboard-help" className="sr-only">When the crop tool is active, focus the canvas and use arrow keys to move the crop area; hold Shift to move by larger steps. When editing text, use arrow keys to nudge the selected text. Editing controls remain available while you work on the canvas.</p>
+    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-700 dark:text-emerald-300">{status}</span>}</div></div>}</main>;
 }
