@@ -1,10 +1,8 @@
 name: Mobile Photo Editor CI
 
 on:
-  # Trigger one full validation run for the completed regression-fix batch on this feature branch.
-  push:
-    branches:
-      - feat/mobile-photo-editor-ux-fixes
+  # Run the full pipeline only when explicitly requested after a work batch is complete.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
