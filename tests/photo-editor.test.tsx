@@ -191,7 +191,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
     expect(screen.getByText("90%")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
-    fireEvent.click(screen.getByRole("button", { name: "Reset zoom" }));
+    fireEvent.click(screen.getByRole("button", { name: /Reset zoom/ }));
     expect(screen.getByText("90%")).toBeTruthy();
     expect(screen.getByTestId("canvas-scroll-area").className).toContain("overflow-auto");
   });
