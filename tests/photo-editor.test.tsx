@@ -21,6 +21,32 @@ describe("PhotoEditor workspace", () => {
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
   });
 
+
+  it("opens contextual feature panels from categorized menus and closes them without a static sidebar", () => {
+    render(<PhotoEditor />);
+
+    expect(screen.queryByText("PROPERTIES")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Adjust" }));
+    fireEvent.click(screen.getByRole("button", { name: "Color & filters…" }));
+
+    expect(screen.getByTestId("feature-panel")).toBeTruthy();
+    expect(screen.getByText("Changes are previewed on the canvas")).toBeTruthy();
+    expect(screen.getByText("Choose a photo to enable editing controls.")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
+    expect(screen.getByTestId("feature-panel").className).toContain("hidden");
+  });
+
+  it("keeps the canvas workspace scrollable and avoids a permanent export button", () => {
+    render(<PhotoEditor />);
+
+    expect(screen.getByTestId("canvas-scroll-area").className).toContain("overflow-auto");
+    expect(screen.queryByRole("button", { name: /^Export$/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    expect(screen.getByRole("button", { name: "Export image…" })).toBeTruthy();
+  });
+
   it("opens the File menu and exposes local open, export, and reset actions", () => {
     render(<PhotoEditor />);
 
