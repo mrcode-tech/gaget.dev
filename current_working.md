@@ -397,3 +397,16 @@ Implemented on `feat/brand-and-user-experience`:
 - Full CI run #191 passed on commit `c031b1e87ce833a631e80248bfb07d42d1177a47`: unit tests, component tests (19/19), ESLint, TypeScript, production build, and production route smoke tests.
 - Run URL: https://github.com/mrcode-tech/gaget.dev/actions/runs/38917262996
 - The final documentation-only commit will trigger CI again; confirm its run before merging.
+
+
+## Shared site sidebar restoration for Photo Editor — 2026-10-16
+
+### Requested behavior
+- Photo Editor must use the exact shared GaGet.dev site sidebar and mobile navigation hamburger used on the homepage and other tools, rather than a second editor-specific icon rail or browse drawer.
+- The editor's File/Edit/Image/Create/History/Help command bar belongs below the shared site header and must begin after the sidebar's reserved width; it must not stretch underneath or overlap the sidebar.
+- The editor-specific right panel remains dedicated to image-editing features.
+
+### Implementation plan
+- Remove the standalone `/images/editor` bypass from `AppShell` so the common `AppSidebar` and `AppHeader` wrap the editor route too.
+- Remove the duplicate site-navigation rail/drawer and its mobile browse button from `PhotoEditor`; preserve only the editor feature menus and right-side contextual panel.
+- Update acceptance tests for the shared shell/sidebar and command-bar placement, then run the full CI workflow before considering this revision verified.
