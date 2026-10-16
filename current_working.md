@@ -418,3 +418,11 @@ Implemented on `feat/brand-and-user-experience`:
 - The right-side contextual panel remains the only editor-specific side panel; site navigation is owned by `AppSidebar` and does not replace it.
 - Added `tests/app-shell.test.tsx` on this branch to check that the shared sidebar/header render on the editor route and the command area follows the shell's sidebar offset. Updated PhotoEditor acceptance tests to assert there is no duplicate site-navigation rail.
 - Verification is not yet confirmed for this revision. GitHub CI must be run against the latest branch commit before merge; browser checks should include desktop expanded/collapsed sidebar, mobile hamburger overlay, and the File menu's left alignment at both widths.
+
+
+### Final verification — 2026-10-16
+- The first CI attempt caught a syntax error left by removing the old navigation-dismiss branch from the canvas click handler. Removed the dangling `else if` and reran CI.
+- GitHub Actions run #211 passed on the implementation commit `a748a61bd910bbdf8ded9cb5f578d34110aa486b`: 5/5 unit tests, all component tests, ESLint, TypeScript, production build, and production route smoke tests.
+- Run URL: https://github.com/mrcode-tech/gaget.dev/actions/runs/38936763766
+- Draft PR #12 remains open and unmerged for review: https://github.com/mrcode-tech/gaget.dev/pull/12
+- Still requires real-browser visual review for expanded/collapsed desktop sidebar, mobile hamburger overlay, and editor command-bar alignment. Automated tests verify shell integration and menu behavior, not screenshot-level layout fidelity.
