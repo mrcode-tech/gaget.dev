@@ -20,6 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LocaleLink } from "@/components/locale-link";
 import { useI18n } from "@/components/i18n-provider";
 import { localeDirections } from "@/lib/i18n/messages";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -155,6 +157,15 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           </div>
         </nav>
       </ScrollArea>
+
+      {mobile && (
+        <div className="shrink-0 border-t border-border px-3 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
+        </div>
+      )}
 
       <div
         className={cn(
