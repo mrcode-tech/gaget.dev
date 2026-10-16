@@ -765,7 +765,7 @@ export function PhotoEditor() {
             <div className="flex items-center justify-between"><p className="text-sm font-medium">Selected images</p><span className="text-xs tabular-nums text-muted-foreground">{collageFiles.length}/9</span></div>
             {collageFiles.length > 0 ? <div className="grid grid-cols-2 gap-2">
               {collageFiles.map((file, index) => <div key={file.name + file.size + file.lastModified} className="overflow-hidden rounded-lg border border-border bg-background">
-                <div className="relative aspect-square bg-muted"><img src={collagePreviewUrls[index] ?? ""} alt={`Preview of ${file.name}`} className="h-full w-full object-cover" /><span className="absolute left-1.5 top-1.5 rounded bg-background/90 px-1.5 py-0.5 text-xs font-semibold">{index + 1}</span><button type="button" aria-label={`Remove ${file.name} from collage`} title="Remove image" className="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md bg-background/90 text-foreground hover:bg-background" onClick={() => setCollageFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}><X className="h-4 w-4" /></button></div>
+                <div className="relative aspect-square bg-muted"><img src={collagePreviewUrls[index] || undefined} alt={`Preview of ${file.name}`} className="h-full w-full object-cover" /><span className="absolute left-1.5 top-1.5 rounded bg-background/90 px-1.5 py-0.5 text-xs font-semibold">{index + 1}</span><button type="button" aria-label={`Remove ${file.name} from collage`} title="Remove image" className="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md bg-background/90 text-foreground hover:bg-background" onClick={() => setCollageFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}><X className="h-4 w-4" /></button></div>
                 <p className="truncate px-2 py-1.5 text-xs text-muted-foreground" title={file.name}>{file.name}</p>
               </div>)}
             </div> : <div className="rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">No images added yet.</div>}
@@ -786,6 +786,7 @@ export function PhotoEditor() {
           {hasImage && activePanel === "print" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Print size is estimated from output pixels and the selected DPI.</p><label className="block space-y-1 text-sm">Resolution (DPI)<select aria-label="Print resolution" className="h-10 w-full rounded-md border border-input bg-background px-3" value={printDpi} onChange={(e) => setPrintDpi(Number(e.target.value))}><option value="72">72 DPI · screen</option><option value="150">150 DPI · draft print</option><option value="300">300 DPI · print</option><option value="600">600 DPI · high detail</option></select></label><div className="rounded-lg border border-border p-3"><p className="text-sm font-medium">Estimated print size</p><p className="mt-1 text-lg tabular-nums">{(doc.width/printDpi).toFixed(2)} × {(doc.height/printDpi).toFixed(2)} inches</p><p className="text-xs text-muted-foreground">{(doc.width/printDpi*2.54).toFixed(1)} × {(doc.height/printDpi*2.54).toFixed(1)} cm</p></div></div>}
         </div>
       </div>
+      </div>
       <div className={"absolute inset-0 z-30 flex transform bg-background transition-[transform,opacity] duration-200 ease-out md:inset-y-0 md:left-auto md:right-0 md:w-[380px] md:border-l md:border-border " + (activeNavPanel === null ? "pointer-events-none translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
         <div className="flex min-h-0 w-full flex-col bg-card shadow-xl">
           <div className="flex min-h-12 shrink-0 items-center justify-between border-b border-border px-4">
@@ -800,7 +801,6 @@ export function PhotoEditor() {
         </div>
       </div>
 
-    </div>
     </div>
 
     {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></div>}
