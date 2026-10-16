@@ -11,7 +11,6 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { locale } = useI18n();
-  if (pathname === "/images/editor" || pathname === "/images/editor/") return <>{children}</>;
   const direction = localeDirections[locale];
 
   return (
