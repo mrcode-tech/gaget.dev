@@ -5,6 +5,17 @@ import { PhotoEditor } from "@/components/photo-editor";
 const originalCreateObjectURL = URL.createObjectURL;
 const originalRevokeObjectURL = URL.revokeObjectURL;
 
+const featureGroups: Record<string, string> = {
+  "Crop & resize": "Edit", "Text & watermark": "Edit",
+  "Color & filters": "Image", "Color picker": "Image", "Image details": "Image",
+  "Export & convert": "Image", "Print size": "Image", "Image to Base64": "Image",
+  "Base64 to image": "Image", Favicon: "Create", Collage: "Create", "SVG optimize": "Create",
+};
+function openFeature(label: string) {
+  fireEvent.click(screen.getByRole("button", { name: featureGroups[label] }));
+  fireEvent.click(screen.getByRole("button", { name: label }));
+}
+
 beforeEach(() => {
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
@@ -28,21 +39,31 @@ afterEach(() => {
 });
 
 describe("PhotoEditor workspace UX acceptance", () => {
-  it("renders the branded editor, capability-first menus, and a theme-aware empty canvas", () => {
+  it("renders a two-level navigation, categorized feature menus, and a theme-aware empty canvas", () => {
     render(<PhotoEditor />);
 
-    expect(screen.getByRole("link", { name: "Back to GaGet.dev home" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "File" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "History" })).toBeTruthy();
-    for (const label of ["Crop & resize", "Color & filters", "Color picker", "Text & watermark", "Image details", "Export & convert", "Print size", "Image to Base64", "Base64 to image", "Favicon", "Collage", "SVG optimize"]) {
-      expect(screen.getAllByRole("button", { name: label }).length).toBeGreaterThan(0);
+    expect(screen.getByTestId("site-navbar")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "GaGet.dev home" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "File" }).length).toBeGreaterThan(0);
+    for (const label of ["Edit", "Image", "Create", "History", "Help"]) {
+      expect(screen.getByRole("button", { name: label })).toBeTruthy();
     }
-    expect(screen.queryByRole("button", { name: "Image" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Adjust" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Tools" })).toBeNull();
-    expect(screen.queryByText("PROPERTIES")).toBeNull();
+    expect(screen.getByTestId("editor-menubar").className).not.toContain("overflow-x-auto");
     expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
 
+    const menuChecks = [
+      ["Edit", ["Crop & resize", "Text & watermark"]],
+      ["Image", ["Color & filters", "Color picker", "Image details", "Export & convert", "Print size", "Image to Base64", "Base64 to image"]],
+      ["Create", ["Favicon", "Collage", "SVG optimize"]],
+    ] as const;
+    for (const [group, labels] of menuChecks) {
+      fireEvent.click(screen.getByRole("button", { name: group }));
+      for (const label of labels) expect(screen.getByRole("button", { name: label })).toBeTruthy();
+    }
+
+    expect(screen.queryByRole("button", { name: "Adjust" })).toBeNull();
+    expect(screen.queryByText("PROPERTIES")).toBeNull();
     const workspace = screen.getByTestId("canvas-scroll-area");
     expect(workspace.className).toContain("bg-muted/25");
     expect(workspace.className).toContain("p-6");
@@ -64,7 +85,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     const navPanel = screen.getByTestId("site-navigation-panel");
     expect(within(navPanel).getByText("Images")).toBeTruthy();
     expect(within(navPanel).getByRole("link", { name: /Photo Editor/ })).toBeTruthy();
-    expect(navPanel.className).toContain("translate-x-0");
+    expect(navPanel.className).toContain("md:w-[320px]");
     expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Back to GaGet.dev home" })).toBeTruthy();
 
@@ -73,21 +94,32 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
   });
 
-  it("opens the full GaGet.dev menu on mobile without a hamburger in the File menu bar", () => {
+  it("expands GaGet navigation on the left without replacing the right feature panel", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1280 });
+    render(<PhotoEditor />);
+    openFeature("Color & filters");
+    fireEvent.click(within(screen.getByRole("complementary", { name: "GaGet.dev navigation" })).getByRole("button", { name: "Images" }));
+
+    expect(screen.getByTestId("site-navigation-panel").className).toContain("md:w-[320px]");
+    expect(screen.getByTestId("feature-panel").className).toContain("translate-x-0");
+    expect(within(screen.getByTestId("feature-panel")).getByText("Color & filters")).toBeTruthy();
+  });
+
+  it("opens the GaGet.dev browse drawer on mobile while keeping the editor feature menu separate", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
     render(<PhotoEditor />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open GaGet.dev navigation" }));
     const navPanel = screen.getByTestId("site-navigation-panel");
     expect(within(navPanel).getByText("All tools")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Close GaGet.dev navigation" }).className).toContain("md:hidden");
+    expect(screen.getByRole("button", { name: "Close GaGet.dev navigation" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
   });
 
   it("opens a contextual feature panel without a Done footer and closes it with the mobile X", () => {
     render(<PhotoEditor />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Color & filters" })[0]);
+    openFeature("Color & filters");
     expect(screen.getByTestId("feature-panel")).toBeTruthy();
     expect(screen.getByText("Changes are previewed on the canvas")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Close feature panel" }).className).toContain("md:hidden");
@@ -128,7 +160,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     ] as const;
 
     for (const [menuLabel, panelTitle] of featureCases) {
-      fireEvent.click(screen.getAllByRole("button", { name: menuLabel })[0]);
+      openFeature(menuLabel);
       expect(within(screen.getByTestId("feature-panel")).getByText(panelTitle)).toBeTruthy();
       expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
       expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
@@ -160,13 +192,13 @@ describe("PhotoEditor workspace UX acceptance", () => {
   it("keeps File and History menus for document-level actions", () => {
     render(<PhotoEditor />);
 
-    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "File" })[0]);
     expect(screen.getByRole("button", { name: "Open photo…" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Export image…" }).hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("button", { name: "Reset edits" }).hasAttribute("disabled")).toBe(true);
     expect(screen.getByText("Images stay on this device while you edit.")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "History" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "History" })[0]);
     expect(screen.getAllByRole("button", { name: "Undo" }).every((button) => button.hasAttribute("disabled"))).toBe(true);
     expect(screen.getAllByRole("button", { name: "Redo" }).every((button) => button.hasAttribute("disabled"))).toBe(true);
   });
@@ -199,14 +231,14 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
   it("opens SVG optimization without requiring a raster photo", () => {
     render(<PhotoEditor />);
-    fireEvent.click(screen.getAllByRole("button", { name: "SVG optimize" })[0]);
+    openFeature("SVG optimize");
     expect(screen.getByRole("button", { name: "Choose SVG…" })).toBeTruthy();
     expect(screen.getByText(/Remove comments and redundant whitespace/)).toBeTruthy();
   });
 
   it("appends collage selections, preserves order, previews on the canvas, and removes an item", () => {
     render(<PhotoEditor />);
-    fireEvent.click(screen.getAllByRole("button", { name: "Collage" })[0]);
+    openFeature("Collage");
     const collageInput = document.querySelector('input[type="file"][multiple]') as HTMLInputElement;
     const first = new File(["first"], "first.png", { type: "image/png", lastModified: 1 });
     const second = new File(["second"], "second.png", { type: "image/png", lastModified: 2 });
@@ -257,7 +289,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
   it("opens Help with concise local-processing guidance", () => {
     render(<PhotoEditor />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Help" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Help" })[0]);
     expect(screen.getByText("Adjustments are rendered locally. Export creates a new file and never overwrites your original.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Crop & editing tips" })).toBeTruthy();
   });
