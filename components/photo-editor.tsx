@@ -571,7 +571,7 @@ export function PhotoEditor() {
         <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card shadow-xl">
           <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><p className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & transform",text:"Text & watermark",color:"Color picker & palette",metadata:"Image information",convert:"Export & format",print:"Print size & DPI",base64:"Base64 converter",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</p><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => { setActivePanel("none"); setCropMode(false); }}>×</button></div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-          {!hasImage && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
+          {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
           {hasImage && activePanel === "adjust" && <div className="space-y-4">
             <label className="block space-y-2 text-sm">Filter preset
