@@ -363,7 +363,7 @@ export function PhotoEditor() {
     const left = Math.abs(x - doc.cropX) <= edge; const right = Math.abs(x - (doc.cropX + doc.cropWidth)) <= edge;
     const top = Math.abs(y - doc.cropY) <= edge; const bottom = Math.abs(y - (doc.cropY + doc.cropHeight)) <= edge;
     const inside = x >= doc.cropX && x <= doc.cropX + doc.cropWidth && y >= doc.cropY && y <= doc.cropY + doc.cropHeight;
-    const mode = !inside ? "new" : (left || right || top || bottom) ? "resize" : "move";
+    const mode = (left || right || top || bottom) ? "resize" : !inside ? "new" : "move";
     cropDragRef.current = { startX: x, startY: y, originX: doc.cropX, originY: doc.cropY, originW: doc.cropWidth, originH: doc.cropHeight, sourceW: canvas.width, sourceH: canvas.height, mode, left: mode === "resize" && left && !right, right: mode === "resize" && right && !left, top: mode === "resize" && top && !bottom, bottom: mode === "resize" && bottom && !top };
     historyRef.current = [...historyRef.current.slice(-49), doc]; futureRef.current = []; setCanUndo(true); setCanRedo(false);
     canvas.setPointerCapture(event.pointerId); event.preventDefault();
