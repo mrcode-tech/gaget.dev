@@ -304,3 +304,11 @@ Component tests now cover:
 - Changed every former standalone image-tool slug (collage, metadata, palette, color-picker, base64, base64-to-image, favicon, svg-optimizer, dimensions, and print-size) to a permanent redirect to /images/editor. The editor slug is the only image route that renders an app; old paths are intentionally retained as redirects for bookmarks and inbound links.
 - Updated production smoke tests to assert HTTP 308 and the /images/editor destination for each retired image route.
 - The latest full CI run must be checked after the last implementation/test/documentation commit. Earlier overlapping runs were cancelled by the workflow concurrency policy and are not evidence of failure or success.
+
+
+### Final navigation and legacy-route adjustments
+- Added a minimal desktop-only GaGet.dev navigation rail with Home and All tools links. It contains no image-editing controls; mobile hides it to maximize the editing workspace.
+- Added the reverse Base64 workflow: paste a supported image data URL and download the decoded image. Invalid data URLs produce validation feedback.
+- The unified metadata panel now reports source MIME type, file size, source/output dimensions, aspect ratio, pixel count, and output format, and offers a metadata-free rendered export.
+- Current component acceptance suite contains 13 tests for workspace/navigation, menus, contextual panels, zoom controls, image-feature panel routing, SVG panel availability, and menu dismissal. Production smoke tests also check the 10 legacy image routes for permanent redirects.
+- **Verification state:** waiting for the latest GitHub Actions run on the final commit. Do not merge unless component tests, lint, typecheck, build, and production smoke tests all pass.
