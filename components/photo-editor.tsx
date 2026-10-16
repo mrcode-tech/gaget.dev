@@ -160,11 +160,20 @@ export function PhotoEditor() {
   const panelReturnFocusRef = useRef<HTMLElement | null>(null);
   const panelHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const closeFeaturePanel = useCallback(() => {
+    // Closing the crop workspace commits the selected rectangle as a reversible edit.
+    if (cropMode && imageRef.current) {
+      historyRef.current = [...historyRef.current.slice(-49), doc];
+      futureRef.current = [];
+      setCanUndo(true);
+      setCanRedo(false);
+      setDoc({ ...doc, width: doc.cropWidth, height: doc.cropHeight });
+      setStatus(`Crop selected: ${doc.cropWidth} × ${doc.cropHeight} pixels. Undo restores the previous state.`);
+    }
     setActivePanel("none");
     setSheetExpanded(false);
     setCropMode(false);
     panelReturnFocusRef.current?.focus();
-  }, []);
+  }, [cropMode, doc]);
   const [zoom, setZoom] = useState(90);
   const [printDpi, setPrintDpi] = useState(300);
   const [paletteColors, setPaletteColors] = useState<string[]>([]);
@@ -678,7 +687,7 @@ export function PhotoEditor() {
                     }
                   }} onClick={(event) => {
                     handleCanvasClick(event);
-                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize. Focus the canvas and use arrow keys to move the crop; hold Shift to move faster." : "Photo editing canvas. In text mode, click to position the selected text, or focus the canvas and use arrow keys to nudge it."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: zoom > 100 ? "none" : "100%", maxHeight: zoom > 100 ? "none" : "100%" }} />
+                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize. Focus the canvas and use arrow keys to move the crop; hold Shift to move faster." : "Photo editing canvas. In text mode, click to position the selected text, or focus the canvas and use arrow keys to nudge it."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: zoom > 100 ? `${zoom}%` : "auto", height: "auto", maxWidth: zoom > 100 ? "none" : "100%", maxHeight: zoom > 100 ? "none" : "100%" }} />
                 : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
                     <p className="text-lg font-semibold">Drop your photo here</p>
@@ -690,14 +699,14 @@ export function PhotoEditor() {
         </CardContent>
       </Card>
 
-      <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm max-h-[calc(100dvh_-_6rem)] transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:w-[320px] md:border-l md:border-t-0 md:pb-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(68dvh,560px)] translate-y-0 md:flex" : "h-[min(44dvh,360px)] translate-y-0 md:flex")} id="feature-panel" data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
+      <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm max-h-[calc(100dvh_-_6rem)] transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:w-[320px] md:border-l md:border-t-0 md:pb-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(52dvh,420px)] translate-y-0 md:flex" : "h-[min(24dvh,200px)] translate-y-0 md:flex")} id="feature-panel" data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
         <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card md:shadow-none">
           <button type="button" aria-label={sheetExpanded ? "Collapse editing panel" : "Expand editing panel"} aria-controls="feature-panel" aria-expanded={sheetExpanded} className="mx-auto mt-1 flex h-6 w-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setSheetExpanded((expanded) => !expanded)}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></button>
           <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 ref={panelHeadingRef} id="feature-panel-title" tabIndex={-1} className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={closeFeaturePanel}>×</button></div>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto p-3 md:space-y-4 md:overflow-x-hidden md:p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
-          {hasImage && activePanel === "adjust" && <div className="space-y-4">
+          {hasImage && activePanel === "adjust" && <div className="min-w-[78vw] space-y-4 md:min-w-0">
             <label className="block space-y-2 text-sm">Filter preset
               <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={filterPreset} onChange={(e) => {
                 setFilterPreset(e.target.value);
@@ -724,8 +733,8 @@ export function PhotoEditor() {
             ] as const).map(([label, key, min, max, unit]) => <label key={key} className="block space-y-1.5 text-sm">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
           </div>}
 
-          {hasImage && activePanel === "transform" && <div className="space-y-4">
-            {cropMode && <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-3"><p className="text-sm font-medium">Interactive crop</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Drag inside the selection to move it. Drag any edge or corner to resize the crop. The export will contain only the selected area.</p><Button className="mt-3 w-full" onClick={() => { change({ width: doc.cropWidth, height: doc.cropHeight }); setCropMode(false); setStatus(`Crop applied: ${doc.cropWidth} × ${doc.cropHeight} pixels. Export when ready.`); }}><Check className="h-4 w-4" />Apply crop</Button><Button variant="ghost" className="mt-1 w-full" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); }}><X className="h-4 w-4" />Reset crop selection</Button></div>}
+          {hasImage && activePanel === "transform" && <div className="min-w-[78vw] space-y-4 md:min-w-0">
+            {cropMode && <div className="min-w-[78vw] rounded-lg border border-sky-500/30 bg-sky-500/5 p-3 md:min-w-0"><p className="text-sm font-medium">Interactive crop</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Drag inside the selection to move it. Close this panel to finish; Undo restores the previous state.</p><Button variant="ghost" className="mt-2" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); }}><X className="mr-1 h-4 w-4" />Reset crop selection</Button></div>}
             <div className="grid grid-cols-2 gap-3">
               <label className="space-y-1 text-sm">Width (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.height))} value={doc.width} onChange={(e) => change({ width: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.height))) })} /></label>
               <label className="space-y-1 text-sm">Height (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.width))} value={doc.height} onChange={(e) => change({ height: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.width))) })} /></label>
@@ -744,7 +753,7 @@ export function PhotoEditor() {
             <p className="text-xs leading-5 text-muted-foreground">Dimensions are exact output dimensions. With “cover”, the photo fills the canvas and may be cropped; “contain” keeps the full photo visible.</p>
           </div>}
 
-          {hasImage && activePanel === "text" && <div className="space-y-3">
+          {hasImage && activePanel === "text" && <div className="min-w-[78vw] space-y-3 md:min-w-0">
             <Button className="w-full" onClick={() => addText()}><Type className="mr-2 h-4 w-4" /> Add text layer</Button>
             {doc.texts.length > 0 && <label className="block space-y-1 text-sm">Text layer<select className="h-10 w-full rounded-md border border-input bg-background px-3" value={doc.selectedText ?? ""} onChange={(e) => change({ selectedText: e.target.value ? Number(e.target.value) : null })}>{doc.texts.map((layer) => <option key={layer.id} value={layer.id}>{layer.text || "Untitled text"}</option>)}</select></label>}
             {selectedText && <>
@@ -762,7 +771,7 @@ export function PhotoEditor() {
             </>}
           </div>}
 
-          {hasImage && activePanel === "color" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Click a pixel on the canvas to sample its HEX color, or generate a six-color palette.</p><Button variant="outline" className="w-full" onClick={generatePalette}>Generate color palette</Button>{paletteColors.length > 0 && <div className="grid grid-cols-2 gap-2">{paletteColors.map(color => <div key={color} className="flex items-center gap-2 rounded-md border border-border p-2 text-xs"><span className="h-6 w-6 rounded border" style={{backgroundColor:color}} />{color}</div>)}</div>}</div>}
+          {hasImage && activePanel === "color" && <div className="min-w-[78vw] space-y-3 md:min-w-0"><p className="text-sm text-muted-foreground">Click a pixel on the canvas to sample its HEX color, or generate a six-color palette.</p><Button variant="outline" className="w-full" onClick={generatePalette}>Generate color palette</Button>{paletteColors.length > 0 && <div className="grid grid-cols-2 gap-2">{paletteColors.map(color => <div key={color} className="flex items-center gap-2 rounded-md border border-border p-2 text-xs"><span className="h-6 w-6 rounded border" style={{backgroundColor:color}} />{color}</div>)}</div>}</div>}
           {activePanel === "base64" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Convert the currently opened source file into a Base64 data URL locally.</p><Button className="w-full" disabled={!sourceFileRef.current} onClick={() => void createBase64()}>Generate Base64 data URL</Button><textarea aria-label="Base64 output" readOnly value={base64Output} rows={8} className="w-full resize-y rounded-md border border-input bg-background p-2 font-mono text-xs" placeholder="Base64 output will appear here" /></div>}
           {activePanel === "base64decode" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Paste a complete Base64 image data URL to decode and download it locally.</p><textarea aria-label="Base64 image input" value={base64Input} onChange={(e) => setBase64Input(e.target.value)} rows={8} className="w-full resize-y rounded-md border border-input bg-background p-2 font-mono text-xs" placeholder="data:image/png;base64,..." /><Button className="w-full" disabled={!base64Input.trim()} onClick={decodeBase64Image}>Decode and download image</Button></div>}
           {activePanel === "favicon" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Create a square PNG favicon from the current edited image.</p><div className="grid grid-cols-3 gap-2">{[16,32,48].map(size => <Button key={size} variant="outline" disabled={!hasImage} onClick={() => exportFavicon(size)}>{size} × {size}</Button>)}</div><p className="text-xs text-muted-foreground">Exports PNG files; ICO packaging is not included.</p></div>}
