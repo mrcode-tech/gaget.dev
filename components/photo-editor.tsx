@@ -421,7 +421,7 @@ export function PhotoEditor() {
       <div className="ml-auto flex items-center gap-1">
         <span className="mr-2 hidden max-w-40 truncate text-xs text-muted-foreground md:inline">{hasImage ? `${fileName} · ${doc.width} × ${doc.height}` : "No image open"}</span>
         <Button size="icon" variant="ghost" aria-label="Zoom out" title="Zoom out" disabled={zoom <= 25} onClick={() => setZoom((value) => Math.max(25, value - 25))}><ZoomOut className="h-4 w-4" /></Button>
-        <button className="min-w-12 rounded-md px-1 py-2 text-xs tabular-nums hover:bg-accent" onClick={() => setZoom(100)} title="Reset zoom">{zoom}%</button>
+        <button className="min-w-12 rounded-md px-1 py-2 text-xs tabular-nums hover:bg-accent" onClick={() => setZoom(100)} aria-label="Reset zoom" title="Reset zoom">{zoom}%</button>
         <Button size="icon" variant="ghost" aria-label="Zoom in" title="Zoom in" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))}><ZoomIn className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Fit canvas" title="Fit canvas" onClick={() => setZoom(100)}><Maximize2 className="h-4 w-4" /></Button>
         <Button onClick={() => void exportImage()} disabled={!hasImage || cropMode} size="sm"><Download className="h-4 w-4" />Export</Button>
