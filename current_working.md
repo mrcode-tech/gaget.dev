@@ -200,3 +200,13 @@ The final implementation changes include compact shared inputs, select-on-focus 
 **CI verification is still pending.** GitHub's commit-status endpoint returned no statuses for the latest commit at the time of review, and the available workflow-run lookup did not return push-triggered runs. Do not mark this branch as passing until the corresponding run is visible in the repository's Actions UI.
 
 Known scope gap: only the catalog is consolidated so far. The remaining image utility capabilities must be integrated into Photo Editor before their old route implementations are removed; this is explicitly retained as follow-up work to avoid silently losing functionality.
+
+
+## CI feedback and correction — 2026-10-16
+
+GitHub Actions run #54 executed the unit and component tests and ESLint successfully, then failed TypeScript checking because two test queries used an unsupported `exact` property in `ByRoleOptions`. Updated the queries to use anchored regular expressions instead. This was a test typing issue, not a production component type error.
+
+- Corrective commit: `2848b8b` — `fix: use supported accessible role query options`.
+- Follow-up GitHub Actions run: #56 (`38899678652`) was queued/in progress when last checked.
+- Run link: https://github.com/mrcode-tech/gaget.dev/actions/runs/38899678652
+- Do not consider the branch fully verified until the follow-up run passes TypeScript, production build, and HTTP smoke tests.
