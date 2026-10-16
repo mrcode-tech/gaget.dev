@@ -61,7 +61,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.queryByRole("link", { name: "Browse all GaGet.dev tools" })).toBeNull();
 
     fireEvent.click(within(rail).getByRole("button", { name: "Collage maker" }));
-    expect(screen.getByText("Collage maker")).toBeTruthy();
+    expect(within(screen.getByTestId("feature-panel")).getByText("Collage maker")).toBeTruthy();
     expect(screen.getByTestId("feature-panel").className).not.toContain("hidden");
 
     fireEvent.click(within(rail).getByRole("button", { name: "Image details" }));
