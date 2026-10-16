@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { localeDirections } from "@/lib/i18n/messages";
 import { useI18n } from "@/components/i18n-provider";
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { locale } = useI18n();
+  if (pathname === "/images/editor" || pathname === "/images/editor/") return <>{children}</>;
   const direction = localeDirections[locale];
 
   return (
