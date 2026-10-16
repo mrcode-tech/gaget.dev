@@ -292,10 +292,10 @@ Component tests now cover:
 - The tests are acceptance/component coverage for visible menu and panel behavior; real browser/device validation is still needed for canvas pixel operations, touch crop gestures, downloads, and large-file memory behavior.
 
 ### Final verification required
-- [ ] Confirm CI on the latest branch commit passes component tests, unit tests, ESLint, TypeScript, production build, and HTTP smoke tests.
-- [ ] Fix every CI failure and rerun until green.
-- [ ] Check the catalog still lists exactly one Images app and all legacy image routes redirect to /images/editor without loops.
-- [ ] Verify 100%+ zoom scrolling, crop side handles on touch devices, and full-workspace mobile panels in a real browser.
+- [x] CI run 122 on commit 786fc9b passed unit tests, component tests, ESLint, TypeScript, production build, and HTTP smoke tests.
+- [x] Fixed the failures discovered during implementation and reran CI successfully.
+- [x] Catalog test confirms one Images app; smoke tests confirm all 10 legacy image routes return HTTP 308 to /images/editor.
+- [ ] Verify 100%+ zoom scrolling, crop side handles on touch devices, and full-workspace mobile panels in a real browser (manual device/browser pass still recommended).
 
 
 ### Final capability consolidation follow-up
@@ -319,3 +319,6 @@ Component tests now cover:
 - Unit tests and all 15 component tests passed in the next run. ESLint then identified one unescaped apostrophe in the metadata panel, which was corrected.
 - Legacy redirect paths are tested separately from regular page-body smoke tests so an intentional HTTP 308 is not treated as an empty page.
 - Re-run the full workflow on the latest commit to verify lint, TypeScript, production build, and route smoke tests after the final fixes.
+
+- Removed the duplicate canvas caption from the toolbar and added an acceptance assertion that there is only one “No image open” caption and no editor hamburger button.
+- Final successful CI run: https://github.com/mrcode-tech/gaget.dev/actions/runs/38905877319 (commit 786fc9baf65564f3134958ba0905311f86583381).
