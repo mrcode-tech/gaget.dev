@@ -580,6 +580,7 @@ export function PhotoEditor() {
   const selectFeature = (panel: string) => {
     setActivePanel(panel);
     setSheetExpanded(false);
+    setZoom((current) => current > 100 ? 90 : current);
     setCropMode(panel === "transform");
     setMenuOpen(null);
   };
