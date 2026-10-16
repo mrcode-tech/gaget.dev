@@ -337,6 +337,43 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(within(panel).getByLabelText("Brightness").className).toContain("w-full");
   });
 
+  it("updates filter previews without synchronous per-pixel processing", async () => {
+    const getImageData = vi.fn();
+    const context = {
+      clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
+      rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
+      strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
+      stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData,
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => context as unknown as CanvasRenderingContext2D,
+    );
+    class FilterPreviewImage {
+      naturalWidth = 6000;
+      naturalHeight = 4000;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+    }
+    vi.stubGlobal("Image", FilterPreviewImage);
+
+    render(<PhotoEditor />);
+    const fileInput = document.querySelector('input[type="file"]:not([multiple])') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: { files: [new File(["filter-photo"], "filter-photo.png", { type: "image/png" })] },
+    });
+    await waitFor(() => expect(screen.getByRole("status").textContent).toContain("Photo loaded locally"));
+
+    openFeature("Color & filters");
+    fireEvent.change(screen.getByLabelText("Brightness"), { target: { value: "150" } });
+
+    const canvas = document.querySelector("canvas[role='img']") as HTMLCanvasElement;
+    expect(canvas.style.filter).toContain("brightness(1.5)");
+    expect(canvas.width * canvas.height).toBeLessThanOrEqual(2_000_000);
+    expect(getImageData).not.toHaveBeenCalled();
+    expect(screen.getByTestId("filter-adjustments").className).toContain("overscroll-y-contain");
+  });
+
   it("draws a tall portrait photo immediately without waiting for an adjustment change", async () => {
     const context = {
       clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),

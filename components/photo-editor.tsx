@@ -203,8 +203,8 @@ export function PhotoEditor() {
   const [status, setStatus] = useState("");
   const nextTextId = useRef(1);
 
-  const draw = useCallback((state: EditorState) => {
-    const canvas = canvasRef.current;
+  const draw = useCallback((state: EditorState, targetCanvas: HTMLCanvasElement | null = canvasRef.current, fullResolution = false) => {
+    const canvas = targetCanvas;
     const image = imageRef.current;
     if (!canvas || !image) return;
     if (cropMode) {
@@ -214,7 +214,6 @@ export function PhotoEditor() {
       if (!cropContext) return;
       cropContext.clearRect(0, 0, canvas.width, canvas.height);
       cropContext.drawImage(image, 0, 0);
-      applyCanvasAdjustments(canvas, state);
       const x = clamp(Math.round(state.cropX), 0, image.naturalWidth - 1);
       const y = clamp(Math.round(state.cropY), 0, image.naturalHeight - 1);
       const w = clamp(Math.round(state.cropWidth), 1, image.naturalWidth - x);
@@ -238,12 +237,14 @@ export function PhotoEditor() {
     const height = clamp(Math.round(Number(state.height) || image.naturalHeight), 1, 12000);
     const outW = rotated ? height : width;
     const outH = rotated ? width : height;
-    canvas.width = outW;
-    canvas.height = outH;
+    const previewScale = fullResolution ? 1 : Math.min(1, Math.sqrt(2_000_000 / (outW * outH)));
+    canvas.width = Math.max(1, Math.floor(outW * previewScale));
+    canvas.height = Math.max(1, Math.floor(outH * previewScale));
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.clearRect(0, 0, outW, outH);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
+    ctx.scale(previewScale, previewScale);
     ctx.translate(outW / 2, outH / 2);
     ctx.rotate(state.rotation * Math.PI / 180);
     ctx.scale(state.flipX ? -1 : 1, state.flipY ? -1 : 1);
@@ -261,9 +262,13 @@ export function PhotoEditor() {
     const drawH = sh * scale;
     ctx.drawImage(image, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
-    // Adjust image pixels explicitly for consistent Safari, Chrome iOS, Android,
-    // and desktop behavior. Apply before text so overlays remain crisp.
-    applyCanvasAdjustments(canvas, state);
+    // Pixel processing is reserved for full-resolution exports and happens before
+    // text overlays so labels/watermarks stay sharp and readable.
+    if (fullResolution) applyCanvasAdjustments(canvas, state);
+    // Keep interactive previews cheap: CSS filters update without synchronously
+    // rewriting every pixel. Full-resolution pixel adjustments run only on export.
+    ctx.save();
+    ctx.scale(previewScale, previewScale);
     state.texts.forEach((layer) => {
       ctx.save();
       ctx.globalAlpha = layer.opacity / 100;
@@ -282,6 +287,7 @@ export function PhotoEditor() {
       ctx.fillText(layer.text, 0, 0, outW * 0.9);
       ctx.restore();
     });
+    ctx.restore();
   }, [cropMode]);
 
   useEffect(() => { if (hasImage) draw(doc); }, [doc, hasImage, draw]);
@@ -486,30 +492,35 @@ export function PhotoEditor() {
     }
   }
   async function exportImage() {
-    const canvas = canvasRef.current;
-    if (!canvas || !imageRef.current) return;
+    if (!canvasRef.current || !imageRef.current) return;
     setError(""); setStatus("");
-    if (canvas.width * canvas.height > maxPixels) {
+    const rotated = Math.abs(doc.rotation % 180) === 90;
+    const outputWidth = rotated ? doc.height : doc.width;
+    const outputHeight = rotated ? doc.width : doc.height;
+    if (outputWidth * outputHeight > maxPixels) {
       setError("Export dimensions exceed 50 megapixels. Reduce the output dimensions first.");
       return;
     }
     const mime = doc.format;
-    let exportCanvas = canvas;
+    // Re-render at the requested output dimensions; never export the lightweight preview.
+    const renderedCanvas = document.createElement("canvas");
+    draw(doc, renderedCanvas, true);
+    let exportCanvas = renderedCanvas;
     if (mime === "image/jpeg") {
       exportCanvas = document.createElement("canvas");
-      exportCanvas.width = canvas.width;
-      exportCanvas.height = canvas.height;
+      exportCanvas.width = renderedCanvas.width;
+      exportCanvas.height = renderedCanvas.height;
       const exportContext = exportCanvas.getContext("2d");
       if (!exportContext) { setError("Could not prepare the JPEG export."); return; }
       exportContext.fillStyle = "#FFFFFF";
       exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-      exportContext.drawImage(canvas, 0, 0);
+      exportContext.drawImage(renderedCanvas, 0, 0);
     }
     const blob = await new Promise<Blob | null>((resolve) => exportCanvas.toBlob(resolve, mime, clamp(doc.quality, 10, 100) / 100));
     if (!blob) { setError("Your browser could not export this format. Try PNG or JPEG."); return; }
     const extension = mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
     downloadBlob(blob, fileName + "-edited." + extension);
-    setStatus("Exported " + canvas.width + " × " + canvas.height + " pixels (" + (blob.size / 1024).toFixed(1) + " KB). Processing stayed in your browser.");
+    setStatus("Exported " + renderedCanvas.width + " × " + renderedCanvas.height + " pixels (" + (blob.size / 1024).toFixed(1) + " KB). Processing stayed in your browser.");
   }
   function generatePalette() {
     const canvas = canvasRef.current;
@@ -637,7 +648,9 @@ export function PhotoEditor() {
     const desktopTrigger = Array.from(menuBarRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []).find((button) => button.textContent?.trim() === group);
     panelReturnFocusRef.current = window.innerWidth < 768 ? mobileTrigger ?? null : desktopTrigger ?? null;
     setActivePanel(panel);
-    setSheetExpanded(false);
+    // Open Color & filters at a useful height on phones so the controls are not
+    // trapped in a tiny bottom sheet; the controls themselves scroll vertically.
+    setSheetExpanded(panel === "adjust" && window.innerWidth < 768);
     setZoom((current) => current > 100 ? 90 : current);
     setCropMode(panel === "crop" || panel === "transform");
     setMenuOpen(null);
@@ -721,7 +734,7 @@ export function PhotoEditor() {
                     }
                   }} onClick={(event) => {
                     handleCanvasClick(event);
-                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize. Focus the canvas and use arrow keys to move the crop; hold Shift to move faster." : "Photo editing canvas. In text mode, click to position the selected text, or focus the canvas and use arrow keys to nudge it."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: zoom > 100 ? `${zoom}%` : "auto", height: "auto", maxWidth: zoom > 100 ? "none" : "100%", maxHeight: zoom > 100 ? "none" : "100%" }} />
+                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize. Focus the canvas and use arrow keys to move the crop; hold Shift to move faster." : "Photo editing canvas. In text mode, click to position the selected text, or focus the canvas and use arrow keys to nudge it."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: zoom > 100 ? `${zoom}%` : "auto", height: "auto", maxWidth: zoom > 100 ? "none" : "100%", maxHeight: zoom > 100 ? "none" : "100%", filter: cropMode ? "none" : `brightness(${doc.brightness / 100}) contrast(${doc.contrast / 100}) saturate(${doc.saturation / 100}) grayscale(${doc.grayscale / 100}) sepia(${doc.sepia / 100}) blur(${doc.blur}px)` }} />
                 : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
                     <p className="text-lg font-semibold">Drop your photo here</p>
@@ -740,7 +753,7 @@ export function PhotoEditor() {
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 md:space-y-4 md:p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
-          {hasImage && activePanel === "adjust" && <div className="min-w-0 space-y-4">
+          {hasImage && activePanel === "adjust" && <div data-testid="filter-adjustments" className="min-w-0 space-y-4 overscroll-y-contain">
             <label className="block space-y-2 text-sm">Filter preset
               <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={filterPreset} onChange={(e) => {
                 setFilterPreset(e.target.value);

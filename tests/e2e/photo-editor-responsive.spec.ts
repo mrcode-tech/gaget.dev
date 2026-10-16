@@ -15,7 +15,7 @@ const onePixelPng = Buffer.from(
   "base64",
 );
 
-async function openFeature(page: Page, width: number, feature: "Crop" | "Text & watermark") {
+async function openFeature(page: Page, width: number, feature: "Crop" | "Text & watermark" | "Color & filters") {
   if (width < 768) {
     await page.getByRole("button", { name: "Open photo editor features" }).click();
   } else {
@@ -102,5 +102,32 @@ for (const viewport of viewports) {
     await canvas.focus();
     await page.keyboard.press("ArrowRight");
     await expect(panel).toBeVisible();
+  });
+}
+
+for (const width of [320, 360, 390, 430]) {
+  test(`mobile Color & filters stays inside the viewport and responds to slider changes at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/images/editor");
+    await loadTestPhoto(page);
+    await openFeature(page, width, "Color & filters");
+
+    const panel = page.getByTestId("feature-panel");
+    const adjustments = page.getByTestId("filter-adjustments");
+    await expect(panel).toBeVisible();
+    await expect(panel).toHaveClass(/h-\[min\(52dvh,420px\)\]/);
+    await expect(adjustments.getByLabel("Brightness")).toBeVisible();
+    await expect(adjustments.getByLabel("Contrast")).toBeAttached();
+
+    await expect.poll(() => panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await expect.poll(() => adjustments.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+
+    const brightness = adjustments.getByLabel("Brightness");
+    await brightness.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => page.locator("canvas[role='img']").evaluate((element) => (element as HTMLCanvasElement).style.filter))
+      .toContain("brightness(1.01)");
+
+    await expect.poll(() => page.locator("main[aria-label='GaGet Photo Editor']").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   });
 }
