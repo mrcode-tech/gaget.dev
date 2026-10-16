@@ -26,7 +26,9 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # The repository lockfile currently omits @radix-ui/react-select and its transitive dependencies.
+        # npm install refreshes that stale lockfile in the runner; commit the regenerated lockfile separately.
+        run: npm install --no-audit --no-fund
 
       - name: Run unit tests
         run: npm run test:unit
