@@ -75,6 +75,11 @@ function clamp(value: number, min: number, max: number) {
  * The latter is not consistently implemented across Safari/WebKit versions.
  */
 function applyCanvasAdjustments(canvas: HTMLCanvasElement, state: EditorState) {
+  // Loading a large portrait should paint immediately. Avoid reading and rewriting
+  // every pixel when all adjustment controls are still at their neutral values.
+  if (state.blur === 0 && state.brightness === 100 && state.contrast === 100 &&
+      state.saturation === 100 && state.grayscale === 0 && state.sepia === 0) return;
+
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Your browser could not create a 2D canvas context.");
 
