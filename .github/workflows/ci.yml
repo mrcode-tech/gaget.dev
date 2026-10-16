@@ -33,6 +33,9 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
+      - name: Run component tests
+        run: npm run test:component
+
       - name: Run ESLint
         run: npm run lint
 
