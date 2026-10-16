@@ -13,6 +13,11 @@ vi.mock("next/navigation", () => ({
 afterEach(() => {
   cleanup();
   navigation.pathname = "/";
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  delete (HTMLElement.prototype as HTMLElement & { hasPointerCapture?: unknown }).hasPointerCapture;
+  delete (HTMLElement.prototype as HTMLElement & { setPointerCapture?: unknown }).setPointerCapture;
+  delete (HTMLElement.prototype as HTMLElement & { releasePointerCapture?: unknown }).releasePointerCapture;
 });
 
 function SidebarHarness() {
@@ -69,6 +74,11 @@ describe("AppSidebar", () => {
     expect(languageRow).not.toBe(appearanceRow);
     expect(languageRow?.parentElement).toBe(appearanceRow?.parentElement);
     expect(languageRow?.parentElement?.className).toContain("border-t");
+    Object.defineProperties(HTMLElement.prototype, {
+      hasPointerCapture: { configurable: true, value: () => false },
+      setPointerCapture: { configurable: true, value: () => undefined },
+      releasePointerCapture: { configurable: true, value: () => undefined },
+    });
     fireEvent.pointerDown(screen.getByRole("combobox", { name: "Language" }), { button: 0, ctrlKey: false, pointerType: "mouse" });
     expect(screen.getByRole("option", { name: "Español" })).toBeTruthy();
   });
