@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home } from "lucide-react";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, LayoutGrid } from "lucide-react";
 import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -570,7 +570,10 @@ export function PhotoEditor() {
     </div>
 
     <div className="relative flex min-h-0 flex-1 overflow-hidden">
-
+      <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center gap-2 border-r border-border bg-card py-3 md:flex">
+        <LocaleLink href="/" aria-label="GaGet.dev home" title="GaGet.dev home" className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Home className="h-4 w-4" /></LocaleLink>
+        <LocaleLink href="/tools" aria-label="Browse all GaGet.dev tools" title="Browse all GaGet.dev tools" className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><LayoutGrid className="h-4 w-4" /></LocaleLink>
+      </aside>
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <div data-testid="canvas-scroll-area" className={"flex min-h-0 flex-1 overflow-auto bg-[#1e1e1e] p-3 sm:p-5 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center")}>
