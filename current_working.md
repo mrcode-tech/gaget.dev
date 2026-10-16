@@ -155,3 +155,34 @@ For **every development branch**:
 ## 7. Review limitations
 
 This document is based on the branch's available README and CI workflow plus accessible commit metadata. No local checkout, browser session, test execution, or latest Actions-run result was available during this review. Therefore, the implementation summary is evidence-based but the runtime/test status remains unverified.
+
+
+## UX refinement implementation update — 2026-10-16
+
+Commits on `feat/brand-and-user-experience`:
+- `7086ed2` — Photo Editor navigation and canvas workspace refinement.
+- `852c677` — Tests for home navigation and menu dismissal.
+- `8c5c053` — Make Photo Editor the single image catalog entry.
+- `8800b1e` — Compact shared input styling.
+
+Implemented:
+- Added a persistent home link back to GaGet.dev from the standalone Photo Editor.
+- Added a compact application-menu icon in the editor title bar.
+- Menus close when the user clicks outside the menu bar or presses Escape.
+- Reduced the canvas title/header height and changed the canvas workspace to a VS Code-inspired dark neutral surface.
+- Set the initial/reset canvas zoom to 90% to create a visible margin and constrain the canvas to its viewport rather than forcing oversized scrolling.
+- Added component tests for home navigation, menu dismissal, and the revised default zoom behavior.
+- Refined the shared input component toward compact, subtle VS Code-style controls.
+- Consolidated the public Images tool catalog to a single Photo Editor entry.
+
+Important scope note:
+- This catalog change removes separate image utilities from the tool listing, but it does **not** yet mean every legacy capability (collage, EXIF/metadata removal, palette extraction, pixel color sampling, Base64 conversion, favicon creation, SVG optimization, dimensions, print-size calculation) has been implemented inside the Photo Editor. Legacy routes/files are not deleted by this catalog-only change. Integrate each capability into the editor as a dedicated panel/tool group before removing its implementation or redirecting its direct URL.
+
+Verification:
+- Added automated component tests, but no local test command has been run in this review session.
+- GitHub Actions should start from the latest commit push. Inspect its run and fix failures before treating the branch as green.
+- [ ] Verify latest GitHub Actions result for the final commit.
+- [ ] Confirm menu dismissal tests pass under jsdom.
+- [ ] Confirm desktop and mobile home navigation behavior.
+- [ ] Check fit-to-canvas behavior for portrait, landscape, and very large aspect ratios.
+- [ ] Integrate the remaining image utilities into the editor before deleting old routes.
