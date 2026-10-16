@@ -307,6 +307,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(within(panel).getByText(/Drag the crop edges or corners directly/)).toBeTruthy();
     fireEvent.click(within(panel).getByRole("button", { name: "1:1" }));
     expect(within(panel).getByRole("button", { name: "1:1" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(panel).getByLabelText("Crop width")).toBeTruthy();
+    expect(within(panel).getByLabelText("Crop height")).toBeTruthy();
     expect(panel.querySelector(".overflow-x-auto")).toBeNull();
   });
 
@@ -318,6 +320,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(within(panel).getByLabelText("Output width")).toBeTruthy();
     expect(within(panel).getByLabelText("Output height")).toBeTruthy();
     expect(within(panel).getByLabelText("Lock aspect ratio")).toBeTruthy();
+    fireEvent.change(within(panel).getByLabelText("Output width"), { target: { value: "800" } });
+    expect((within(panel).getByLabelText("Output height") as HTMLInputElement).value).toBe("600");
     expect(within(panel).queryByText("Crop rectangle (source pixels)")).toBeNull();
     expect(panel.querySelector(".overflow-x-auto")).toBeNull();
   });
