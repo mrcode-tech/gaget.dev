@@ -156,6 +156,14 @@ export function PhotoEditor() {
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("none");
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const panelReturnFocusRef = useRef<HTMLElement | null>(null);
+  const panelHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const closeFeaturePanel = useCallback(() => {
+    setActivePanel("none");
+    setSheetExpanded(false);
+    setCropMode(false);
+    panelReturnFocusRef.current?.focus();
+  }, []);
   const [cropMode, setCropMode] = useState(false);
   const [zoom, setZoom] = useState(90);
   const [printDpi, setPrintDpi] = useState(300);
@@ -270,10 +278,13 @@ export function PhotoEditor() {
   useEffect(() => {
     if (activePanel === "none") return;
     const closePanelOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setActivePanel("none"); setSheetExpanded(false); setCropMode(false); }
+      if (event.key === "Escape") { event.preventDefault(); closeFeaturePanel(); }
     };
     document.addEventListener("keydown", closePanelOnEscape);
     return () => document.removeEventListener("keydown", closePanelOnEscape);
+  }, [activePanel, closeFeaturePanel]);
+  useEffect(() => {
+    if (activePanel !== "none") panelHeadingRef.current?.focus();
   }, [activePanel]);
   useEffect(() => {
     if (!menuOpen) return;
@@ -578,6 +589,10 @@ export function PhotoEditor() {
     { label: "Create", items: [["Favicon", "favicon", ImageIcon], ["Collage", "collage", Grid2X2], ["SVG optimize", "svg", Code2]] },
   ] as const;
   const selectFeature = (panel: string) => {
+    const group = panel === "transform" || panel === "text" ? "Edit" : ["adjust", "color", "metadata", "convert", "print", "base64", "base64decode"].includes(panel) ? "Image" : "Create";
+    const mobileTrigger = menuBarRef.current?.querySelector<HTMLButtonElement>('button[aria-label="Open photo editor features"]');
+    const desktopTrigger = Array.from(menuBarRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []).find((button) => button.textContent?.trim() === group);
+    panelReturnFocusRef.current = window.innerWidth < 768 ? mobileTrigger ?? null : desktopTrigger ?? null;
     setActivePanel(panel);
     setSheetExpanded(false);
     setZoom((current) => current > 100 ? 90 : current);
@@ -675,10 +690,10 @@ export function PhotoEditor() {
         </CardContent>
       </Card>
 
-      <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:w-[320px] md:border-l md:border-t-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(68dvh,560px)] translate-y-0 md:flex" : "h-[min(44dvh,360px)] translate-y-0 md:flex")} data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
+      <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:w-[320px] md:border-l md:border-t-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(68dvh,560px)] translate-y-0 md:flex" : "h-[min(44dvh,360px)] translate-y-0 md:flex")} id="feature-panel" data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
         <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card md:shadow-none">
-          <button type="button" aria-label={sheetExpanded ? "Collapse editing panel" : "Expand editing panel"} aria-expanded={sheetExpanded} className="mx-auto mt-1 flex h-6 w-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setSheetExpanded((expanded) => !expanded)}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></button>
-          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 id="feature-panel-title" className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => { setActivePanel("none"); setSheetExpanded(false); setCropMode(false); }}>×</button></div>
+          <button type="button" aria-label={sheetExpanded ? "Collapse editing panel" : "Expand editing panel"} aria-controls="feature-panel" aria-expanded={sheetExpanded} className="mx-auto mt-1 flex h-6 w-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setSheetExpanded((expanded) => !expanded)}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></button>
+          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 ref={panelHeadingRef} id="feature-panel-title" tabIndex={-1} className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={closeFeaturePanel}>×</button></div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
