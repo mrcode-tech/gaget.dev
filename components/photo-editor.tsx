@@ -238,8 +238,8 @@ export function PhotoEditor() {
     const outW = rotated ? height : width;
     const outH = rotated ? width : height;
     const previewScale = fullResolution ? 1 : Math.min(1, Math.sqrt(2_000_000 / (outW * outH)));
-    canvas.width = Math.max(1, Math.round(outW * previewScale));
-    canvas.height = Math.max(1, Math.round(outH * previewScale));
+    canvas.width = Math.max(1, Math.floor(outW * previewScale));
+    canvas.height = Math.max(1, Math.floor(outH * previewScale));
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
