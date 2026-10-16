@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { tools } from "@/lib/tools/registry";
 import { localeDirections } from "@/lib/i18n/messages";
 
-export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
+export function AppHeader({ sidebarCollapsed, standalone = false }: { sidebarCollapsed: boolean; standalone?: boolean }) {
   const [query, setQuery] = useState("");
   const { locale, t } = useI18n();
   const matches = query.trim()
@@ -26,8 +26,10 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
 
   return (
     <header
-      className={`sticky top-0 z-30 flex h-[68px] items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6 ${direction === "ltr" ? (sidebarCollapsed ? "pl-16 sm:pl-16 lg:pl-[88px]" : "pl-16 sm:pl-16 lg:pl-[272px]") : (sidebarCollapsed ? "pr-16 sm:pr-16 lg:pr-[88px]" : "pr-16 sm:pr-16 lg:pr-[272px]")}`}
+      data-testid={standalone ? "site-navbar" : undefined}
+      className={`sticky top-0 z-30 flex h-[68px] items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6 ${standalone ? "" : direction === "ltr" ? (sidebarCollapsed ? "pl-16 sm:pl-16 lg:pl-[88px]" : "pl-16 sm:pl-16 lg:pl-[272px]") : (sidebarCollapsed ? "pr-16 sm:pr-16 lg:pr-[88px]" : "pr-16 sm:pr-16 lg:pr-[272px]")}`}
     >
+      {standalone && <LocaleLink href="/" aria-label="GaGet.dev home" className="inline-flex shrink-0 items-center gap-2 rounded-md font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">G</span><span className="hidden sm:inline">GaGet.dev</span></LocaleLink>}
       <div className="relative w-full max-w-xl">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
