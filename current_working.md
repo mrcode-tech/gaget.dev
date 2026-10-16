@@ -502,3 +502,39 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 
 ### Verification
 - Not run yet for this branch. Record results after implementation and CI execution.
+
+
+## Mobile Photo Editor and navigation bug-fix implementation — 2026-10-17
+
+### Changes made on `feat/mobile-photo-editor-ux-fixes`
+
+- `components/photo-editor.tsx`
+  - Added a neutral-adjustment fast path to `applyCanvasAdjustments`. When brightness, contrast, saturation, blur, grayscale, and sepia are all at defaults, the editor skips reading and rewriting every canvas pixel. This avoids unnecessary CPU work when loading large portrait images.
+  - Changed fitted canvas CSS to use intrinsic sizing with width/height constraints when zoom is at or below 100%; zoom above 100% remains unconstrained and scrollable.
+  - Reduced the collapsed mobile editing sheet from 44dvh (up to 360px) to 24dvh (up to 200px); the expanded state is 52dvh (up to 420px).
+  - Added horizontal overflow/grouping for crop/resize and text controls. Filter sliders now appear as compact horizontally browsable cards.
+  - Removed the redundant **Apply crop** buttons. Closing the crop panel commits the selected crop dimensions into editor state and records the previous state in history so Undo can restore it. The crop panel retains **Reset crop selection** and explains the close-to-finish workflow.
+  - Updated crop help copy to match the new undo-based workflow.
+- `components/app-sidebar.tsx`
+  - Moved mobile language and appearance preferences into the navigation ScrollArea, after the navigation links. They scroll with the menu instead of taking a fixed, non-scrollable footer area.
+  - Replaced the tall preference cards/heading with a minimal separator and two compact horizontal rows.
+- `components/language-switcher.tsx`
+  - Raised the language SelectContent to `z-[70]`, above the mobile navigation overlay at `z-[60]`. The previous stacking order could let the overlay intercept interactions with the portaled language list.
+- `tests/photo-editor.test.tsx`
+  - Added a portrait-image regression test with a mocked 600×1800 image/canvas context. It verifies that canvas drawing happens without a pixel readback when all adjustments are neutral.
+  - Added assertions for the compact mobile panel, horizontally scrollable filter controls, and removal of Apply crop.
+- `tests/app-sidebar.test.tsx`
+  - Added assertions for minimal preference rows and opening the language dropdown to expose the localized language options.
+- Existing `.github/workflows/ci.yml` was reviewed and retained: it already runs on every branch push and PR, including unit/component tests, ESLint, TypeScript, production build, route smoke tests, and Playwright/axe responsive checks. A duplicate workflow was not added.
+
+### Pull request
+- Draft PR #15 targets `stage`: https://github.com/mrcode-tech/gaget.dev/pull/15
+- The PR is intentionally draft pending a confirmed green CI run.
+
+### Verification status — not yet confirmed
+- The GitHub Actions run/status lookup returned no run or status entries for the latest branch commit during this session.
+- A local checkout/test run was unavailable because the execution environment could not resolve `github.com`; no test results are claimed.
+- [ ] Confirm PR #15's latest GitHub Actions run passes unit tests, component tests, ESLint, TypeScript, production build, smoke tests, and Playwright/axe.
+- [ ] Fix any failures and rerun CI against the final commit.
+- [ ] After CI is green, update this section with the run URL and exact result, then mark PR #15 ready for review.
+- [ ] Manual mobile checks remain necessary for real-device touch crop handles, portrait canvas fit across browsers, and the language dropdown on a narrow device.
