@@ -429,17 +429,7 @@ export function PhotoEditor() {
     </div>
 
     <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(220px,1fr)_minmax(180px,32vh)] sm:grid-cols-[48px_minmax(0,1fr)] sm:grid-rows-[auto_minmax(0,1fr)_minmax(180px,32vh)] xl:grid-cols-[52px_minmax(0,1fr)_320px] xl:grid-rows-1">
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={() => fileInputRef.current?.click()}><ImagePlus className="mr-2 h-4 w-4" /> {hasImage ? "Change photo" : "Open photo"}</Button>
-        <Input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
-        <Button variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo"><Undo2 className="mr-2 h-4 w-4" /> Undo</Button>
-        <Button variant="outline" onClick={redo} disabled={!canRedo} aria-label="Redo"><Redo2 className="mr-2 h-4 w-4" /> Redo</Button>
-        <Button variant="outline" onClick={resetEdits} disabled={!hasImage}><RotateCcw className="mr-2 h-4 w-4" /> Reset edits</Button>
-      </div>
-      <Button onClick={() => void exportImage()} disabled={!hasImage}><Download className="mr-2 h-4 w-4" /> Export photo</Button>
-    </div>
 
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="flex flex-row gap-1 border-b border-border bg-card p-1 sm:flex-col sm:border-b-0 sm:border-r sm:p-2">
         <button className={"flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 text-[10px] sm:flex-none sm:py-3 " + (cropMode ? "bg-primary text-primary-foreground" : "hover:bg-accent")} onClick={() => { setActivePanel("transform"); setCropMode(true); }} disabled={!hasImage} title="Crop"><Crop className="h-5 w-5" />Crop</button>
         <button className={"flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 text-[10px] sm:flex-none sm:py-3 " + (activePanel === "adjust" && !cropMode ? "bg-primary text-primary-foreground" : "hover:bg-accent")} onClick={() => { setActivePanel("adjust"); setCropMode(false); }} disabled={!hasImage} title="Adjust"><SlidersHorizontal className="h-5 w-5" />Adjust</button>
