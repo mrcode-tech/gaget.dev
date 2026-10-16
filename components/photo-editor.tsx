@@ -647,8 +647,8 @@ export function PhotoEditor() {
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <div data-testid="canvas-scroll-area" onClick={(event) => {
-            if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
-            else if (hasImage && activePanel !== "none" && event.target === event.currentTarget && window.matchMedia("(min-width: 768px)").matches) { setActivePanel("none"); setCropMode(false); }
+            if (activePanel !== "none" && event.target === event.currentTarget && window.innerWidth >= 768) { setActivePanel("none"); setCropMode(false); }
+            else if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
           }} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={(event) => { if (event.target === event.currentTarget) setDragOver(false); }} onDrop={(event) => {
             event.preventDefault(); setDragOver(false);
             const dropped = Array.from(event.dataTransfer.files).find((file) => file.type.startsWith("image/"));
@@ -661,7 +661,7 @@ export function PhotoEditor() {
               : hasImage
                 ? <canvas ref={canvasRef} onClick={(event) => {
                     handleCanvasClick(event);
-                    if (activePanel !== "none" && !cropMode && window.matchMedia("(min-width: 768px)").matches) { setActivePanel("none"); setCropMode(false); }
+                    if (activePanel !== "none" && !cropMode && window.innerWidth >= 768) { setActivePanel("none"); setCropMode(false); }
                   }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
                 : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
