@@ -65,7 +65,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByTestId("feature-panel").className).not.toContain("hidden");
 
     fireEvent.click(within(rail).getByRole("button", { name: "Image details" }));
-    expect(screen.getByText("Image details")).toBeTruthy();
+    expect(within(screen.getByTestId("feature-panel")).getByText("Image details")).toBeTruthy();
     expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Back to GaGet.dev home" })).toBeTruthy();
   });
@@ -88,7 +88,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     render(<PhotoEditor />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "Color & filters" })[0]);
-    expect(screen.getByText("Color & filters")).toBeTruthy();
+    expect(within(screen.getByTestId("feature-panel")).getByText("Color & filters")).toBeTruthy();
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
     expect(screen.getByTestId("feature-panel").className).toContain("hidden");
@@ -113,7 +113,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
     for (const [menuLabel, panelTitle] of featureCases) {
       fireEvent.click(screen.getAllByRole("button", { name: menuLabel })[0]);
-      expect(screen.getByText(panelTitle)).toBeTruthy();
+      expect(within(screen.getByTestId("feature-panel")).getByText(panelTitle)).toBeTruthy();
       expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
       expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
     }
@@ -151,8 +151,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByText("Images stay on this device while you edit.")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "History" }));
-    expect(screen.getByRole("button", { name: "Undo" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "Redo" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getAllByRole("button", { name: "Undo" }).every((button) => button.hasAttribute("disabled"))).toBe(true);
+    expect(screen.getAllByRole("button", { name: "Redo" }).every((button) => button.hasAttribute("disabled"))).toBe(true);
   });
 
   it("keeps zoom controls and the scrollable canvas available", () => {
