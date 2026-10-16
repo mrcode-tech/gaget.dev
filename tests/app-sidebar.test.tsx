@@ -15,9 +15,9 @@ afterEach(() => {
   navigation.pathname = "/";
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
-  delete (HTMLElement.prototype as HTMLElement & { hasPointerCapture?: unknown }).hasPointerCapture;
-  delete (HTMLElement.prototype as HTMLElement & { setPointerCapture?: unknown }).setPointerCapture;
-  delete (HTMLElement.prototype as HTMLElement & { releasePointerCapture?: unknown }).releasePointerCapture;
+  Reflect.deleteProperty(HTMLElement.prototype, "hasPointerCapture");
+  Reflect.deleteProperty(HTMLElement.prototype, "setPointerCapture");
+  Reflect.deleteProperty(HTMLElement.prototype, "releasePointerCapture");
 });
 
 function SidebarHarness() {
