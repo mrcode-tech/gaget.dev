@@ -48,6 +48,30 @@ describe("PhotoEditor workspace", () => {
   });
 
 
+
+  it("opens crop, transform, adjustment, and color tools from their logical menus", () => {
+    render(<PhotoEditor />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Image" }));
+    fireEvent.click(screen.getByRole("button", { name: "Crop…" }));
+    expect(screen.getByText("Crop & transform")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Image" }));
+    fireEvent.click(screen.getByRole("button", { name: "Resize & rotate…" }));
+    expect(screen.getByText("Crop & transform")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Adjust" }));
+    fireEvent.click(screen.getByRole("button", { name: "Color & filters…" }));
+    expect(screen.getByText("Color & filters")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Adjust" }));
+    fireEvent.click(screen.getByRole("button", { name: "Color picker…" }));
+    expect(screen.getByText("Color picker & palette")).toBeTruthy();
+  });
+
   it("routes image capabilities through the categorized Tools menu", () => {
     render(<PhotoEditor />);
 
