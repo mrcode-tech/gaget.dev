@@ -796,5 +796,5 @@ export function PhotoEditor() {
     </div>
 
     <p id="canvas-keyboard-help" className="sr-only">When the crop tool is active, focus the canvas and use arrow keys to move the crop area; hold Shift to move by larger steps. When editing text, use arrow keys to nudge the selected text. Editing controls remain available while you work on the canvas.</p>
-    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></main>;
+    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></div>}</main>;
 }
