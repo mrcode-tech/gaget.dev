@@ -87,7 +87,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(within(navPanel).getByRole("link", { name: /Photo Editor/ })).toBeTruthy();
     expect(navPanel.className).toContain("md:w-[320px]");
     expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Back to GaGet.dev home" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "GaGet.dev home" })).toBeTruthy();
 
     fireEvent.click(within(rail).getByRole("button", { name: "Audio" }));
     expect(within(screen.getByTestId("site-navigation-panel")).getByText("Audio")).toBeTruthy();
@@ -134,7 +134,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1280 });
     render(<PhotoEditor />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Color & filters" })[0]);
+    openFeature("Color & filters");
     expect(within(screen.getByTestId("feature-panel")).getByText("Color & filters")).toBeTruthy();
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
@@ -265,7 +265,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
   it("supports matrix, row, and column collage layouts with configurable matrix columns", () => {
     render(<PhotoEditor />);
-    fireEvent.click(screen.getAllByRole("button", { name: "Collage" })[0]);
+    openFeature("Collage");
     const collageInput = document.querySelector('input[type="file"][multiple]') as HTMLInputElement;
     const files = [
       new File(["one"], "one.png", { type: "image/png", lastModified: 1 }),
