@@ -488,7 +488,7 @@ export function PhotoEditor() {
     setSvgOutput(optimized); setError(""); setStatus("SVG whitespace and comments optimized locally. Review the result before using it.");
   }
   async function createCollage() {
-    if (collageFiles.length < 2) { setError("Choose at least two images to create a collage."); return; }
+    if (collageFiles.length < 2) { setError("Choose at least two images to create a collage."); return; }\n    if (collageFiles.length > 9) { setError("Choose no more than nine images for a collage."); return; }
     try {
       const images = await Promise.all(collageFiles.slice(0, 9).map(async file => {
         if (!file.type.startsWith("image/") || file.type === "image/svg+xml") throw new Error("Choose raster images for a collage.");
@@ -558,9 +558,9 @@ export function PhotoEditor() {
 
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
-          <div data-testid="canvas-scroll-area" className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#1e1e1e] p-3 sm:p-5">
+          <div data-testid="canvas-scroll-area" className={"flex min-h-0 flex-1 overflow-auto bg-[#1e1e1e] p-3 sm:p-5 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center")}>
             {hasImage
-              ? <canvas ref={canvasRef} onClick={handleCanvasClick} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.28)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
+              ? <canvas ref={canvasRef} onClick={handleCanvasClick} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.28)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
               : <div className="max-w-sm py-12 text-center text-white"><ImagePlus className="mx-auto h-12 w-12 text-slate-400" /><p className="mt-3 font-medium">Your canvas is ready</p><p className="mt-1 text-sm text-slate-400">Open a photo to crop, adjust color, rotate, add text, and export from one workspace.</p><Button className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose image</Button><p className="mt-3 text-xs text-slate-500">PNG · JPEG · WebP · GIF · AVIF</p></div>}
           </div>
           {hasImage && <div className="flex items-center justify-between border-t border-slate-800 px-3 py-2 text-[11px] text-slate-400"><span>{cropMode ? "Drag inside the crop to move it; drag edges or corners to resize." : activePanel === "text" && selectedText ? "Click the photo to position the selected text." : "Edits remain reversible until you export."}</span><span>{imageRef.current?.naturalWidth} × {imageRef.current?.naturalHeight} px</span></div>}
