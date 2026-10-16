@@ -155,6 +155,7 @@ export function PhotoEditor() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("none");
+  const [sheetExpanded, setSheetExpanded] = useState(false);
   const [cropMode, setCropMode] = useState(false);
   const [zoom, setZoom] = useState(90);
   const [printDpi, setPrintDpi] = useState(300);
@@ -269,7 +270,7 @@ export function PhotoEditor() {
   useEffect(() => {
     if (activePanel === "none") return;
     const closePanelOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setActivePanel("none"); setCropMode(false); }
+      if (event.key === "Escape") { setActivePanel("none"); setSheetExpanded(false); setCropMode(false); }
     };
     document.addEventListener("keydown", closePanelOnEscape);
     return () => document.removeEventListener("keydown", closePanelOnEscape);
@@ -578,11 +579,12 @@ export function PhotoEditor() {
   ] as const;
   const selectFeature = (panel: string) => {
     setActivePanel(panel);
+    setSheetExpanded(false);
     setCropMode(panel === "transform");
     setMenuOpen(null);
   };
 
-  return <div className="flex h-[calc(100dvh-68px)] min-h-[492px] flex-col overflow-hidden bg-background text-foreground">
+  return <main aria-label="GaGet Photo Editor" data-testid="photo-editor" className="flex h-[calc(100dvh-68px)] min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
     <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
     <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
@@ -626,25 +628,41 @@ export function PhotoEditor() {
       </div>
     </div>
 
-    <div className="relative flex min-h-0 flex-1 overflow-hidden">
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <div data-testid="canvas-scroll-area" onClick={(event) => {
-            if (activePanel !== "none" && event.target === event.currentTarget && window.innerWidth >= 768) setActivePanel("none");
-            else if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
+            if (!hasImage && !(event.target instanceof Element && event.target.closest("button"))) fileInputRef.current?.click();
           }} onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={(event) => { if (event.target === event.currentTarget) setDragOver(false); }} onDrop={(event) => {
             event.preventDefault(); setDragOver(false);
             const dropped = Array.from(event.dataTransfer.files).find((file) => file.type.startsWith("image/"));
             if (dropped) void chooseFile(dropped); else setError("Drop an image file such as PNG, JPEG, WebP, GIF, or AVIF.");
-          }} className={"relative flex min-h-0 flex-1 overflow-auto bg-muted/25 p-6 sm:p-8 lg:p-10 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center") + (dragOver ? " ring-2 ring-inset ring-primary bg-primary/5" : "")}>
+          }} className={"relative flex min-h-0 flex-1 overflow-auto bg-muted/25 p-3 sm:p-6 lg:p-8 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center") + (dragOver ? " ring-2 ring-inset ring-primary bg-primary/5" : "")}>
             {activePanel === "collage" && collageFiles.length > 0
               ? <div data-testid="collage-canvas-preview" aria-label="Collage preview in selection order" className="grid w-[90%] max-w-4xl gap-2 rounded-lg border border-border bg-background p-3 shadow-sm" style={{ gridTemplateColumns: `repeat(${collageLayout === "row" ? collageFiles.length : collageLayout === "column" ? 1 : Math.min(collageColumns, collageFiles.length)}, minmax(0, 1fr))` }}>
                   {collageFiles.map((file, index) => <div key={file.name + file.size + file.lastModified} className="relative aspect-square min-w-0 overflow-hidden rounded-md bg-muted"><img src={collagePreviewUrls[index] || undefined} alt={file.name} className="h-full w-full object-cover" /><span className="absolute left-1.5 top-1.5 rounded bg-background/90 px-1.5 py-0.5 text-xs font-semibold text-foreground">{index + 1}</span></div>)}
                 </div>
               : hasImage
-                ? <canvas ref={canvasRef} onClick={(event) => {
+                ? <canvas ref={canvasRef} role="img" tabIndex={0} aria-describedby="canvas-keyboard-help" onKeyDown={(event) => {
+                    const arrows = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+                    if (cropMode && arrows.includes(event.key) && imageRef.current) {
+                      event.preventDefault();
+                      const step = event.shiftKey ? 10 : 1;
+                      change({
+                        cropX: clamp(doc.cropX + (event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0), 0, Math.max(0, imageRef.current.naturalWidth - doc.cropWidth)),
+                        cropY: clamp(doc.cropY + (event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0), 0, Math.max(0, imageRef.current.naturalHeight - doc.cropHeight)),
+                      });
+                    } else if (activePanel === "text" && doc.selectedText !== null && arrows.includes(event.key)) {
+                      event.preventDefault();
+                      const selected = doc.texts.find((layer) => layer.id === doc.selectedText);
+                      if (selected) updateText(selected.id, {
+                        x: clamp(selected.x + (event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0) * (event.shiftKey ? 0.02 : 0.005), 0.02, 0.98),
+                        y: clamp(selected.y + (event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0) * (event.shiftKey ? 0.02 : 0.005), 0.02, 0.98),
+                      });
+                    }
+                  }} onClick={(event) => {
                     handleCanvasClick(event);
-                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
+                  }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize. Focus the canvas and use arrow keys to move the crop; hold Shift to move faster." : "Photo editing canvas. In text mode, click to position the selected text, or focus the canvas and use arrow keys to nudge it."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: zoom > 100 ? "none" : "100%", maxHeight: zoom > 100 ? "none" : "100%" }} />
                 : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
                     <p className="text-lg font-semibold">Drop your photo here</p>
@@ -656,9 +674,10 @@ export function PhotoEditor() {
         </CardContent>
       </Card>
 
-      <div className={"absolute inset-y-0 right-0 z-20 flex w-full transform bg-background/95 backdrop-blur-sm transition-[transform,opacity] duration-200 ease-out md:w-[360px] md:border-l md:border-border " + (activePanel === "none" ? "pointer-events-none translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="feature-panel" aria-label="Editing feature panel" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
-        <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card shadow-xl">
-          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><p className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</p><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => { setActivePanel("none"); setCropMode(false); }}>×</button></div>
+      <div className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:w-[320px] md:border-l md:border-t-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(68dvh,560px)] translate-y-0 md:block" : "h-[min(44dvh,360px)] translate-y-0 md:block")} data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
+        <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card md:shadow-none">
+          <button type="button" aria-label={sheetExpanded ? "Collapse editing panel" : "Expand editing panel"} aria-expanded={sheetExpanded} className="mx-auto mt-1 flex h-6 w-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setSheetExpanded((expanded) => !expanded)}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></button>
+          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 id="feature-panel-title" className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => { setActivePanel("none"); setSheetExpanded(false); setCropMode(false); }}>×</button></div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
@@ -757,11 +776,9 @@ export function PhotoEditor() {
           {hasImage && activePanel === "print" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Print size is estimated from output pixels and the selected DPI.</p><label className="block space-y-1 text-sm">Resolution (DPI)<select aria-label="Print resolution" className="h-10 w-full rounded-md border border-input bg-background px-3" value={printDpi} onChange={(e) => setPrintDpi(Number(e.target.value))}><option value="72">72 DPI · screen</option><option value="150">150 DPI · draft print</option><option value="300">300 DPI · print</option><option value="600">600 DPI · high detail</option></select></label><div className="rounded-lg border border-border p-3"><p className="text-sm font-medium">Estimated print size</p><p className="mt-1 text-lg tabular-nums">{(doc.width/printDpi).toFixed(2)} × {(doc.height/printDpi).toFixed(2)} inches</p><p className="text-xs text-muted-foreground">{(doc.width/printDpi*2.54).toFixed(1)} × {(doc.height/printDpi*2.54).toFixed(1)} cm</p></div></div>}
         </div>
       </div>
-      </div>
-
-
+      </section>
     </div>
 
-    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></div>}
-  </div>;
+    <p id="canvas-keyboard-help" className="sr-only">When the crop tool is active, focus the canvas and use arrow keys to move the crop area; hold Shift to move by larger steps. When editing text, use arrow keys to nudge the selected text. Editing controls remain available while you work on the canvas.</p>
+    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-600 dark:text-emerald-400">{status}</span>}</div></main>;
 }
