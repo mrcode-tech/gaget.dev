@@ -538,3 +538,17 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - [ ] Fix any failures and rerun CI against the final commit.
 - [ ] After CI is green, update this section with the run URL and exact result, then mark PR #15 ready for review.
 - [ ] Manual mobile checks remain necessary for real-device touch crop handles, portrait canvas fit across browsers, and the language dropdown on a narrow device.
+
+
+### CI workflow update — 2026-10-17
+- Updated `.github/workflows/ci.yml` on `feat/mobile-photo-editor-ux-fixes` and renamed the workflow to **Mobile Photo Editor CI**.
+- The workflow triggers on every branch push, all pull requests, and manual dispatch.
+- Added an explicit focused regression-test step for `tests/photo-editor.test.tsx` and `tests/app-sidebar.test.tsx` before the complete component suite.
+- Existing checks remain enabled: unit tests, component tests, ESLint, TypeScript, production build, route smoke tests, and Playwright/axe responsive accessibility tests.
+- Workflow update commit: `15c88e1c3afcd200637c73107d6c9183d3cd1d00`.
+- Follow-up test cleanup commit: `040a7f1434a5ccc2952b9070d6c2ca208844ef0f` (removes a duplicated global-mock cleanup call).
+- **Verification status: pending/unavailable from this session.** The GitHub integration returned no workflow-run records and no commit status entries for the latest commit, so there is no evidence yet that GitHub Actions started or passed. Do not mark this branch green based on the workflow file alone.
+- Check the branch's Actions page: https://github.com/mrcode-tech/gaget.dev/actions/workflows/ci.yml?query=branch%3Afeat%2Fmobile-photo-editor-ux-fixes
+- Check PR #15: https://github.com/mrcode-tech/gaget.dev/pull/15
+- [ ] Inspect the latest run for commit `040a7f1434a5ccc2952b9070d6c2ca208844ef0f`.
+- [ ] If any job fails, inspect logs, fix the underlying test or implementation, push the fix, and verify the rerun for the new commit.
