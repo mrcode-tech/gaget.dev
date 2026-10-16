@@ -57,18 +57,20 @@ describe("AppSidebar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
 
-    expect(screen.getByRole("heading", { name: "Preferences" })).toBeTruthy();
-    const languageCaption = screen.getByText("Language", { selector: "p" });
-    const appearanceCaption = screen.getByText("Appearance", { selector: "p" });
+    const languageCaption = screen.getByText("Language", { selector: "span" });
+    const appearanceCaption = screen.getByText("Appearance", { selector: "span" });
     expect(screen.getByRole("combobox", { name: "Language" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
 
     const languageRow = languageCaption.parentElement;
     const appearanceRow = appearanceCaption.parentElement;
-    expect(languageRow?.className).toContain("space-y-2");
-    expect(appearanceRow?.className).toContain("space-y-2");
+    expect(languageRow?.className).toContain("min-h-10");
+    expect(appearanceRow?.className).toContain("min-h-10");
     expect(languageRow).not.toBe(appearanceRow);
     expect(languageRow?.parentElement).toBe(appearanceRow?.parentElement);
+    expect(languageRow?.parentElement?.parentElement?.className).toContain("border-t");
+    fireEvent.click(screen.getByRole("combobox", { name: "Language" }));
+    expect(screen.getByRole("option", { name: "Spanish" })).toBeTruthy();
   });
 
   it("marks the current route as active", () => {
