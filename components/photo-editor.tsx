@@ -159,6 +159,13 @@ export function PhotoEditor() {
   const [cropMode, setCropMode] = useState(false);
   const [zoom, setZoom] = useState(90);
   const [printDpi, setPrintDpi] = useState(300);
+  const [paletteColors, setPaletteColors] = useState<string[]>([]);
+  const [base64Output, setBase64Output] = useState("");
+  const [svgOutput, setSvgOutput] = useState("");
+  const [collageFiles, setCollageFiles] = useState<File[]>([]);
+  const svgInputRef = useRef<HTMLInputElement>(null);
+  const collageInputRef = useRef<HTMLInputElement>(null);
+  const sourceFileRef = useRef<File | null>(null);
   const menuBarRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const cropDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number; originW: number; originH: number; sourceW: number; sourceH: number; mode: "new" | "move" | "resize"; left: boolean; right: boolean; top: boolean; bottom: boolean } | null>(null);
@@ -293,6 +300,7 @@ export function PhotoEditor() {
       if (sourceUrlRef.current) URL.revokeObjectURL(sourceUrlRef.current);
       sourceUrlRef.current = url;
       imageRef.current = image;
+      sourceFileRef.current = file;
       const initial = defaults(image.naturalWidth, image.naturalHeight);
       historyRef.current = [];
       futureRef.current = [];
@@ -431,6 +439,79 @@ export function PhotoEditor() {
     downloadBlob(blob, fileName + "-edited." + extension);
     setStatus("Exported " + canvas.width + " × " + canvas.height + " pixels (" + (blob.size / 1024).toFixed(1) + " KB). Processing stayed in your browser.");
   }
+  function generatePalette() {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d", { willReadFrequently: true });
+    if (!canvas || !ctx) return;
+    const sample = document.createElement("canvas"); sample.width = 64; sample.height = 64;
+    const sampleCtx = sample.getContext("2d", { willReadFrequently: true });
+    if (!sampleCtx) return;
+    sampleCtx.drawImage(canvas, 0, 0, 64, 64);
+    const data = sampleCtx.getImageData(0, 0, 64, 64).data;
+    const counts = new Map<string, number>();
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 32) continue;
+      const rgb = [data[i], data[i + 1], data[i + 2]].map(v => clamp(Math.round(v / 32) * 32, 0, 255));
+      const hex = "#" + rgb.map(v => v.toString(16).padStart(2, "0")).join("").toUpperCase();
+      counts.set(hex, (counts.get(hex) ?? 0) + 1);
+    }
+    setPaletteColors([...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([hex]) => hex));
+    setStatus("Generated a six-color palette from a downsampled canvas preview.");
+  }
+  async function createBase64() {
+    const file = sourceFileRef.current;
+    if (!file) { setError("Open a photo before converting it to Base64."); return; }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    setBase64Output("data:" + (file.type || "application/octet-stream") + ";base64," + window.btoa(binary));
+    setStatus("Base64 data URL generated locally.");
+  }
+  function exportFavicon(size: number) {
+    const source = canvasRef.current;
+    if (!source) return;
+    const output = document.createElement("canvas"); output.width = size; output.height = size;
+    const ctx = output.getContext("2d");
+    if (!ctx) { setError("Could not create the favicon canvas."); return; }
+    const scale = Math.min(size / source.width, size / source.height);
+    const width = source.width * scale, height = source.height * scale;
+    ctx.drawImage(source, (size - width) / 2, (size - height) / 2, width, height);
+    output.toBlob(blob => { if (blob) { downloadBlob(blob, fileName + "-favicon-" + size + ".png"); setStatus("Exported " + size + " × " + size + " favicon PNG."); } else setError("Could not export this favicon size."); }, "image/png");
+  }
+  async function onSvgChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]; event.target.value = "";
+    if (!file) return;
+    if (file.size > maxBytes || !(file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg"))) { setError("Choose an SVG file smaller than 25 MB."); return; }
+    const source = await file.text();
+    if (!/<svg\b/i.test(source)) { setError("The selected file does not contain an SVG root element."); return; }
+    const optimized = source.replace(/<!--[\s\S]*?-->/g, "").replace(/>\s+</g, "><").replace(/[\t\r\n]+/g, " ").replace(/ {2,}/g, " ").trim();
+    setSvgOutput(optimized); setError(""); setStatus("SVG whitespace and comments optimized locally. Review the result before using it.");
+  }
+  async function createCollage() {
+    if (collageFiles.length < 2) { setError("Choose at least two images to create a collage."); return; }
+    try {
+      const images = await Promise.all(collageFiles.slice(0, 9).map(async file => {
+        if (!file.type.startsWith("image/") || file.type === "image/svg+xml") throw new Error("Choose raster images for a collage.");
+        if (file.size > maxBytes) throw new Error("Each collage image must be smaller than 25 MB.");
+        const url = URL.createObjectURL(file);
+        try { return await loadImage(url); } finally { URL.revokeObjectURL(url); }
+      }));
+      const cell = 480, columns = Math.ceil(Math.sqrt(images.length)), rows = Math.ceil(images.length / columns);
+      const collage = document.createElement("canvas"); collage.width = columns * cell; collage.height = rows * cell;
+      const ctx = collage.getContext("2d");
+      if (!ctx) throw new Error("Could not create the collage canvas.");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, collage.width, collage.height);
+      images.forEach((image, index) => {
+        const x = (index % columns) * cell, y = Math.floor(index / columns) * cell;
+        const scale = Math.max(cell / image.naturalWidth, cell / image.naturalHeight);
+        const width = image.naturalWidth * scale, height = image.naturalHeight * scale;
+        ctx.save(); ctx.beginPath(); ctx.rect(x, y, cell, cell); ctx.clip();
+        ctx.drawImage(image, x + (cell - width) / 2, y + (cell - height) / 2, width, height); ctx.restore();
+      });
+      collage.toBlob(blob => { if (blob) downloadBlob(blob, "gaget-collage.png"); else setError("Could not export the collage."); }, "image/png");
+      setStatus("Created a " + columns + " × " + rows + " collage from " + images.length + " images.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not create collage."); }
+  }
   function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     void chooseFile(event.target.files?.[0]);
     event.target.value = "";
@@ -439,6 +520,8 @@ export function PhotoEditor() {
 
   return <div className="flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
+    <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
+    <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => setCollageFiles(Array.from(event.target.files ?? []))} className="hidden" />
     <div ref={menuBarRef} className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
       <LocaleLink href="/" aria-label="Back to GaGet.dev home" title="Back to GaGet.dev home" className="mr-1 inline-flex h-8 shrink-0 items-center gap-2 rounded-md px-2 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Home className="h-4 w-4" /><span className="hidden sm:inline">GaGet.dev</span></LocaleLink>
       <span className="mr-1 hidden h-5 border-l border-border md:block" />
