@@ -49,6 +49,7 @@ for (const viewport of viewports) {
     await expect(panel).toHaveAttribute("aria-labelledby", "feature-panel-title");
     await expect(panel.getByRole("heading", { name: "Text & watermark" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Close feature panel" })).toBeVisible();
+    await expect.poll(() => panel.evaluate((element) => getComputedStyle(element).transitionProperty)).toBe("none");
 
     if (viewport.width < 768) {
       await expect(page.getByRole("button", { name: "Expand editing panel" })).toBeVisible();
