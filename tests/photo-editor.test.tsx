@@ -349,8 +349,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
       () => context as unknown as CanvasRenderingContext2D,
     );
     class FilterPreviewImage {
-      naturalWidth = 640;
-      naturalHeight = 480;
+      naturalWidth = 6000;
+      naturalHeight = 4000;
       onload: (() => void) | null = null;
       onerror: (() => void) | null = null;
       set src(_value: string) { queueMicrotask(() => this.onload?.()); }
@@ -369,6 +369,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
     const canvas = document.querySelector("canvas[role='img']") as HTMLCanvasElement;
     expect(canvas.style.filter).toContain("brightness(1.5)");
+    expect(canvas.width * canvas.height).toBeLessThanOrEqual(2_000_000);
     expect(getImageData).not.toHaveBeenCalled();
     expect(screen.getByTestId("filter-adjustments").className).toContain("overscroll-y-contain");
   });
