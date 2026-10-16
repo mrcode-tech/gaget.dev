@@ -1,1 +1,65 @@
-import type {Metadata,Viewport} from "next";import {headers} from "next/headers";import {Inter} from "next/font/google";import "./globals.css";import {ThemeProvider} from "@/components/theme-provider";import {AppSidebar} from "@/components/app-sidebar";import {AppHeader} from "@/components/app-header";import {I18nProvider} from "@/components/i18n-provider";import {isLocale,localeDirections,type Locale} from "@/lib/i18n/messages";import {Analytics} from "@vercel/analytics/next";const inter=Inter({subsets:["latin"],variable:"--font-inter",display:"swap"});const siteUrl=process.env.NEXT_PUBLIC_SITE_URL||"https://gaget.dev";export async function generateMetadata():Promise<Metadata>{const h=await headers();const raw=h.get("x-gaget-locale")||"en";const locale:Locale=isLocale(raw)?raw:"en";return {metadataBase:new URL(siteUrl),title:{default:"GaGet.dev — Developer Tools in One Place",template:"%s | GaGet.dev"},description:"Free online developer utilities to format, validate, decode, compare, and generate data. Fast browser-based tools with privacy in mind.",applicationName:"GaGet.dev",openGraph:{type:"website",siteName:"GaGet.dev",title:"GaGet.dev — Developer Tools in One Place",description:"Simple, fast developer utilities for everyday work.",url:siteUrl},twitter:{card:"summary_large_image",title:"GaGet.dev — Developer Tools in One Place",description:"Simple, fast developer utilities for everyday work."},robots:{index:locale==="en",follow:true}}};export const viewport:Viewport={width:"device-width",initialScale:1,themeColor:[{media:"(prefers-color-scheme: light)",color:"#f8fafc"},{media:"(prefers-color-scheme: dark)",color:"#0b1020"}]};export default async function RootLayout({children}:Readonly<{children:React.ReactNode}>){const h=await headers();const raw=h.get("x-gaget-locale")||"en";const locale:Locale=isLocale(raw)?raw:"en";return <html lang={locale} dir={localeDirections[locale]} suppressHydrationWarning><body className={`${inter.variable} font-sans`}><I18nProvider locale={locale}><ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange><AppSidebar/><div className={localeDirections[locale]==="ltr"?"min-h-screen lg:pl-[248px]":"min-h-screen lg:pr-[248px]"}><AppHeader/>{children}</div></ThemeProvider></I18nProvider><Analytics/></body></html>}
+import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AppShell } from "@/components/app-shell";
+import { I18nProvider } from "@/components/i18n-provider";
+import { isLocale, localeDirections, type Locale } from "@/lib/i18n/messages";
+import { Analytics } from "@vercel/analytics/next";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gaget.dev";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const h = await headers();
+  const raw = h.get("x-gaget-locale") || "en";
+  const locale: Locale = isLocale(raw) ? raw : "en";
+  return {
+    metadataBase: new URL(siteUrl),
+    title: { default: "GaGet.dev — Developer Tools in One Place", template: "%s | GaGet.dev" },
+    description: "Free online developer utilities to format, validate, decode, compare, and generate data. Fast browser-based tools with privacy in mind.",
+    applicationName: "GaGet.dev",
+    openGraph: {
+      type: "website",
+      siteName: "GaGet.dev",
+      title: "GaGet.dev — Developer Tools in One Place",
+      description: "Simple, fast developer utilities for everyday work.",
+      url: siteUrl,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "GaGet.dev — Developer Tools in One Place",
+      description: "Simple, fast developer utilities for everyday work.",
+    },
+    robots: { index: locale === "en", follow: true },
+  };
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1020" },
+  ],
+};
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const h = await headers();
+  const raw = h.get("x-gaget-locale") || "en";
+  const locale: Locale = isLocale(raw) ? raw : "en";
+
+  return (
+    <html lang={locale} dir={localeDirections[locale]} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans`}>
+        <I18nProvider locale={locale}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <AppShell>{children}</AppShell>
+          </ThemeProvider>
+        </I18nProvider>
+        <Analytics />
+      </body>
+    </html>
+  );
+}
