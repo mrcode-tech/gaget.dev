@@ -156,31 +156,21 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             </div>
           </div>
         </nav>
-      </ScrollArea>
-
-      {mobile && (
-        <section
-          aria-label="Preferences"
-          className="shrink-0 space-y-4 border-t border-border px-4 py-4"
-        >
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Preferences
-          </h2>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">{t("nav.language")}</p>
-            <div className="flex min-w-0 items-center">
-              <LanguageSwitcher />
+        {mobile && (
+          <section aria-label="Preferences" className="mt-3 space-y-1 border-t border-border px-1 pt-2">
+            <div className="flex min-h-10 items-center justify-between gap-3 px-2">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">{t("nav.language")}</span>
+              <div className="flex min-w-0 items-center" onClick={(event) => event.stopPropagation()}>
+                <LanguageSwitcher />
+              </div>
             </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">{t("nav.appearance")}</p>
-            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-              <span className="text-sm text-muted-foreground">Light / dark theme</span>
+            <div className="flex min-h-10 items-center justify-between gap-3 px-2">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">{t("nav.appearance")}</span>
               <ThemeToggle />
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+      </ScrollArea>
 
       <div
         className={cn(
