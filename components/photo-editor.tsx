@@ -264,6 +264,8 @@ export function PhotoEditor() {
     ctx.restore();
     // Keep interactive previews cheap: CSS filters update without synchronously
     // rewriting every pixel. Full-resolution pixel adjustments run only on export.
+    ctx.save();
+    ctx.scale(previewScale, previewScale);
     state.texts.forEach((layer) => {
       ctx.save();
       ctx.globalAlpha = layer.opacity / 100;
@@ -282,6 +284,7 @@ export function PhotoEditor() {
       ctx.fillText(layer.text, 0, 0, outW * 0.9);
       ctx.restore();
     });
+    ctx.restore();
   }, [cropMode]);
 
   useEffect(() => { if (hasImage) draw(doc); }, [doc, hasImage, draw]);
