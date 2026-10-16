@@ -5,7 +5,6 @@ import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { categories, tools } from "@/lib/tools/registry";
 
 type TextLayer = {
   id: number;
