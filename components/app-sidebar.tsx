@@ -52,51 +52,40 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           isCollapsed ? "justify-center px-2" : "gap-3 px-5"
         )}
       >
-        <LocaleLink
-          href="/"
-          aria-label="GaGet.dev home"
-          className="flex min-w-0 items-center gap-3"
-          onClick={mobile ? () => setMobileOpen(false) : undefined}
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Code2 className="h-4 w-4" />
-          </span>
-          {!isCollapsed && (
+        {!isCollapsed && (
+          <LocaleLink
+            href="/"
+            aria-label="GaGet.dev home"
+            className="flex min-w-0 items-center gap-3"
+            onClick={mobile ? () => setMobileOpen(false) : undefined}
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <Code2 className="h-4 w-4" />
+            </span>
             <span className="whitespace-nowrap text-base font-bold tracking-tight">
               GaGet<span className="text-primary">.dev</span>
             </span>
-          )}
-        </LocaleLink>
-        {!mobile && !isCollapsed && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-auto h-8 w-8 shrink-0"
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
-            onClick={onToggle}
-          >
-            {direction === "ltr" ? (
-              <PanelLeftClose className="h-4 w-4" />
-            ) : (
-              <PanelLeftOpen className="h-4 w-4" />
-            )}
-          </Button>
+          </LocaleLink>
         )}
-        {!mobile && isCollapsed && (
+        {!mobile && (
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-[76px] hidden h-8 w-8 -translate-x-1/2 lg:inline-flex"
-            style={direction === "ltr" ? { left: "32px" } : { right: "32px" }}
-            aria-label="Expand sidebar"
-            title="Expand sidebar"
+            className={cn("h-8 w-8 shrink-0", !isCollapsed && "ml-auto")}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={onToggle}
           >
-            {direction === "ltr" ? (
-              <PanelLeftOpen className="h-4 w-4" />
-            ) : (
+            {isCollapsed ? (
+              direction === "ltr" ? (
+                <PanelLeftOpen className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )
+            ) : direction === "ltr" ? (
               <PanelLeftClose className="h-4 w-4" />
+            ) : (
+              <PanelLeftOpen className="h-4 w-4" />
             )}
           </Button>
         )}
