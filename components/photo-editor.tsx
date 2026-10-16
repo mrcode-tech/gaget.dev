@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { categories, tools } from "@/lib/tools/registry";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type TextLayer = {
   id: number;
@@ -668,6 +669,22 @@ export function PhotoEditor() {
       <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-border bg-card py-3 md:flex">
         {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
       </aside>
+      <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center border-r border-border bg-card py-2 md:flex">
+        <ScrollArea className="h-full w-full"><div className="flex flex-col items-center gap-1.5 py-1">{siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
+      </aside>
+      <div className={"relative z-10 flex h-full shrink-0 overflow-hidden border-r border-border bg-background transition-[width] duration-200 ease-out " + (activeNavPanel === null ? "pointer-events-none w-0 border-r-0" : "w-[min(320px,calc(100vw-48px))] md:w-[320px]")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
+        <div className="flex h-full min-h-0 w-[320px] min-w-[min(320px,calc(100vw-48px))] flex-col bg-card shadow-xl">
+          <div className="flex min-h-12 shrink-0 items-center justify-between border-b border-border px-4">
+            <div className="flex items-center gap-2"><Grid2X2 className="h-4 w-4 text-muted-foreground" /><p className="text-sm font-semibold">{navPanelTitle}</p></div>
+            <button type="button" tabIndex={activeNavPanel === null ? -1 : 0} aria-label="Close GaGet.dev navigation" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setActiveNavPanel(null)}>×</button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            {activeNavPanel === "home" && <div className="mb-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Browse by category</p><div className="grid grid-cols-2 gap-2">{categories.map((category) => { const Icon = category.icon; return <button key={category.slug} type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="flex min-w-0 items-center gap-2 rounded-lg border border-border p-2 text-left text-sm hover:bg-accent" onClick={() => setActiveNavPanel(`category:${category.slug}`)}><Icon className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="truncate">{category.name}</span></button>; })}</div></div>}
+            {activeNavPanel === "favorites" ? <div className="rounded-xl border border-dashed border-border p-5 text-center"><Heart className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm font-medium">No saved tools here yet</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Browse the catalog to find a tool for your next task.</p><button type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="mt-3 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground" onClick={() => setActiveNavPanel("all-tools")}>Browse all tools</button></div>
+              : <div className="space-y-1">{navPanelTools.map((tool) => { const Icon = tool.icon; return <LocaleLink key={tool.href} href={tool.href} tabIndex={activeNavPanel === null ? -1 : 0} onClick={() => setActiveNavPanel(null)} className="flex items-start gap-3 rounded-lg p-3 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{tool.name}</span><span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{tool.description}</span></span><ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /></LocaleLink>; })}</div>}
+          </div>
+        </div>
+      </div>
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <div data-testid="canvas-scroll-area" onClick={(event) => {
@@ -700,7 +717,7 @@ export function PhotoEditor() {
         </CardContent>
       </Card>
 
-      <div className={"absolute inset-0 z-20 flex transform bg-background/95 backdrop-blur-sm transition-[transform,opacity] duration-200 ease-out md:inset-y-0 md:left-auto md:right-0 md:w-[360px] md:border-l md:border-border " + (activePanel === "none" ? "pointer-events-none translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="feature-panel" aria-label="Editing feature panel" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
+      <div className={"absolute inset-y-0 right-0 z-20 flex w-full transform bg-background/95 backdrop-blur-sm transition-[transform,opacity] duration-200 ease-out md:w-[360px] md:border-l md:border-border " + (activePanel === "none" ? "pointer-events-none translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="feature-panel" aria-label="Editing feature panel" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
         <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card shadow-xl">
           <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><p className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</p><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => { setActivePanel("none"); setCropMode(false); }}>×</button></div>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
@@ -802,19 +819,7 @@ export function PhotoEditor() {
         </div>
       </div>
       </div>
-      <div className={"absolute inset-y-0 left-0 z-10 flex w-full transform bg-background transition-[transform,opacity] duration-200 ease-out md:w-[320px] md:border-r md:border-border " + (activeNavPanel === null ? "pointer-events-none -translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
-        <div className="flex min-h-0 w-full flex-col bg-card shadow-xl">
-          <div className="flex min-h-12 shrink-0 items-center justify-between border-b border-border px-4">
-            <div className="flex items-center gap-2"><Grid2X2 className="h-4 w-4 text-muted-foreground" /><p className="text-sm font-semibold">{navPanelTitle}</p></div>
-            <button type="button" tabIndex={activeNavPanel === null ? -1 : 0} aria-label="Close GaGet.dev navigation" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setActiveNavPanel(null)}>×</button>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {activeNavPanel === "home" && <div className="mb-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Browse by category</p><div className="grid grid-cols-2 gap-2">{categories.map((category) => { const Icon = category.icon; return <button key={category.slug} type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="flex min-w-0 items-center gap-2 rounded-lg border border-border p-2 text-left text-sm hover:bg-accent" onClick={() => setActiveNavPanel(`category:${category.slug}`)}><Icon className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="truncate">{category.name}</span></button>; })}</div></div>}
-            {activeNavPanel === "favorites" ? <div className="rounded-xl border border-dashed border-border p-5 text-center"><Heart className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm font-medium">No saved tools here yet</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Browse the catalog to find a tool for your next task.</p><button type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="mt-3 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground" onClick={() => setActiveNavPanel("all-tools")}>Browse all tools</button></div>
-              : <div className="space-y-1">{navPanelTools.map((tool) => { const Icon = tool.icon; return <LocaleLink key={tool.href} href={tool.href} tabIndex={activeNavPanel === null ? -1 : 0} onClick={() => setActiveNavPanel(null)} className="flex items-start gap-3 rounded-lg p-3 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{tool.name}</span><span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{tool.description}</span></span><ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /></LocaleLink>; })}</div>}
-          </div>
-        </div>
-      </div>
+
 
     </div>
 
