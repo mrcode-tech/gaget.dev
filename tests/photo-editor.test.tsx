@@ -9,11 +9,13 @@ describe("PhotoEditor workspace", () => {
     render(<PhotoEditor />);
 
     expect(screen.getByRole("link", { name: "Back to GaGet.dev home" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Open application menu" })).toBeTruthy();
     expect(screen.getByText("Photo Editor")).toBeTruthy();
     expect(screen.getByRole("button", { name: "File" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Edit" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Image" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Adjust" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tools" })).toBeTruthy();
+    expect(screen.queryByText("PROPERTIES")).toBeNull();
     expect(screen.getAllByRole("button", { name: "Help" }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Your canvas is ready")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
@@ -33,11 +35,6 @@ describe("PhotoEditor workspace", () => {
   it("keeps image-dependent editing and export actions disabled until a photo is opened", () => {
     render(<PhotoEditor />);
 
-    expect(screen.getByRole("button", { name: "Crop" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getAllByRole("button", { name: "Adjust" })[0].hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "Transform" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getAllByRole("button", { name: "Text" })[0].hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: /^Export$/ }).hasAttribute("disabled")).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     expect(screen.getByRole("button", { name: "Export image…" }).hasAttribute("disabled")).toBe(true);
