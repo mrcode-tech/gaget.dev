@@ -552,3 +552,14 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - Check PR #15: https://github.com/mrcode-tech/gaget.dev/pull/15
 - [ ] Inspect the latest run for commit `040a7f1434a5ccc2952b9070d6c2ca208844ef0f`.
 - [ ] If any job fails, inspect logs, fix the underlying test or implementation, push the fix, and verify the rerun for the new commit.
+
+
+### CI cadence adjustment — 2026-10-17
+- Per the requested workflow, removed automatic `push` and `pull_request` triggers from `.github/workflows/ci.yml`.
+- The full pipeline now runs only via `workflow_dispatch`, so intermediate commits do not start CI. Manually trigger it after the implementation and test-fix batch is complete; if fixes are needed, finish the next batch before triggering another run.
+- The focused Photo Editor/sidebar regression step remains part of the full pipeline, followed by component tests, lint, typecheck, production build, route smoke tests, and Playwright/axe.
+- Workflow trigger change commit: `431ad211291702609196578027a9c866b67ebcb9`.
+- **Current verification state:** the latest code/test-fix commit's workflow run was pending when last checked. This workflow-only commit intentionally will not start a run. Wait until the task's changes are complete, then use the workflow's **Run workflow** button for branch `feat/mobile-photo-editor-ux-fixes`.
+- [ ] Finish any remaining implementation/test fixes.
+- [ ] Manually run the complete CI workflow on the final feature-branch commit and record the result.
+- [ ] Mark PR #15 ready for review only after a green full run.
