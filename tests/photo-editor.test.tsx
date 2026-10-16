@@ -16,6 +16,32 @@ function openFeature(label: string) {
   fireEvent.click(screen.getByRole("button", { name: label }));
 }
 
+async function loadTestPhoto() {
+  const context = {
+    clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
+    rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
+    strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
+    stroke: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
+  };
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+    () => context as unknown as CanvasRenderingContext2D,
+  );
+  class TestImage {
+    naturalWidth = 640;
+    naturalHeight = 480;
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+  }
+  vi.stubGlobal("Image", TestImage);
+
+  const fileInput = document.querySelector('input[type="file"]:not([multiple])') as HTMLInputElement;
+  fireEvent.change(fileInput, {
+    target: { files: [new File(["test-photo"], "test-photo.png", { type: "image/png" })] },
+  });
+  await waitFor(() => expect(screen.queryByText("Choose a photo to enable editing controls.")).toBeNull());
+}
+
 beforeEach(() => {
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
@@ -268,8 +294,9 @@ describe("PhotoEditor workspace UX acceptance", () => {
   });
 
 
-  it("keeps mobile crop controls compact and removes the redundant Apply crop action", () => {
+  it("keeps mobile crop controls compact and removes the redundant Apply crop action", async () => {
     render(<PhotoEditor />);
+    await loadTestPhoto();
     openFeature("Crop & resize");
     const panel = screen.getByTestId("feature-panel");
     expect(panel.className).toContain("h-[min(24dvh,200px)]");
@@ -279,8 +306,9 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(panel.querySelector(".overflow-x-auto")).toBeTruthy();
   });
 
-  it("uses horizontally scrollable filter controls on mobile", () => {
+  it("uses horizontally scrollable filter controls on mobile", async () => {
     render(<PhotoEditor />);
+    await loadTestPhoto();
     openFeature("Color & filters");
     const panel = screen.getByTestId("feature-panel");
     expect(panel.className).toContain("h-[min(24dvh,200px)]");
