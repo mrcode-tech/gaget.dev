@@ -322,3 +322,19 @@ Component tests now cover:
 
 - Removed the duplicate canvas caption from the toolbar and added an acceptance assertion that there is only one “No image open” caption and no editor hamburger button.
 - Final successful CI run: https://github.com/mrcode-tech/gaget.dev/actions/runs/38905877319 (commit 786fc9baf65564f3134958ba0905311f86583381).
+
+
+## Follow-up UX acceptance plan — 2026-10-16
+
+User-requested changes for this iteration, written before implementation:
+
+1. Remove the persistent panel footer **Done** button. Keep the panel-header **X** for mobile and keyboard/screen-reader users. On desktop, clicking the canvas/workspace outside the panel dismisses it.
+2. Replace the two navigation-only buttons in the editor rail with a complete, accessible capability rail. Rail icons open contextual panels without navigating away or destroying the current edit session. Keep the brand/home link as the sole home navigation affordance.
+3. Make the empty canvas use the active light/dark theme tokens, provide a generous neutral workspace margin, and accept image drag/drop as well as click-to-open.
+4. Make collage selection additive (append new files, deduplicate, allow removal, preserve order, cap at nine), show numbered thumbnails and a live ordered preview, and support matrix / single-row / single-column layouts with configurable matrix columns.
+5. Consolidate the canvas caption/status and dimensions into the existing contextual toolbar; remove the extra canvas-footer row so there are only the app menu and one work toolbar.
+6. Replace generic feature categories (Image / Adjust / Tools) with capability-specific menu entries, keeping File/History/Help as application-level actions. Each capability menu item opens the relevant contextual panel and never navigates away.
+7. Add acceptance tests before implementation for: no Done button, X dismissal, desktop canvas dismissal, capability rail actions stay on the editor, theme-aware empty state, drag/drop handlers, additive/deduplicated collage selections, remove/order/layout settings, preview, no third toolbar/footer, and capability-first menus.
+8. Re-run the full CI pipeline on the final commit: unit tests, component tests, ESLint, TypeScript, production build, and production route smoke tests.
+
+Implementation must preserve the current branch and avoid deleting the original-image/local-processing protections. Mobile panels remain full-workspace views with a close X; desktop panels remain contextual right-side overlays. If browser automation is unavailable, explicitly retain real-device/touch testing as a manual follow-up rather than claiming it passed.
