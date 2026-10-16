@@ -444,3 +444,13 @@ Implemented on `feat/brand-and-user-experience`:
 - CI run: https://github.com/mrcode-tech/gaget.dev/actions/runs/38943817043
 - [ ] Real-device manual check remains necessary for touch crop handles, sheet drag feel (the current accessible handle is a tap-to-expand/collapse control), on-screen keyboard behavior, and VoiceOver/TalkBack screen-reader behavior.
 - [ ] No merge performed; continue work only on `feat/brand-and-user-experience`.
+
+
+## Mobile navigation preferences refinement — 2026-10-16
+
+Scope and acceptance criteria:
+- Keep the mobile top bar focused on the hamburger and tool search; hide language and theme controls from that narrow header.
+- Add language selection and light/dark theme toggle to the mobile navigation drawer, in a clearly separated preferences row near the bottom.
+- Preserve the existing desktop header controls and shared sidebar behavior, including RTL layout.
+- Add regression tests for the mobile drawer controls and verify desktop header controls remain available.
+- Run component tests, lint, typecheck, production build, smoke tests, and the responsive/accessibility browser suite; record actual results before calling the change complete.
