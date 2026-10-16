@@ -39,7 +39,7 @@ async function loadTestPhoto() {
   fireEvent.change(fileInput, {
     target: { files: [new File(["test-photo"], "test-photo.png", { type: "image/png" })] },
   });
-  await waitFor(() => expect(screen.queryByText("Choose a photo to enable editing controls.")).toBeNull());
+  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("Photo loaded locally"));
 }
 
 beforeEach(() => {
