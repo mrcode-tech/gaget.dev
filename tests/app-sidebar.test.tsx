@@ -13,6 +13,11 @@ vi.mock("next/navigation", () => ({
 afterEach(() => {
   cleanup();
   navigation.pathname = "/";
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  Reflect.deleteProperty(HTMLElement.prototype, "hasPointerCapture");
+  Reflect.deleteProperty(HTMLElement.prototype, "setPointerCapture");
+  Reflect.deleteProperty(HTMLElement.prototype, "releasePointerCapture");
 });
 
 function SidebarHarness() {
@@ -57,18 +62,25 @@ describe("AppSidebar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
 
-    expect(screen.getByRole("heading", { name: "Preferences" })).toBeTruthy();
-    const languageCaption = screen.getByText("Language", { selector: "p" });
-    const appearanceCaption = screen.getByText("Appearance", { selector: "p" });
+    const languageCaption = screen.getAllByText("Language", { selector: "span" })[0];
+    const appearanceCaption = screen.getByText("Appearance", { selector: "span" });
     expect(screen.getByRole("combobox", { name: "Language" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
 
     const languageRow = languageCaption.parentElement;
     const appearanceRow = appearanceCaption.parentElement;
-    expect(languageRow?.className).toContain("space-y-2");
-    expect(appearanceRow?.className).toContain("space-y-2");
+    expect(languageRow?.className).toContain("min-h-10");
+    expect(appearanceRow?.className).toContain("min-h-10");
     expect(languageRow).not.toBe(appearanceRow);
     expect(languageRow?.parentElement).toBe(appearanceRow?.parentElement);
+    expect(languageRow?.parentElement?.className).toContain("border-t");
+    Object.defineProperties(HTMLElement.prototype, {
+      hasPointerCapture: { configurable: true, value: () => false },
+      setPointerCapture: { configurable: true, value: () => undefined },
+      releasePointerCapture: { configurable: true, value: () => undefined },
+    });
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Language" }), { key: "ArrowDown" });
+    expect(screen.getByRole("option", { name: "Español" })).toBeTruthy();
   });
 
   it("marks the current route as active", () => {

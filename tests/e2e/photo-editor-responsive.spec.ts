@@ -53,7 +53,6 @@ for (const viewport of viewports) {
 
     if (viewport.width < 768) {
       await expect(page.getByRole("button", { name: "Expand editing panel" })).toBeVisible();
-      await expect(panel).toHaveClass(/h-\[min\(44dvh,360px\)\]/);
     } else {
       await expect(panel).toHaveClass(/md:w-\[320px\]/);
     }
@@ -65,6 +64,10 @@ for (const viewport of viewports) {
     expect(panelBox, "editing panel should have a measurable viewport").not.toBeNull();
     if (canvasBox && panelBox && viewport.width < 768) {
       expect(panelBox.y).toBeGreaterThanOrEqual(canvasBox.y + canvasBox.height - 2);
+      // The mobile feature sheet is intentionally compact; verify rendered geometry
+      // rather than coupling this test to Tailwind class names.
+      expect(panelBox.height).toBeGreaterThan(0);
+      expect(panelBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.24, 200) + 2);
     } else if (canvasBox && panelBox) {
       expect(panelBox.x).toBeGreaterThanOrEqual(canvasBox.x + canvasBox.width - 2);
     }

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PhotoEditor } from "@/components/photo-editor";
 
@@ -14,6 +14,32 @@ const featureGroups: Record<string, string> = {
 function openFeature(label: string) {
   fireEvent.click(screen.getByRole("button", { name: featureGroups[label] }));
   fireEvent.click(screen.getByRole("button", { name: label }));
+}
+
+async function loadTestPhoto() {
+  const context = {
+    clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
+    rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
+    strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
+    stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
+  };
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+    () => context as unknown as CanvasRenderingContext2D,
+  );
+  class TestImage {
+    naturalWidth = 640;
+    naturalHeight = 480;
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+  }
+  vi.stubGlobal("Image", TestImage);
+
+  const fileInput = document.querySelector('input[type="file"]:not([multiple])') as HTMLInputElement;
+  fireEvent.change(fileInput, {
+    target: { files: [new File(["test-photo"], "test-photo.png", { type: "image/png" })] },
+  });
+  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("Photo loaded locally"));
 }
 
 beforeEach(() => {
@@ -36,6 +62,7 @@ afterEach(() => {
   if (originalRevokeObjectURL) Object.defineProperty(URL, "revokeObjectURL", { configurable: true, writable: true, value: originalRevokeObjectURL });
   else Reflect.deleteProperty(URL, "revokeObjectURL");
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("PhotoEditor workspace UX acceptance", () => {
@@ -114,12 +141,12 @@ describe("PhotoEditor workspace UX acceptance", () => {
     openFeature("Crop & resize");
 
     const panel = screen.getByTestId("feature-panel");
-    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
     fireEvent.click(screen.getByRole("button", { name: "Expand editing panel" }));
-    expect(panel.className).toContain("h-[min(68dvh,560px)]");
+    expect(panel.className).toContain("h-[min(52dvh,420px)]");
     expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
-    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
@@ -264,6 +291,67 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
     fireEvent.change(screen.getByLabelText("Collage layout"), { target: { value: "column" } });
     expect(screen.getByTestId("collage-canvas-preview").getAttribute("style")).toContain("repeat(1");
+  });
+
+
+  it("keeps mobile crop controls compact and removes the redundant Apply crop action", async () => {
+    render(<PhotoEditor />);
+    await loadTestPhoto();
+    openFeature("Crop & resize");
+    const panel = screen.getByTestId("feature-panel");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
+    expect(within(panel).queryByRole("button", { name: "Apply crop" })).toBeNull();
+    expect(within(panel).getByRole("button", { name: "Reset crop selection" })).toBeTruthy();
+    expect(within(panel).getByText(/Close this panel to finish; Undo restores/)).toBeTruthy();
+    expect(panel.querySelector(".overflow-x-auto")).toBeTruthy();
+  });
+
+  it("uses horizontally scrollable filter controls on mobile", async () => {
+    render(<PhotoEditor />);
+    await loadTestPhoto();
+    openFeature("Color & filters");
+    const panel = screen.getByTestId("feature-panel");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
+    expect(within(panel).getByLabelText("Brightness")).toBeTruthy();
+    expect(within(panel).getByLabelText("Contrast")).toBeTruthy();
+    expect(panel.querySelector(".overflow-x-auto")).toBeTruthy();
+  });
+
+  it("draws a tall portrait photo immediately without waiting for an adjustment change", async () => {
+    const context = {
+      clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
+      rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
+      strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
+      stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => context as unknown as CanvasRenderingContext2D,
+    );
+    class TallImage {
+      naturalWidth = 600;
+      naturalHeight = 1800;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+    }
+    vi.stubGlobal("Image", TallImage);
+
+    render(<PhotoEditor />);
+    const fileInput = document.querySelector('input[type="file"]:not([multiple])') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: { files: [new File(["portrait"], "portrait.png", { type: "image/png" })] },
+    });
+
+    const canvas = await waitFor(() => {
+      const element = document.querySelector("canvas");
+      expect(element).toBeTruthy();
+      expect(element?.width).toBe(600);
+      expect(element?.height).toBe(1800);
+      expect(context.drawImage).toHaveBeenCalled();
+      return element as HTMLCanvasElement;
+    });
+    expect(canvas.getAttribute("aria-label")).toContain("Photo editing canvas");
+    expect(context.getImageData).not.toHaveBeenCalled();
   });
 
   it("opens Help with concise local-processing guidance", () => {
