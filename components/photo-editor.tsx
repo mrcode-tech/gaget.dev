@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Heart, Sparkles, ChevronRight } from "lucide-react";
+import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, Check, X, Home, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Heart, Sparkles, ChevronRight, Menu } from "lucide-react";
 import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -593,47 +593,62 @@ export function PhotoEditor() {
     : activeNavPanel === "popular" || activeNavPanel === "home" ? tools.slice(0, 8)
     : activeNavCategory ? tools.filter((tool) => tool.category === activeNavCategory.name)
     : [];
+  const featureMenuGroups = [
+    { label: "Edit", items: [["Crop & resize", "transform", Crop], ["Text & watermark", "text", Type]] },
+    { label: "Image", items: [["Color & filters", "adjust", SlidersHorizontal], ["Color picker", "color", Pipette], ["Image details", "metadata", Info], ["Export & convert", "convert", FileOutput], ["Print size", "print", Ruler], ["Image to Base64", "base64", Code2], ["Base64 to image", "base64decode", FileImage]] },
+    { label: "Create", items: [["Favicon", "favicon", ImageIcon], ["Collage", "collage", Grid2X2], ["SVG optimize", "svg", Code2]] },
+  ] as const;
+  const selectFeature = (panel: string) => {
+    setActivePanel(panel);
+    setCropMode(panel === "transform");
+    setMenuOpen(null);
+    setActiveNavPanel(null);
+  };
 
   return <div className="flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
     <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
     <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
-    <div ref={menuBarRef} className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
-      <LocaleLink href="/" aria-label="Back to GaGet.dev home" title="Back to GaGet.dev home" className="mr-1 inline-flex h-8 shrink-0 items-center gap-2 rounded-md px-2 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Home className="h-4 w-4" /><span className="hidden sm:inline">GaGet.dev</span></LocaleLink>
-      <span className="hidden h-5 border-l border-border sm:block" />
-      <span className="mr-1 hidden shrink-0 font-medium text-muted-foreground lg:inline">Photo Editor</span>
-      <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto whitespace-nowrap">
-        {(["File", "History"] as const).map((menu) => <div key={menu} className="relative shrink-0">
-          <button type="button" aria-expanded={menuOpen === menu} className={"rounded-md px-2.5 py-1.5 hover:bg-accent " + (menuOpen === menu ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === menu ? null : menu)}>{menu}</button>
-          {menuOpen === menu && <div className="absolute left-0 top-9 z-50 min-w-48 rounded-lg border border-border bg-popover p-1.5 shadow-xl">
-            {menu === "File" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border" /><p className="px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></>}
+    <header data-testid="site-navbar" className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-3 sm:px-5">
+      <LocaleLink href="/" aria-label="GaGet.dev home" className="inline-flex items-center gap-2 rounded-md font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">G</span>
+        <span>GaGet.dev</span>
+      </LocaleLink>
+      <div className="flex items-center gap-2">
+        <span className="hidden text-sm text-muted-foreground sm:inline">Photo Editor</span>
+        <span className="hidden h-5 border-l border-border sm:block" />
+        <LocaleLink href="/tools" className="rounded-md px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">All tools</LocaleLink>
+      </div>
+    </header>
+
+    <div ref={menuBarRef} className="relative z-40 flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
+      <span className="mr-1 hidden shrink-0 font-medium text-muted-foreground sm:inline">File</span>
+      <div className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
+        {(["File", "Edit", "Image", "Create", "History", "Help"] as const).map((menu) => <div key={menu} className="relative shrink-0">
+          <button type="button" aria-expanded={menuOpen === menu} className={"rounded-md px-3 py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === menu ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === menu ? null : menu)}>{menu}</button>
+          {menuOpen === menu && <div className="absolute left-0 top-9 z-50 min-w-52 rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+            {menu === "File" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><p className="mt-1 border-t border-border px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></>}
+            {menu === "Edit" && featureMenuGroups[0].items.map(([label, panel, Icon]) => <button key={panel} className={"flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 text-muted-foreground" />{label}</button>)}
+            {menu === "Image" && featureMenuGroups[1].items.map(([label, panel, Icon]) => <button key={panel} className={"flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 text-muted-foreground" />{label}</button>)}
+            {menu === "Create" && featureMenuGroups[2].items.map(([label, panel, Icon]) => <button key={panel} className={"flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 text-muted-foreground" />{label}</button>)}
             {menu === "History" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button></>}
+            {menu === "Help" && <><p className="px-3 py-2 text-sm font-medium">GaGet Photo Editor</p><p className="max-w-64 px-3 pb-2 text-xs leading-5 text-muted-foreground">Adjustments are rendered locally. Export creates a new file and never overwrites your original.</p><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: drag a crop edge or corner to refine the selection, then choose Apply crop."); }}>Crop & editing tips</button></>}
           </div>}
         </div>)}
-        {([
-          ["Crop & resize", "transform", Crop],
-          ["Color & filters", "adjust", SlidersHorizontal],
-          ["Color picker", "color", Pipette],
-          ["Text & watermark", "text", Type],
-          ["Image details", "metadata", Info],
-          ["Export & convert", "convert", FileOutput],
-          ["Print size", "print", Ruler],
-          ["Image to Base64", "base64", Code2],
-          ["Base64 to image", "base64decode", FileImage],
-          ["Favicon", "favicon", ImageIcon],
-          ["Collage", "collage", Grid2X2],
-          ["SVG optimize", "svg", Code2],
-        ] as const).map(([label, panel, Icon]) => <button key={panel} type="button" aria-label={label} aria-pressed={activePanel === panel} title={label} className={"inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activePanel === panel ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setActivePanel(panel); setCropMode(panel === "transform"); setMenuOpen(null); }}><Icon className="h-3.5 w-3.5" /><span>{label}</span></button>)}
-        <div className="relative shrink-0">
-          <button type="button" aria-expanded={menuOpen === "Help"} className={"rounded-md px-2.5 py-1.5 hover:bg-accent " + (menuOpen === "Help" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Help" ? null : "Help")}>Help</button>
-          {menuOpen === "Help" && <div className="absolute right-0 top-9 z-50 min-w-52 rounded-lg border border-border bg-popover p-1.5 shadow-xl"><p className="px-3 py-2 text-sm font-medium">GaGet Photo Editor</p><p className="max-w-64 px-3 pb-2 text-xs leading-5 text-muted-foreground">Adjustments are rendered locally. Export creates a new file and never overwrites your original.</p><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: drag a crop edge or corner to refine the selection, then choose Apply crop."); }}>Crop & editing tips</button></div>}
-        </div>
+      </div>
+      <div className="flex min-w-0 flex-1 items-center md:hidden">
+        <button type="button" aria-expanded={menuOpen === "File"} className={"rounded-md px-3 py-1.5 hover:bg-accent " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
+        <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"ml-auto inline-flex h-8 items-center gap-2 rounded-md px-3 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><Menu className="h-4 w-4" /><span>Features</span></button>
+        {menuOpen === "File" && <div className="absolute left-2 top-9 z-50 min-w-52 rounded-lg border border-border bg-popover p-1.5 shadow-xl"><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: drag a crop edge or corner to refine the selection, then choose Apply crop."); }}>Help & editing tips</button><p className="mt-1 border-t border-border px-3 py-2 text-xs text-muted-foreground">Private · local processing</p></div>}
+        {menuOpen === "Features" && <div className="absolute left-2 right-2 top-9 z-50 max-h-[min(75dvh,560px)] overflow-y-auto rounded-lg border border-border bg-popover p-2 shadow-xl">
+          {featureMenuGroups.map((group) => <section key={group.label} className="mb-2 last:mb-0"><h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h3>{group.items.map(([label, panel, Icon]) => <button key={panel} className={"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 text-muted-foreground" /><span>{label}</span></button>)}</section>)}
+        </div>}
       </div>
       <div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span>Private · local processing</span></div>
     </div>
 
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
-      <Button size="icon" variant="ghost" className="md:hidden" aria-label="Open GaGet.dev navigation" title="Browse GaGet.dev" onClick={() => { setActivePanel("none"); setCropMode(false); setActiveNavPanel("all-tools"); }}><Grid2X2 className="h-4 w-4" /></Button>
+      <Button size="icon" variant="ghost" className="md:hidden" aria-label="Open GaGet.dev navigation" title="Browse GaGet.dev" onClick={() => { setActiveNavPanel("all-tools"); }}><Grid2X2 className="h-4 w-4" /></Button>
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status ? ` · ${status}` : ""}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
@@ -651,7 +666,7 @@ export function PhotoEditor() {
 
     <div className="relative flex min-h-0 flex-1 overflow-hidden">
       <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-border bg-card py-3 md:flex">
-        {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setActivePanel("none"); setCropMode(false); setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
+        {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
       </aside>
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
@@ -787,11 +802,11 @@ export function PhotoEditor() {
         </div>
       </div>
       </div>
-      <div className={"absolute inset-0 z-30 flex transform bg-background transition-[transform,opacity] duration-200 ease-out md:inset-y-0 md:left-auto md:right-0 md:w-[380px] md:border-l md:border-border " + (activeNavPanel === null ? "pointer-events-none translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
+      <div className={"absolute inset-y-0 left-0 z-10 flex w-full transform bg-background transition-[transform,opacity] duration-200 ease-out md:w-[320px] md:border-r md:border-border " + (activeNavPanel === null ? "pointer-events-none -translate-x-full opacity-0" : "translate-x-0 opacity-100")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
         <div className="flex min-h-0 w-full flex-col bg-card shadow-xl">
           <div className="flex min-h-12 shrink-0 items-center justify-between border-b border-border px-4">
             <div className="flex items-center gap-2"><Grid2X2 className="h-4 w-4 text-muted-foreground" /><p className="text-sm font-semibold">{navPanelTitle}</p></div>
-            <button type="button" tabIndex={activeNavPanel === null ? -1 : 0} aria-label="Close GaGet.dev navigation" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setActiveNavPanel(null)}>×</button>
+            <button type="button" tabIndex={activeNavPanel === null ? -1 : 0} aria-label="Close GaGet.dev navigation" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setActiveNavPanel(null)}>×</button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
             {activeNavPanel === "home" && <div className="mb-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Browse by category</p><div className="grid grid-cols-2 gap-2">{categories.map((category) => { const Icon = category.icon; return <button key={category.slug} type="button" tabIndex={activeNavPanel === null ? -1 : 0} className="flex min-w-0 items-center gap-2 rounded-lg border border-border p-2 text-left text-sm hover:bg-accent" onClick={() => setActiveNavPanel(`category:${category.slug}`)}><Icon className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="truncate">{category.name}</span></button>; })}</div></div>}
