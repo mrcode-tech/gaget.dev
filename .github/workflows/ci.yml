@@ -1,12 +1,7 @@
 name: Mobile Photo Editor CI
 
 on:
-  # Run validation for every branch, including feature and fix branches.
-  push:
-    branches:
-      - "**"
-  # Validate proposed changes regardless of the PR's target branch.
-  pull_request:
+  # Run the full pipeline only when explicitly requested after a work batch is complete.
   workflow_dispatch:
 
 concurrency:
