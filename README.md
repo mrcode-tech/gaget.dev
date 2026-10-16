@@ -10,7 +10,7 @@ An extensible developer-toolbox built with Next.js App Router, TypeScript, Tailw
 ## Run locally
 
 ```bash
-npm ci
+npm install
 cp .env.example .env.local
 npm run dev
 ```
@@ -29,6 +29,8 @@ npm run build
 ```
 
 The GitHub Actions workflow in `.github/workflows/ci.yml` runs the unit tests, lint, TypeScript check, production build, and HTTP smoke tests against key routes of the built application for pull requests targeting `main` and pushes to `main`.
+
+**Known setup issue:** the existing `package-lock.json` is stale and omits the declared `@radix-ui/react-select` dependency and its transitive packages, so `npm ci` currently fails. CI temporarily uses `npm install` to regenerate the lockfile in its runner. Regenerate and commit `package-lock.json` from a local checkout before switching CI back to reproducible `npm ci` installs.
 
 The current initial suite checks tool registry integrity, image tool metadata, locale metadata/indexing rules, and production HTTP responses. It is a baseline, not full coverage of each tool's behavior. UI component tests and real browser E2E coverage (including mobile Safari/WebKit) are still follow-up work.
 
