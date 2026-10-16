@@ -30,6 +30,13 @@ describe("AppShell", () => {
     expect(screen.getByRole("button", { name: "Open navigation" })).toBeTruthy();
     expect(screen.getByRole("textbox")).toBeTruthy();
 
+    const languageControl = screen.getByRole("combobox", { name: "Language" });
+    expect(languageControl.parentElement?.parentElement?.className).toContain("hidden");
+    expect(languageControl.parentElement?.parentElement?.className).toContain("lg:flex");
+    const themeControl = screen.getByRole("button", { name: "Switch to dark mode" });
+    expect(themeControl.parentElement?.className).toContain("hidden");
+    expect(themeControl.parentElement?.className).toContain("lg:flex");
+
     const editorMenu = screen.getByTestId("editor-menubar");
     expect(editorMenu.parentElement?.className).toContain("lg:pl-[248px]");
     expect(editorMenu.parentElement?.className).not.toContain("lg:pl-0");
