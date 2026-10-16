@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Download, Undo2, Redo2, RotateCcw, ShieldCheck, Type, ImagePlus, Crop, SlidersHorizontal, ZoomIn, ZoomOut, Maximize2, HelpCircle, Check, X } from "lucide-react";
+import { Download, Undo2, Redo2, RotateCcw, ShieldCheck, Type, ImagePlus, Crop, SlidersHorizontal, ZoomIn, ZoomOut, Maximize2, HelpCircle, Check, X, Home, Menu } from "lucide-react";
+import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,7 +157,8 @@ export function PhotoEditor() {
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("adjust");
   const [cropMode, setCropMode] = useState(false);
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(90);
+  const menuBarRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const cropDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number; originW: number; originH: number; sourceW: number; sourceH: number; mode: "new" | "move" | "resize"; left: boolean; right: boolean; top: boolean; bottom: boolean } | null>(null);
   const [filterPreset, setFilterPreset] = useState("custom");
@@ -247,6 +249,21 @@ export function PhotoEditor() {
 
   useEffect(() => { if (hasImage) draw(doc); }, [doc, hasImage, draw]);
   useEffect(() => () => { if (sourceUrlRef.current) URL.revokeObjectURL(sourceUrlRef.current); }, []);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (event.target instanceof Node && !menuBarRef.current?.contains(event.target)) setMenuOpen(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(null);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
 
   const change = useCallback((patch: Partial<EditorState>) => {
     historyRef.current = [...historyRef.current.slice(-49), doc];
@@ -401,8 +418,11 @@ export function PhotoEditor() {
 
   return <div className="flex h-[100dvh] min-h-[560px] flex-col overflow-hidden bg-background text-foreground">
     <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" onChange={onFileChange} className="hidden" />
-    <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-3 text-sm">
-      <div className="mr-2 flex items-center gap-2 font-semibold"><span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-950 text-xs font-bold text-cyan-300">G</span><span>GaGet Photo</span></div>
+    <div ref={menuBarRef} className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
+      <LocaleLink href="/" aria-label="Back to GaGet.dev home" title="Back to GaGet.dev home" className="mr-1 inline-flex h-8 shrink-0 items-center gap-2 rounded-md px-2 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Home className="h-4 w-4" /><span className="hidden sm:inline">GaGet.dev</span></LocaleLink>
+      <span className="mr-1 hidden h-5 border-l border-border md:block" />
+      <button type="button" className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Open application menu" title="Open application menu" onClick={() => setMenuOpen(menuOpen ? null : "File")}><Menu className="h-4 w-4" /></button>
+      <span className="mr-2 hidden font-medium text-muted-foreground sm:inline">Photo Editor</span>
       {(["File", "Edit", "Image", "Help"] as const).map((menu) => <div key={menu} className="relative"><button type="button" className={"rounded-md px-3 py-1.5 hover:bg-accent " + (menuOpen === menu ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === menu ? null : menu)}>{menu}</button>{menuOpen === menu && <div className="absolute left-0 top-9 z-50 min-w-48 rounded-lg border border-border bg-popover p-1.5 shadow-xl">
         {menu === "File" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border" /><p className="px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></>}
         {menu === "Edit" && <><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button></>}
@@ -423,7 +443,7 @@ export function PhotoEditor() {
         <Button size="icon" variant="ghost" aria-label="Zoom out" title="Zoom out" disabled={zoom <= 25} onClick={() => setZoom((value) => Math.max(25, value - 25))}><ZoomOut className="h-4 w-4" /></Button>
         <button className="min-w-12 rounded-md px-1 py-2 text-xs tabular-nums hover:bg-accent" onClick={() => setZoom(100)} aria-label="Reset zoom" title="Reset zoom">{zoom}%</button>
         <Button size="icon" variant="ghost" aria-label="Zoom in" title="Zoom in" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))}><ZoomIn className="h-4 w-4" /></Button>
-        <Button size="icon" variant="ghost" aria-label="Fit canvas" title="Fit canvas" onClick={() => setZoom(100)}><Maximize2 className="h-4 w-4" /></Button>
+        <Button size="icon" variant="ghost" aria-label="Fit canvas" title="Fit canvas" onClick={() => setZoom(90)}><Maximize2 className="h-4 w-4" /></Button>
         <Button onClick={() => void exportImage()} disabled={!hasImage || cropMode} size="sm"><Download className="h-4 w-4" />Export</Button>
       </div>
     </div>
@@ -439,14 +459,14 @@ export function PhotoEditor() {
         <button className="hidden flex-col items-center justify-center gap-1 rounded-lg px-1 py-3 text-[10px] hover:bg-accent sm:flex" onClick={() => setMenuOpen("Help")} title="Help"><HelpCircle className="h-5 w-5" />Help</button>
       </div>
       <Card className="flex min-h-0 min-w-0 flex-col rounded-none border-x-0 shadow-none">
-        <CardHeader className="flex-row items-center justify-between gap-3 border-b border-border py-3">
-          <CardTitle className="text-sm">{hasImage ? fileName : "Your photo canvas"}</CardTitle>
+        <CardHeader className="flex-row items-center justify-between gap-2 border-b border-border px-3 py-1.5">
+          <CardTitle className="min-w-0 truncate text-xs font-medium">{hasImage ? fileName : "Canvas"}</CardTitle>
           {hasImage && <span className="text-xs text-muted-foreground">{cropMode ? `${doc.cropWidth} × ${doc.cropHeight} crop` : `${doc.width} × ${doc.height} px`}</span>}
         </CardHeader>
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
-          <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-slate-950 p-4 sm:p-6">
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#1e1e1e] p-3 sm:p-5">
             {hasImage
-              ? <canvas ref={canvasRef} onClick={handleCanvasClick} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "none", maxHeight: "none" }} />
+              ? <canvas ref={canvasRef} onClick={handleCanvasClick} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize." : "Photo editing canvas. In text mode, click to position the selected text."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.28)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : "")} style={{ width: `${zoom}%`, height: "auto", maxWidth: "100%", maxHeight: "100%" }} />
               : <div className="max-w-sm py-12 text-center text-white"><ImagePlus className="mx-auto h-12 w-12 text-slate-400" /><p className="mt-3 font-medium">Your canvas is ready</p><p className="mt-1 text-sm text-slate-400">Open a photo to crop, adjust color, rotate, add text, and export from one workspace.</p><Button className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose image</Button><p className="mt-3 text-xs text-slate-500">PNG · JPEG · WebP · GIF · AVIF</p></div>}
           </div>
           {hasImage && <div className="flex items-center justify-between border-t border-slate-800 px-3 py-2 text-[11px] text-slate-400"><span>{cropMode ? "Drag inside the crop to move it; drag edges or corners to resize." : activePanel === "text" && selectedText ? "Click the photo to position the selected text." : "Edits remain reversible until you export."}</span><span>{imageRef.current?.naturalWidth} × {imageRef.current?.naturalHeight} px</span></div>}
@@ -454,7 +474,7 @@ export function PhotoEditor() {
       </Card>
 
       <Card className="col-span-1 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-y-0 border-r-0 shadow-none sm:col-span-2 xl:col-span-1">
-        <CardHeader className="shrink-0"><CardTitle className="text-sm">Edit photo</CardTitle></CardHeader>
+        <CardHeader className="shrink-0 border-b border-border px-3 py-2"><CardTitle className="text-xs font-semibold tracking-wide">PROPERTIES</CardTitle></CardHeader>
         <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
             <button className={"rounded-md px-2 py-2 text-xs " + (activePanel === "adjust" && !cropMode ? "bg-background font-semibold shadow-sm" : "text-muted-foreground")} onClick={() => { setActivePanel("adjust"); setCropMode(false); }}><SlidersHorizontal className="mx-auto mb-1 h-4 w-4" />Adjust</button>
