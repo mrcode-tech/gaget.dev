@@ -389,3 +389,11 @@ Implemented on `feat/brand-and-user-experience`:
 - The changes have been committed on `feat/brand-and-user-experience`; no merge has been performed.
 - A fresh full CI run on the latest commit is required before treating this revision as verified. Do not rely on the earlier green run for this new navigation change.
 - Manual follow-up remains: inspect the layout at narrow phone widths and desktop widths where both the expanded site drawer and right feature panel are open; verify keyboard and screen-reader behavior in a real browser.
+
+
+### CI correction and final verification — 2026-10-16
+- The first navigation test run exposed stale test queries after the menu redesign; these were updated to use the categorized menus and shared File menu.
+- TypeScript then identified an obsolete File-menu branch left in the desktop category switch. Removed the unreachable branch.
+- Full CI run #191 passed on commit `c031b1e87ce833a631e80248bfb07d42d1177a47`: unit tests, component tests (19/19), ESLint, TypeScript, production build, and production route smoke tests.
+- Run URL: https://github.com/mrcode-tech/gaget.dev/actions/runs/38917262996
+- The final documentation-only commit will trigger CI again; confirm its run before merging.
