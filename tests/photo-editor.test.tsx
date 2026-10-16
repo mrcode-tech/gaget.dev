@@ -9,6 +9,8 @@ describe("PhotoEditor workspace", () => {
     render(<PhotoEditor />);
 
     expect(screen.getByRole("link", { name: "Back to GaGet.dev home" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
+    expect(screen.getAllByText("No image open")).toHaveLength(1);
     expect(screen.getByRole("complementary", { name: "GaGet.dev navigation" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Browse all GaGet.dev tools" })).toBeTruthy();
     expect(screen.getByText("Photo Editor")).toBeTruthy();
