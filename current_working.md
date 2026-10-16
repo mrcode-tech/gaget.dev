@@ -257,3 +257,42 @@ This verifies the PR merge commit tested by run #58. Any subsequent commit shoul
 - CI baseline from workflow run #60: all jobs passed on commit `7b72d40` before this UX overhaul.
 - This is a pre-development acceptance checklist, not a claim that the above requirements are already implemented.
 - Do not retire legacy routes/files until their capability has a tested equivalent in the unified editor and inbound links have been checked.
+
+
+## Unified Photo Editor UX implementation — 2026-10-16
+
+### Implemented in this working branch
+- Removed the editor's hamburger button and permanent left editor-tool rail; retained the GaGet.dev home/brand link.
+- Reduced the top controls to a compact app-menu row and a contextual editing toolbar with undo/redo and zoom. Export is available through **File → Export image…** or the **Tools → Export & format…** panel, not as a permanent toolbar feature button.
+- Removed the static right-side **PROPERTIES** section and its internal tabs. Menu selections open a contextual panel over the canvas workspace; the panel fills the available workspace on narrow screens and has Close/Done controls.
+- Reworked zoom so the canvas has no max-width/max-height clamp. Zoom above 100% switches to a top-left scroll origin so the enlarged image remains reachable; fit returns to 90%.
+- Increased crop-edge hit testing tolerance and added edge/corner resize cursors on pointer hover. Crop mode retains pointer capture and touch-action handling for drag gestures.
+- Organized capabilities under Image, Adjust, and Tools menus.
+- Added or consolidated panels for crop/transform, color adjustments and filters, text/watermark, color sampling and a six-color approximate palette, image information, output format/quality, print-size estimation, Base64 data URL generation, PNG favicon sizes, multi-image collage, and SVG whitespace/comment optimization.
+- Updated Photo Editor catalog description and search keywords to expose the unified app and its capabilities.
+- Kept old image-tool URLs as redirects rather than deleting them outright. This preserves inbound links/bookmarks while the catalog presents one Images app.
+
+### Acceptance coverage added
+Component tests now cover:
+- No hamburger inside the editor and no static PROPERTIES header.
+- File menu ownership of open/export/reset.
+- Contextual panel opening and dismissal.
+- Scrollable canvas workspace and absence of a permanent Export toolbar button.
+- Navigation for Image crop/transform, Adjust color/filter/color picker, and Tools image information/export/print/Base64/favicon/collage/SVG/text panels.
+- SVG optimizer availability without needing a raster photo.
+- Existing zoom percentage, menu outside-click/Escape dismissal, local-processing guidance, and empty-state behavior.
+
+### Scope and limitations that must remain visible
+- Palette generation is an approximate six-color palette from a downsampled preview, not a professional quantizer.
+- Favicon export creates PNG sizes (16/32/48); it does not package an ICO file.
+- SVG optimization currently removes comments and redundant whitespace only; it is not a full SVGO-equivalent optimizer and does not promise semantic equivalence for every SVG.
+- Print size is an estimate from pixel dimensions and a selected DPI; it does not write DPI metadata into the exported raster file.
+- Collage is a simple square-cropped grid for 2–9 images, not a layered collage editor.
+- Image processing stays client-side. Base64 generation is memory-bound and intended for files within the editor's 25 MB limit.
+- The tests are acceptance/component coverage for visible menu and panel behavior; real browser/device validation is still needed for canvas pixel operations, touch crop gestures, downloads, and large-file memory behavior.
+
+### Final verification required
+- [ ] Confirm CI on the latest branch commit passes component tests, unit tests, ESLint, TypeScript, production build, and HTTP smoke tests.
+- [ ] Fix every CI failure and rerun until green.
+- [ ] Check the catalog still lists exactly one Images app and all legacy image routes redirect to /images/editor without loops.
+- [ ] Verify 100%+ zoom scrolling, crop side handles on touch devices, and full-workspace mobile panels in a real browser.
