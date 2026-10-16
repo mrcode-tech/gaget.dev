@@ -426,3 +426,19 @@ Implemented on `feat/brand-and-user-experience`:
 - Run URL: https://github.com/mrcode-tech/gaget.dev/actions/runs/38936763766
 - Draft PR #12 remains open and unmerged for review: https://github.com/mrcode-tech/gaget.dev/pull/12
 - Still requires real-browser visual review for expanded/collapsed desktop sidebar, mobile hamburger overlay, and editor command-bar alignment. Automated tests verify shell integration and menu behavior, not screenshot-level layout fidelity.
+
+
+## Responsive Photo Editor and accessibility implementation — 2026-10-16
+
+### Four phases implemented on `feat/brand-and-user-experience`
+
+1. **Layout foundation:** converted the editor root to a named main landmark, changed the workspace to a responsive flex layout, reserved a 320px right inspector on desktop instead of overlaying the canvas, tightened workspace padding, and constrained the canvas to the available viewport when zoom is at or below 100%.
+2. **Mobile bottom sheet:** editing controls now slide up from the bottom with compact and expanded heights; the canvas workspace occupies the remaining space above it. The sheet has an accessible expand/collapse control, an explicit close control, internal scrolling, and reduced-motion support.
+3. **Consistent interactions:** canvas clicks no longer dismiss the active inspector. Crop/Text controls stay open during canvas interaction. Opening a tool returns an over-100% zoom to fit mode. The canvas is keyboard-focusable; arrow keys move crop bounds or nudge selected text, with Shift for larger steps. Instructions are associated with the canvas using `aria-describedby`.
+4. **Regression and accessibility coverage:** updated component tests for persistent desktop inspector and mobile sheet states; added Playwright + axe-core browser tests at 360×800, 390×844, 844×390, 768×1024, 1280×800, and 1440×900. The browser suite uploads a tiny local image, checks panel/canvas geometry, tests Text and Crop interactions, runs WCAG 2.1 A/AA axe checks, and verifies Escape closes the panel. CI installs Chromium and runs this suite after the existing unit/component/lint/typecheck/build/route smoke checks.
+
+### Verification status
+
+- [ ] Awaiting GitHub Actions for the latest branch commit; do not mark CI green until unit tests, component tests, lint, TypeScript, production build, route smoke tests, and Playwright/axe checks all pass.
+- [ ] Real-device manual check remains necessary for touch crop handles, sheet drag feel (the current accessible handle is a tap-to-expand/collapse control), on-screen keyboard behavior, and VoiceOver/TalkBack screen-reader behavior.
+- [ ] No merge performed; continue work only on `feat/brand-and-user-experience`.
