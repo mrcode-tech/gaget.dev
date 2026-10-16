@@ -1,27 +1,10 @@
 # GaGet.dev
 
-An extensible developer-toolbox starter built with Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui-style components, Lucide icons, and next-themes.
-
-## Included
-
-- Consistent light/dark/system theme support
-- Responsive sidebar and header search
-- Tool registry for categories and navigation
-- SEO metadata per implemented tool
-- Generated `robots.txt` and `sitemap.xml`
-- JSON formatter / minifier / validator
-- URL component encoder / decoder
-- UTF-8 Base64 encoder / decoder
-- JWT header and claims decoder (does not verify signatures)
-- UUID v4 generator
-- Reusable shadcn-style Button, Card, Input, Textarea, and Badge components
-- TypeScript strict mode
-
-Some tools listed in the directory are roadmap entries, not yet implemented. They are marked Planned and should not be presented as functional tools.
+An extensible developer-toolbox built with Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui-style components, Lucide icons, and next-themes.
 
 ## Requirements
 
-- Node.js 20.9 or newer
+- Node.js 22 (used by CI for the built-in TypeScript test runner)
 - npm
 
 ## Run locally
@@ -34,34 +17,42 @@ npm run dev
 
 Open http://localhost:3000.
 
-## Check before deployment
+## Automated checks
+
+Run these before opening a pull request:
 
 ```bash
+npm run test:unit
+npm run lint
 npm run typecheck
 npm run build
 ```
 
-The `lint` script is a placeholder for the project's chosen ESLint command. With ESLint 9, configure `eslint.config.mjs` before enabling a CI lint step.
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs the unit tests, lint, TypeScript check, production build, and HTTP smoke tests against key routes of the built application for pull requests targeting `main` and pushes to `main`.
 
-## Deploy to Vercel
+**Known setup issue:** the existing `package-lock.json` is stale and omits the declared `@radix-ui/react-select` dependency and its transitive packages, so `npm ci` currently fails. CI temporarily uses `npm install` to regenerate the lockfile in its runner. Regenerate and commit `package-lock.json` from a local checkout before switching CI back to reproducible `npm ci` installs.
 
-1. Push this project to a Git repository.
-2. Import the repository into Vercel.
-3. Set `NEXT_PUBLIC_SITE_URL` to `https://gaget.dev`.
-4. Deploy and verify the production build.
-5. Add the domain in Vercel and configure DNS as instructed by Vercel.
+The current initial suite checks tool registry integrity, image tool metadata, locale metadata/indexing rules, and production HTTP responses. It is a baseline, not full coverage of each tool's behavior. UI component tests and real browser E2E coverage (including mobile Safari/WebKit) are still follow-up work.
+
+## Deployment
+
+1. Set `NEXT_PUBLIC_SITE_URL=https://gaget.dev` in the Vercel project.
+2. Vercel can create preview deployments for feature branches and production deployments from `main`.
+3. Review the preview and confirm GitHub Actions checks before merging.
+
+**Important:** GitHub branch protection / required status checks are not enforced on the current plan. CI reports failures, but it cannot prevent a maintainer from merging or pushing to `main`. Treat a failed check as a stop sign and do not deploy that change.
 
 ## Architecture
 
 - `app/`: routes, layouts, metadata, sitemap, and robots
-- `components/ui/`: shared shadcn-style UI primitives
-- `components/`: shared shell, cards, tool layouts, and workbenches
-- `lib/tools/registry.ts`: central directory and navigation metadata
-- `features/`: reserved for extracting larger feature modules as the project grows
+- `components/ui/`: shared UI primitives
+- `components/`: shared shell and tool workbenches
+- `lib/tools/registry.ts`: central tool directory and navigation metadata
+- `lib/i18n/messages.ts`: locale metadata and translations
+- `tests/`: automated unit and production smoke tests
 
-## Notes
+## Security and privacy notes
 
-- All implemented transformations run in the browser.
-- JWT decoding is not JWT signature verification.
+- Implemented transformations are intended to run in the browser.
+- JWT decoding does not verify a token's signature.
 - Do not paste production secrets into tools unless you understand the risks.
-- Add automated unit and accessibility tests before treating this as a production release.
