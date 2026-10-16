@@ -159,12 +159,27 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </ScrollArea>
 
       {mobile && (
-        <div className="shrink-0 border-t border-border px-3 py-3">
-          <div className="flex items-center justify-between gap-2">
-            <LanguageSwitcher />
-            <ThemeToggle />
+        <section
+          aria-label="Preferences"
+          className="shrink-0 space-y-4 border-t border-border px-4 py-4"
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Preferences
+          </h2>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">{t("nav.language")}</p>
+            <div className="flex min-w-0 items-center">
+              <LanguageSwitcher />
+            </div>
           </div>
-        </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">{t("nav.appearance")}</p>
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+              <span className="text-sm text-muted-foreground">Light / dark theme</span>
+              <ThemeToggle />
+            </div>
+          </div>
+        </section>
       )}
 
       <div
