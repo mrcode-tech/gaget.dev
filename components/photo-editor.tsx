@@ -197,6 +197,8 @@ export function PhotoEditor() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const cropDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number; originW: number; originH: number; sourceW: number; sourceH: number; mode: "new" | "move" | "resize"; left: boolean; right: boolean; top: boolean; bottom: boolean } | null>(null);
   const [filterPreset, setFilterPreset] = useState("custom");
+  const [cropAspectRatio, setCropAspectRatio] = useState<number | null>(null);
+  const [resizeAspectLocked, setResizeAspectLocked] = useState(true);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const nextTextId = useRef(1);
@@ -396,6 +398,14 @@ export function PhotoEditor() {
     change({ texts: [...doc.texts, layer], selectedText: layer.id });
     setActivePanel("text");
   }
+  function applyCropRatio(ratio: number) {
+    const image = imageRef.current;
+    if (!image || !Number.isFinite(ratio) || ratio <= 0) return;
+    let width = image.naturalWidth;
+    let height = Math.round(width / ratio);
+    if (height > image.naturalHeight) { height = image.naturalHeight; width = Math.round(height * ratio); }
+    change({ cropX: Math.round((image.naturalWidth - width) / 2), cropY: Math.round((image.naturalHeight - height) / 2), cropWidth: width, cropHeight: height });
+  }
   function handleCropPointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
     if (!cropMode || !imageRef.current) return;
     const canvas = event.currentTarget; const rect = canvas.getBoundingClientRect();
@@ -437,6 +447,25 @@ export function PhotoEditor() {
       if (drag.right) cropWidth = clamp(drag.originW + dx, 1, drag.sourceW - drag.originX);
       if (drag.top) { cropY = clamp(drag.originY + dy, 0, drag.originY + drag.originH - 1); cropHeight = drag.originH + drag.originY - cropY; }
       if (drag.bottom) cropHeight = clamp(drag.originH + dy, 1, drag.sourceH - drag.originY);
+    }
+    if (cropAspectRatio !== null && drag.mode !== "move") {
+      if (drag.mode === "new") {
+        if (cropWidth / Math.max(1, cropHeight) > cropAspectRatio) cropWidth = cropHeight * cropAspectRatio;
+        else cropHeight = cropWidth / cropAspectRatio;
+        cropX = dx < 0 ? drag.startX - cropWidth : drag.startX;
+        cropY = dy < 0 ? drag.startY - cropHeight : drag.startY;
+      } else {
+        if (drag.left || drag.right) cropHeight = cropWidth / cropAspectRatio;
+        else cropWidth = cropHeight * cropAspectRatio;
+        if (drag.left) cropX = drag.originX + drag.originW - cropWidth;
+        if (drag.right) cropX = drag.originX;
+        if (drag.top) cropY = drag.originY + drag.originH - cropHeight;
+        if (drag.bottom) cropY = drag.originY;
+      }
+      cropWidth = clamp(cropWidth, 1, drag.sourceW);
+      cropHeight = clamp(cropHeight, 1, drag.sourceH);
+      cropX = clamp(cropX, 0, drag.sourceW - cropWidth);
+      cropY = clamp(cropY, 0, drag.sourceH - cropHeight);
     }
     setDoc({ ...doc, cropX: Math.round(cropX), cropY: Math.round(cropY), cropWidth: Math.max(1, Math.round(cropWidth)), cropHeight: Math.max(1, Math.round(cropHeight)) });
   }
@@ -598,19 +627,19 @@ export function PhotoEditor() {
   }
   const selectedText = doc.texts.find((layer) => layer.id === doc.selectedText) ?? null;
   const featureMenuGroups = [
-    { label: "Edit", items: [["Crop & resize", "transform", Crop], ["Text & watermark", "text", Type]] },
+    { label: "Edit", items: [["Crop", "crop", Crop], ["Resize", "resize", Ruler], ["Text & watermark", "text", Type]] },
     { label: "Image", items: [["Color & filters", "adjust", SlidersHorizontal], ["Color picker", "color", Pipette], ["Image details", "metadata", Info], ["Export & convert", "convert", FileOutput], ["Print size", "print", Ruler], ["Image to Base64", "base64", Code2], ["Base64 to image", "base64decode", FileImage]] },
     { label: "Create", items: [["Favicon", "favicon", ImageIcon], ["Collage", "collage", Grid2X2], ["SVG optimize", "svg", Code2]] },
   ] as const;
   const selectFeature = (panel: string) => {
-    const group = panel === "transform" || panel === "text" ? "Edit" : ["adjust", "color", "metadata", "convert", "print", "base64", "base64decode"].includes(panel) ? "Image" : "Create";
+    const group = ["crop", "resize", "transform", "text"].includes(panel) ? "Edit" : ["adjust", "color", "metadata", "convert", "print", "base64", "base64decode"].includes(panel) ? "Image" : "Create";
     const mobileTrigger = menuBarRef.current?.querySelector<HTMLButtonElement>('button[aria-label="Open photo editor features"]');
     const desktopTrigger = Array.from(menuBarRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []).find((button) => button.textContent?.trim() === group);
     panelReturnFocusRef.current = window.innerWidth < 768 ? mobileTrigger ?? null : desktopTrigger ?? null;
     setActivePanel(panel);
     setSheetExpanded(false);
     setZoom((current) => current > 100 ? 90 : current);
-    setCropMode(panel === "transform");
+    setCropMode(panel === "crop" || panel === "transform");
     setMenuOpen(null);
   };
 
@@ -707,11 +736,11 @@ export function PhotoEditor() {
       <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm max-h-[calc(100dvh_-_6rem)] transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:w-[320px] md:border-l md:border-t-0 md:pb-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(52dvh,420px)] translate-y-0 md:flex" : "h-[min(24dvh,200px)] translate-y-0 md:flex")} id="feature-panel" data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
         <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card md:shadow-none">
           <button type="button" aria-label={sheetExpanded ? "Collapse editing panel" : "Expand editing panel"} aria-controls="feature-panel" aria-expanded={sheetExpanded} className="mx-auto mt-1 flex h-6 w-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setSheetExpanded((expanded) => !expanded)}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></button>
-          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 ref={panelHeadingRef} id="feature-panel-title" tabIndex={-1} className="text-sm font-semibold">{({adjust:"Color & filters",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={closeFeaturePanel}>×</button></div>
-        <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto p-3 md:space-y-4 md:overflow-x-hidden md:p-4">
+          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 ref={panelHeadingRef} id="feature-panel-title" tabIndex={-1} className="text-sm font-semibold">{({adjust:"Color & filters",crop:"Crop",resize:"Resize",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="text-[11px] text-muted-foreground">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={closeFeaturePanel}>×</button></div>
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 md:space-y-4 md:p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
-          {hasImage && activePanel === "adjust" && <div className="min-w-[78vw] space-y-4 md:min-w-0">
+          {hasImage && activePanel === "adjust" && <div className="min-w-0 space-y-4">
             <label className="block space-y-2 text-sm">Filter preset
               <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={filterPreset} onChange={(e) => {
                 setFilterPreset(e.target.value);
@@ -728,7 +757,7 @@ export function PhotoEditor() {
                 <option value="custom">Choose a preset…</option><option value="original">Original</option><option value="vivid">Vivid</option><option value="warm">Warm</option><option value="vintage">Vintage</option><option value="mono">Black & white</option><option value="dramatic">Dramatic</option>
               </select>
             </label>
-            <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-1 md:overflow-visible">
+            <div className="grid grid-cols-1 gap-3 pb-1">
               {([
                 ["Brightness", "brightness", 0, 200, "%"],
                 ["Contrast", "contrast", 0, 200, "%"],
@@ -736,28 +765,34 @@ export function PhotoEditor() {
                 ["Grayscale", "grayscale", 0, 100, "%"],
                 ["Sepia", "sepia", 0, 100, "%"],
                 ["Blur", "blur", 0, 12, "px"],
-              ] as const).map(([label, key, min, max, unit]) => <label key={key} className="min-w-[132px] shrink-0 space-y-1.5 rounded-lg border border-border p-2 text-sm md:min-w-0 md:border-0 md:p-0">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
+              ] as const).map(([label, key, min, max, unit]) => <label key={key} className="block min-w-0 space-y-2 rounded-lg border border-border p-3 text-sm touch-pan-y">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
             </div>
           </div>}
 
-          {hasImage && activePanel === "transform" && <div className="flex min-w-[78vw] gap-3 overflow-x-auto pb-2 md:min-w-0 md:flex-col md:overflow-visible md:pb-0">
-            {cropMode && <div className="min-w-[78vw] rounded-lg border border-sky-500/30 bg-sky-500/5 p-3 md:min-w-0"><p className="text-sm font-medium">Interactive crop</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Drag inside the selection to move it. Close this panel to finish; Undo restores the previous state.</p><Button variant="ghost" className="mt-2" onClick={() => { const image = imageRef.current; if (image) change({ cropX: 0, cropY: 0, cropWidth: image.naturalWidth, cropHeight: image.naturalHeight }); }}><X className="mr-1 h-4 w-4" />Reset crop selection</Button></div>}
-            <div className="grid min-w-[68vw] shrink-0 grid-cols-2 gap-3 rounded-lg border border-border p-3 md:min-w-0 md:border-0 md:p-0">
-              <label className="space-y-1 text-sm">Width (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.height))} value={doc.width} onChange={(e) => change({ width: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.height))) })} /></label>
-              <label className="space-y-1 text-sm">Height (px)<Input type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.width))} value={doc.height} onChange={(e) => change({ height: clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.width))) })} /></label>
+          {hasImage && activePanel === "crop" && <div data-testid="crop-controls" className="min-w-0 space-y-3 pb-1">
+            <p className="text-sm font-medium">Crop selection</p>
+            <div className="grid grid-cols-5 gap-1.5">
+              {([{label:"Free",ratio:null},{label:"1:1",ratio:1},{label:"4:3",ratio:4/3},{label:"3:2",ratio:3/2},{label:"16:9",ratio:16/9}] as const).map(({label,ratio}) => <Button key={label} size="sm" variant={cropAspectRatio === ratio ? "default" : "outline"} className="min-w-0 px-1 text-xs" aria-pressed={cropAspectRatio === ratio} onClick={() => { setCropAspectRatio(ratio); if (ratio !== null) applyCropRatio(ratio); }}>{label}</Button>)}
             </div>
-            <div className="min-w-[68vw] shrink-0 rounded-lg border border-border p-3 md:min-w-0 md:rounded-none md:border-0 md:p-0">
-              <p className="mb-2 text-sm font-medium">Crop rectangle (source pixels)</p>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="space-y-1 text-sm">X<Input type="number" min="0" max={imageRef.current?.naturalWidth ?? 12000} value={doc.cropX} onChange={(e) => change({ cropX: clamp(Number(e.target.value) || 0, 0, (imageRef.current?.naturalWidth ?? 12000) - 1) })} /></label>
-                <label className="space-y-1 text-sm">Y<Input type="number" min="0" max={imageRef.current?.naturalHeight ?? 12000} value={doc.cropY} onChange={(e) => change({ cropY: clamp(Number(e.target.value) || 0, 0, (imageRef.current?.naturalHeight ?? 12000) - 1) })} /></label>
-                <label className="space-y-1 text-sm">Crop width<Input type="number" min="1" max={imageRef.current?.naturalWidth ?? 12000} value={doc.cropWidth} onChange={(e) => change({ cropWidth: clamp(Number(e.target.value) || 1, 1, imageRef.current?.naturalWidth ?? 12000) })} /></label>
-                <label className="space-y-1 text-sm">Crop height<Input type="number" min="1" max={imageRef.current?.naturalHeight ?? 12000} value={doc.cropHeight} onChange={(e) => change({ cropHeight: clamp(Number(e.target.value) || 1, 1, imageRef.current?.naturalHeight ?? 12000) })} /></label>
-              </div>
+            {cropAspectRatio !== null && <div className="grid grid-cols-2 gap-3">
+              <label className="space-y-1 text-sm">Crop width (px)<Input aria-label="Crop width" type="number" min="1" max={imageRef.current?.naturalWidth ?? 12000} value={doc.cropWidth} onChange={(e) => { const image = imageRef.current; const width = clamp(Number(e.target.value) || 1, 1, image?.naturalWidth ?? 12000); const height = Math.max(1, Math.min(image?.naturalHeight ?? 12000, Math.round(width / cropAspectRatio))); change({cropWidth:width,cropHeight:height,cropX:Math.min(doc.cropX,(image?.naturalWidth ?? width)-width),cropY:Math.min(doc.cropY,(image?.naturalHeight ?? height)-height)}); }} /></label>
+              <label className="space-y-1 text-sm">Crop height (px)<Input aria-label="Crop height" type="number" min="1" max={imageRef.current?.naturalHeight ?? 12000} value={doc.cropHeight} onChange={(e) => { const image = imageRef.current; const height = clamp(Number(e.target.value) || 1, 1, image?.naturalHeight ?? 12000); const width = Math.max(1, Math.min(image?.naturalWidth ?? 12000, Math.round(height * cropAspectRatio))); change({cropHeight:height,cropWidth:width,cropX:Math.min(doc.cropX,(image?.naturalWidth ?? width)-width),cropY:Math.min(doc.cropY,(image?.naturalHeight ?? height)-height)}); }} /></label>
+            </div>}
+            <p className="text-xs leading-5 text-muted-foreground">Drag the crop edges or corners directly on the photo. Choose a ratio for a fixed composition. Save applies the crop; Undo can restore it.</p>
+            <div className="flex gap-2">
+              <Button className="flex-1" variant="outline" onClick={() => { const image = imageRef.current; if (image) change({cropX:0,cropY:0,cropWidth:image.naturalWidth,cropHeight:image.naturalHeight}); setCropAspectRatio(null); }}>Reset selection</Button>
+              <Button className="flex-1" onClick={closeFeaturePanel}>Save crop</Button>
             </div>
-            <label className="flex min-w-[68vw] shrink-0 items-center gap-2 rounded-lg border border-border p-3 text-sm md:min-w-0 md:border-0 md:p-0"><input type="checkbox" checked={doc.fit === "contain"} onChange={(e) => change({ fit: e.target.checked ? "contain" : "cover" })} /> Fit whole photo inside output (contain)</label>
-            <div className="grid min-w-[68vw] shrink-0 grid-cols-2 gap-2 rounded-lg border border-border p-3 md:min-w-0 md:border-0 md:p-0"><Button variant="outline" onClick={() => change({ rotation: (doc.rotation + 270) % 360 })}>Rotate left 90°</Button><Button variant="outline" onClick={() => change({ rotation: (doc.rotation + 90) % 360 })}>Rotate right 90°</Button><Button variant="outline" onClick={() => change({ flipX: !doc.flipX })}>Flip horizontal</Button><Button variant="outline" onClick={() => change({ flipY: !doc.flipY })}>Flip vertical</Button></div>
-            <p className="min-w-[68vw] shrink-0 self-center text-xs leading-5 text-muted-foreground md:min-w-0">Dimensions are exact output dimensions. With “cover”, the photo fills the canvas and may be cropped; “contain” keeps the full photo visible.</p>
+          </div>}
+          {hasImage && activePanel === "resize" && <div data-testid="resize-controls" className="min-w-0 space-y-3 pb-1">
+            <div className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3">
+              <label className="space-y-1 text-sm">Width (px)<Input aria-label="Output width" type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.height))} value={doc.width} onChange={(e) => { const width = clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.height))); const height = resizeAspectLocked ? clamp(Math.round(width * doc.height / Math.max(1, doc.width)), 1, Math.min(12000, Math.floor(maxPixels / width))) : doc.height; change({width,height}); }} /></label>
+              <label className="space-y-1 text-sm">Height (px)<Input aria-label="Output height" type="number" min="1" max={Math.min(12000, Math.floor(maxPixels / doc.width))} value={doc.height} onChange={(e) => { const height = clamp(Number(e.target.value) || 1, 1, Math.min(12000, Math.floor(maxPixels / doc.width))); const width = resizeAspectLocked ? clamp(Math.round(height * doc.width / Math.max(1, doc.height)), 1, Math.min(12000, Math.floor(maxPixels / height))) : doc.width; change({height,width}); }} /></label>
+              <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={resizeAspectLocked} onChange={(e) => setResizeAspectLocked(e.target.checked)} /> Lock aspect ratio</label>
+            </div>
+            <label className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm"><input type="checkbox" checked={doc.fit === "contain"} onChange={(e) => change({ fit: e.target.checked ? "contain" : "cover" })} /> Fit whole photo inside output (contain)</label>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3"><Button variant="outline" onClick={() => change({ rotation: (doc.rotation + 270) % 360 })}>Rotate left 90°</Button><Button variant="outline" onClick={() => change({ rotation: (doc.rotation + 90) % 360 })}>Rotate right 90°</Button><Button variant="outline" onClick={() => change({ flipX: !doc.flipX })}>Flip horizontal</Button><Button variant="outline" onClick={() => change({ flipY: !doc.flipY })}>Flip vertical</Button></div>
+            <p className="text-xs leading-5 text-muted-foreground">Resize controls output pixel dimensions. Crop controls the visible source area; the two operations are kept separate.</p>
           </div>}
 
           {hasImage && activePanel === "text" && <div className="flex min-w-[78vw] gap-3 overflow-x-auto pb-2 md:min-w-0 md:flex-col md:overflow-visible">

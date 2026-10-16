@@ -6,7 +6,7 @@ const originalCreateObjectURL = URL.createObjectURL;
 const originalRevokeObjectURL = URL.revokeObjectURL;
 
 const featureGroups: Record<string, string> = {
-  "Crop & resize": "Edit", "Text & watermark": "Edit",
+  "Crop": "Edit", "Resize": "Edit", "Crop & resize": "Edit", "Text & watermark": "Edit",
   "Color & filters": "Image", "Color picker": "Image", "Image details": "Image",
   "Export & convert": "Image", "Print size": "Image", "Image to Base64": "Image",
   "Base64 to image": "Image", Favicon: "Create", Collage: "Create", "SVG optimize": "Create",
@@ -77,7 +77,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
 
     const menuChecks = [
-      ["Edit", ["Crop & resize", "Text & watermark"]],
+      ["Edit", ["Crop", "Resize", "Text & watermark"]],
       ["Image", ["Color & filters", "Color picker", "Image details", "Export & convert", "Print size", "Image to Base64", "Base64 to image"]],
       ["Create", ["Favicon", "Collage", "SVG optimize"]],
     ] as const;
@@ -138,7 +138,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
   it("supports expanding and collapsing the mobile editing bottom sheet", () => {
     render(<PhotoEditor />);
-    openFeature("Crop & resize");
+    openFeature("Resize");
 
     const panel = screen.getByTestId("feature-panel");
     expect(panel.className).toContain("h-[min(24dvh,200px)]");
@@ -152,7 +152,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
     render(<PhotoEditor />);
     const featureCases = [
-      ["Crop & resize", "Crop & resize"],
+      ["Resize", "Resize"],
       ["Color & filters", "Color & filters"],
       ["Color picker", "Color picker & palette"],
       ["Text & watermark", "Text & watermark"],
@@ -294,27 +294,47 @@ describe("PhotoEditor workspace UX acceptance", () => {
   });
 
 
-  it("keeps mobile crop controls compact and removes the redundant Apply crop action", async () => {
+  it("provides a separate crop panel with edge-based guidance, ratio presets, reset, and save", async () => {
     render(<PhotoEditor />);
     await loadTestPhoto();
-    openFeature("Crop & resize");
-    const panel = screen.getByTestId("feature-panel");
-    expect(panel.className).toContain("h-[min(24dvh,200px)]");
-    expect(within(panel).queryByRole("button", { name: "Apply crop" })).toBeNull();
-    expect(within(panel).getByRole("button", { name: "Reset crop selection" })).toBeTruthy();
-    expect(within(panel).getByText(/Close this panel to finish; Undo restores/)).toBeTruthy();
-    expect(panel.querySelector(".overflow-x-auto")).toBeTruthy();
+    openFeature("Crop");
+    const panel = screen.getByTestId("crop-controls");
+    expect(within(panel).getByRole("button", { name: "Free" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "1:1" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "4:3" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "Save crop" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "Reset selection" })).toBeTruthy();
+    expect(within(panel).getByText(/Drag the crop edges or corners directly/)).toBeTruthy();
+    fireEvent.click(within(panel).getByRole("button", { name: "1:1" }));
+    expect(within(panel).getByRole("button", { name: "1:1" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(panel).getByLabelText("Crop width")).toBeTruthy();
+    expect(within(panel).getByLabelText("Crop height")).toBeTruthy();
+    expect(panel.querySelector(".overflow-x-auto")).toBeNull();
   });
 
-  it("uses horizontally scrollable filter controls on mobile", async () => {
+  it("separates output resizing from crop and exposes aspect-ratio locking", async () => {
+    render(<PhotoEditor />);
+    await loadTestPhoto();
+    openFeature("Resize");
+    const panel = screen.getByTestId("resize-controls");
+    expect(within(panel).getByLabelText("Output width")).toBeTruthy();
+    expect(within(panel).getByLabelText("Output height")).toBeTruthy();
+    expect(within(panel).getByLabelText("Lock aspect ratio")).toBeTruthy();
+    fireEvent.change(within(panel).getByLabelText("Output width"), { target: { value: "800" } });
+    expect((within(panel).getByLabelText("Output height") as HTMLInputElement).value).toBe("600");
+    expect(within(panel).queryByText("Crop rectangle (source pixels)")).toBeNull();
+    expect(panel.querySelector(".overflow-x-auto")).toBeNull();
+  });
+
+  it("stacks adjustment sliders vertically without horizontal scrolling", async () => {
     render(<PhotoEditor />);
     await loadTestPhoto();
     openFeature("Color & filters");
     const panel = screen.getByTestId("feature-panel");
-    expect(panel.className).toContain("h-[min(24dvh,200px)]");
     expect(within(panel).getByLabelText("Brightness")).toBeTruthy();
     expect(within(panel).getByLabelText("Contrast")).toBeTruthy();
-    expect(panel.querySelector(".overflow-x-auto")).toBeTruthy();
+    expect(panel.querySelector(".overflow-x-auto")).toBeNull();
+    expect(within(panel).getByLabelText("Brightness").className).toContain("w-full");
   });
 
   it("draws a tall portrait photo immediately without waiting for an adjustment change", async () => {
