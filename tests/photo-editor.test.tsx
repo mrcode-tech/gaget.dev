@@ -47,6 +47,37 @@ describe("PhotoEditor workspace", () => {
     expect(screen.getByRole("button", { name: "Export image…" })).toBeTruthy();
   });
 
+
+  it("routes image capabilities through the categorized Tools menu", () => {
+    render(<PhotoEditor />);
+
+    const capabilities = [
+      ["Base64 converter…", "Base64 converter"],
+      ["Favicon generator…", "Favicon generator"],
+      ["Collage maker…", "Collage maker"],
+      ["SVG optimizer…", "SVG optimizer"],
+      ["Image information…", "Image information"],
+      ["Print size & DPI…", "Print size & DPI"],
+      ["Export & format…", "Export & format"],
+      ["Text & watermark…", "Text & watermark"],
+    ] as const;
+
+    for (const [menuItem, panelTitle] of capabilities) {
+      fireEvent.click(screen.getByRole("button", { name: "Tools" }));
+      fireEvent.click(screen.getByRole("button", { name: menuItem }));
+      expect(screen.getByText(panelTitle)).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Close feature panel" }));
+    }
+  });
+
+  it("opens SVG optimization without requiring a raster photo", () => {
+    render(<PhotoEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "Tools" }));
+    fireEvent.click(screen.getByRole("button", { name: "SVG optimizer…" }));
+    expect(screen.getByRole("button", { name: "Choose SVG…" })).toBeTruthy();
+    expect(screen.getByText(/Remove comments and redundant whitespace/)).toBeTruthy();
+  });
+
   it("opens the File menu and exposes local open, export, and reset actions", () => {
     render(<PhotoEditor />);
 
