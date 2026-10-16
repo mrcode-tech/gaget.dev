@@ -622,7 +622,7 @@ export function PhotoEditor() {
       </div>
     </header>
 
-    <div ref={menuBarRef} className="relative z-40 flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
+    <div ref={menuBarRef} data-testid="editor-menubar" className="relative z-40 flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
       <span className="mr-1 hidden shrink-0 font-medium text-muted-foreground sm:inline">File</span>
       <div className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
         {(["File", "Edit", "Image", "Create", "History", "Help"] as const).map((menu) => <div key={menu} className="relative shrink-0">
@@ -666,11 +666,12 @@ export function PhotoEditor() {
     </div>
 
     <div className="relative flex min-h-0 flex-1 overflow-hidden">
-      <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-border bg-card py-3 md:flex">
-        {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
-      </aside>
       <aside aria-label="GaGet.dev navigation" className="hidden w-12 shrink-0 flex-col items-center border-r border-border bg-card py-2 md:flex">
-        <ScrollArea className="h-full w-full"><div className="flex flex-col items-center gap-1.5 py-1">{siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
+        <ScrollArea className="h-full w-full">
+          <div className="flex flex-col items-center gap-1.5 py-1">
+            {siteNavItems.map(({ id, label, Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={activeNavPanel === id} className={"inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeNavPanel === id ? "bg-accent text-foreground" : "text-muted-foreground")} onClick={() => { setMenuOpen(null); setActiveNavPanel(activeNavPanel === id ? null : id); }}><Icon className="h-4 w-4" /></button>)}
+          </div>
+        </ScrollArea>
       </aside>
       <div className={"relative z-10 flex h-full shrink-0 overflow-hidden border-r border-border bg-background transition-[width] duration-200 ease-out " + (activeNavPanel === null ? "pointer-events-none w-0 border-r-0" : "w-[min(320px,calc(100vw-48px))] md:w-[320px]")} data-testid="site-navigation-panel" aria-label="GaGet.dev menu" aria-hidden={activeNavPanel === null}>
         <div className="flex h-full min-h-0 w-[320px] min-w-[min(320px,calc(100vw-48px))] flex-col bg-card shadow-xl">
