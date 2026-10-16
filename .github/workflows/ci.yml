@@ -1,10 +1,13 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [main, stage]
+  # Run validation for every branch, including feature and fix branches.
   push:
-    branches: [main, stage]
+    branches:
+      - "**"
+  # Validate proposed changes regardless of the PR's target branch.
+  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -12,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Unit tests, lint, typecheck, and production build
+    name: Unit tests, component tests, lint, typecheck, build, and smoke tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -26,8 +29,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # The repository lockfile currently omits @radix-ui/react-select and its transitive dependencies.
-        # npm install refreshes that stale lockfile in the runner; commit the regenerated lockfile separately.
+        # npm install is used because the current lockfile is stale and omits dependencies.
+        # Once package-lock.json is regenerated and committed, switch this to npm ci.
         run: npm install --no-audit --no-fund
 
       - name: Run unit tests
