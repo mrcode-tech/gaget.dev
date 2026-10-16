@@ -374,7 +374,7 @@ Implemented on `feat/brand-and-user-experience`:
 ## Two-level editor navigation refinement — 2026-10-16
 
 ### User-requested UX changes implemented
-- Added a dedicated GaGet.dev site-navigation header above the Photo Editor command bar, creating the requested two-level top navigation.
+- Reused the existing GaGet.dev `AppHeader` (brand, tool search, language switcher, and theme toggle) above the Photo Editor command bar, with standalone spacing so it does not reserve room for the hidden site sidebar.
 - Removed the horizontal-scrolling strip of twelve feature buttons. Desktop commands are grouped into **File**, **Edit**, **Image**, **Create**, **History**, and **Help** menus; editing capabilities are nested under their relevant groups.
 - On narrow screens, the editor command bar collapses feature access into a hamburger-style **Features** menu with labeled Edit / Image / Create sections. File actions remain available from a separate File menu.
 - Reworked the GaGet.dev icon rail to use the shadcn `ScrollArea` component.
