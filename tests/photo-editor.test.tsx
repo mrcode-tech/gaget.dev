@@ -37,7 +37,7 @@ describe("PhotoEditor workspace", () => {
     expect(screen.getAllByRole("button", { name: "Adjust" })[0].hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("button", { name: "Transform" }).hasAttribute("disabled")).toBe(true);
     expect(screen.getAllByRole("button", { name: "Text" })[0].hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "Export", exact: true }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("button", { name: /^Export$/ }).hasAttribute("disabled")).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     expect(screen.getByRole("button", { name: "Export image…" }).hasAttribute("disabled")).toBe(true);
@@ -79,7 +79,7 @@ describe("PhotoEditor workspace", () => {
   it("opens the Help menu with local-processing guidance", () => {
     render(<PhotoEditor />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Help", exact: true })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /^Help$/ })[0]);
 
     expect(screen.getByText("A lightweight editor. Adjustments are rendered locally in your browser; export creates a new file and never overwrites your original.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Crop & editing tips" })).toBeTruthy();
