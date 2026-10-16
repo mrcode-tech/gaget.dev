@@ -329,7 +329,7 @@ Component tests now cover:
 User-requested changes for this iteration, written before implementation:
 
 1. Remove the persistent panel footer **Done** button. Keep the panel-header **X** for mobile and keyboard/screen-reader users. On desktop, clicking the canvas/workspace outside the panel dismisses it.
-2. Replace the two navigation-only buttons in the editor rail with a complete, accessible capability rail. Rail icons open contextual panels without navigating away or destroying the current edit session. Keep the brand/home link as the sole home navigation affordance.
+2. Replace the two navigation-only buttons in the editor rail with GaGet.dev navigation icons for Home, Popular, All tools, Favorites, and every tool category. Clicking an icon opens a sliding in-editor drawer; it must not navigate until the user explicitly selects a tool link. Keep the brand/home link as the direct home affordance.
 3. Make the empty canvas use the active light/dark theme tokens, provide a generous neutral workspace margin, and accept image drag/drop as well as click-to-open.
 4. Make collage selection additive (append new files, deduplicate, allow removal, preserve order, cap at nine), show numbered thumbnails and a live ordered preview, and support matrix / single-row / single-column layouts with configurable matrix columns.
 5. Consolidate the canvas caption/status and dimensions into the existing contextual toolbar; remove the extra canvas-footer row so there are only the app menu and one work toolbar.
@@ -338,3 +338,34 @@ User-requested changes for this iteration, written before implementation:
 8. Re-run the full CI pipeline on the final commit: unit tests, component tests, ESLint, TypeScript, production build, and production route smoke tests.
 
 Implementation must preserve the current branch and avoid deleting the original-image/local-processing protections. Mobile panels remain full-workspace views with a close X; desktop panels remain contextual right-side overlays. If browser automation is unavailable, explicitly retain real-device/touch testing as a manual follow-up rather than claiming it passed.
+
+
+## Follow-up UX implementation results — 2026-10-16
+
+Implemented on `feat/brand-and-user-experience`:
+
+- Removed the persistent **Done** footer from the feature panel. The **X** close action is mobile-only. The feature panel slides in from the right and is dismissed on desktop by clicking the canvas or workspace outside it. Pressing Escape also closes an open panel.
+- When a desktop click dismisses the panel during an interactive crop, the crop state remains active and the compact toolbar exposes **Apply crop** and **Cancel crop** so the crop workflow is not lost with the panel.
+- Replaced the two navigation-only rail links with GaGet.dev navigation icons: Home, Popular, All tools, Favorites, and all tool categories. Selecting an icon opens a sliding drawer over the existing editor; it does not navigate away or discard the current image. Selecting a tool link inside the drawer performs the actual navigation. On mobile, a separate browse-navigation icon is in the work toolbar, not in the File menu bar.
+- Added category-specific tool lists to the drawer. Favorites currently has an empty-state placeholder because a persisted favorites feature is not wired into this editor.
+- Replaced the dark-only empty workspace with theme-token surfaces, a generous dashed drop zone, click-to-browse behavior, drag-over feedback, and image drag-and-drop. The workspace has consistent margins around the canvas and remains scrollable at larger zoom levels.
+- Collage selection now appends images across repeated file-picker uses, deduplicates the same file, limits selection to nine, displays ordered/numbered previews, supports removal, and mirrors the live selection in the central workspace. Matrix layout supports configurable columns; horizontal row and vertical column layouts are also available.
+- Removed the always-visible canvas footer/status row and kept the photo caption/status, undo/redo, crop actions, and zoom controls in the compact work toolbar.
+- Replaced generic Image / Adjust / Tools menu names with capability-specific entries: Crop & resize, Color & filters, Color picker, Text & watermark, Image details, Export & convert, Print size, Image to Base64, Base64 to image, Favicon, Collage, and SVG optimize. File and History remain application-level menus; export is not a permanent feature button.
+- Added/updated PhotoEditor acceptance tests for capability-first menus, GaGet category drawer behavior, mobile navigation, contextual panel dismissal, theme-aware empty state, drag/drop validation, no Done footer, collage append/deduplication/removal/order/preview/layout, and the compact work toolbar.
+
+### Verification
+
+- Successful full CI run on implementation commit `7ce950738027b98e87905c7c4f76997b43ebb977`: https://github.com/mrcode-tech/gaget.dev/actions/runs/38912669101
+- Passed: unit tests, component tests, ESLint, TypeScript, production build, and production route smoke tests.
+- The component suite reported 16 PhotoEditor acceptance tests and 3 AppSidebar tests passing; the unit suite passed 5 tests.
+- The smoke tests continue to validate the unified editor route and the legacy image-tool redirects.
+
+### Remaining manual acceptance checks
+
+- [ ] Verify actual canvas-click dismissal with a real loaded image at desktop widths; the code path is implemented and the workspace-dismissal behavior is covered in component tests.
+- [ ] Test drag/drop, crop-edge touch gestures, and zoom scrolling on a real mobile device and in Safari/WebKit.
+- [ ] Confirm the sliding panel feels correct with reduced-motion preferences and screen-reader navigation.
+- [ ] Favorites remains a placeholder empty state until a favorites persistence model exists.
+- [ ] Run CI once more on the documentation-updated final branch commit before considering it merge-ready.
+
