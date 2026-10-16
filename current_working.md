@@ -461,3 +461,18 @@ Implementation started:
 - `tests/app-sidebar.test.tsx`: assert the controls are available after opening the mobile drawer.
 - `tests/app-shell.test.tsx`: assert the header preferences are desktop-only.
 - Latest implementation commit: `39925ed77cfef8392cb05cf30e6caad6d0c70d12`. CI verification is pending.
+
+
+## Mobile drawer preferences layout fix — 2026-10-16
+
+### Reported issue
+The mobile drawer showed language selection and theme toggle side by side, without visible **Language** and **Appearance** captions.
+
+### Fix implemented
+- Replaced the single horizontal preferences row with a clearly titled **Preferences** section.
+- Added a **Language** caption above the language selector and an **Appearance** caption above the theme control; these are separate vertically stacked rows.
+- Kept language/theme settings inside the mobile drawer and desktop preferences in the desktop header.
+- Added regression assertions for both captions and separate row containers.
+
+### Verification
+- CI has not yet been verified for this commit. Do not claim the fix is tested until the GitHub Actions result is checked.
