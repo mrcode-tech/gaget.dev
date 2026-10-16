@@ -37,7 +37,6 @@ afterEach(() => {
   else Reflect.deleteProperty(URL, "revokeObjectURL");
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
-  vi.unstubAllGlobals();
 });
 
 describe("PhotoEditor workspace UX acceptance", () => {
