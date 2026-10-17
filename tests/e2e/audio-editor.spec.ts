@@ -42,7 +42,7 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
 
   await openFeatures.click();
   await featureMenu.getByRole("button", { name: "Pitch preview" }).click();
-  await expect(page.getByText(/does not export time-stretched or pitch-shifted audio/i)).toBeVisible();
+  await expect(page.getByText(/does not apply speed or pitch changes/i)).toBeVisible();
   await expect(page.getByLabel("Preview speed (pitch changes with speed)")).toBeVisible();
 
   await openFeatures.click();
@@ -102,4 +102,24 @@ test("mobile audio features use the compact bottom sheet instead of a list box",
   expect(box!.y).toBeGreaterThan(100);
   expect(box!.y + box!.height).toBeLessThanOrEqual(790);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("audio editor menus and inspector dismiss with Escape", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/audio/editor");
+  const trigger = page.getByRole("button", { name: "Open audio editor features" });
+  await trigger.click();
+  await expect(page.getByTestId("audio-feature-menu")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("audio-feature-menu")).toBeHidden();
+  await trigger.click();
+  await page.getByTestId("audio-feature-menu").getByRole("button", { name: "Trim & range" }).click();
+  await page.locator("#audio-input").setInputFiles({
+    name: "fixture.wav",
+    mimeType: "audio/wav",
+    buffer: makeWavFixture(),
+  });
+  await expect(page.getByTestId("audio-feature-panel")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("audio-feature-panel")).toBeHidden();
 });
