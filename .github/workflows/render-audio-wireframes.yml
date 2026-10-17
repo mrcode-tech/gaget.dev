@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - proposal/unified-audio-editor
+      - fix/audio-editor-photo-editor-consistency
     paths:
       - 'specification/audio-editor/wireframes/*.svg'
       - '.github/workflows/render-audio-wireframes.yml'
@@ -15,10 +16,10 @@ jobs:
   render:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out proposal branch
+      - name: Check out branch
         uses: actions/checkout@v4
         with:
-          ref: proposal/unified-audio-editor
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Install SVG rendering tools
@@ -46,4 +47,4 @@ jobs:
             exit 0
           fi
           git commit -m "docs: add PNG and JPEG audio wireframes"
-          git push origin HEAD:proposal/unified-audio-editor
+          git push origin "HEAD:${GITHUB_REF_NAME}"

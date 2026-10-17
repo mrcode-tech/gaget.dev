@@ -42,3 +42,14 @@ Consolidate the 18 existing audio tools into one Audio Editor workspace, using t
 - Unsupported operations are labelled honestly.
 - CI passes on the latest commit; no horizontal overflow at the proposal viewport matrix.
 - No merge to `main` without explicit user approval.
+
+
+## Follow-up UI consistency fix — 2026-10-18
+
+- Branch: `fix/audio-editor-photo-editor-consistency`; draft PR [#41](https://github.com/mrcode-tech/gaget.dev/pull/41) targets `stage`.
+- Matched the Photo Editor's 68px in-flow editor toolbar: mobile navigation, File, and Features at the top; desktop category menus remain in the top toolbar.
+- Removed the duplicate fixed bottom navigation and standalone Export action. Export is available from File; the feature inspector remains a bottom sheet on mobile and now sits 8px above the viewport edge.
+- Hid the global search field on mobile Audio Editor pages and reduced the empty upload area's extra copy.
+- Updated XS/MD/XL wireframes and regenerated matching PNG/JPG variants with successful render workflow [39068708138](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068708138).
+- Added E2E checks for mobile/desktop search and toolbar behavior, File-menu export, and desktop access to Export & data features.
+- **Verification:** Implementation commit `3658fd254248c52d1b76756feb5ea6848975b010` passed full CI in run [39068980000](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068980000): 38 unit/smoke tests and 34 Playwright E2E tests passed, including the 11-viewport overflow matrix, Audio Editor toolbar/search/export checks, and Photo Editor regressions. ESLint, TypeScript, and the production build also passed. This tracking update is documentation-only.

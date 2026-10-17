@@ -16,6 +16,7 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
   const [query, setQuery] = useState("");
   const pathname = usePathname();
   const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
+  const isAudioEditor = /(?:^|\/)audio\/editor\/?$/.test(pathname);
   const { locale, t } = useI18n();
   const matches = query.trim()
     ? tools
@@ -35,7 +36,7 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
       <Button variant="outline" size="icon" aria-label="Open navigation" className="h-9 w-9 shrink-0 lg:hidden" onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}>
         <Menu className="h-4 w-4" />
       </Button>
-      <div className={`relative min-w-0 w-full max-w-xl ${isPhotoEditor ? "hidden md:block" : ""}`}>
+      <div className={`relative min-w-0 w-full max-w-xl ${isPhotoEditor || isAudioEditor ? "hidden md:block" : ""}`}>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           dir={direction}
