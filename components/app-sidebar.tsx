@@ -201,8 +201,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
       <div
         className={cn(
-          "fixed z-50 lg:hidden",
-          isPhotoEditor ? "top-1" : "top-3",
+          "fixed z-[70] lg:hidden",
+          isPhotoEditor ? "top-0" : "top-3",
           direction === "ltr" ? (isPhotoEditor ? "left-2" : "left-3") : (isPhotoEditor ? "right-2" : "right-3")
         )}
       >
@@ -210,7 +210,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           variant="outline"
           size="icon"
           aria-label="Open navigation"
-          className={isPhotoEditor ? "h-8 w-8" : undefined}
+          className={isPhotoEditor ? "h-10 w-10 rounded-none border-0 bg-card/95 shadow-sm" : undefined}
           onClick={() => setMobileOpen(true)}
         >
           <Menu className="h-4 w-4" />
