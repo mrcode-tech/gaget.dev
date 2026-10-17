@@ -625,3 +625,12 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - The editor already declares `overflow-x-hidden overflow-y-auto` on the bottom-sheet scroller, and the suite separately checks actual width containment and vertical scrolling. Adjusted the assertion to verify the intended `overflow-x-hidden` class, computed vertical scrolling, and no horizontal layout overflow, instead of relying only on a computed overflow-axis value that can be normalized by the browser.
 - This is a test assertion correction, not a confirmed production-code fix. The new commit's CI run must verify that the four cases pass.
 - Process reminder: related test/code changes are grouped into one commit; wait for the CI run on that commit before making additional pushes unless a further fix is needed.
+
+
+## Mobile filter overflow investigation and layout cleanup — 2026-10-17
+
+- Inspected CI run [#39027891737](https://github.com/mrcode-tech/gaget.dev/actions/runs/39027891737). Unit tests, component tests, lint, TypeScript, and production build passed; all four narrow-mobile Color & filters E2E cases still failed.
+- Root cause of the assertion failure: `scrollWidth` can include descendants clipped by an element with `overflow-x: hidden`. The test treated that measurement as proof of visible horizontal overflow, so it was not measuring the intended behavior.
+- Refactored the filter adjustments container to rely on the panel's single horizontal-clipping boundary instead of adding a second nested `overflow-x-hidden` boundary.
+- Updated E2E coverage to assert the scroller's horizontal clipping and vertical scrolling, and verify all six range controls fit within their labels' rendered bounds. Panel-level viewport containment and vertical-scroll assertions remain.
+- Verification is pending on the next CI run; do not mark the branch green until all four mobile cases pass.

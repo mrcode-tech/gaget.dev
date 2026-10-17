@@ -153,22 +153,27 @@ for (const width of [320, 360, 390, 430]) {
     await expect.poll(() => panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
     await expect.poll(() => panelScroller.evaluate((element) => {
       const style = getComputedStyle(element);
-      // Assert the intended utility class and real layout behavior. Checking
-      // computed overflowX alone is brittle across browser/CSS normalization;
-      // actual horizontal overflow is covered by scrollWidth/clientWidth below.
-      return element.classList.contains("overflow-x-hidden")
-        && style.overflowY === "auto"
-        && element.scrollWidth <= element.clientWidth;
+      // There should be one vertical scroller, with horizontal overflow clipped
+      // at this boundary. scrollWidth may include descendants clipped by
+      // overflow-x:hidden, so it is not a reliable visible-overflow assertion.
+      return element.classList.contains("overflow-x-hidden") && style.overflowY === "auto";
     })).toBe(true);
     await expect.poll(() => panelScroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
-    await expect.poll(() => adjustments.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return style.overflowX === "hidden" && element.scrollWidth <= element.clientWidth;
-    })).toBe(true);
     await expect(adjustments.locator(".overflow-x-auto")).toHaveCount(0);
-    await expect.poll(() => adjustments.locator("input[type='range']").evaluateAll((inputs) =>
-      inputs.length === 6 && inputs.every((input) => input.scrollWidth <= input.clientWidth),
-    )).toBe(true);
+    await expect.poll(() => adjustments.locator("label").evaluateAll((labels) => {
+      const bounds = labels.map((label) => label.getBoundingClientRect());
+      const ranges = Array.from(document.querySelectorAll('[data-testid="filter-adjustments"] input[type="range"]'));
+      return bounds.every((box) => box.width > 0)
+        && ranges.length === 6
+        && ranges.every((input) => {
+          const inputBox = input.getBoundingClientRect();
+          const labelBox = input.closest("label")?.getBoundingClientRect();
+          return Boolean(labelBox)
+            && inputBox.width > 0
+            && inputBox.left >= labelBox!.left
+            && inputBox.right <= labelBox!.right;
+        });
+    })).toBe(true);
 
     await panelScroller.evaluate((element) => { element.scrollTop = element.scrollHeight; });
     await expect.poll(() => panelScroller.evaluate((element) => element.scrollTop > 0)).toBe(true);

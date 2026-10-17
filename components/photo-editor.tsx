@@ -753,7 +753,7 @@ export function PhotoEditor() {
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 md:space-y-4 md:p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
-          {hasImage && activePanel === "adjust" && <div data-testid="filter-adjustments" className="flex w-full min-w-0 max-w-full flex-col gap-3 overflow-x-hidden overscroll-y-contain">
+          {hasImage && activePanel === "adjust" && <div data-testid="filter-adjustments" className="flex w-full min-w-0 max-w-full flex-col gap-3">
             <label className="block space-y-2 text-sm">Filter preset
               <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={filterPreset} onChange={(e) => {
                 setFilterPreset(e.target.value);
