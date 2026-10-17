@@ -130,10 +130,11 @@ for (const viewport of viewports) {
     expect(panelBox, "editing panel should have a measurable viewport").not.toBeNull();
     if (canvasBox && panelBox && viewport.width < 768) {
       expect(panelBox.y).toBeGreaterThanOrEqual(canvasBox.y + canvasBox.height - 2);
-      // The mobile feature sheet is intentionally compact; verify rendered geometry
-      // rather than coupling this test to Tailwind class names.
-      expect(panelBox.height).toBeGreaterThan(0);
-      expect(panelBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.32, 280) + 2);
+      // Every mobile feature starts at the same useful default height.
+      // Verify rendered geometry rather than coupling the test to Tailwind classes.
+      const defaultPanelHeight = Math.min(viewport.height * 0.45, 380);
+      expect(panelBox.height).toBeGreaterThanOrEqual(defaultPanelHeight - 2);
+      expect(panelBox.height).toBeLessThanOrEqual(defaultPanelHeight + 2);
     } else if (canvasBox && panelBox) {
       expect(panelBox.x).toBeGreaterThanOrEqual(canvasBox.x + canvasBox.width - 2);
     }
