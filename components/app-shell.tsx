@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { localeDirections } from "@/lib/i18n/messages";
@@ -10,6 +11,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { locale } = useI18n();
   const direction = localeDirections[locale];
+  const pathname = usePathname();
+  const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
 
   return (
     <>
@@ -28,7 +31,9 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
               : "min-h-screen transition-[padding] duration-200 lg:pr-[248px]"
         }
       >
-        <AppHeader sidebarCollapsed={sidebarCollapsed} />
+        <div className={isPhotoEditor ? "hidden lg:block" : ""}>
+          <AppHeader sidebarCollapsed={sidebarCollapsed} />
+        </div>
         {children}
       </div>
     </>

@@ -33,6 +33,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { locale, t } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const direction = localeDirections[locale];
+  const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
 
   const isActive = (href: string) => {
     const clean = pathname.replace(/^\/(fa|ar)(?=\/|$)/, "") || "/";
@@ -200,14 +201,16 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
       <div
         className={cn(
-          "fixed top-3 z-50 lg:hidden",
-          direction === "ltr" ? "left-3" : "right-3"
+          "fixed z-50 lg:hidden",
+          isPhotoEditor ? "top-1" : "top-3",
+          direction === "ltr" ? (isPhotoEditor ? "left-2" : "left-3") : (isPhotoEditor ? "right-2" : "right-3")
         )}
       >
         <Button
           variant="outline"
           size="icon"
           aria-label="Open navigation"
+          className={isPhotoEditor ? "h-8 w-8" : undefined}
           onClick={() => setMobileOpen(true)}
         >
           <Menu className="h-4 w-4" />

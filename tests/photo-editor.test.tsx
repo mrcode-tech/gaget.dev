@@ -97,17 +97,16 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
   });
 
-  it("places the GaGet.dev brand and compact File button on the left, with Features on the right", () => {
+  it("keeps the editor navbar compact without a duplicate brand row and anchors Features right", () => {
     render(<PhotoEditor />);
     const menubar = screen.getByTestId("editor-menubar");
-    const brand = within(menubar).getByRole("link", { name: "GaGet.dev home" });
     const file = within(menubar).getByRole("button", { name: "File" });
     const features = within(menubar).getByRole("button", { name: "Open photo editor features" });
 
-    expect(brand.compareDocumentPosition(file) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(menubar).queryByRole("link", { name: "GaGet.dev home" })).toBeNull();
+    expect(menubar.className).toContain("pl-12");
     expect(file.className).toContain("px-2");
-    expect(file.className).toContain("md:px-3");
-    expect(menubar.querySelector('[aria-hidden="true"]')?.className).toContain("inline-block");
+    expect(file.className).toContain("lg:px-3");
     expect(features.parentElement?.className).toContain("ml-auto");
   });
 
