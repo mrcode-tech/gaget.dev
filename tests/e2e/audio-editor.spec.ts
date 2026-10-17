@@ -77,3 +77,29 @@ for (const viewport of [
     expect(overflow).toBe(false);
   });
 }
+
+test("mobile audio features use the compact bottom sheet instead of a list box", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/audio/editor");
+  await expect(page.getByRole("button", { name: "Open audio editor features" })).toBeVisible();
+  await page.getByRole("button", { name: "Open audio editor features" }).click();
+  const menu = page.getByTestId("audio-feature-menu");
+  await expect(menu).toBeVisible();
+  await menu.getByRole("button", { name: "Pitch preview" }).click();
+  await expect(menu).toBeHidden();
+  await page.locator("#audio-input").setInputFiles({
+    name: "fixture.wav",
+    mimeType: "audio/wav",
+    buffer: makeWavFixture(),
+  });
+  await expect(page.getByText(/Decoded locally/i)).toBeVisible();
+  await page.getByRole("button", { name: "Open audio editor features" }).click();
+  await page.getByTestId("audio-feature-menu").getByRole("button", { name: "Trim & range" }).click();
+  const panel = page.getByTestId("audio-feature-panel");
+  await expect(panel).toBeVisible();
+  const box = await panel.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.y).toBeGreaterThan(100);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(790);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
