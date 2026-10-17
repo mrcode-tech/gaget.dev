@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
@@ -32,6 +32,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const pathname = usePathname();
   const { locale, t } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const openNavigation = () => setMobileOpen(true);
+    window.addEventListener("gaget:open-navigation", openNavigation);
+    return () => window.removeEventListener("gaget:open-navigation", openNavigation);
+  }, []);
   const direction = localeDirections[locale];
   const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
 
@@ -199,26 +205,13 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         {renderSidebar(collapsed)}
       </aside>
 
-      <div
-        data-testid="mobile-site-navigation-trigger"
-        className={cn(
-          // This is a viewport-level control, not part of the scrolling editor
-          // navbar. Keep it above the editor's own menus and panel overlays.
-          "fixed z-[100] lg:hidden",
-          isPhotoEditor ? "top-0" : "top-3",
-          direction === "ltr" ? (isPhotoEditor ? "left-2" : "left-3") : (isPhotoEditor ? "right-2" : "right-3")
-        )}
-      >
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Open navigation"
-          className={isPhotoEditor ? "relative z-[101] pointer-events-auto h-10 w-10 rounded-none border border-border bg-card shadow-md" : undefined}
-          onClick={() => setMobileOpen(true)}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-      </div>
+      {!isPhotoEditor && (
+        <div data-testid="mobile-site-navigation-trigger" className={cn("fixed z-[100] lg:hidden top-3", direction === "ltr" ? "left-3" : "right-3")}>
+          <Button variant="outline" size="icon" aria-label="Open navigation" onClick={() => setMobileOpen(true)}>
+            <Menu className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {mobileOpen && (
         <div className="fixed inset-0 z-[110] lg:hidden">
