@@ -31,3 +31,14 @@ test("the Images category promotes the unified Photo Editor instead of duplicate
   assert.equal(imageTools[0].name, "Photo Editor");
   assert.equal(imageTools[0].href, "/images/editor");
 });
+
+
+test("Audio category exposes one unified editor with searchable capability keywords", () => {
+  const audioTools = tools.filter((tool) => tool.category === "Audio");
+  assert.equal(audioTools.length, 1, "audio capabilities should be grouped under one Audio Editor entry");
+  assert.equal(audioTools[0].name, "Audio Editor");
+  assert.equal(audioTools[0].href, "/audio/editor");
+  for (const keyword of ["trim", "split", "merge", "volume", "speed", "pitch", "metadata", "wav", "base64", "silence", "frequency", "recorder"]) {
+    assert.ok(audioTools[0].keywords.includes(keyword), `Audio Editor search keywords should include ${keyword}`);
+  }
+});
