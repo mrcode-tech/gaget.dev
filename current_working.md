@@ -692,3 +692,11 @@ Verification: pending latest branch CI. Real-browser layout still needs to be co
 - Added responsive SVG wireframes for homepage/shared navigation and an atlas covering all 13 photo-editing features at XS, SM, MD, LG, XL and 2XL.
 - Linked the visual library from `specification/design.md`.
 - These are design schematics, not production screenshots. CI must be checked separately; documentation-only changes do not prove runtime behavior.
+
+
+## Text & watermark mobile overflow fix (2026-10-17)
+
+- Removed the Text & watermark panel's `78vw` minimum width and horizontal scrolling layout.
+- Stacked parameter controls vertically on mobile, constrained children/sliders to available width, and kept paired font/color and Bold/Italic controls two-column only at the desktop breakpoint.
+- Added unit and responsive Playwright regression assertions for vertical layout and no horizontal overflow.
+- CI run result pending for the resulting commit.
