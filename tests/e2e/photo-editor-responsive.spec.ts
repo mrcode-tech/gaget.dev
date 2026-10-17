@@ -62,7 +62,7 @@ for (const viewport of viewports) {
     }
 
     await loadTestPhoto(page);
-    if (viewport.width >= 640) {
+    if (viewport.width >= 768) {
       await expect(page.getByRole("status")).toBeVisible();
     } else {
       await expect(page.getByRole("status")).toBeHidden();

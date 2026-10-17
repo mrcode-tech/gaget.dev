@@ -685,7 +685,7 @@ export function PhotoEditor() {
     </div>
 
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
-      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status && <span className="hidden sm:inline"> · {status}</span>}</span>
+      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status && <span className="hidden md:inline"> · {status}</span>}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
       <Button size="icon" variant="outline" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 className="h-4 w-4" /></Button>
@@ -860,5 +860,5 @@ export function PhotoEditor() {
     </div>
 
     <p id="canvas-keyboard-help" className="sr-only">When the crop tool is active, focus the canvas and use arrow keys to move the crop area; hold Shift to move by larger steps. When editing text, use arrow keys to nudge the selected text. Editing controls remain available while you work on the canvas.</p>
-    {(error || status) && <div className={"shrink-0 border-t border-border bg-card px-4 py-2 text-xs " + (!error ? "hidden sm:block" : "")}><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-700 dark:text-emerald-300">{status}</span>}</div></div>}</main>;
+    {(error || status) && <div className={"shrink-0 border-t border-border bg-card px-4 py-2 text-xs " + (!error ? "hidden md:block" : "")}><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-700 dark:text-emerald-300">{status}</span>}</div></div>}</main>;
 }
