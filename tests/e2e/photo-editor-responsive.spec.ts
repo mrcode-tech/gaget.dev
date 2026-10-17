@@ -274,5 +274,5 @@ test("mobile feature panel has a shared default height and supports bounded drag
   await expect.poll(panelHeight).toBeGreaterThanOrEqual(height * 0.7 - 3);
   await expect.poll(panelHeight).toBeLessThanOrEqual(height * 0.7 + 3);
 
-  await expect(page.locator("main[aria-label='GaGet Photo Editor']").evaluate((element) => element.scrollWidth <= element.clientWidth)).resolves.toBe(true);
+  await expect.poll(() => page.locator("main[aria-label='GaGet Photo Editor']").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });
