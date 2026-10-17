@@ -1,10 +1,17 @@
 name: Mobile Photo Editor CI
 
 on:
-  # Verify every branch update and pull request automatically.
+  # Test the three active branches when they are updated.
   push:
+    branches:
+      - main
+      - stage
+      - feat/mobile-navigation-ux-fixes
+  # Validate feature-to-stage and stage-to-production pull requests.
   pull_request:
-  # Keep manual runs available for deliberate full verification.
+    branches:
+      - stage
+      - main
   workflow_dispatch:
 
 # One active CI run per branch, shared across push, pull_request, and workflow_dispatch.
