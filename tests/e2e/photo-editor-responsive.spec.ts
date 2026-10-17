@@ -49,7 +49,7 @@ for (const viewport of viewports) {
       const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
       const siteMenu = page.getByRole("button", { name: "Open navigation" });
       await expect(siteMenu).toBeVisible();
-      await expect(siteMenu).toHaveCSS("position", "fixed");
+      await expect(siteMenu.locator("xpath=..")).toHaveCSS("position", "fixed");
       await expect(menubar.getByRole("link", { name: "GaGet.dev home" })).toHaveCount(0);
       await expect(fileMenu).toBeVisible();
       await expect(featuresMenu).toBeVisible();
