@@ -163,6 +163,18 @@ for (const viewport of viewports) {
       expect(panelBox.x).toBeGreaterThanOrEqual(canvasBox.x + canvasBox.width - 2);
     }
 
+    const textControls = panel.getByTestId("text-watermark-controls");
+    await expect(textControls).toBeVisible();
+    if (viewport.width < 1024) {
+      await expect(textControls).toHaveClass(/flex-col/);
+      await expect(textControls).toHaveClass(/overflow-x-hidden/);
+      await expect(textControls.locator(".overflow-x-auto")).toHaveCount(0);
+      await expect.poll(() => textControls.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+      await expect.poll(() => panel.evaluate((element) => {
+        const scroller = element.querySelector(":scope > div > div.flex-1");
+        return scroller instanceof HTMLElement && scroller.scrollWidth <= scroller.clientWidth;
+      })).toBe(true);
+    }
     await page.getByRole("button", { name: "Add text layer" }).click();
     const canvas = page.locator("canvas[role='img']");
     await canvas.click();
