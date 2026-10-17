@@ -64,11 +64,15 @@ for (const viewport of viewports) {
       const featureList = page.getByTestId("mobile-feature-menu");
       await expect(featureList).toBeVisible();
       const featureListBox = await featureList.boundingBox();
+      const featuresTriggerBox = await featuresMenu.boundingBox();
       expect(featureListBox, "mobile feature list should have a measurable compact dropdown").not.toBeNull();
-      if (featureListBox) {
-        expect(featureListBox.width).toBeLessThanOrEqual(280);
+      expect(featuresTriggerBox, "Features trigger should have a measurable anchor").not.toBeNull();
+      if (featureListBox && featuresTriggerBox) {
+        expect(featureListBox.width).toBeLessThanOrEqual(256);
         expect(featureListBox.width).toBeLessThan(viewport.width - 80);
         expect(featureListBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.7, 420) + 2);
+        // The dropdown must align to the Features trigger, not stretch or anchor to the viewport/page.
+        expect(featureListBox.x + featureListBox.width).toBeCloseTo(featuresTriggerBox.x + featuresTriggerBox.width, 0);
         expect(viewport.width - featureListBox.x - featureListBox.width).toBeCloseTo(viewport.width >= 640 ? 24 : 12, 0);
       }
       await expect(featureList.getByRole("button", { name: "Crop", exact: true })).toBeVisible();
