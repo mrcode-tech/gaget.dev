@@ -210,7 +210,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           variant="outline"
           size="icon"
           aria-label="Open navigation"
-          className={isPhotoEditor ? "h-8 w-8" : undefined}
+          className={isPhotoEditor ? "h-10 w-10 rounded-none border-0 bg-card/95 shadow-sm" : undefined}
           onClick={() => setMobileOpen(true)}
         >
           <Menu className="h-4 w-4" />
