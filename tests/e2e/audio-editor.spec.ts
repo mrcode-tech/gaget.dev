@@ -145,7 +145,7 @@ test("audio editor follows the Photo Editor navbar on mobile", async ({ page }) 
   await expect(fileMenu.getByRole("button", { name: "Export audio…" })).toBeVisible();
 });
 
-test("audio editor search returns on desktop like the shared header", async ({ page }) => {
+test("audio editor desktop search and category menus match the shared header", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/audio/editor");
   await expect(page.locator("header input")).toBeVisible();
