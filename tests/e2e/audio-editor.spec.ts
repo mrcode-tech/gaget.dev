@@ -24,6 +24,7 @@ function makeWavFixture() {
 }
 
 test("Audio Editor loads audio, switches features, and keeps processing available", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/audio/editor");
   await expect(page.getByRole("heading", { name: "Audio Editor" }).first()).toBeVisible();
   const openFeatures = page.getByRole("button", { name: "Open audio editor features" });
