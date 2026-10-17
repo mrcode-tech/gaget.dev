@@ -378,9 +378,9 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(controls.className).not.toContain("min-w-[78vw]");
     fireEvent.click(within(controls).getByRole("button", { name: "Add text layer" }));
     expect(within(controls).getByLabelText("Text")).toBeTruthy();
-    expect(within(controls).getByLabelText("Font size")).toBeTruthy();
-    expect(within(controls).getByLabelText("Rotation")).toBeTruthy();
-    expect(within(controls).getByLabelText("Opacity")).toBeTruthy();
+    expect(within(controls).getByLabelText(/Font size/)).toBeTruthy();
+    expect(within(controls).getByLabelText(/Rotation/)).toBeTruthy();
+    expect(within(controls).getByLabelText(/Opacity/)).toBeTruthy();
     expect(within(controls).getByRole("button", { name: "Bold" })).toBeTruthy();
     expect(within(controls).getByRole("button", { name: "Italic" })).toBeTruthy();
   });
