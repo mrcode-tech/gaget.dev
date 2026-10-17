@@ -753,7 +753,7 @@ export function PhotoEditor() {
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 md:space-y-4 md:p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
-          {hasImage && activePanel === "adjust" && <div data-testid="filter-adjustments" className="min-w-0 space-y-4 overscroll-y-contain">
+          {hasImage && activePanel === "adjust" && <div data-testid="filter-adjustments" className="flex w-full min-w-0 max-w-full flex-col gap-3 overflow-x-hidden overscroll-y-contain">
             <label className="block space-y-2 text-sm">Filter preset
               <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={filterPreset} onChange={(e) => {
                 setFilterPreset(e.target.value);
@@ -770,7 +770,7 @@ export function PhotoEditor() {
                 <option value="custom">Choose a preset…</option><option value="original">Original</option><option value="vivid">Vivid</option><option value="warm">Warm</option><option value="vintage">Vintage</option><option value="mono">Black & white</option><option value="dramatic">Dramatic</option>
               </select>
             </label>
-            <div className="grid grid-cols-1 gap-3 pb-1">
+            <div className="grid w-full min-w-0 max-w-full grid-cols-1 gap-3 pb-1">
               {([
                 ["Brightness", "brightness", 0, 200, "%"],
                 ["Contrast", "contrast", 0, 200, "%"],
@@ -778,7 +778,7 @@ export function PhotoEditor() {
                 ["Grayscale", "grayscale", 0, 100, "%"],
                 ["Sepia", "sepia", 0, 100, "%"],
                 ["Blur", "blur", 0, 12, "px"],
-              ] as const).map(([label, key, min, max, unit]) => <label key={key} className="block min-w-0 space-y-2 rounded-lg border border-border p-3 text-sm touch-pan-y">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
+              ] as const).map(([label, key, min, max, unit]) => <label key={key} className="block w-full min-w-0 max-w-full space-y-2 overflow-hidden rounded-lg border border-border p-3 text-sm touch-pan-y">{label}<span className="float-right text-xs text-muted-foreground">{doc[key]}{unit}</span><input aria-label={label} className="block w-full min-w-0 max-w-full accent-primary" type="range" min={min} max={max} value={doc[key]} onChange={(e) => { setFilterPreset("custom"); change({ [key]: Number(e.target.value) } as Partial<EditorState>); }} /></label>)}
             </div>
           </div>}
 

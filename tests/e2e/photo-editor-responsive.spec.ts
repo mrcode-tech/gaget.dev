@@ -113,14 +113,34 @@ for (const width of [320, 360, 390, 430]) {
     await openFeature(page, width, "Color & filters");
 
     const panel = page.getByTestId("feature-panel");
+    const panelScroller = panel.locator(":scope > .overflow-y-auto");
     const adjustments = page.getByTestId("filter-adjustments");
     await expect(panel).toBeVisible();
     await expect(panel).toHaveClass(/h-\[min\(52dvh,420px\)\]/);
     await expect(adjustments.getByLabel("Brightness")).toBeVisible();
     await expect(adjustments.getByLabel("Contrast")).toBeAttached();
 
+    // The bottom sheet's content is the only scroll container. Filter controls
+    // must fit its width and must not create their own horizontal scroller.
+    await expect(panel.locator(".overflow-y-auto")).toHaveCount(1);
+    await expect(panel.locator(".overflow-x-auto")).toHaveCount(0);
     await expect.poll(() => panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
-    await expect.poll(() => adjustments.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await expect.poll(() => panelScroller.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return style.overflowX === "hidden" && style.overflowY === "auto";
+    })).toBe(true);
+    await expect.poll(() => panelScroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+    await expect.poll(() => adjustments.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return style.overflowX === "hidden" && element.scrollWidth <= element.clientWidth;
+    })).toBe(true);
+    await expect(adjustments.locator(".overflow-x-auto")).toHaveCount(0);
+    await expect.poll(() => adjustments.locator("input[type='range']").evaluateAll((inputs) =>
+      inputs.length === 6 && inputs.every((input) => input.scrollWidth <= input.clientWidth),
+    )).toBe(true);
+
+    await panelScroller.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect.poll(() => panelScroller.evaluate((element) => element.scrollTop > 0)).toBe(true);
 
     const brightness = adjustments.getByLabel("Brightness");
     await brightness.focus();
