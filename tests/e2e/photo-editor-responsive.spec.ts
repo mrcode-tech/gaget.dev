@@ -62,7 +62,11 @@ for (const viewport of viewports) {
     }
 
     await loadTestPhoto(page);
-    await expect(page.getByRole("status")).toBeVisible({ visible: viewport.width >= 640 });
+    if (viewport.width >= 640) {
+      await expect(page.getByRole("status")).toBeVisible();
+    } else {
+      await expect(page.getByRole("status")).toBeHidden();
+    }
     await openFeature(page, viewport.width, "Text & watermark");
 
     const panel = page.getByTestId("feature-panel");
