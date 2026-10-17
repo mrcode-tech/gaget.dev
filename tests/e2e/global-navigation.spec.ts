@@ -36,7 +36,7 @@ for (const route of routes) {
     const drawer = page.getByTestId("mobile-navigation-drawer");
     await expect(drawer).toBeVisible();
     const logoBox = await drawer.getByRole("link", { name: "GaGet.dev home" }).boundingBox();
-    const closeBox = await drawer.getByRole("button", { name: "Close navigation" }).boundingBox();
+    const closeBox = await drawer.getByRole("button", { name: "Close navigation", exact: true }).boundingBox();
     expect(logoBox).not.toBeNull();
     expect(closeBox).not.toBeNull();
     if (logoBox && closeBox) {
