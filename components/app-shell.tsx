@@ -22,7 +22,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       />
       <div
         className={
-          direction === "ltr"
+          isPhotoEditor ? "h-dvh overflow-hidden" : direction === "ltr"
             ? sidebarCollapsed
               ? "min-h-screen transition-[padding] duration-200 lg:pl-16"
               : "min-h-screen transition-[padding] duration-200 lg:pl-[248px]"
