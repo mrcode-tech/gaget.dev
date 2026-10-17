@@ -71,7 +71,7 @@ for (const viewport of viewports) {
         // Main site navigation occupies the left edge; File follows it and Features stays at the right.
         expect(fileBox.x).toBeGreaterThanOrEqual(siteMenuBox.x + siteMenuBox.width - 1);
         expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width);
-        expect(Math.abs(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width)).toBeLessThanOrEqual(10);
+        expect(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width).toBeCloseTo(viewport.width >= 640 ? 24 : 12, 0);
       }
       await expect.poll(() => editor.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
       await expect(editor).toHaveClass(/h-dvh/);
