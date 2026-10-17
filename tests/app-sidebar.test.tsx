@@ -50,7 +50,7 @@ describe("AppSidebar", () => {
     render(<SidebarHarness />);
     expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Switch to dark mode" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
+    window.dispatchEvent(new Event("gaget:open-navigation"));
     const languageCaption = screen.getAllByText("Language", { selector: "span" })[0];
     const appearanceCaption = screen.getByText("Appearance", { selector: "span" });
     expect(screen.getByRole("combobox", { name: "Language" })).toBeTruthy();
@@ -79,7 +79,7 @@ describe("AppSidebar", () => {
 
   it("keeps the drawer close button in the header instead of floating over the GaGet logo", () => {
     render(<SidebarHarness />);
-    fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
+    window.dispatchEvent(new Event("gaget:open-navigation"));
     const drawer = screen.getByTestId("mobile-navigation-drawer");
     const logo = screen.getByRole("link", { name: "GaGet.dev home" });
     const close = screen.getByRole("button", { name: "Close navigation" });
