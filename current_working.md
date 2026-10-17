@@ -663,3 +663,11 @@ Acceptance criteria:
 - Add/update component and Playwright responsive assertions for mobile, tablet, and desktop; check horizontal overflow.
 
 Verification: pending latest branch CI. Real-browser layout still needs to be confirmed by the Playwright workflow before merge.
+
+
+## 2026-10-17 — Feature dropdown width / anchoring follow-up
+- **Problem:** The compact feature list dropdown has a fixed-width class, but its trigger wrapper is not positioned. The absolutely positioned dropdown can therefore use a distant ancestor as its positioning context, making its apparent alignment/width unreliable across wider viewports.
+- **Planned fix:** Anchor the dropdown to the Features trigger wrapper (`relative`), set its right edge to that wrapper, and express its width as a capped 16rem value constrained by the viewport. Preserve internal vertical scrolling and avoid horizontal overflow.
+- **Acceptance criteria:** At all responsive test viewports below 1024px, the dropdown is visibly compact (no wider than 280px and materially narrower than the viewport), aligned to the Features trigger, and its feature items remain usable.
+- **Verification plan:** Extend the responsive Playwright geometry checks if needed, run the CI workflow on this same branch, and record the exact run/commit outcome. Do not treat the previous green run as verification of this follow-up.
+- **Status:** Investigation found the dropdown is `absolute` but its immediate Features wrapper lacks `relative`; implementation and fresh CI verification are pending.
