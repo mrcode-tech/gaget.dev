@@ -118,7 +118,7 @@ for (const viewport of viewports) {
     await expect.poll(() => panel.evaluate((element) => getComputedStyle(element).transitionProperty)).toBe("none");
 
     if (viewport.width < 768) {
-      await expect(page.getByRole("button", { name: "Expand editing panel" })).toBeVisible();
+      await expect(page.getByRole("slider", { name: "Resize editing panel" })).toBeVisible();
     } else {
       await expect(panel).toHaveClass(/md:w-\[320px\]/);
     }
@@ -130,10 +130,11 @@ for (const viewport of viewports) {
     expect(panelBox, "editing panel should have a measurable viewport").not.toBeNull();
     if (canvasBox && panelBox && viewport.width < 768) {
       expect(panelBox.y).toBeGreaterThanOrEqual(canvasBox.y + canvasBox.height - 2);
-      // The mobile feature sheet is intentionally compact; verify rendered geometry
-      // rather than coupling this test to Tailwind class names.
-      expect(panelBox.height).toBeGreaterThan(0);
-      expect(panelBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.32, 280) + 2);
+      // Every mobile feature starts at the same useful default height.
+      // Verify rendered geometry rather than coupling the test to Tailwind classes.
+      const defaultPanelHeight = Math.min(viewport.height * 0.45, 380);
+      expect(panelBox.height).toBeGreaterThanOrEqual(defaultPanelHeight - 2);
+      expect(panelBox.height).toBeLessThanOrEqual(defaultPanelHeight + 2);
     } else if (canvasBox && panelBox) {
       expect(panelBox.x).toBeGreaterThanOrEqual(canvasBox.x + canvasBox.width - 2);
     }
@@ -227,3 +228,52 @@ for (const width of [320, 360, 390, 430]) {
     await expect.poll(() => page.locator("main[aria-label='GaGet Photo Editor']").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   });
 }
+
+
+test("mobile feature panel has a shared default height and supports bounded drag and keyboard resizing", async ({ page }) => {
+  const width = 390;
+  const height = 844;
+  await page.setViewportSize({ width, height });
+  await page.goto("/images/editor");
+  await loadTestPhoto(page);
+  await openFeature(page, width, "Color & filters");
+
+  const panel = page.getByTestId("feature-panel");
+  const handle = page.getByRole("slider", { name: "Resize editing panel" });
+  const panelHeight = () => panel.evaluate((element) => element.getBoundingClientRect().height);
+  await expect(panel).toBeVisible();
+  const initialHeight = await panelHeight();
+  expect(initialHeight).toBeCloseTo(Math.min(height * 0.45, 380), 0);
+
+  // Switching tools retains the current sheet height rather than resetting it.
+  await openFeature(page, width, "Text & watermark");
+  await expect(panel.getByRole("heading", { name: "Text & watermark" })).toBeVisible();
+  await expect.poll(panelHeight).toBeCloseTo(initialHeight, 0);
+
+  const handleBox = await handle.boundingBox();
+  expect(handleBox).not.toBeNull();
+  if (!handleBox) return;
+  const startX = handleBox.x + handleBox.width / 2;
+  const startY = handleBox.y + handleBox.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX, startY - 90, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(panelHeight).toBeGreaterThan(initialHeight + 50);
+
+  const draggedHeight = await panelHeight();
+  await openFeature(page, width, "Crop");
+  await expect(panel.getByRole("heading", { name: "Crop" })).toBeVisible();
+  await expect.poll(panelHeight).toBeCloseTo(draggedHeight, 0);
+
+  // Keyboard controls expose and enforce the practical minimum and viewport-based maximum.
+  await handle.focus();
+  await page.keyboard.press("Home");
+  await expect.poll(panelHeight).toBeGreaterThanOrEqual(Math.max(160, height * 0.2) - 3);
+  await expect.poll(panelHeight).toBeLessThanOrEqual(Math.max(160, height * 0.2) + 3);
+  await page.keyboard.press("End");
+  await expect.poll(panelHeight).toBeGreaterThanOrEqual(height * 0.7 - 3);
+  await expect.poll(panelHeight).toBeLessThanOrEqual(height * 0.7 + 3);
+
+  await expect.poll(() => page.locator("main[aria-label='GaGet Photo Editor']").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+});

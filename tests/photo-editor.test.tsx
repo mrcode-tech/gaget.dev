@@ -150,17 +150,24 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(panel.className).not.toContain("md:hidden");
   });
 
-  it("supports expanding and collapsing the mobile editing bottom sheet", () => {
+  it("uses a shared mobile panel height and supports bounded keyboard resizing", () => {
     render(<PhotoEditor />);
     openFeature("Resize");
 
     const panel = screen.getByTestId("feature-panel");
-    expect(panel.className).toContain("h-[min(32dvh,280px)]");
-    fireEvent.click(screen.getByRole("button", { name: "Expand editing panel" }));
+    const handle = screen.getByRole("slider", { name: "Resize editing panel" });
     expect(panel.className).toContain("h-[min(45dvh,380px)]");
-    expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
-    expect(panel.className).toContain("h-[min(32dvh,280px)]");
+
+    fireEvent.keyDown(handle, { key: "Home" });
+    const minHeight = Math.min(window.innerHeight, Math.max(160, window.innerHeight * 0.2));
+    expect(Number.parseFloat(panel.style.getPropertyValue("--feature-panel-height"))).toBeCloseTo(minHeight, 0);
+
+    fireEvent.keyDown(handle, { key: "End" });
+    const maxHeight = Math.min(window.innerHeight, window.innerHeight * 0.7);
+    expect(Number.parseFloat(panel.style.getPropertyValue("--feature-panel-height"))).toBeCloseTo(maxHeight, 0);
+
+    openFeature("Color & filters");
+    expect(Number.parseFloat(panel.style.getPropertyValue("--feature-panel-height"))).toBeCloseTo(maxHeight, 0);
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
