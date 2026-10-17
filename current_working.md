@@ -684,3 +684,11 @@ Verification: pending latest branch CI. Real-browser layout still needs to be co
 - **Documentation discovery:** Linked `specification/design.md` from the root README Architecture section. No application runtime behavior was changed in this documentation task.
 - **Commits:** specification `2b013f58cf7522cb0fd75ffba6eb59945c96187a`; README link `5c76b02500d9ab651b24a844fd43a785ced48a2f`.
 - **Verification:** Documentation-only change. Review the generated Markdown and check the CI run for the latest commit before considering the branch fully verified.
+
+
+## Visual wireframe assets (2026-10-17)
+
+- Added `specification/wireframes/README.md` as a visual index.
+- Added responsive SVG wireframes for homepage/shared navigation and an atlas covering all 13 photo-editing features at XS, SM, MD, LG, XL and 2XL.
+- Linked the visual library from `specification/design.md`.
+- These are design schematics, not production screenshots. CI must be checked separately; documentation-only changes do not prove runtime behavior.
