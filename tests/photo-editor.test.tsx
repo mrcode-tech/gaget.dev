@@ -372,8 +372,10 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(canvas.width * canvas.height).toBeLessThanOrEqual(2_000_000);
     expect(getImageData).not.toHaveBeenCalled();
     const adjustments = screen.getByTestId("filter-adjustments");
-    expect(adjustments.className).toContain("overflow-x-hidden");
-    expect(adjustments.className).toContain("overscroll-y-contain");
+    const panelScroller = adjustments.parentElement;
+    expect(panelScroller?.className).toContain("overflow-x-hidden");
+    expect(panelScroller?.className).toContain("overscroll-y-contain");
+    expect(panelScroller?.className).toContain("overflow-y-auto");
     expect(adjustments.className).toContain("max-w-full");
     expect(adjustments.querySelector(".overflow-x-auto")).toBeNull();
     expect(adjustments.querySelector("input[type='range']")?.className).toContain("max-w-full");
