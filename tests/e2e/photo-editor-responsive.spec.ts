@@ -66,6 +66,8 @@ for (const viewport of viewports) {
         expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width);
         expect(Math.abs(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width)).toBeLessThanOrEqual(10);
       }
+      await expect.poll(() => editor.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+      await expect(editor).toHaveClass(/h-dvh/);
     } else {
       await expect(page.locator('header input[aria-label]')).toBeVisible();
     }
