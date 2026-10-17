@@ -26,9 +26,11 @@ function makeWavFixture() {
 test("Audio Editor loads audio, switches features, and keeps processing available", async ({ page }) => {
   await page.goto("/audio/editor");
   await expect(page.getByRole("heading", { name: "Audio Editor" }).first()).toBeVisible();
-  const features = page.getByRole("combobox", { name: "Audio editing feature" });
-  await expect(features).toBeVisible();
-  await expect(features.locator("option")).toHaveCount(18);
+  const openFeatures = page.getByRole("button", { name: "Open audio editor features" });
+  await expect(openFeatures).toBeVisible();
+  await openFeatures.click();
+  const featureMenu = page.getByTestId("audio-feature-menu");
+  await expect(featureMenu.locator("section button")).toHaveCount(18);
 
   await page.locator("#audio-input").setInputFiles({
     name: "fixture.wav",
@@ -38,15 +40,18 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
   await expect(page.getByText(/Decoded locally/i)).toBeVisible();
   await expect(page.locator("#audio-waveform")).toBeVisible();
 
-  await features.selectOption("pitch");
+  await openFeatures.click();
+  await featureMenu.getByRole("button", { name: "Pitch preview" }).click();
   await expect(page.getByText(/does not export time-stretched or pitch-shifted audio/i)).toBeVisible();
   await expect(page.getByLabel("Preview speed (pitch changes with speed)")).toBeVisible();
 
-  await features.selectOption("metadata-editor");
+  await openFeatures.click();
+  await featureMenu.getByRole("button", { name: "Metadata sidecar" }).click();
   await expect(page.getByText(/Editing embedded ID3\/Vorbis tags is not supported/i)).toBeVisible();
   await expect(page.getByText(/Duration:/i)).toBeVisible();
 
-  await features.selectOption("compressor");
+  await openFeatures.click();
+  await featureMenu.getByRole("button", { name: "WAV compression" }).click();
   await page.getByRole("button", { name: "Compress to WAV" }).click();
   await expect(page.getByText(/Ready:/i)).toBeVisible();
   await expect(page.getByText(/compressed\.wav/i)).toBeVisible();
