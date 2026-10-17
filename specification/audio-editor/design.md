@@ -1,6 +1,6 @@
 # Unified Audio Editor — Proposal & Responsive Design
 
-**Status:** Implementation in progress on `feat/unified-audio-editor`; this document remains the design and acceptance specification  
+**Status:** Implementation in progress on `feat/unified-audio-editor`; the feature-menu and compact inspector implementation is being validated against this specification  
 **Base reviewed:** `main`  
 **Proposal branch:** `proposal/unified-audio-editor`  
 **Date:** 2026-10-17  
@@ -158,3 +158,17 @@ Do not attempt a large rewrite in one commit. First write characterization tests
 - `wireframes/audio-editor-xs.svg` — phone / bottom-sheet layout
 - `wireframes/audio-editor-md.svg` — tablet portrait layout
 - `wireframes/audio-editor-xl.svg` — desktop with inspector
+
+
+## 11. UI acceptance refinements — compact command bar
+
+The initial implementation's native select/list box and long in-flow explanatory copy do not meet this specification. The editor must use the Photo Editor command-bar pattern instead:
+
+- A compact **File** menu for Open, Export, and Reset/Close actions.
+- A **Features** menu grouped by Edit, Adjust, Analyze, Export & data, and Record; the full list is shown only when the menu is open, never as a persistent selector card.
+- Desktop: grouped command-bar shortcuts and a fixed-width 320–360 px contextual inspector beside the waveform.
+- Mobile: a small fixed bottom bar with File, Features, and Export; the selected feature's controls appear in a vertically scrollable bottom sheet with a close button. The waveform/player stay in the workspace behind it.
+- Keep labels short. Remove repeated privacy/product explanations from the main canvas; use concise metadata and one-line capability limitations only where they affect expectations.
+- Feature menus must close after selection, preserve the loaded source, have accessible names/focus states, and avoid horizontal scrolling.
+- Playwright should select features through the menu and assert all 18 actions are available. Test the bottom-sheet panel and overflow at the full viewport matrix.
+
