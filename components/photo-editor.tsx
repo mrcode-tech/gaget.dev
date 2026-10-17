@@ -676,7 +676,7 @@ export function PhotoEditor() {
         </div>)}
       </div>
       <div className="ml-auto flex min-w-0 shrink-0 items-center lg:hidden">
-        <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"inline-flex h-8 items-center gap-2 rounded-md px-2 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><Menu className="h-4 w-4" /><span>Features</span></button>
+        <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"inline-flex h-8 items-center gap-2 rounded-md px-2 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
         {menuOpen === "Features" && <div className="absolute left-2 right-2 top-9 z-50 max-h-[min(75dvh,560px)] overflow-y-auto rounded-lg border border-border bg-popover p-2 shadow-xl">
           {featureMenuGroups.map((group) => <section key={group.label} className="mb-2 last:mb-0"><h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h3>{group.items.map(([label, panel, Icon]) => <button key={panel} className={"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 text-muted-foreground" /><span>{label}</span></button>)}</section>)}
         </div>}
