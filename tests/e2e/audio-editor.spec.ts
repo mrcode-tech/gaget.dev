@@ -26,9 +26,12 @@ function makeWavFixture() {
 test("Audio Editor loads audio, switches features, and keeps processing available", async ({ page }) => {
   await page.goto("/audio/editor");
   await expect(page.getByRole("heading", { name: "Audio Editor" }).first()).toBeVisible();
-  const features = page.getByRole("combobox", { name: "Audio editing feature" });
-  await expect(features).toBeVisible();
-  await expect(features.locator("option")).toHaveCount(18);
+  const openFeatures = page.getByRole("button", { name: "Open audio editor features" });
+  await expect(openFeatures).toBeVisible();
+  await openFeatures.click();
+  const featureMenu = page.getByTestId("audio-feature-menu");
+  await expect(featureMenu.locator("section button")).toHaveCount(18);
+  await featureMenu.getByRole("button", { name: "Close feature menu" }).click();
 
   await page.locator("#audio-input").setInputFiles({
     name: "fixture.wav",
@@ -38,15 +41,18 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
   await expect(page.getByText(/Decoded locally/i)).toBeVisible();
   await expect(page.locator("#audio-waveform")).toBeVisible();
 
-  await features.selectOption("pitch");
-  await expect(page.getByText(/does not export time-stretched or pitch-shifted audio/i)).toBeVisible();
+  await openFeatures.click();
+  await featureMenu.getByRole("button", { name: "Pitch preview" }).click();
+  await expect(page.getByText(/does not apply speed or pitch changes/i)).toBeVisible();
   await expect(page.getByLabel("Preview speed (pitch changes with speed)")).toBeVisible();
 
-  await features.selectOption("metadata-editor");
+  await openFeatures.click();
+  await featureMenu.getByRole("button", { name: "Metadata sidecar" }).click();
   await expect(page.getByText(/Editing embedded ID3\/Vorbis tags is not supported/i)).toBeVisible();
   await expect(page.getByText(/Duration:/i)).toBeVisible();
 
-  await features.selectOption("compressor");
+  await openFeatures.click();
+  await featureMenu.getByRole("button", { name: "WAV compression" }).click();
   await page.getByRole("button", { name: "Compress to WAV" }).click();
   await expect(page.getByText(/Ready:/i)).toBeVisible();
   await expect(page.getByText(/compressed\.wav/i)).toBeVisible();
@@ -72,3 +78,49 @@ for (const viewport of [
     expect(overflow).toBe(false);
   });
 }
+
+test("mobile audio features use the compact bottom sheet instead of a list box", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/audio/editor");
+  await expect(page.getByRole("button", { name: "Open audio editor features" })).toBeVisible();
+  await page.getByRole("button", { name: "Open audio editor features" }).click();
+  const menu = page.getByTestId("audio-feature-menu");
+  await expect(menu).toBeVisible();
+  await menu.getByRole("button", { name: "Pitch preview" }).click();
+  await expect(menu).toBeHidden();
+  await page.locator("#audio-input").setInputFiles({
+    name: "fixture.wav",
+    mimeType: "audio/wav",
+    buffer: makeWavFixture(),
+  });
+  await expect(page.getByText(/Decoded locally/i)).toBeVisible();
+  await page.getByRole("button", { name: "Open audio editor features" }).click();
+  await page.getByTestId("audio-feature-menu").getByRole("button", { name: "Trim & range" }).click();
+  const panel = page.getByTestId("audio-feature-panel");
+  await expect(panel).toBeVisible();
+  const box = await panel.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.y).toBeGreaterThan(100);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(790);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("audio editor menus and inspector dismiss with Escape", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/audio/editor");
+  const trigger = page.getByRole("button", { name: "Open audio editor features" });
+  await trigger.click();
+  await expect(page.getByTestId("audio-feature-menu")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("audio-feature-menu")).toBeHidden();
+  await trigger.click();
+  await page.getByTestId("audio-feature-menu").getByRole("button", { name: "Trim & range" }).click();
+  await page.locator("#audio-input").setInputFiles({
+    name: "fixture.wav",
+    mimeType: "audio/wav",
+    buffer: makeWavFixture(),
+  });
+  await expect(page.getByTestId("audio-feature-panel")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("audio-feature-panel")).toBeHidden();
+});
