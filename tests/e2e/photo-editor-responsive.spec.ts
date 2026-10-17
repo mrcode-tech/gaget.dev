@@ -47,9 +47,11 @@ for (const viewport of viewports) {
       const menubar = page.getByTestId("editor-menubar");
       const fileMenu = menubar.getByRole("button", { name: "File", exact: true });
       const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
-      const siteMenu = page.getByRole("button", { name: "Open navigation" });
+      const siteMenu = menubar.getByRole("button", { name: "Open navigation" });
       await expect(siteMenu).toBeVisible();
-      await expect(siteMenu.locator("xpath=..")).toHaveCSS("position", "fixed");
+      // The hamburger belongs to the editor's in-flow navbar, not a viewport overlay.
+      await expect(siteMenu.locator("xpath=..")).toHaveCSS("position", "sticky");
+      await expect(menubar).toHaveCSS("position", "sticky");
       await expect(menubar.getByRole("link", { name: "GaGet.dev home" })).toHaveCount(0);
       await expect(fileMenu).toBeVisible();
       await expect(featuresMenu).toBeVisible();
@@ -69,10 +71,31 @@ for (const viewport of viewports) {
       }
       await expect.poll(() => editor.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
       await expect(editor).toHaveClass(/h-dvh/);
-      const initialHamburgerY = await siteMenu.evaluate((element) => element.getBoundingClientRect().top);
+      const initialNavbarY = await menubar.evaluate((element) => element.getBoundingClientRect().top);
+      // The page itself should not scroll; the editor canvas is the scrollable workspace.
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await expect(siteMenu).toBeVisible();
-      await expect.poll(() => siteMenu.evaluate((element) => element.getBoundingClientRect().top)).toBe(initialHamburgerY);
+      await expect.poll(() => menubar.evaluate((element) => element.getBoundingClientRect().top)).toBe(initialNavbarY);
+      await siteMenu.click();
+      const drawer = page.getByTestId("mobile-navigation-drawer");
+      await expect(drawer).toBeVisible();
+      const logo = drawer.getByRole("link", { name: "GaGet.dev home" });
+      const closeButton = drawer.getByRole("button", { name: "Close navigation" });
+      await expect(logo).toBeVisible();
+      await expect(closeButton).toBeVisible();
+      const logoBox = await logo.boundingBox();
+      const closeBox = await closeButton.boundingBox();
+      expect(logoBox).not.toBeNull();
+      expect(closeBox).not.toBeNull();
+      if (logoBox && closeBox) {
+        const overlaps = logoBox.x < closeBox.x + closeBox.width
+          && logoBox.x + logoBox.width > closeBox.x
+          && logoBox.y < closeBox.y + closeBox.height
+          && logoBox.y + logoBox.height > closeBox.y;
+        expect(overlaps, "drawer close button must not overlap the GaGet.dev logo").toBe(false);
+      }
+      await closeButton.click();
+      await expect(drawer).toBeHidden();
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1)).toBe(true);
     } else {
       await expect(page.locator('header input[aria-label]')).toBeVisible();
