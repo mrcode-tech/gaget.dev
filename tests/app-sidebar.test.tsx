@@ -100,17 +100,14 @@ describe("AppSidebar", () => {
     expect(screen.queryByRole("button", { name: "Close navigation" })).toBeNull();
   });
 
-  it("keeps the existing hamburger fixed above the compact editor navbar on mobile and tablet", () => {
+  it("opens the mobile drawer from the in-flow editor navbar trigger event", () => {
     navigation.pathname = "/images/editor";
     render(<SidebarHarness />);
-    const trigger = screen.getByRole("button", { name: "Open navigation" });
-    const viewportTrigger = screen.getByTestId("mobile-site-navigation-trigger");
 
-    expect(trigger.className).toContain("z-[101]");
-    expect(trigger.className).toContain("pointer-events-auto");
-    expect(viewportTrigger.className).toContain("fixed");
-    expect(viewportTrigger.className).toContain("z-[100]");
-    expect(viewportTrigger.className).toContain("top-0");
-    expect(viewportTrigger.className).toContain("left-2");
+    expect(screen.queryByTestId("mobile-site-navigation-trigger")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Open navigation" })).toBeNull();
+
+    window.dispatchEvent(new Event("gaget:open-navigation"));
+    expect(screen.getByRole("button", { name: "Close navigation" })).toBeTruthy();
   });
 });
