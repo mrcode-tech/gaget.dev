@@ -649,3 +649,17 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - Added a component regression test for the header grouping and an E2E geometry assertion at the responsive mobile viewport sizes.
 - [ ] Run focused Photo Editor tests and the full manually triggered CI workflow on this final implementation batch.
 - [ ] Confirm the workflow is green before marking PR #15 ready for review.
+
+
+## Compact mobile/tablet Photo Editor navigation — 2026-10-17
+
+Scope: remove the duplicate editor brand row and empty shared header below desktop breakpoints, while preserving the existing GaGet.dev hamburger and its navigation drawer.
+
+Acceptance criteria:
+- Below 1024px, render a single editor navbar row with the existing site hamburger at the left, File immediately after it, and Features at the right.
+- Keep the shared AppHeader on desktop (1024px and above) and preserve its existing desktop layout.
+- Use the full viewport height on mobile/tablet for the editor workspace; retain the desktop header offset.
+- Hide nonessential descriptive copy in the mobile/tablet empty state and editor panel header to maximize usable canvas space.
+- Add/update component and Playwright responsive assertions for mobile, tablet, and desktop; check horizontal overflow.
+
+Verification: pending latest branch CI. Real-browser layout still needs to be confirmed by the Playwright workflow before merge.
