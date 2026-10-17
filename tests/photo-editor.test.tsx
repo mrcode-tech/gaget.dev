@@ -371,7 +371,12 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(canvas.style.filter).toContain("brightness(1.5)");
     expect(canvas.width * canvas.height).toBeLessThanOrEqual(2_000_000);
     expect(getImageData).not.toHaveBeenCalled();
-    expect(screen.getByTestId("filter-adjustments").className).toContain("overscroll-y-contain");
+    const adjustments = screen.getByTestId("filter-adjustments");
+    expect(adjustments.className).toContain("overflow-x-hidden");
+    expect(adjustments.className).toContain("overscroll-y-contain");
+    expect(adjustments.className).toContain("max-w-full");
+    expect(adjustments.querySelector(".overflow-x-auto")).toBeNull();
+    expect(adjustments.querySelector("input[type='range']")?.className).toContain("max-w-full");
   });
 
   it("draws a tall portrait photo immediately without waiting for an adjustment change", async () => {
