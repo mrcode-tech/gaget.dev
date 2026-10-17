@@ -1,0 +1,66 @@
+import { expect, test } from "@playwright/test";
+
+const routes = [
+  "/",
+  "/tools",
+  "/json/formatter",
+  "/encoding/base64",
+  "/datetime/world-clock",
+];
+
+for (const route of routes) {
+  test(`mobile site navbar and hamburger stay fixed on ${route}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(route);
+
+    const header = page.locator("header").first();
+    const hamburger = page.getByRole("button", { name: "Open navigation" });
+    await expect(header).toBeVisible();
+    await expect(hamburger).toBeVisible();
+    await expect(hamburger.locator("xpath=..")).toHaveAttribute("class", /fixed/);
+    await expect(header).toHaveCSS("position", "fixed");
+
+    // Ensure even short utility routes can exercise real viewport scrolling.
+    await page.evaluate(() => { document.body.style.minHeight = "180vh"; });
+    await page.evaluate(() => window.scrollTo(0, 400));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await expect.poll(() => header.evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(0);
+    await expect(hamburger).toBeVisible();
+    await expect(hamburger).toHaveCSS("position", "static");
+
+    // The trigger belongs to the shared header, not an independently floating overlay.
+    expect(await hamburger.evaluate((element) => element.closest("header") !== null)).toBe(true);
+    expect(await page.locator('[data-testid="mobile-site-navigation-trigger"]').count()).toBe(0);
+
+    await hamburger.click();
+    const drawer = page.getByTestId("mobile-navigation-drawer");
+    await expect(drawer).toBeVisible();
+    const logoBox = await drawer.getByRole("link", { name: "GaGet.dev home" }).boundingBox();
+    const closeBox = await drawer.getByRole("button", { name: "Close navigation", exact: true }).boundingBox();
+    expect(logoBox).not.toBeNull();
+    expect(closeBox).not.toBeNull();
+    if (logoBox && closeBox) {
+      const overlaps = logoBox.x < closeBox.x + closeBox.width
+        && logoBox.x + logoBox.width > closeBox.x
+        && logoBox.y < closeBox.y + closeBox.height
+        && logoBox.y + logoBox.height > closeBox.y;
+      expect(overlaps, "navigation drawer close button must not overlap the GaGet.dev logo").toBe(false);
+    }
+  });
+}
+
+test("desktop navbar remains fixed beside the sidebar while scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/tools");
+  const header = page.locator("header").first();
+  await expect(header).toBeVisible();
+  await expect(header).toHaveCSS("position", "fixed");
+  await page.evaluate(() => { document.body.style.minHeight = "180vh"; });
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await expect.poll(() => header.evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(0);
+
+  const headerBox = await header.boundingBox();
+  expect(headerBox).not.toBeNull();
+  if (headerBox) expect(headerBox.x).toBeGreaterThanOrEqual(240);
+});

@@ -34,6 +34,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
         <div className={isPhotoEditor ? "hidden lg:block" : ""}>
           <AppHeader sidebarCollapsed={sidebarCollapsed} />
         </div>
+        <div aria-hidden="true" className={isPhotoEditor ? "hidden h-[68px] lg:block" : "h-[68px]"} />
         {children}
       </div>
     </>

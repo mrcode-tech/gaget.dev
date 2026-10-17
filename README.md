@@ -23,16 +23,18 @@ Run these before opening a pull request:
 
 ```bash
 npm run test:unit
+npm run test:component
 npm run lint
 npm run typecheck
 npm run build
+npm run test:e2e
 ```
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` runs the unit tests, lint, TypeScript check, production build, and HTTP smoke tests against key routes of the built application for pull requests targeting `main` and pushes to `main`.
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs unit and component tests, focused Photo Editor/sidebar regression tests, ESLint, TypeScript checks, a production build, HTTP smoke tests, and Playwright end-to-end tests. It runs on pushes to the active `main`, `stage`, and `feat/mobile-navigation-ux-fixes` branches, and on pull requests targeting `stage` or `main`. Feature changes should be proposed to `stage`; promote verified changes from `stage` to `main`.
 
 **Known setup issue:** the existing `package-lock.json` is stale and omits the declared `@radix-ui/react-select` dependency and its transitive packages, so `npm ci` currently fails. CI temporarily uses `npm install` to regenerate the lockfile in its runner. Regenerate and commit `package-lock.json` from a local checkout before switching CI back to reproducible `npm ci` installs.
 
-The current initial suite checks tool registry integrity, image tool metadata, locale metadata/indexing rules, and production HTTP responses. It is a baseline, not full coverage of each tool's behavior. UI component tests and real browser E2E coverage (including mobile Safari/WebKit) are still follow-up work.
+The suite is a baseline and does not guarantee full coverage of every tool. Continue expanding regression and browser coverage when features change.
 
 ## Deployment
 
@@ -49,7 +51,7 @@ The current initial suite checks tool registry integrity, image tool metadata, l
 - `components/`: shared shell and tool workbenches
 - `lib/tools/registry.ts`: central tool directory and navigation metadata
 - `lib/i18n/messages.ts`: locale metadata and translations
-- `tests/`: automated unit and production smoke tests
+- `tests/`: automated unit, component, smoke, and end-to-end tests
 
 ## Security and privacy notes
 
