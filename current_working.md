@@ -676,3 +676,11 @@ Verification: pending latest branch CI. Real-browser layout still needs to be co
 - **Regression coverage:** Updated component assertions for the positioned anchor and viewport-capped width; responsive Playwright now asserts the menu is at most 256px wide and its right edge aligns with the Features trigger.
 - **Commits:** implementation `9cb8f438925d449594d1b02e2daf6716b6da1937`; component test `6c9bf6dc44b7a9aab661159303df8b8642be04c4`; responsive E2E `c86a6148b2297939f92534fa185531e2b769a99e`.
 - **Verification:** CI run #467 is running for `c86a6148b2297939f92534fa185531e2b769a99e`; final pass/fail must be checked before closing this item.
+
+
+## 2026-10-17 — Responsive design specification and wireframes
+- **Request:** Create a `specification/` folder and a `design.md` covering the default GaGet.dev homepage, all Photo Editor features, the shared sidebar, every responsive breakpoint, and wireframes.
+- **Added:** `specification/design.md` with responsive rules for XS (<640), SM (640–767), MD (768–1023), LG (1024–1279), XL (1280–1535), and 2XL (1536+); homepage wireframes at all six ranges; mobile/desktop sidebar and collapsed sidebar wireframes; editor empty/loaded/menu/panel states; editor wireframes for phone portrait, phone landscape, tablet portrait/landscape, small desktop, desktop, and wide desktop; complete 13-feature inventory; menu grouping; accessibility/localization and responsive acceptance criteria; and a 10-viewport visual regression matrix.
+- **Documentation discovery:** Linked `specification/design.md` from the root README Architecture section. No application runtime behavior was changed in this documentation task.
+- **Commits:** specification `2b013f58cf7522cb0fd75ffba6eb59945c96187a`; README link `5c76b02500d9ab651b24a844fd43a785ced48a2f`.
+- **Verification:** Documentation-only change. Review the generated Markdown and check the CI run for the latest commit before considering the branch fully verified.
