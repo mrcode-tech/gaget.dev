@@ -107,6 +107,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(brand.compareDocumentPosition(file) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(file.className).toContain("px-2");
     expect(file.className).toContain("md:px-3");
+    expect(menubar.querySelector('[aria-hidden="true"]')?.className).toContain("inline-block");
     expect(features.parentElement?.className).toContain("ml-auto");
   });
 
