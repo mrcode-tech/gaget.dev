@@ -52,4 +52,4 @@ Consolidate the 18 existing audio tools into one Audio Editor workspace, using t
 - Hid the global search field on mobile Audio Editor pages and reduced the empty upload area's extra copy.
 - Updated XS/MD/XL wireframes and regenerated matching PNG/JPG variants with successful render workflow [39068708138](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068708138).
 - Added E2E checks for mobile/desktop search and toolbar behavior, File-menu export, and desktop access to Export & data features.
-- **Verification:** CI for the current branch head is pending. Do not treat the previous successful run for the earlier UI implementation as validation of this follow-up.
+- **Verification:** Implementation commit `3658fd254248c52d1b76756feb5ea6848975b010` passed full CI in run [39068980000](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068980000): 38 unit/smoke tests and 34 Playwright E2E tests passed, including the 11-viewport overflow matrix, Audio Editor toolbar/search/export checks, and Photo Editor regressions. ESLint, TypeScript, and the production build also passed. This tracking update is documentation-only.
