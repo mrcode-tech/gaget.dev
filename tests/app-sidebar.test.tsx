@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -85,8 +85,8 @@ describe("AppSidebar", () => {
       window.dispatchEvent(new Event("gaget:open-navigation"));
     });
     const drawer = screen.getByTestId("mobile-navigation-drawer");
-    const logo = screen.getByRole("link", { name: "GaGet.dev home" });
-    const close = screen.getByRole("button", { name: "Close navigation" });
+    const logo = within(drawer).getByRole("link", { name: "GaGet.dev home" });
+    const close = within(drawer).getByRole("button", { name: "Close navigation" });
     expect(drawer.contains(logo)).toBe(true);
     expect(drawer.contains(close)).toBe(true);
     expect(logo.parentElement).toBe(close.parentElement);
