@@ -5,6 +5,7 @@ const viewports = [
   { width: 360, height: 800, label: "small mobile portrait" },
   { width: 390, height: 844, label: "mobile portrait" },
   { width: 844, height: 390, label: "mobile landscape / compact desktop layout" },
+  { width: 744, height: 1024, label: "compact tablet portrait" },
   { width: 768, height: 1024, label: "tablet portrait" },
   { width: 1280, height: 800, label: "desktop" },
   { width: 1440, height: 900, label: "large desktop" },
@@ -40,6 +41,10 @@ for (const viewport of viewports) {
 
     const editor = page.getByRole("main", { name: "GaGet Photo Editor" });
     await expect(editor).toBeVisible();
+    const editorNavbar = page.getByTestId("editor-menubar");
+    await expect(editorNavbar).toHaveCSS("height", "68px");
+    await expect(editorNavbar).toHaveCSS("padding-left", viewport.width >= 640 ? "24px" : "12px");
+    await expect(editorNavbar).toHaveCSS("gap", "12px");
 
     if (viewport.width < 1024) {
       // Keep the shared header out of the compact photo-editing workspace and retain the main-site hamburger.
@@ -67,7 +72,7 @@ for (const viewport of viewports) {
         // Main site navigation occupies the left edge; File follows it and Features stays at the right.
         expect(fileBox.x).toBeGreaterThanOrEqual(siteMenuBox.x + siteMenuBox.width - 1);
         expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width);
-        expect(Math.abs(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width)).toBeLessThanOrEqual(10);
+        expect(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width).toBeCloseTo(viewport.width >= 640 ? 24 : 12, 0);
       }
       await expect.poll(() => editor.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
       await expect(editor).toHaveClass(/h-dvh/);
@@ -117,10 +122,10 @@ for (const viewport of viewports) {
     await expect(page.getByRole("button", { name: "Close feature panel" })).toBeVisible();
     await expect.poll(() => panel.evaluate((element) => getComputedStyle(element).transitionProperty)).toBe("none");
 
-    if (viewport.width < 768) {
+    if (viewport.width < 640) {
       await expect(page.getByRole("slider", { name: "Resize editing panel" })).toBeVisible();
     } else {
-      await expect(panel).toHaveClass(/md:w-\[320px\]/);
+      await expect(panel).toHaveClass(/sm:w-\[320px\]/);
     }
 
     const workspace = page.getByTestId("canvas-scroll-area");
@@ -128,7 +133,7 @@ for (const viewport of viewports) {
     const panelBox = await panel.boundingBox();
     expect(canvasBox, "canvas workspace should have a measurable viewport").not.toBeNull();
     expect(panelBox, "editing panel should have a measurable viewport").not.toBeNull();
-    if (canvasBox && panelBox && viewport.width < 768) {
+    if (canvasBox && panelBox && viewport.width < 640) {
       expect(panelBox.y).toBeGreaterThanOrEqual(canvasBox.y + canvasBox.height - 2);
       // Every mobile feature starts at the same useful default height.
       // Verify rendered geometry rather than coupling the test to Tailwind classes.
