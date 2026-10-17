@@ -200,8 +200,11 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </aside>
 
       <div
+        data-testid="mobile-site-navigation-trigger"
         className={cn(
-          "fixed z-[70] lg:hidden",
+          // This is a viewport-level control, not part of the scrolling editor
+          // navbar. Keep it above the editor's own menus and panel overlays.
+          "fixed z-[100] lg:hidden",
           isPhotoEditor ? "top-0" : "top-3",
           direction === "ltr" ? (isPhotoEditor ? "left-2" : "left-3") : (isPhotoEditor ? "right-2" : "right-3")
         )}
@@ -210,7 +213,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           variant="outline"
           size="icon"
           aria-label="Open navigation"
-          className={isPhotoEditor ? "h-10 w-10 rounded-none border-0 bg-card/95 shadow-sm" : undefined}
+          className={isPhotoEditor ? "relative z-[101] pointer-events-auto h-10 w-10 rounded-none border border-border bg-card shadow-md" : undefined}
           onClick={() => setMobileOpen(true)}
         >
           <Menu className="h-4 w-4" />
@@ -218,7 +221,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </div>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
+        <div className="fixed inset-0 z-[110] lg:hidden">
           <button
             aria-label="Close navigation overlay"
             className="absolute inset-0 bg-black/50"
