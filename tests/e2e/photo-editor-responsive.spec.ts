@@ -15,8 +15,8 @@ const onePixelPng = Buffer.from(
   "base64",
 );
 
-async function openFeature(page: Page, width: number, feature: "Crop & resize" | "Text & watermark") {
-  if (width < 768) {
+async function openFeature(page: Page, width: number, feature: "Crop" | "Text & watermark" | "Color & filters") {
+  if (width < 1024) {
     await page.getByRole("button", { name: "Open photo editor features" }).click();
   } else {
     await page.getByRole("button", { name: "Edit", exact: true }).click();
@@ -40,7 +40,44 @@ for (const viewport of viewports) {
 
     const editor = page.getByRole("main", { name: "GaGet Photo Editor" });
     await expect(editor).toBeVisible();
+
+    if (viewport.width < 1024) {
+      // Keep the shared header out of the compact photo-editing workspace and retain the main-site hamburger.
+      await expect(page.locator('header input[aria-label]')).toBeHidden();
+      const menubar = page.getByTestId("editor-menubar");
+      const fileMenu = menubar.getByRole("button", { name: "File", exact: true });
+      const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
+      const siteMenu = page.getByRole("button", { name: "Open navigation" });
+      await expect(siteMenu).toBeVisible();
+      await expect(menubar.getByRole("link", { name: "GaGet.dev home" })).toHaveCount(0);
+      await expect(fileMenu).toBeVisible();
+      await expect(featuresMenu).toBeVisible();
+      const menubarBox = await menubar.boundingBox();
+      const siteMenuBox = await siteMenu.boundingBox();
+      const fileBox = await fileMenu.boundingBox();
+      const featuresBox = await featuresMenu.boundingBox();
+      expect(menubarBox).not.toBeNull();
+      expect(siteMenuBox).not.toBeNull();
+      expect(fileBox).not.toBeNull();
+      expect(featuresBox).not.toBeNull();
+      if (menubarBox && siteMenuBox && fileBox && featuresBox) {
+        // Main site navigation occupies the left edge; File follows it and Features stays at the right.
+        expect(fileBox.x).toBeGreaterThanOrEqual(siteMenuBox.x + siteMenuBox.width - 1);
+        expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width);
+        expect(Math.abs(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width)).toBeLessThanOrEqual(10);
+      }
+      await expect.poll(() => editor.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+      await expect(editor).toHaveClass(/h-dvh/);
+    } else {
+      await expect(page.locator('header input[aria-label]')).toBeVisible();
+    }
+
     await loadTestPhoto(page);
+    if (viewport.width >= 768) {
+      await expect(page.getByRole("status")).toBeVisible();
+    } else {
+      await expect(page.getByRole("status")).toBeHidden();
+    }
     await openFeature(page, viewport.width, "Text & watermark");
 
     const panel = page.getByTestId("feature-panel");
@@ -53,7 +90,6 @@ for (const viewport of viewports) {
 
     if (viewport.width < 768) {
       await expect(page.getByRole("button", { name: "Expand editing panel" })).toBeVisible();
-      await expect(panel).toHaveClass(/h-\[min\(44dvh,360px\)\]/);
     } else {
       await expect(panel).toHaveClass(/md:w-\[320px\]/);
     }
@@ -65,6 +101,10 @@ for (const viewport of viewports) {
     expect(panelBox, "editing panel should have a measurable viewport").not.toBeNull();
     if (canvasBox && panelBox && viewport.width < 768) {
       expect(panelBox.y).toBeGreaterThanOrEqual(canvasBox.y + canvasBox.height - 2);
+      // The mobile feature sheet is intentionally compact; verify rendered geometry
+      // rather than coupling this test to Tailwind class names.
+      expect(panelBox.height).toBeGreaterThan(0);
+      expect(panelBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.24, 200) + 2);
     } else if (canvasBox && panelBox) {
       expect(panelBox.x).toBeGreaterThanOrEqual(canvasBox.x + canvasBox.width - 2);
     }
@@ -94,10 +134,67 @@ for (const viewport of viewports) {
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
 
-    await openFeature(page, viewport.width, "Crop & resize");
-    await expect(panel.getByRole("heading", { name: "Crop & resize" })).toBeVisible();
+    await openFeature(page, viewport.width, "Crop");
+    await expect(panel.getByRole("heading", { name: "Crop" })).toBeVisible();
     await canvas.focus();
     await page.keyboard.press("ArrowRight");
     await expect(panel).toBeVisible();
+  });
+}
+
+for (const width of [320, 360, 390, 430]) {
+  test(`mobile Color & filters stays inside the viewport and responds to slider changes at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/images/editor");
+    await loadTestPhoto(page);
+    await openFeature(page, width, "Color & filters");
+
+    const panel = page.getByTestId("feature-panel");
+    const panelScroller = panel.locator(".overflow-y-auto");
+    const adjustments = page.getByTestId("filter-adjustments");
+    await expect(panel).toBeVisible();
+    await expect(panel).toHaveClass(/h-\[min\(52dvh,420px\)\]/);
+    await expect(adjustments.getByLabel("Brightness")).toBeVisible();
+    await expect(adjustments.getByLabel("Contrast")).toBeAttached();
+
+    // The bottom sheet's content is the only scroll container. Filter controls
+    // must fit its width and must not create their own horizontal scroller.
+    await expect(panel.locator(".overflow-y-auto")).toHaveCount(1);
+    await expect(panel.locator(".overflow-x-auto")).toHaveCount(0);
+    await expect.poll(() => panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await expect.poll(() => panelScroller.evaluate((element) => {
+      const style = getComputedStyle(element);
+      // There should be one vertical scroller, with horizontal overflow clipped
+      // at this boundary. scrollWidth may include descendants clipped by
+      // overflow-x:hidden, so it is not a reliable visible-overflow assertion.
+      return element.classList.contains("overflow-x-hidden") && style.overflowY === "auto";
+    })).toBe(true);
+    await expect.poll(() => panelScroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+    await expect(adjustments.locator(".overflow-x-auto")).toHaveCount(0);
+    await expect.poll(() => adjustments.locator("label").evaluateAll((labels) => {
+      const bounds = labels.map((label) => label.getBoundingClientRect());
+      const ranges = Array.from(document.querySelectorAll('[data-testid="filter-adjustments"] input[type="range"]'));
+      return bounds.every((box) => box.width > 0)
+        && ranges.length === 6
+        && ranges.every((input) => {
+          const inputBox = input.getBoundingClientRect();
+          const labelBox = input.closest("label")?.getBoundingClientRect();
+          return Boolean(labelBox)
+            && inputBox.width > 0
+            && inputBox.left >= labelBox!.left
+            && inputBox.right <= labelBox!.right;
+        });
+    })).toBe(true);
+
+    await panelScroller.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect.poll(() => panelScroller.evaluate((element) => element.scrollTop > 0)).toBe(true);
+
+    const brightness = adjustments.getByLabel("Brightness");
+    await brightness.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => page.locator("canvas[role='img']").evaluate((element) => (element as HTMLCanvasElement).style.filter))
+      .toContain("brightness(1.01)");
+
+    await expect.poll(() => page.locator("main[aria-label='GaGet Photo Editor']").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   });
 }

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PhotoEditor } from "@/components/photo-editor";
 
@@ -6,7 +6,7 @@ const originalCreateObjectURL = URL.createObjectURL;
 const originalRevokeObjectURL = URL.revokeObjectURL;
 
 const featureGroups: Record<string, string> = {
-  "Crop & resize": "Edit", "Text & watermark": "Edit",
+  "Crop": "Edit", "Resize": "Edit", "Crop & resize": "Edit", "Text & watermark": "Edit",
   "Color & filters": "Image", "Color picker": "Image", "Image details": "Image",
   "Export & convert": "Image", "Print size": "Image", "Image to Base64": "Image",
   "Base64 to image": "Image", Favicon: "Create", Collage: "Create", "SVG optimize": "Create",
@@ -14,6 +14,32 @@ const featureGroups: Record<string, string> = {
 function openFeature(label: string) {
   fireEvent.click(screen.getByRole("button", { name: featureGroups[label] }));
   fireEvent.click(screen.getByRole("button", { name: label }));
+}
+
+async function loadTestPhoto() {
+  const context = {
+    clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
+    rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
+    strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
+    stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
+  };
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+    () => context as unknown as CanvasRenderingContext2D,
+  );
+  class TestImage {
+    naturalWidth = 640;
+    naturalHeight = 480;
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+  }
+  vi.stubGlobal("Image", TestImage);
+
+  const fileInput = document.querySelector('input[type="file"]:not([multiple])') as HTMLInputElement;
+  fireEvent.change(fileInput, {
+    target: { files: [new File(["test-photo"], "test-photo.png", { type: "image/png" })] },
+  });
+  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("Photo loaded locally"));
 }
 
 beforeEach(() => {
@@ -36,6 +62,7 @@ afterEach(() => {
   if (originalRevokeObjectURL) Object.defineProperty(URL, "revokeObjectURL", { configurable: true, writable: true, value: originalRevokeObjectURL });
   else Reflect.deleteProperty(URL, "revokeObjectURL");
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("PhotoEditor workspace UX acceptance", () => {
@@ -50,7 +77,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.queryByRole("button", { name: "Open application menu" })).toBeNull();
 
     const menuChecks = [
-      ["Edit", ["Crop & resize", "Text & watermark"]],
+      ["Edit", ["Crop", "Resize", "Text & watermark"]],
       ["Image", ["Color & filters", "Color picker", "Image details", "Export & convert", "Print size", "Image to Base64", "Base64 to image"]],
       ["Create", ["Favicon", "Collage", "SVG optimize"]],
     ] as const;
@@ -68,6 +95,19 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByTestId("empty-canvas-state").className).toContain("bg-background/80");
     expect(screen.getByText("Drop your photo here")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
+  });
+
+  it("keeps the editor navbar compact without a duplicate brand row and anchors Features right", () => {
+    render(<PhotoEditor />);
+    const menubar = screen.getByTestId("editor-menubar");
+    const file = within(menubar).getByRole("button", { name: "File" });
+    const features = within(menubar).getByRole("button", { name: "Open photo editor features" });
+
+    expect(within(menubar).queryByRole("link", { name: "GaGet.dev home" })).toBeNull();
+    expect(menubar.className).toContain("pl-12");
+    expect(file.className).toContain("px-2");
+    expect(file.className).toContain("lg:px-3");
+    expect(features.parentElement?.className).toContain("ml-auto");
   });
 
   it("keeps site navigation outside the editor workspace and uses the shared shell", () => {
@@ -111,21 +151,21 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
   it("supports expanding and collapsing the mobile editing bottom sheet", () => {
     render(<PhotoEditor />);
-    openFeature("Crop & resize");
+    openFeature("Resize");
 
     const panel = screen.getByTestId("feature-panel");
-    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
     fireEvent.click(screen.getByRole("button", { name: "Expand editing panel" }));
-    expect(panel.className).toContain("h-[min(68dvh,560px)]");
+    expect(panel.className).toContain("h-[min(52dvh,420px)]");
     expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
-    expect(panel.className).toContain("h-[min(44dvh,360px)]");
+    expect(panel.className).toContain("h-[min(24dvh,200px)]");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
     render(<PhotoEditor />);
     const featureCases = [
-      ["Crop & resize", "Crop & resize"],
+      ["Resize", "Resize"],
       ["Color & filters", "Color & filters"],
       ["Color picker", "Color picker & palette"],
       ["Text & watermark", "Text & watermark"],
@@ -264,6 +304,131 @@ describe("PhotoEditor workspace UX acceptance", () => {
 
     fireEvent.change(screen.getByLabelText("Collage layout"), { target: { value: "column" } });
     expect(screen.getByTestId("collage-canvas-preview").getAttribute("style")).toContain("repeat(1");
+  });
+
+
+  it("provides a separate crop panel with edge-based guidance, ratio presets, reset, and save", async () => {
+    render(<PhotoEditor />);
+    await loadTestPhoto();
+    openFeature("Crop");
+    const panel = screen.getByTestId("crop-controls");
+    expect(within(panel).getByRole("button", { name: "Free" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "1:1" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "4:3" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "Save crop" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "Reset selection" })).toBeTruthy();
+    expect(within(panel).getByText(/Drag the crop edges or corners directly/)).toBeTruthy();
+    fireEvent.click(within(panel).getByRole("button", { name: "1:1" }));
+    expect(within(panel).getByRole("button", { name: "1:1" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(panel).getByLabelText("Crop width")).toBeTruthy();
+    expect(within(panel).getByLabelText("Crop height")).toBeTruthy();
+    expect(panel.querySelector(".overflow-x-auto")).toBeNull();
+  });
+
+  it("separates output resizing from crop and exposes aspect-ratio locking", async () => {
+    render(<PhotoEditor />);
+    await loadTestPhoto();
+    openFeature("Resize");
+    const panel = screen.getByTestId("resize-controls");
+    expect(within(panel).getByLabelText("Output width")).toBeTruthy();
+    expect(within(panel).getByLabelText("Output height")).toBeTruthy();
+    expect(within(panel).getByLabelText("Lock aspect ratio")).toBeTruthy();
+    fireEvent.change(within(panel).getByLabelText("Output width"), { target: { value: "800" } });
+    expect((within(panel).getByLabelText("Output height") as HTMLInputElement).value).toBe("600");
+    expect(within(panel).queryByText("Crop rectangle (source pixels)")).toBeNull();
+    expect(panel.querySelector(".overflow-x-auto")).toBeNull();
+  });
+
+  it("stacks adjustment sliders vertically without horizontal scrolling", async () => {
+    render(<PhotoEditor />);
+    await loadTestPhoto();
+    openFeature("Color & filters");
+    const panel = screen.getByTestId("feature-panel");
+    expect(within(panel).getByLabelText("Brightness")).toBeTruthy();
+    expect(within(panel).getByLabelText("Contrast")).toBeTruthy();
+    expect(panel.querySelector(".overflow-x-auto")).toBeNull();
+    expect(within(panel).getByLabelText("Brightness").className).toContain("w-full");
+  });
+
+  it("updates filter previews without synchronous per-pixel processing", async () => {
+    const getImageData = vi.fn();
+    const context = {
+      clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
+      rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
+      strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
+      stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData,
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => context as unknown as CanvasRenderingContext2D,
+    );
+    class FilterPreviewImage {
+      naturalWidth = 6000;
+      naturalHeight = 4000;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+    }
+    vi.stubGlobal("Image", FilterPreviewImage);
+
+    render(<PhotoEditor />);
+    const fileInput = document.querySelector('input[type="file"]:not([multiple])') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: { files: [new File(["filter-photo"], "filter-photo.png", { type: "image/png" })] },
+    });
+    await waitFor(() => expect(screen.getByRole("status").textContent).toContain("Photo loaded locally"));
+
+    openFeature("Color & filters");
+    fireEvent.change(screen.getByLabelText("Brightness"), { target: { value: "150" } });
+
+    const canvas = document.querySelector("canvas[role='img']") as HTMLCanvasElement;
+    expect(canvas.style.filter).toContain("brightness(1.5)");
+    expect(canvas.width * canvas.height).toBeLessThanOrEqual(2_000_000);
+    expect(getImageData).not.toHaveBeenCalled();
+    const adjustments = screen.getByTestId("filter-adjustments");
+    const panelScroller = adjustments.parentElement;
+    expect(panelScroller?.className).toContain("overflow-x-hidden");
+    expect(panelScroller?.className).toContain("overscroll-y-contain");
+    expect(panelScroller?.className).toContain("overflow-y-auto");
+    expect(adjustments.className).toContain("max-w-full");
+    expect(adjustments.querySelector(".overflow-x-auto")).toBeNull();
+    expect(adjustments.querySelector("input[type='range']")?.className).toContain("max-w-full");
+  });
+
+  it("draws a tall portrait photo immediately without waiting for an adjustment change", async () => {
+    const context = {
+      clearRect: vi.fn(), drawImage: vi.fn(), save: vi.fn(), translate: vi.fn(),
+      rotate: vi.fn(), scale: vi.fn(), restore: vi.fn(), fillText: vi.fn(),
+      strokeText: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(),
+      stroke: vi.fn(), strokeRect: vi.fn(), fillRect: vi.fn(), getImageData: vi.fn(),
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => context as unknown as CanvasRenderingContext2D,
+    );
+    class TallImage {
+      naturalWidth = 600;
+      naturalHeight = 1800;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+    }
+    vi.stubGlobal("Image", TallImage);
+
+    render(<PhotoEditor />);
+    const fileInput = document.querySelector('input[type="file"]:not([multiple])') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: { files: [new File(["portrait"], "portrait.png", { type: "image/png" })] },
+    });
+
+    const canvas = await waitFor(() => {
+      const element = document.querySelector("canvas");
+      expect(element).toBeTruthy();
+      expect(element?.width).toBe(600);
+      expect(element?.height).toBe(1800);
+      expect(context.drawImage).toHaveBeenCalled();
+      return element as HTMLCanvasElement;
+    });
+    expect(canvas.getAttribute("aria-label")).toContain("Photo editing canvas");
+    expect(context.getImageData).not.toHaveBeenCalled();
   });
 
   it("opens Help with concise local-processing guidance", () => {

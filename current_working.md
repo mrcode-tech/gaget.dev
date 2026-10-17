@@ -1,4 +1,4 @@
-# Current Working Branch: `feat/brand-and-user-experience`
+# Current Working Branch: `feat/mobile-photo-editor-ux-fixes`
 
 **Last reviewed:** 2026-10-16  
 **Repository:** `mrcode-tech/gaget.dev`  
@@ -476,3 +476,190 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 
 ### Verification
 - CI has not yet been verified for this commit. Do not claim the fix is tested until the GitHub Actions result is checked.
+
+
+## Mobile Photo Editor and navigation bug-fix iteration — 2026-10-17
+
+### Branch
+- `feat/mobile-photo-editor-ux-fixes`, created from `main`.
+- Scope is limited to regressions and mobile UX: reliable rendering of tall photos, compact touch-friendly editing controls, and the mobile drawer language/theme controls.
+
+### Acceptance criteria
+1. After selecting a tall/portrait image, the canvas renders without requiring a parameter change; image loading and canvas redraw must not depend on a later state update.
+2. On mobile, the editing sheet is compact (target maximum around 25dvh when collapsed), with controls organized into titled horizontal groups that can be swiped horizontally. The canvas retains enough height to reach crop edges and corners.
+3. Crop/resize controls must not consume the canvas viewport vertically; remove redundant Apply Crop action if crop changes are already represented in undo/history, while preserving a clear way to leave crop mode.
+4. Color/filter and text/watermark parameters should use compact, titled horizontal groups rather than long vertical stacks where appropriate.
+5. Mobile language selection opens reliably without parent/overlay click conflicts. Language and appearance controls sit at the end of the scrollable drawer content, use a minimal divider and compact rows, and are not pinned to the viewport.
+6. Add regression tests for portrait/tall-image canvas rendering, mobile panel geometry/control grouping, crop action layout, language selector interaction, and preference placement.
+7. CI runs on all branches and PRs; validate tests, lint, typecheck, production build, smoke checks, and browser tests on this branch before merge.
+8. Update this log with actual changes, commit links, and observed CI results. Never report unrun tests as passing.
+
+### Initial inspection
+- Main already contains the shared editor shell, responsive editor panel, component tests, Playwright/axe coverage, and a CI workflow.
+- Existing panel uses a 44dvh collapsed sheet / 68dvh expanded sheet; the mobile preference section is outside the navigation ScrollArea and therefore consumes fixed viewport space.
+- Existing canvas draw effect is tied to `doc`, `hasImage`, and `draw`; image loading sets state, but very tall image fit/viewport layout and canvas redraw timing need targeted review.
+- CI still uses `npm install` because the committed lockfile is described as stale; do not change dependency installation without confirming the lockfile situation.
+
+### Verification
+- Not run yet for this branch. Record results after implementation and CI execution.
+
+
+## Mobile Photo Editor and navigation bug-fix implementation — 2026-10-17
+
+### Changes made on `feat/mobile-photo-editor-ux-fixes`
+
+- `components/photo-editor.tsx`
+  - Added a neutral-adjustment fast path to `applyCanvasAdjustments`. When brightness, contrast, saturation, blur, grayscale, and sepia are all at defaults, the editor skips reading and rewriting every canvas pixel. This avoids unnecessary CPU work when loading large portrait images.
+  - Changed fitted canvas CSS to use intrinsic sizing with width/height constraints when zoom is at or below 100%; zoom above 100% remains unconstrained and scrollable.
+  - Reduced the collapsed mobile editing sheet from 44dvh (up to 360px) to 24dvh (up to 200px); the expanded state is 52dvh (up to 420px).
+  - Added horizontal overflow/grouping for crop/resize and text controls. Filter sliders now appear as compact horizontally browsable cards.
+  - Removed the redundant **Apply crop** buttons. Closing the crop panel commits the selected crop dimensions into editor state and records the previous state in history so Undo can restore it. The crop panel retains **Reset crop selection** and explains the close-to-finish workflow.
+  - Updated crop help copy to match the new undo-based workflow.
+- `components/app-sidebar.tsx`
+  - Moved mobile language and appearance preferences into the navigation ScrollArea, after the navigation links. They scroll with the menu instead of taking a fixed, non-scrollable footer area.
+  - Replaced the tall preference cards/heading with a minimal separator and two compact horizontal rows.
+- `components/language-switcher.tsx`
+  - Raised the language SelectContent to `z-[70]`, above the mobile navigation overlay at `z-[60]`. The previous stacking order could let the overlay intercept interactions with the portaled language list.
+- `tests/photo-editor.test.tsx`
+  - Added a portrait-image regression test with a mocked 600×1800 image/canvas context. It verifies that canvas drawing happens without a pixel readback when all adjustments are neutral.
+  - Added assertions for the compact mobile panel, horizontally scrollable filter controls, and removal of Apply crop.
+- `tests/app-sidebar.test.tsx`
+  - Added assertions for minimal preference rows and opening the language dropdown to expose the localized language options.
+- Existing `.github/workflows/ci.yml` was reviewed and retained: it already runs on every branch push and PR, including unit/component tests, ESLint, TypeScript, production build, route smoke tests, and Playwright/axe responsive checks. A duplicate workflow was not added.
+
+### Pull request
+- Draft PR #15 targets `stage`: https://github.com/mrcode-tech/gaget.dev/pull/15
+- The PR is intentionally draft pending a confirmed green CI run.
+
+### Verification status — not yet confirmed
+- The GitHub Actions run/status lookup returned no run or status entries for the latest branch commit during this session.
+- A local checkout/test run was unavailable because the execution environment could not resolve `github.com`; no test results are claimed.
+- [ ] Confirm PR #15's latest GitHub Actions run passes unit tests, component tests, ESLint, TypeScript, production build, smoke tests, and Playwright/axe.
+- [ ] Fix any failures and rerun CI against the final commit.
+- [ ] After CI is green, update this section with the run URL and exact result, then mark PR #15 ready for review.
+- [ ] Manual mobile checks remain necessary for real-device touch crop handles, portrait canvas fit across browsers, and the language dropdown on a narrow device.
+
+
+### CI workflow update — 2026-10-17
+- Updated `.github/workflows/ci.yml` on `feat/mobile-photo-editor-ux-fixes` and renamed the workflow to **Mobile Photo Editor CI**.
+- The workflow triggers on every branch push, all pull requests, and manual dispatch.
+- Added an explicit focused regression-test step for `tests/photo-editor.test.tsx` and `tests/app-sidebar.test.tsx` before the complete component suite.
+- Existing checks remain enabled: unit tests, component tests, ESLint, TypeScript, production build, route smoke tests, and Playwright/axe responsive accessibility tests.
+- Workflow update commit: `15c88e1c3afcd200637c73107d6c9183d3cd1d00`.
+- Follow-up test cleanup commit: `040a7f1434a5ccc2952b9070d6c2ca208844ef0f` (removes a duplicated global-mock cleanup call).
+- **Verification status: pending/unavailable from this session.** The GitHub integration returned no workflow-run records and no commit status entries for the latest commit, so there is no evidence yet that GitHub Actions started or passed. Do not mark this branch green based on the workflow file alone.
+- Check the branch's Actions page: https://github.com/mrcode-tech/gaget.dev/actions/workflows/ci.yml?query=branch%3Afeat%2Fmobile-photo-editor-ux-fixes
+- Check PR #15: https://github.com/mrcode-tech/gaget.dev/pull/15
+- [ ] Inspect the latest run for commit `040a7f1434a5ccc2952b9070d6c2ca208844ef0f`.
+- [ ] If any job fails, inspect logs, fix the underlying test or implementation, push the fix, and verify the rerun for the new commit.
+
+
+### CI cadence adjustment — 2026-10-17
+- Per the requested workflow, removed automatic `push` and `pull_request` triggers from `.github/workflows/ci.yml`.
+- The full pipeline now runs only via `workflow_dispatch`, so intermediate commits do not start CI. Manually trigger it after the implementation and test-fix batch is complete; if fixes are needed, finish the next batch before triggering another run.
+- The focused Photo Editor/sidebar regression step remains part of the full pipeline, followed by component tests, lint, typecheck, production build, route smoke tests, and Playwright/axe.
+- Workflow trigger change commit: `431ad211291702609196578027a9c866b67ebcb9`.
+- **Current verification state:** the latest code/test-fix commit's workflow run was pending when last checked. This workflow-only commit intentionally will not start a run. Wait until the task's changes are complete, then use the workflow's **Run workflow** button for branch `feat/mobile-photo-editor-ux-fixes`.
+- [ ] Finish any remaining implementation/test fixes.
+- [ ] Manually run the complete CI workflow on the final feature-branch commit and record the result.
+- [ ] Mark PR #15 ready for review only after a green full run.
+
+
+## Color & filters mobile bottom-sheet consistency fix — 2026-10-17
+
+### Scope
+- Make the Color & filters controls match the other feature panels in the mobile bottom sheet and prevent nested horizontal scrolling. The panel should scroll vertically only.
+
+### Implementation
+- Constrained the filter controls wrapper, slider grid, slider cards, and range inputs to the available width using `w-full`, `min-w-0`, and `max-w-full`.
+- Applied `overflow-x-hidden` to the filter controls group and kept vertical overscroll containment, so the bottom sheet is the single vertical scrolling surface rather than a nested horizontal/vertical scroller.
+- Added regression assertions for horizontal overflow prevention, width constraints, and full-width range controls.
+
+### Verification
+- [ ] Run focused Photo Editor tests.
+- [ ] Run full manually triggered CI on this branch after the implementation batch is complete.
+- [ ] Confirm on a narrow real device that Color & filters has vertical scrolling only and matches other bottom-sheet panels.
+
+
+## Color & filters mobile scroll E2E regression — 2026-10-17
+
+- Extended `tests/e2e/photo-editor-responsive.spec.ts` for the 320, 360, 390, and 430px viewports.
+- The browser test now checks that the bottom-sheet content is the sole vertical scroll container, its computed overflow is horizontal-hidden/vertical-auto, the filter controls do not overflow the viewport, no nested horizontal scroller exists, all six range inputs fit their containers, and vertical scrolling actually changes `scrollTop`.
+- Commit: `a39703a7dec5eb187baca75e46da78245e66f07d`.
+- Verification: the GitHub connector returned no workflow-run records and no commit statuses for this commit, so the new E2E test has not been confirmed as executed or passing. The failure run's details were not exposed by the available workflow lookup; do not claim the reported CI failure is fixed until its failed job/log is inspected and the full workflow passes.
+- [ ] Inspect the failed GitHub Actions run for this branch and diagnose the first failing step.
+- [ ] Run the focused E2E and component tests, then the full CI pipeline; record actual results before merging.
+
+
+## Photo Editor search/menu and mobile workspace refinement — 2026-10-17
+
+### Changes
+- Raised the global header stacking context above the Photo Editor menubar so search suggestions are not obscured by the File menu.
+- Hidden the global search field on mobile widths only while viewing the Photo Editor; it remains available on desktop and on other pages.
+- Grouped the mobile File and Features controls together instead of pushing Features to the far right.
+- Hidden the non-error local-processing status message on narrow mobile screens in both the toolbar and bottom status strip; errors remain visible, and the full privacy/status message remains available at wider widths.
+- Added responsive Playwright assertions for search visibility, File/Features proximity, and status-message visibility.
+
+### Verification
+- [ ] Run focused Photo Editor unit/component tests.
+- [ ] Run the manually triggered full CI workflow against the final feature-branch commit.
+- [ ] Verify the search suggestions overlay the editor menubar without being clipped or covered.
+- [ ] Verify mobile editor layout and privacy/status messaging on a real device.
+
+### CI outcome
+- Not yet run for this change set. Do not consider the branch verified until GitHub Actions completes successfully on the final commit.
+
+## CI concurrency rule — 2026-10-17
+
+- **One active CI workflow run per branch at a time.** The concurrency group uses the workflow name plus the source branch name, so push, pull-request, and manual runs for the same branch share the same group.
+- **A newer run cancels the older in-progress run** for that branch (`cancel-in-progress: true`). This prevents overlapping CI runs from wasting time and resources; it does not mean the newer run is cancelled by the older one.
+- Related implementation and test changes should be reviewed and committed as one batch, then CI should validate the final commit. Avoid pushing intermediate commits unless an early CI run is intentional.
+- Workflow configuration: `.github/workflows/ci.yml`.
+- Verification: configuration/documentation updated in one commit; automated CI result for that new commit must still be checked before declaring the branch green.
+
+## CI failure diagnosis and E2E assertion correction — 2026-10-17
+
+- Inspected failed GitHub Actions run [#39024036147](https://github.com/mrcode-tech/gaget.dev/actions/runs/39024036147) on commit `65cbd92965b0efd5b3c35106b4ccf666863ff011`.
+- Unit tests, focused Photo Editor/sidebar tests, component tests, ESLint, TypeScript, and production build all passed.
+- The final Playwright step failed four narrow-mobile cases (320, 360, 390, and 430px) at the assertion that required `getComputedStyle(...).overflowX === "hidden"` and `overflowY === "auto"`. Six other E2E cases passed.
+- The editor already declares `overflow-x-hidden overflow-y-auto` on the bottom-sheet scroller, and the suite separately checks actual width containment and vertical scrolling. Adjusted the assertion to verify the intended `overflow-x-hidden` class, computed vertical scrolling, and no horizontal layout overflow, instead of relying only on a computed overflow-axis value that can be normalized by the browser.
+- This is a test assertion correction, not a confirmed production-code fix. The new commit's CI run must verify that the four cases pass.
+- Process reminder: related test/code changes are grouped into one commit; wait for the CI run on that commit before making additional pushes unless a further fix is needed.
+
+
+## Mobile filter overflow investigation and layout cleanup — 2026-10-17
+
+- Inspected CI run [#39027891737](https://github.com/mrcode-tech/gaget.dev/actions/runs/39027891737). Unit tests, component tests, lint, TypeScript, and production build passed; all four narrow-mobile Color & filters E2E cases still failed.
+- Root cause of the assertion failure: `scrollWidth` can include descendants clipped by an element with `overflow-x: hidden`. The test treated that measurement as proof of visible horizontal overflow, so it was not measuring the intended behavior.
+- Refactored the filter adjustments container to rely on the panel's single horizontal-clipping boundary instead of adding a second nested `overflow-x-hidden` boundary.
+- Updated E2E coverage to assert the scroller's horizontal clipping and vertical scrolling, and verify all six range controls fit within their labels' rendered bounds. Panel-level viewport containment and vertical-scroll assertions remain.
+- Verification is pending on the next CI run; do not mark the branch green until all four mobile cases pass.
+
+
+## Approved mobile Photo Editor header layout — 2026-10-17
+
+### Approved behavior
+- On mobile photo-editing tools, use one compact editor header row: **GaGet.dev | File** grouped at the left and **Features** anchored to the right.
+- Do not add a second mobile site-navigation row; this layout keeps vertical space available for the canvas.
+- Keep File compact on mobile while preserving its existing desktop sizing and leave desktop menu layout unchanged.
+
+### Implementation and regression coverage
+- Added a mobile-only GaGet.dev home link and separator before File.
+- Reduced the File button's mobile padding and used an auto left margin to anchor Features at the right edge.
+- Added a component regression test for the header grouping and an E2E geometry assertion at the responsive mobile viewport sizes.
+- [ ] Run focused Photo Editor tests and the full manually triggered CI workflow on this final implementation batch.
+- [ ] Confirm the workflow is green before marking PR #15 ready for review.
+
+
+## Compact mobile/tablet Photo Editor navigation — 2026-10-17
+
+Scope: remove the duplicate editor brand row and empty shared header below desktop breakpoints, while preserving the existing GaGet.dev hamburger and its navigation drawer.
+
+Acceptance criteria:
+- Below 1024px, render a single editor navbar row with the existing site hamburger at the left, File immediately after it, and Features at the right.
+- Keep the shared AppHeader on desktop (1024px and above) and preserve its existing desktop layout.
+- Use the full viewport height on mobile/tablet for the editor workspace; retain the desktop header offset.
+- Hide nonessential descriptive copy in the mobile/tablet empty state and editor panel header to maximize usable canvas space.
+- Add/update component and Playwright responsive assertions for mobile, tablet, and desktop; check horizontal overflow.
+
+Verification: pending latest branch CI. Real-browser layout still needs to be confirmed by the Playwright workflow before merge.

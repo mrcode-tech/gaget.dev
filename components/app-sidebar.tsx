@@ -33,6 +33,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { locale, t } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const direction = localeDirections[locale];
+  const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
 
   const isActive = (href: string) => {
     const clean = pathname.replace(/^\/(fa|ar)(?=\/|$)/, "") || "/";
@@ -156,31 +157,21 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             </div>
           </div>
         </nav>
-      </ScrollArea>
-
-      {mobile && (
-        <section
-          aria-label="Preferences"
-          className="shrink-0 space-y-4 border-t border-border px-4 py-4"
-        >
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Preferences
-          </h2>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">{t("nav.language")}</p>
-            <div className="flex min-w-0 items-center">
-              <LanguageSwitcher />
+        {mobile && (
+          <section aria-label="Preferences" className="mt-3 space-y-1 border-t border-border px-1 pt-2">
+            <div className="flex min-h-10 items-center justify-between gap-3 px-2">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">{t("nav.language")}</span>
+              <div className="flex min-w-0 items-center" onClick={(event) => event.stopPropagation()}>
+                <LanguageSwitcher />
+              </div>
             </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">{t("nav.appearance")}</p>
-            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-              <span className="text-sm text-muted-foreground">Light / dark theme</span>
+            <div className="flex min-h-10 items-center justify-between gap-3 px-2">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">{t("nav.appearance")}</span>
               <ThemeToggle />
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+      </ScrollArea>
 
       <div
         className={cn(
@@ -210,14 +201,16 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
       <div
         className={cn(
-          "fixed top-3 z-50 lg:hidden",
-          direction === "ltr" ? "left-3" : "right-3"
+          "fixed z-50 lg:hidden",
+          isPhotoEditor ? "top-1" : "top-3",
+          direction === "ltr" ? (isPhotoEditor ? "left-2" : "left-3") : (isPhotoEditor ? "right-2" : "right-3")
         )}
       >
         <Button
           variant="outline"
           size="icon"
           aria-label="Open navigation"
+          className={isPhotoEditor ? "h-8 w-8" : undefined}
           onClick={() => setMobileOpen(true)}
         >
           <Menu className="h-4 w-4" />

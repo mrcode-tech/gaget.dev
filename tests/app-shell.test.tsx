@@ -28,7 +28,9 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Open navigation" })).toBeTruthy();
-    expect(screen.getByRole("textbox")).toBeTruthy();
+    const sharedHeader = document.querySelector("header");
+    expect(sharedHeader).toBeTruthy();
+    expect(sharedHeader?.parentElement?.className).toContain("hidden lg:block");
 
     const languageControl = screen.getByRole("combobox", { name: "Language" });
     expect(languageControl.parentElement?.parentElement?.className).toContain("hidden");
