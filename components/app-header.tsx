@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Search, Command, ArrowUpRight } from "lucide-react";
+import { Search, Command, ArrowUpRight, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LocaleLink, localizeHref } from "@/components/locale-link";
 import { useI18n } from "@/components/i18n-provider";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { tools } from "@/lib/tools/registry";
 import { localeDirections } from "@/lib/i18n/messages";
 
@@ -29,9 +30,12 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
 
   return (
     <header
-      className={`sticky top-0 z-50 flex h-[68px] items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6 ${direction === "ltr" ? (sidebarCollapsed ? "pl-16 sm:pl-16 lg:pl-[88px]" : "pl-16 sm:pl-16 lg:pl-[272px]") : (sidebarCollapsed ? "pr-16 sm:pr-16 lg:pr-[88px]" : "pr-16 sm:pr-16 lg:pr-[272px]")}`}
+      className={`fixed inset-x-0 top-0 z-[80] flex h-[68px] items-center gap-3 border-b border-border bg-background/95 px-3 backdrop-blur-md sm:px-6 ${direction === "ltr" ? (sidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[272px]") : (sidebarCollapsed ? "lg:pr-[88px]" : "lg:pr-[272px]")}`}
     >
-      <div className={`relative w-full max-w-xl ${isPhotoEditor ? "hidden md:block" : ""}`}>
+      <Button variant="outline" size="icon" aria-label="Open navigation" className="h-9 w-9 shrink-0 lg:hidden" onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}>
+        <Menu className="h-4 w-4" />
+      </Button>
+      <div className={`relative min-w-0 w-full max-w-xl ${isPhotoEditor ? "hidden md:block" : ""}`}>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           dir={direction}
