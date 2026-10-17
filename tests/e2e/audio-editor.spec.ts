@@ -31,6 +31,7 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
   await openFeatures.click();
   const featureMenu = page.getByTestId("audio-feature-menu");
   await expect(featureMenu.locator("section button")).toHaveCount(18);
+  await featureMenu.getByRole("button", { name: "Close feature menu" }).click();
 
   await page.locator("#audio-input").setInputFiles({
     name: "fixture.wav",
