@@ -144,13 +144,13 @@ describe("PhotoEditor workspace UX acceptance", () => {
     openFeature("Color & filters");
     const panel = screen.getByTestId("feature-panel");
     expect(within(panel).getByText("Color & filters")).toBeTruthy();
-    expect(panel.className).toContain("md:w-[320px]");
-    expect(panel.className).toContain("md:border-l");
+    expect(panel.className).toContain("sm:w-[320px]");
+    expect(panel.className).toContain("sm:border-l");
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
     expect(screen.getByTestId("feature-panel")).toBe(panel);
-    expect(panel.className).toContain("md:flex");
-    expect(panel.className).not.toContain("md:hidden");
+    expect(panel.className).toContain("sm:flex");
+    expect(panel.className).not.toContain("sm:hidden");
   });
 
   it("uses a shared mobile panel height and supports bounded keyboard resizing", () => {
