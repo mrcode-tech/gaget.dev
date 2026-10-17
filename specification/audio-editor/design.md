@@ -1,6 +1,6 @@
 # Unified Audio Editor — Proposal & Responsive Design
 
-**Status:** Implementation in progress on `feat/unified-audio-editor`; the feature-menu and compact inspector implementation is being validated against this specification  
+**Status:** Unified Audio Editor implemented; responsive UI consistency refinements are being validated on `fix/audio-editor-photo-editor-consistency`  
 **Base reviewed:** `main`  
 **Proposal branch:** `proposal/unified-audio-editor`  
 **Date:** 2026-10-17  
@@ -8,7 +8,7 @@
 
 ## 1. Recommendation
 
-Replace the 18 separate Audio tool destinations with one **Audio Editor** workspace, using the Photo Editor's established shell and responsive behavior: shared GaGet.dev navigation, a compact editor command bar (`[☰] File … Features`), one central workspace, one active feature panel, and a responsive inspector/bottom sheet. Audio-specific needs are a waveform timeline, transport controls, a clear selection range, and a persistent export action.
+Replace the 18 separate Audio tool destinations with one **Audio Editor** workspace, using the Photo Editor's established shell and responsive behavior: shared GaGet.dev navigation, a compact editor command bar (`[☰] File … Features`), one central workspace, one active feature panel, and a responsive inspector/bottom sheet. Audio-specific needs are a waveform timeline, transport controls, a clear selection range, and an export command in the File menu.
 
 This is a consolidation of capabilities, not a proposal to build a full digital audio workstation (DAW) immediately. Start with single-file editing plus analysis/conversion tools; keep multi-file merge and microphone recording as workflows within the same editor.
 
@@ -84,15 +84,15 @@ Feature names are grouped once; do not add 18 separate top-level Audio cards. Le
 - Center stage: waveform timeline with readable time ruler and selection overlay.
 - Bottom transport strip: play/pause, stop, current time, duration, playback speed, zoom, undo/redo.
 - Right inspector: 320–360 px; contains only the currently selected feature's controls, internally scrollable.
-- Export remains discoverable in File and in a primary Export action.
+- Export remains in the File menu; do not add a separate persistent Export button.
 - Keep the waveform area useful when the inspector is open; collapse the site sidebar or use an overlay at constrained desktop widths rather than squeezing the canvas.
 
 ## 6. Responsive behavior — reuse photo editor breakpoints
 
 Use the six existing breakpoint categories from `specification/design.md`: XS, SM, MD, LG, XL, and 2XL. Test the representative viewport matrix from that document.
 
-- **XS (<640 px):** compact sticky command bar `[☰] File … Features`; waveform takes the available width; transport controls wrap into one compact row; feature controls open as a bottom sheet with internal vertical scroll. No horizontal page scrolling.
-- **SM (640–767 px):** same command bar, larger waveform, bottom sheet inspector.
+- **XS (<640 px):** compact sticky top command bar `[☰] File … Features`; the global search box is hidden; waveform takes the available width; transport controls wrap into one compact row; feature controls open as a bottom sheet with internal vertical scroll. Export stays in File. No fixed bottom navigation and no horizontal page scrolling.
+- **SM (640–767 px):** same top command bar, larger waveform, bottom sheet inspector; no separate File / Features / Export bottom bar.
 - **MD (768–1023 px):** portrait uses bottom sheet (collapsed preview ≤ about 24dvh, expanded ≤ about 70dvh); landscape may use a right overlay if enough width remains. Do not force a narrow side-by-side layout in portrait.
 - **LG (1024–1279 px):** desktop shell; sidebar may collapse automatically or inspector becomes an overlay if the waveform falls below a usable width.
 - **XL (1280–1535 px):** sidebar + waveform stage + fixed-width inspector.
@@ -167,8 +167,8 @@ The initial implementation's native select/list box and long in-flow explanatory
 - A compact **File** menu for Open, Export, and Reset/Close actions.
 - A **Features** menu grouped by Edit, Adjust, Analyze, Export & data, and Record; the full list is shown only when the menu is open, never as a persistent selector card.
 - Desktop: grouped command-bar shortcuts and a fixed-width 320–360 px contextual inspector beside the waveform.
-- Mobile: a small fixed bottom bar with File, Features, and Export; the selected feature's controls appear in a vertically scrollable bottom sheet with a close button. The waveform/player stay in the workspace behind it.
+- Mobile: File and Features stay in the top command bar beside the in-flow navigation button. Export is inside File; there is no fixed bottom action bar. The selected feature's controls appear in a vertically scrollable bottom sheet with a close button. The waveform/player stay in the workspace behind it.
 - Keep labels short. Remove repeated privacy/product explanations from the main canvas; use concise metadata and one-line capability limitations only where they affect expectations.
 - Feature menus must close after selection, preserve the loaded source, have accessible names/focus states, and avoid horizontal scrolling.
-- Playwright should select features through the menu and assert all 18 actions are available. Test the bottom-sheet panel and overflow at the full viewport matrix.
+- Playwright should select features through the menu and assert all 18 actions are available. Verify File-menu export placement, hidden mobile search, top-toolbar controls, bottom-sheet bounds, and overflow at the full viewport matrix.
 
