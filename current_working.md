@@ -563,3 +563,19 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - [ ] Finish any remaining implementation/test fixes.
 - [ ] Manually run the complete CI workflow on the final feature-branch commit and record the result.
 - [ ] Mark PR #15 ready for review only after a green full run.
+
+
+## Color & filters mobile bottom-sheet consistency fix — 2026-10-17
+
+### Scope
+- Make the Color & filters controls match the other feature panels in the mobile bottom sheet and prevent nested horizontal scrolling. The panel should scroll vertically only.
+
+### Implementation
+- Constrained the filter controls wrapper, slider grid, slider cards, and range inputs to the available width using `w-full`, `min-w-0`, and `max-w-full`.
+- Applied `overflow-x-hidden` to the filter controls group and kept vertical overscroll containment, so the bottom sheet is the single vertical scrolling surface rather than a nested horizontal/vertical scroller.
+- Added regression assertions for horizontal overflow prevention, width constraints, and full-width range controls.
+
+### Verification
+- [ ] Run focused Photo Editor tests.
+- [ ] Run full manually triggered CI on this branch after the implementation batch is complete.
+- [ ] Confirm on a narrow real device that Color & filters has vertical scrolling only and matches other bottom-sheet panels.
