@@ -150,4 +150,6 @@ test("audio editor search returns on desktop like the shared header", async ({ p
   await page.goto("/audio/editor");
   await expect(page.locator("header input")).toBeVisible();
   await expect(page.getByRole("button", { name: "Open audio editor features" })).toBeHidden();
+  await page.getByRole("button", { name: "Export & data", exact: true }).click();
+  await expect(page.getByTestId("audio-feature-menu").getByRole("button", { name: "Audio converter" })).toBeVisible();
 });
