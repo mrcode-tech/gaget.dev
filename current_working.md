@@ -1,4 +1,4 @@
-# Current Working Branch: `feat/brand-and-user-experience`
+# Current Working Branch: `feat/mobile-photo-editor-ux-fixes`
 
 **Last reviewed:** 2026-10-16  
 **Repository:** `mrcode-tech/gaget.dev`  
@@ -589,3 +589,22 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - Verification: the GitHub connector returned no workflow-run records and no commit statuses for this commit, so the new E2E test has not been confirmed as executed or passing. The failure run's details were not exposed by the available workflow lookup; do not claim the reported CI failure is fixed until its failed job/log is inspected and the full workflow passes.
 - [ ] Inspect the failed GitHub Actions run for this branch and diagnose the first failing step.
 - [ ] Run the focused E2E and component tests, then the full CI pipeline; record actual results before merging.
+
+
+## Photo Editor search/menu and mobile workspace refinement — 2026-10-17
+
+### Changes
+- Raised the global header stacking context above the Photo Editor menubar so search suggestions are not obscured by the File menu.
+- Hidden the global search field on mobile widths only while viewing the Photo Editor; it remains available on desktop and on other pages.
+- Grouped the mobile File and Features controls together instead of pushing Features to the far right.
+- Hidden the non-error local-processing status message on narrow mobile screens in both the toolbar and bottom status strip; errors remain visible, and the full privacy/status message remains available at wider widths.
+- Added responsive Playwright assertions for search visibility, File/Features proximity, and status-message visibility.
+
+### Verification
+- [ ] Run focused Photo Editor unit/component tests.
+- [ ] Run the manually triggered full CI workflow against the final feature-branch commit.
+- [ ] Verify the search suggestions overlay the editor menubar without being clipped or covered.
+- [ ] Verify mobile editor layout and privacy/status messaging on a real device.
+
+### CI outcome
+- Not yet run for this change set. Do not consider the branch verified until GitHub Actions completes successfully on the final commit.

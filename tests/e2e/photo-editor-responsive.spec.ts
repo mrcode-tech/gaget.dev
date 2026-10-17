@@ -40,7 +40,29 @@ for (const viewport of viewports) {
 
     const editor = page.getByRole("main", { name: "GaGet Photo Editor" });
     await expect(editor).toBeVisible();
+
+    if (viewport.width < 768) {
+      // Keep the global search field out of the compact photo-editing workspace.
+      await expect(page.locator('header input[aria-label]')).toBeHidden();
+      const menubar = page.getByTestId("editor-menubar");
+      const fileMenu = menubar.getByRole("button", { name: "File", exact: true });
+      const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
+      await expect(fileMenu).toBeVisible();
+      await expect(featuresMenu).toBeVisible();
+      const fileBox = await fileMenu.boundingBox();
+      const featuresBox = await featuresMenu.boundingBox();
+      expect(fileBox).not.toBeNull();
+      expect(featuresBox).not.toBeNull();
+      if (fileBox && featuresBox) {
+        expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width - 1);
+        expect(featuresBox.x - (fileBox.x + fileBox.width)).toBeLessThan(32);
+      }
+    } else {
+      await expect(page.locator('header input[aria-label]')).toBeVisible();
+    }
+
     await loadTestPhoto(page);
+    await expect(page.getByRole("status")).toBeVisible({ visible: viewport.width >= 640 });
     await openFeature(page, viewport.width, "Text & watermark");
 
     const panel = page.getByTestId("feature-panel");
