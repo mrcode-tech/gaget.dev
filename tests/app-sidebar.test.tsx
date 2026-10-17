@@ -99,4 +99,13 @@ describe("AppSidebar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close navigation" }));
     expect(screen.queryByRole("button", { name: "Close navigation" })).toBeNull();
   });
+
+  it("aligns the shared hamburger with the compact editor navbar on mobile and tablet", () => {
+    navigation.pathname = "/images/editor";
+    render(<SidebarHarness />);
+    const trigger = screen.getByRole("button", { name: "Open navigation" });
+    expect(trigger.className).toContain("h-8");
+    expect(trigger.parentElement?.className).toContain("top-1");
+    expect(trigger.parentElement?.className).toContain("left-2");
+  });
 });
