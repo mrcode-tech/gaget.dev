@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   Heart,
   Home,
-  Menu,
   Sparkles,
   X,
   Grid2X2,
@@ -39,7 +38,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
     return () => window.removeEventListener("gaget:open-navigation", openNavigation);
   }, []);
   const direction = localeDirections[locale];
-  const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
 
   const isActive = (href: string) => {
     const clean = pathname.replace(/^\/(fa|ar)(?=\/|$)/, "") || "/";
@@ -172,14 +170,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       <aside className={cn("fixed inset-y-0 z-40 hidden lg:block", direction === "ltr" ? "left-0" : "right-0")}>
         {renderSidebar(collapsed)}
       </aside>
-
-      {!isPhotoEditor && (
-        <div data-testid="mobile-site-navigation-trigger" className={cn("fixed z-[100] lg:hidden top-3", direction === "ltr" ? "left-3" : "right-3")}>
-          <Button variant="outline" size="icon" aria-label="Open navigation" onClick={() => setMobileOpen(true)}>
-            <Menu className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
 
       {mobileOpen && (
         <div className="fixed inset-0 z-[110] lg:hidden" data-testid="mobile-navigation-drawer">
