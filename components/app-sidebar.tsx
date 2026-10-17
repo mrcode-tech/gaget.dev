@@ -75,7 +75,17 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             </span>
           )}
         </LocaleLink>
-        {!mobile && (
+        {mobile ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto h-8 w-8 shrink-0"
+            aria-label="Close navigation"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        ) : (
           <Button
             variant="ghost"
             size="icon"
@@ -105,38 +115,10 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           className={cn("space-y-6 py-5", isCollapsed ? "px-2" : "px-3")}
         >
           <div className="space-y-1">
-            <NavLink
-              href="/"
-              label={t("nav.home")}
-              active={isActive("/")}
-              icon={<Home className="h-4 w-4" />}
-              collapsed={isCollapsed}
-              onClick={mobile ? () => setMobileOpen(false) : undefined}
-            />
-            <NavLink
-              href="/#popular-tools"
-              label={t("nav.popular")}
-              active={false}
-              icon={<Sparkles className="h-4 w-4" />}
-              collapsed={isCollapsed}
-              onClick={mobile ? () => setMobileOpen(false) : undefined}
-            />
-            <NavLink
-              href="/tools"
-              label={t("nav.allTools")}
-              active={isActive("/tools")}
-              icon={<Grid2X2 className="h-4 w-4" />}
-              collapsed={isCollapsed}
-              onClick={mobile ? () => setMobileOpen(false) : undefined}
-            />
-            <NavLink
-              href="/#popular-tools"
-              label={t("nav.favorites")}
-              active={false}
-              icon={<Heart className="h-4 w-4" />}
-              collapsed={isCollapsed}
-              onClick={mobile ? () => setMobileOpen(false) : undefined}
-            />
+            <NavLink href="/" label={t("nav.home")} active={isActive("/")} icon={<Home className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
+            <NavLink href="/#popular-tools" label={t("nav.popular")} active={false} icon={<Sparkles className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
+            <NavLink href="/tools" label={t("nav.allTools")} active={isActive("/tools")} icon={<Grid2X2 className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
+            <NavLink href="/#popular-tools" label={t("nav.favorites")} active={false} icon={<Heart className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
           </div>
 
           <div>
@@ -179,29 +161,15 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         )}
       </ScrollArea>
 
-      <div
-        className={cn(
-          "shrink-0 border-t border-border py-3 text-[11px] text-muted-foreground",
-          isCollapsed ? "flex justify-center px-1" : "px-5"
-        )}
-      >
-        {isCollapsed ? (
-          <span aria-label="GaGet.dev">©</span>
-        ) : (
-          <>© {new Date().getFullYear()} GaGet.dev</>
-        )}
+      <div className={cn("shrink-0 border-t border-border py-3 text-[11px] text-muted-foreground", isCollapsed ? "flex justify-center px-1" : "px-5")}>
+        {isCollapsed ? <span aria-label="GaGet.dev">©</span> : <>© {new Date().getFullYear()} GaGet.dev</>}
       </div>
     </div>
   );
 
   return (
     <>
-      <aside
-        className={cn(
-          "fixed inset-y-0 z-40 hidden lg:block",
-          direction === "ltr" ? "left-0" : "right-0"
-        )}
-      >
+      <aside className={cn("fixed inset-y-0 z-40 hidden lg:block", direction === "ltr" ? "left-0" : "right-0")}>
         {renderSidebar(collapsed)}
       </aside>
 
@@ -214,32 +182,11 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       )}
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-[110] lg:hidden">
-          <button
-            aria-label="Close navigation overlay"
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div
-            className={cn(
-              "absolute inset-y-0",
-              direction === "ltr" ? "left-0" : "right-0"
-            )}
-          >
+        <div className="fixed inset-0 z-[110] lg:hidden" data-testid="mobile-navigation-drawer">
+          <button aria-label="Close navigation overlay" className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className={cn("absolute inset-y-0", direction === "ltr" ? "left-0" : "right-0")}>
             {renderSidebar(false, true)}
           </div>
-          <Button
-            variant="secondary"
-            size="icon"
-            className={cn(
-              "absolute top-3",
-              direction === "ltr" ? "left-[260px]" : "right-[260px]"
-            )}
-            aria-label="Close navigation"
-            onClick={() => setMobileOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </div>
       )}
     </>
@@ -270,9 +217,7 @@ function NavLink({
       className={cn(
         "flex h-9 items-center rounded-lg text-sm transition-colors",
         collapsed ? "justify-center px-0" : "gap-3 px-3",
-        active
-          ? "bg-accent font-semibold text-accent-foreground"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        active ? "bg-accent font-semibold text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
     >
       <span className="shrink-0">{icon}</span>
