@@ -1,4 +1,4 @@
-# Current Working Branch: `feat/brand-and-user-experience`
+# Current Working Branch: `feat/mobile-photo-editor-ux-fixes`
 
 **Last reviewed:** 2026-10-16  
 **Repository:** `mrcode-tech/gaget.dev`  
@@ -589,3 +589,48 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - Verification: the GitHub connector returned no workflow-run records and no commit statuses for this commit, so the new E2E test has not been confirmed as executed or passing. The failure run's details were not exposed by the available workflow lookup; do not claim the reported CI failure is fixed until its failed job/log is inspected and the full workflow passes.
 - [ ] Inspect the failed GitHub Actions run for this branch and diagnose the first failing step.
 - [ ] Run the focused E2E and component tests, then the full CI pipeline; record actual results before merging.
+
+
+## Photo Editor search/menu and mobile workspace refinement — 2026-10-17
+
+### Changes
+- Raised the global header stacking context above the Photo Editor menubar so search suggestions are not obscured by the File menu.
+- Hidden the global search field on mobile widths only while viewing the Photo Editor; it remains available on desktop and on other pages.
+- Grouped the mobile File and Features controls together instead of pushing Features to the far right.
+- Hidden the non-error local-processing status message on narrow mobile screens in both the toolbar and bottom status strip; errors remain visible, and the full privacy/status message remains available at wider widths.
+- Added responsive Playwright assertions for search visibility, File/Features proximity, and status-message visibility.
+
+### Verification
+- [ ] Run focused Photo Editor unit/component tests.
+- [ ] Run the manually triggered full CI workflow against the final feature-branch commit.
+- [ ] Verify the search suggestions overlay the editor menubar without being clipped or covered.
+- [ ] Verify mobile editor layout and privacy/status messaging on a real device.
+
+### CI outcome
+- Not yet run for this change set. Do not consider the branch verified until GitHub Actions completes successfully on the final commit.
+
+## CI concurrency rule — 2026-10-17
+
+- **One active CI workflow run per branch at a time.** The concurrency group uses the workflow name plus the source branch name, so push, pull-request, and manual runs for the same branch share the same group.
+- **A newer run cancels the older in-progress run** for that branch (`cancel-in-progress: true`). This prevents overlapping CI runs from wasting time and resources; it does not mean the newer run is cancelled by the older one.
+- Related implementation and test changes should be reviewed and committed as one batch, then CI should validate the final commit. Avoid pushing intermediate commits unless an early CI run is intentional.
+- Workflow configuration: `.github/workflows/ci.yml`.
+- Verification: configuration/documentation updated in one commit; automated CI result for that new commit must still be checked before declaring the branch green.
+
+## CI failure diagnosis and E2E assertion correction — 2026-10-17
+
+- Inspected failed GitHub Actions run [#39024036147](https://github.com/mrcode-tech/gaget.dev/actions/runs/39024036147) on commit `65cbd92965b0efd5b3c35106b4ccf666863ff011`.
+- Unit tests, focused Photo Editor/sidebar tests, component tests, ESLint, TypeScript, and production build all passed.
+- The final Playwright step failed four narrow-mobile cases (320, 360, 390, and 430px) at the assertion that required `getComputedStyle(...).overflowX === "hidden"` and `overflowY === "auto"`. Six other E2E cases passed.
+- The editor already declares `overflow-x-hidden overflow-y-auto` on the bottom-sheet scroller, and the suite separately checks actual width containment and vertical scrolling. Adjusted the assertion to verify the intended `overflow-x-hidden` class, computed vertical scrolling, and no horizontal layout overflow, instead of relying only on a computed overflow-axis value that can be normalized by the browser.
+- This is a test assertion correction, not a confirmed production-code fix. The new commit's CI run must verify that the four cases pass.
+- Process reminder: related test/code changes are grouped into one commit; wait for the CI run on that commit before making additional pushes unless a further fix is needed.
+
+
+## Mobile filter overflow investigation and layout cleanup — 2026-10-17
+
+- Inspected CI run [#39027891737](https://github.com/mrcode-tech/gaget.dev/actions/runs/39027891737). Unit tests, component tests, lint, TypeScript, and production build passed; all four narrow-mobile Color & filters E2E cases still failed.
+- Root cause of the assertion failure: `scrollWidth` can include descendants clipped by an element with `overflow-x: hidden`. The test treated that measurement as proof of visible horizontal overflow, so it was not measuring the intended behavior.
+- Refactored the filter adjustments container to rely on the panel's single horizontal-clipping boundary instead of adding a second nested `overflow-x-hidden` boundary.
+- Updated E2E coverage to assert the scroller's horizontal clipping and vertical scrolling, and verify all six range controls fit within their labels' rendered bounds. Panel-level viewport containment and vertical-scroll assertions remain.
+- Verification is pending on the next CI run; do not mark the branch green until all four mobile cases pass.

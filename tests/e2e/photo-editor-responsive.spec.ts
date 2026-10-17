@@ -40,7 +40,33 @@ for (const viewport of viewports) {
 
     const editor = page.getByRole("main", { name: "GaGet Photo Editor" });
     await expect(editor).toBeVisible();
+
+    if (viewport.width < 768) {
+      // Keep the global search field out of the compact photo-editing workspace.
+      await expect(page.locator('header input[aria-label]')).toBeHidden();
+      const menubar = page.getByTestId("editor-menubar");
+      const fileMenu = menubar.getByRole("button", { name: "File", exact: true });
+      const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
+      await expect(fileMenu).toBeVisible();
+      await expect(featuresMenu).toBeVisible();
+      const fileBox = await fileMenu.boundingBox();
+      const featuresBox = await featuresMenu.boundingBox();
+      expect(fileBox).not.toBeNull();
+      expect(featuresBox).not.toBeNull();
+      if (fileBox && featuresBox) {
+        expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width - 1);
+        expect(featuresBox.x - (fileBox.x + fileBox.width)).toBeLessThan(32);
+      }
+    } else {
+      await expect(page.locator('header input[aria-label]')).toBeVisible();
+    }
+
     await loadTestPhoto(page);
+    if (viewport.width >= 768) {
+      await expect(page.getByRole("status")).toBeVisible();
+    } else {
+      await expect(page.getByRole("status")).toBeHidden();
+    }
     await openFeature(page, viewport.width, "Text & watermark");
 
     const panel = page.getByTestId("feature-panel");
@@ -113,7 +139,7 @@ for (const width of [320, 360, 390, 430]) {
     await openFeature(page, width, "Color & filters");
 
     const panel = page.getByTestId("feature-panel");
-    const panelScroller = panel.locator(":scope > .overflow-y-auto");
+    const panelScroller = panel.locator(".overflow-y-auto");
     const adjustments = page.getByTestId("filter-adjustments");
     await expect(panel).toBeVisible();
     await expect(panel).toHaveClass(/h-\[min\(52dvh,420px\)\]/);
@@ -127,17 +153,27 @@ for (const width of [320, 360, 390, 430]) {
     await expect.poll(() => panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
     await expect.poll(() => panelScroller.evaluate((element) => {
       const style = getComputedStyle(element);
-      return style.overflowX === "hidden" && style.overflowY === "auto";
+      // There should be one vertical scroller, with horizontal overflow clipped
+      // at this boundary. scrollWidth may include descendants clipped by
+      // overflow-x:hidden, so it is not a reliable visible-overflow assertion.
+      return element.classList.contains("overflow-x-hidden") && style.overflowY === "auto";
     })).toBe(true);
     await expect.poll(() => panelScroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
-    await expect.poll(() => adjustments.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return style.overflowX === "hidden" && element.scrollWidth <= element.clientWidth;
-    })).toBe(true);
     await expect(adjustments.locator(".overflow-x-auto")).toHaveCount(0);
-    await expect.poll(() => adjustments.locator("input[type='range']").evaluateAll((inputs) =>
-      inputs.length === 6 && inputs.every((input) => input.scrollWidth <= input.clientWidth),
-    )).toBe(true);
+    await expect.poll(() => adjustments.locator("label").evaluateAll((labels) => {
+      const bounds = labels.map((label) => label.getBoundingClientRect());
+      const ranges = Array.from(document.querySelectorAll('[data-testid="filter-adjustments"] input[type="range"]'));
+      return bounds.every((box) => box.width > 0)
+        && ranges.length === 6
+        && ranges.every((input) => {
+          const inputBox = input.getBoundingClientRect();
+          const labelBox = input.closest("label")?.getBoundingClientRect();
+          return Boolean(labelBox)
+            && inputBox.width > 0
+            && inputBox.left >= labelBox!.left
+            && inputBox.right <= labelBox!.right;
+        });
+    })).toBe(true);
 
     await panelScroller.evaluate((element) => { element.scrollTop = element.scrollHeight; });
     await expect.poll(() => panelScroller.evaluate((element) => element.scrollTop > 0)).toBe(true);

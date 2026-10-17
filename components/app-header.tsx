@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Search, Command, ArrowUpRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -12,6 +13,8 @@ import { localeDirections } from "@/lib/i18n/messages";
 
 export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
   const [query, setQuery] = useState("");
+  const pathname = usePathname();
+  const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
   const { locale, t } = useI18n();
   const matches = query.trim()
     ? tools
@@ -26,9 +29,9 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
 
   return (
     <header
-      className={`sticky top-0 z-30 flex h-[68px] items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6 ${direction === "ltr" ? (sidebarCollapsed ? "pl-16 sm:pl-16 lg:pl-[88px]" : "pl-16 sm:pl-16 lg:pl-[272px]") : (sidebarCollapsed ? "pr-16 sm:pr-16 lg:pr-[88px]" : "pr-16 sm:pr-16 lg:pr-[272px]")}`}
+      className={`sticky top-0 z-50 flex h-[68px] items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6 ${direction === "ltr" ? (sidebarCollapsed ? "pl-16 sm:pl-16 lg:pl-[88px]" : "pl-16 sm:pl-16 lg:pl-[272px]") : (sidebarCollapsed ? "pr-16 sm:pr-16 lg:pr-[88px]" : "pr-16 sm:pr-16 lg:pr-[272px]")}`}
     >
-      <div className="relative w-full max-w-xl">
+      <div className={`relative w-full max-w-xl ${isPhotoEditor ? "hidden md:block" : ""}`}>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           dir={direction}

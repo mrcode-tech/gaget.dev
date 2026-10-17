@@ -675,8 +675,8 @@ export function PhotoEditor() {
           </div>}
         </div>)}
       </div>
-      <div className="flex min-w-0 flex-1 items-center md:hidden">
-        <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"ml-auto inline-flex h-8 items-center gap-2 rounded-md px-3 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><Menu className="h-4 w-4" /><span>Features</span></button>
+      <div className="flex min-w-0 items-center md:hidden">
+        <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"inline-flex h-8 items-center gap-2 rounded-md px-3 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><Menu className="h-4 w-4" /><span>Features</span></button>
         {menuOpen === "Features" && <div className="absolute left-2 right-2 top-9 z-50 max-h-[min(75dvh,560px)] overflow-y-auto rounded-lg border border-border bg-popover p-2 shadow-xl">
           {featureMenuGroups.map((group) => <section key={group.label} className="mb-2 last:mb-0"><h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h3>{group.items.map(([label, panel, Icon]) => <button key={panel} className={"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 text-muted-foreground" /><span>{label}</span></button>)}</section>)}
         </div>}
@@ -685,7 +685,7 @@ export function PhotoEditor() {
     </div>
 
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
-      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status ? ` · ${status}` : ""}</span>
+      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status && <span className="hidden md:inline"> · {status}</span>}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
       <Button size="icon" variant="outline" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 className="h-4 w-4" /></Button>
@@ -753,7 +753,7 @@ export function PhotoEditor() {
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 md:space-y-4 md:p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
 
-          {hasImage && activePanel === "adjust" && <div data-testid="filter-adjustments" className="flex w-full min-w-0 max-w-full flex-col gap-3 overflow-x-hidden overscroll-y-contain">
+          {hasImage && activePanel === "adjust" && <div data-testid="filter-adjustments" className="flex w-full min-w-0 max-w-full flex-col gap-3">
             <label className="block space-y-2 text-sm">Filter preset
               <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={filterPreset} onChange={(e) => {
                 setFilterPreset(e.target.value);
@@ -860,5 +860,5 @@ export function PhotoEditor() {
     </div>
 
     <p id="canvas-keyboard-help" className="sr-only">When the crop tool is active, focus the canvas and use arrow keys to move the crop area; hold Shift to move by larger steps. When editing text, use arrow keys to nudge the selected text. Editing controls remain available while you work on the canvas.</p>
-    {(error || status) && <div className="shrink-0 border-t border-border bg-card px-4 py-2 text-xs"><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-700 dark:text-emerald-300">{status}</span>}</div></div>}</main>;
+    {(error || status) && <div className={"shrink-0 border-t border-border bg-card px-4 py-2 text-xs " + (!error ? "hidden md:block" : "")}><div className="mx-auto flex max-w-screen-2xl items-center gap-2">{error ? <span role="alert" className="text-destructive">{error}</span> : <span role="status" className="text-emerald-700 dark:text-emerald-300">{status}</span>}</div></div>}</main>;
 }
