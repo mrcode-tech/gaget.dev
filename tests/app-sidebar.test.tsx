@@ -104,8 +104,8 @@ describe("AppSidebar", () => {
     navigation.pathname = "/images/editor";
     render(<SidebarHarness />);
     const trigger = screen.getByRole("button", { name: "Open navigation" });
-    expect(trigger.className).toContain("h-8");
-    expect(trigger.parentElement?.className).toContain("top-1");
+    expect(trigger.className).toContain("h-10");
+    expect(trigger.parentElement?.className).toContain("top-0");
     expect(trigger.parentElement?.className).toContain("left-2");
   });
 });
