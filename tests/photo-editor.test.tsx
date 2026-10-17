@@ -114,6 +114,20 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(features.parentElement?.className).toContain("ml-auto");
   });
 
+  it("keeps the mobile feature list menu compact and scrollable instead of full-width", () => {
+    render(<PhotoEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "Open photo editor features" }));
+
+    const menu = screen.getByTestId("mobile-feature-menu");
+    expect(menu.className).toContain("w-64");
+    expect(menu.className).toContain("max-w-[calc(100vw-1.5rem)]");
+    expect(menu.className).toContain("max-h-[min(70dvh,420px)]");
+    expect(menu.className).toContain("overflow-y-auto");
+    expect(menu.className).toContain("right-3");
+    expect(within(menu).getByRole("button", { name: "Crop" })).toBeTruthy();
+    expect(within(menu).getByRole("button", { name: "SVG optimize" })).toBeTruthy();
+  });
+
   it("keeps site navigation outside the editor workspace and uses the shared shell", () => {
     render(<PhotoEditor />);
     expect(screen.queryByRole("complementary", { name: "GaGet.dev navigation" })).toBeNull();
