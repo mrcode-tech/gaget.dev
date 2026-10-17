@@ -16,7 +16,7 @@ const onePixelPng = Buffer.from(
 );
 
 async function openFeature(page: Page, width: number, feature: "Crop" | "Text & watermark" | "Color & filters") {
-  if (width < 768) {
+  if (width < 1024) {
     await page.getByRole("button", { name: "Open photo editor features" }).click();
   } else {
     await page.getByRole("button", { name: "Edit", exact: true }).click();
@@ -41,27 +41,28 @@ for (const viewport of viewports) {
     const editor = page.getByRole("main", { name: "GaGet Photo Editor" });
     await expect(editor).toBeVisible();
 
-    if (viewport.width < 768) {
-      // Keep the global search field out of the compact photo-editing workspace.
+    if (viewport.width < 1024) {
+      // Keep the shared header out of the compact photo-editing workspace and retain the main-site hamburger.
       await expect(page.locator('header input[aria-label]')).toBeHidden();
       const menubar = page.getByTestId("editor-menubar");
-      const brand = menubar.getByRole("link", { name: "GaGet.dev home" });
       const fileMenu = menubar.getByRole("button", { name: "File", exact: true });
       const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
-      await expect(brand).toBeVisible();
+      const siteMenu = page.getByRole("button", { name: "Open navigation" });
+      await expect(siteMenu).toBeVisible();
+      await expect(menubar.getByRole("link", { name: "GaGet.dev home" })).toHaveCount(0);
       await expect(fileMenu).toBeVisible();
       await expect(featuresMenu).toBeVisible();
       const menubarBox = await menubar.boundingBox();
-      const brandBox = await brand.boundingBox();
+      const siteMenuBox = await siteMenu.boundingBox();
       const fileBox = await fileMenu.boundingBox();
       const featuresBox = await featuresMenu.boundingBox();
       expect(menubarBox).not.toBeNull();
-      expect(brandBox).not.toBeNull();
+      expect(siteMenuBox).not.toBeNull();
       expect(fileBox).not.toBeNull();
       expect(featuresBox).not.toBeNull();
-      if (menubarBox && brandBox && fileBox && featuresBox) {
-        // Brand and File stay grouped on the left; Features is anchored to the right edge.
-        expect(fileBox.x).toBeGreaterThanOrEqual(brandBox.x + brandBox.width - 1);
+      if (menubarBox && siteMenuBox && fileBox && featuresBox) {
+        // Main site navigation occupies the left edge; File follows it and Features stays at the right.
+        expect(fileBox.x).toBeGreaterThanOrEqual(siteMenuBox.x + siteMenuBox.width - 1);
         expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width);
         expect(Math.abs(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width)).toBeLessThanOrEqual(10);
       }
