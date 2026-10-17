@@ -40,6 +40,10 @@ for (const viewport of viewports) {
 
     const editor = page.getByRole("main", { name: "GaGet Photo Editor" });
     await expect(editor).toBeVisible();
+    const editorNavbar = page.getByTestId("editor-menubar");
+    await expect(editorNavbar).toHaveCSS("height", "68px");
+    await expect(editorNavbar).toHaveCSS("padding-left", viewport.width >= 640 ? "24px" : "12px");
+    await expect(editorNavbar).toHaveCSS("gap", "12px");
 
     if (viewport.width < 1024) {
       // Keep the shared header out of the compact photo-editing workspace and retain the main-site hamburger.
