@@ -22,8 +22,8 @@ Consolidate the 18 existing audio tools into one Audio Editor workspace, using t
 - [x] Added a grouped feature selector inside the existing audio workbench for all 18 capabilities; changing features retains the loaded source buffer.
 - [x] Consolidated the main tool registry to one Audio Editor catalog entry and added keywords for all legacy capabilities.
 - [x] Updated CI push and pull-request triggers to cover all branches.
-- [ ] Update audio navigation/category page and homepage copy/cards as needed.
-- [ ] Add focused unit/component coverage for feature discovery, source retention, legacy routes, and honest unsupported-state messaging.
+- [x] Consolidate the Audio category and homepage/tool catalog to one Audio Editor entry; existing homepage featured-card logic now promotes the unified editor.
+- [x] Add a tool-catalog assertion for one Audio entry and searchable feature keywords, smoke tests for all 17 legacy redirects, and Playwright tests for the 18-option selector, honest limitation messaging, and the 11 responsive viewport sizes.
 - [ ] Run unit, component, lint, typecheck, production build, smoke, and E2E/accessibility checks on the final branch commit.
 - [ ] Record the exact commit and Actions run result before requesting merge approval.
 
