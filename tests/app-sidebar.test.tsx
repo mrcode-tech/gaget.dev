@@ -100,12 +100,17 @@ describe("AppSidebar", () => {
     expect(screen.queryByRole("button", { name: "Close navigation" })).toBeNull();
   });
 
-  it("aligns the shared hamburger with the compact editor navbar on mobile and tablet", () => {
+  it("keeps the existing hamburger fixed above the compact editor navbar on mobile and tablet", () => {
     navigation.pathname = "/images/editor";
     render(<SidebarHarness />);
     const trigger = screen.getByRole("button", { name: "Open navigation" });
-    expect(trigger.className).toContain("h-10");
-    expect(trigger.parentElement?.className).toContain("top-0");
-    expect(trigger.parentElement?.className).toContain("left-2");
+    const viewportTrigger = screen.getByTestId("mobile-site-navigation-trigger");
+
+    expect(trigger.className).toContain("z-[101]");
+    expect(trigger.className).toContain("pointer-events-auto");
+    expect(viewportTrigger.className).toContain("fixed");
+    expect(viewportTrigger.className).toContain("z-[100]");
+    expect(viewportTrigger.className).toContain("top-0");
+    expect(viewportTrigger.className).toContain("left-2");
   });
 });
