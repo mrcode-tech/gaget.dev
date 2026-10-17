@@ -52,6 +52,7 @@ The suite is a baseline and does not guarantee full coverage of every tool. Cont
 - `lib/tools/registry.ts`: central tool directory and navigation metadata
 - `lib/i18n/messages.ts`: locale metadata and translations
 - `tests/`: automated unit, component, smoke, and end-to-end tests
+- `specification/design.md`: responsive homepage, shared sidebar, unified Photo Editor, feature inventory, and wireframes for all Tailwind breakpoints
 
 ## Security and privacy notes
 

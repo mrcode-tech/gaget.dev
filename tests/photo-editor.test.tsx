@@ -365,6 +365,26 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(panel.querySelector(".overflow-x-auto")).toBeNull();
   });
 
+  it("keeps Text & watermark parameters in a vertical mobile panel without horizontal scrolling", async () => {
+    render(<PhotoEditor />);
+    await loadTestPhoto();
+    openFeature("Text & watermark");
+    const panel = screen.getByTestId("feature-panel");
+    const controls = within(panel).getByTestId("text-watermark-controls");
+    expect(controls.className).toContain("flex-col");
+    expect(controls.className).toContain("overflow-x-hidden");
+    expect(controls.className).toContain("min-w-0");
+    expect(controls.querySelector(".overflow-x-auto")).toBeNull();
+    expect(controls.className).not.toContain("min-w-[78vw]");
+    fireEvent.click(within(controls).getByRole("button", { name: "Add text layer" }));
+    expect(within(controls).getByLabelText("Text")).toBeTruthy();
+    expect(within(controls).getByLabelText(/Font size/)).toBeTruthy();
+    expect(within(controls).getByLabelText(/Rotation/)).toBeTruthy();
+    expect(within(controls).getByLabelText(/Opacity/)).toBeTruthy();
+    expect(within(controls).getByRole("button", { name: "Bold" })).toBeTruthy();
+    expect(within(controls).getByRole("button", { name: "Italic" })).toBeTruthy();
+  });
+
   it("stacks adjustment sliders vertically without horizontal scrolling", async () => {
     render(<PhotoEditor />);
     await loadTestPhoto();
