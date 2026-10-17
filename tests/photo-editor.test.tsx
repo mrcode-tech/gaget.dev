@@ -104,10 +104,13 @@ describe("PhotoEditor workspace UX acceptance", () => {
     const features = within(menubar).getByRole("button", { name: "Open photo editor features" });
 
     expect(within(menubar).queryByRole("link", { name: "GaGet.dev home" })).toBeNull();
-    expect(menubar.className).toContain("px-2");
+    expect(menubar.className).toContain("h-[68px]");
+    expect(menubar.className).toContain("px-3");
+    expect(menubar.className).toContain("sm:px-6");
+    expect(menubar.className).toContain("gap-3");
     expect(menubar.className).not.toContain("pl-12");
-    expect(file.className).toContain("px-2");
-    expect(file.className).toContain("lg:px-3");
+    expect(file.className).toContain("h-9");
+    expect(file.className).toContain("px-3");
     expect(features.parentElement?.className).toContain("ml-auto");
   });
 
