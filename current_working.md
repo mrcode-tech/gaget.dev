@@ -608,3 +608,11 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 
 ### CI outcome
 - Not yet run for this change set. Do not consider the branch verified until GitHub Actions completes successfully on the final commit.
+
+## CI concurrency rule — 2026-10-17
+
+- **One active CI workflow run per branch at a time.** The concurrency group uses the workflow name plus the source branch name, so push, pull-request, and manual runs for the same branch share the same group.
+- **A newer run cancels the older in-progress run** for that branch (`cancel-in-progress: true`). This prevents overlapping CI runs from wasting time and resources; it does not mean the newer run is cancelled by the older one.
+- Related implementation and test changes should be reviewed and committed as one batch, then CI should validate the final commit. Avoid pushing intermediate commits unless an early CI run is intentional.
+- Workflow configuration: `.github/workflows/ci.yml`.
+- Verification: configuration/documentation updated in one commit; automated CI result for that new commit must still be checked before declaring the branch green.

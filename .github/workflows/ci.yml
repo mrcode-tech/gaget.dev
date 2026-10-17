@@ -7,8 +7,11 @@ on:
   # Keep manual runs available for deliberate full verification.
   workflow_dispatch:
 
+# One active CI run per branch, shared across push, pull_request, and workflow_dispatch.
+# For pull requests use the source branch name; for pushes/manual runs use ref_name.
+# When a newer run starts for the same branch, GitHub cancels the older in-progress run.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
