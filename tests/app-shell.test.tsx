@@ -60,8 +60,8 @@ describe("AppShell", () => {
     expect(header?.className).toContain("top-0");
     expect(screen.getByRole("button", { name: "Open navigation" })).toBeTruthy();
     expect(document.querySelector('[data-testid="mobile-site-navigation-trigger"]')).toBeNull();
-    const spacer = document.querySelector('div[aria-hidden="true"]');
-    expect(spacer?.className).toContain("h-[68px]");
+    const spacer = Array.from(document.querySelectorAll('div[aria-hidden="true"]')).find((element) => element.className.includes("h-[68px]"));
+    expect(spacer).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
     expect(screen.getByTestId("mobile-navigation-drawer")).toBeTruthy();
