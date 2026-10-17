@@ -80,7 +80,7 @@ for (const viewport of viewports) {
       const drawer = page.getByTestId("mobile-navigation-drawer");
       await expect(drawer).toBeVisible();
       const logo = drawer.getByRole("link", { name: "GaGet.dev home" });
-      const closeButton = drawer.getByRole("button", { name: "Close navigation" });
+      const closeButton = drawer.getByRole("button", { name: "Close navigation", exact: true });
       await expect(logo).toBeVisible();
       await expect(closeButton).toBeVisible();
       const logoBox = await logo.boundingBox();
