@@ -44,8 +44,11 @@ describe("AppShell", () => {
     expect(themeControl.parentElement?.className).toContain("lg:flex");
 
     const editorMenu = screen.getByTestId("editor-menubar");
-    expect(editorMenu.parentElement?.className).toContain("lg:pl-[248px]");
-    expect(editorMenu.parentElement?.className).not.toContain("lg:pl-0");
+    // The editor owns a viewport-sized workspace; ordinary page sidebar padding
+    // must not be applied to its canvas container.
+    expect(editorMenu.parentElement?.className).toContain("h-dvh");
+    expect(editorMenu.parentElement?.className).toContain("overflow-hidden");
+    expect(editorMenu.parentElement?.className).not.toContain("lg:pl-[248px]");
   });
   
   it("keeps the shared navbar and hamburger fixed on ordinary routes", () => {
