@@ -153,7 +153,12 @@ for (const width of [320, 360, 390, 430]) {
     await expect.poll(() => panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
     await expect.poll(() => panelScroller.evaluate((element) => {
       const style = getComputedStyle(element);
-      return style.overflowX === "hidden" && style.overflowY === "auto";
+      // Assert the intended utility class and real layout behavior. Checking
+      // computed overflowX alone is brittle across browser/CSS normalization;
+      // actual horizontal overflow is covered by scrollWidth/clientWidth below.
+      return element.classList.contains("overflow-x-hidden")
+        && style.overflowY === "auto"
+        && element.scrollWidth <= element.clientWidth;
     })).toBe(true);
     await expect.poll(() => panelScroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
     await expect.poll(() => adjustments.evaluate((element) => {

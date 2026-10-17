@@ -616,3 +616,12 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - Related implementation and test changes should be reviewed and committed as one batch, then CI should validate the final commit. Avoid pushing intermediate commits unless an early CI run is intentional.
 - Workflow configuration: `.github/workflows/ci.yml`.
 - Verification: configuration/documentation updated in one commit; automated CI result for that new commit must still be checked before declaring the branch green.
+
+## CI failure diagnosis and E2E assertion correction — 2026-10-17
+
+- Inspected failed GitHub Actions run [#39024036147](https://github.com/mrcode-tech/gaget.dev/actions/runs/39024036147) on commit `65cbd92965b0efd5b3c35106b4ccf666863ff011`.
+- Unit tests, focused Photo Editor/sidebar tests, component tests, ESLint, TypeScript, and production build all passed.
+- The final Playwright step failed four narrow-mobile cases (320, 360, 390, and 430px) at the assertion that required `getComputedStyle(...).overflowX === "hidden"` and `overflowY === "auto"`. Six other E2E cases passed.
+- The editor already declares `overflow-x-hidden overflow-y-auto` on the bottom-sheet scroller, and the suite separately checks actual width containment and vertical scrolling. Adjusted the assertion to verify the intended `overflow-x-hidden` class, computed vertical scrolling, and no horizontal layout overflow, instead of relying only on a computed overflow-axis value that can be normalized by the browser.
+- This is a test assertion correction, not a confirmed production-code fix. The new commit's CI run must verify that the four cases pass.
+- Process reminder: related test/code changes are grouped into one commit; wait for the CI run on that commit before making additional pushes unless a further fix is needed.
