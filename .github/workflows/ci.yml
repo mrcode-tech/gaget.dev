@@ -1,17 +1,14 @@
-name: Mobile Photo Editor CI
+name: GaGet.dev CI
 
 on:
-  # Test the three active branches when they are updated.
+  # Run the complete quality gate on every branch and commit.
   push:
     branches:
-      - main
-      - stage
-      - feat/mobile-navigation-ux-fixes
-  # Validate feature-to-stage and stage-to-production pull requests.
+      - "**"
+  # Validate all proposed changes before they can be merged.
   pull_request:
     branches:
-      - stage
-      - main
+      - "**"
   workflow_dispatch:
 
 # One active CI run per branch, shared across push, pull_request, and workflow_dispatch.
