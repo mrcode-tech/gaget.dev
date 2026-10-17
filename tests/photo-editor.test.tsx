@@ -159,7 +159,7 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(panel.className).toContain("h-[min(45dvh,380px)]");
     expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
-    expect(panel.className).toContain("h-[min(24dvh,200px)]");
+    expect(panel.className).toContain("h-[min(32dvh,280px)]");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
