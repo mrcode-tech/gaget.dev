@@ -127,14 +127,8 @@ test("audio editor menus and inspector dismiss with Escape", async ({ page }) =>
   await expect(page.getByTestId("audio-feature-panel")).toBeHidden();
 });
 
-test("audio editor follows the Photo Editor navbar on mobile", async ({ page }) => {
+test("audio editor toolbar sits below the fixed global header on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/images/editor");
-  const photoMenubar = page.getByTestId("editor-menubar");
-  await expect(photoMenubar).toBeVisible();
-  const photoBox = await photoMenubar.boundingBox();
-  expect(photoBox).not.toBeNull();
-
   await page.goto("/audio/editor");
   await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(0);
   const menubar = page.getByTestId("audio-editor-menubar");
@@ -143,8 +137,11 @@ test("audio editor follows the Photo Editor navbar on mobile", async ({ page }) 
   await expect(menubar.getByRole("button", { name: "File menu" })).toBeVisible();
   await expect(menubar.getByRole("button", { name: "Open audio editor features" })).toBeVisible();
   const audioBox = await menubar.boundingBox();
+  const headerBox = await page.locator("header").boundingBox();
   expect(audioBox).not.toBeNull();
-  expect(Math.abs(audioBox!.y - photoBox!.y)).toBeLessThanOrEqual(1);
+  expect(headerBox).not.toBeNull();
+  // Keep the editor controls immediately below, not underneath, the fixed global header.
+  expect(Math.abs(audioBox!.y - (headerBox!.y + headerBox!.height))).toBeLessThanOrEqual(1);
   await expect(page.locator("header input")).toBeHidden();
   await expect(page.getByRole("button", { name: "Export", exact: true })).toHaveCount(0);
   await expect(page.locator("main > div.fixed.inset-x-0.bottom-0")).toHaveCount(0);
