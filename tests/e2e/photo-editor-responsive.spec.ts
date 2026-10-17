@@ -139,7 +139,7 @@ for (const width of [320, 360, 390, 430]) {
     await openFeature(page, width, "Color & filters");
 
     const panel = page.getByTestId("feature-panel");
-    const panelScroller = panel.locator(":scope > .overflow-y-auto");
+    const panelScroller = panel.locator(".overflow-y-auto");
     const adjustments = page.getByTestId("filter-adjustments");
     await expect(panel).toBeVisible();
     await expect(panel).toHaveClass(/h-\[min\(52dvh,420px\)\]/);
