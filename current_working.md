@@ -671,3 +671,8 @@ Verification: pending latest branch CI. Real-browser layout still needs to be co
 - **Acceptance criteria:** At all responsive test viewports below 1024px, the dropdown is visibly compact (no wider than 280px and materially narrower than the viewport), aligned to the Features trigger, and its feature items remain usable.
 - **Verification plan:** Extend the responsive Playwright geometry checks if needed, run the CI workflow on this same branch, and record the exact run/commit outcome. Do not treat the previous green run as verification of this follow-up.
 - **Status:** Investigation found the dropdown is `absolute` but its immediate Features wrapper lacks `relative`; implementation and fresh CI verification are pending.
+
+- **Implemented:** Added `relative` to the Features trigger wrapper, anchored the dropdown with `right-0` / `top-[calc(100%-1px)]`, and capped it at `min(16rem, calc(100vw - 1.5rem))`. This removes the unpositioned-ancestor dependency and makes the menu align with the trigger rather than the viewport/page. The menu retains vertical scrolling and horizontal clipping.
+- **Regression coverage:** Updated component assertions for the positioned anchor and viewport-capped width; responsive Playwright now asserts the menu is at most 256px wide and its right edge aligns with the Features trigger.
+- **Commits:** implementation `9cb8f438925d449594d1b02e2daf6716b6da1937`; component test `6c9bf6dc44b7a9aab661159303df8b8642be04c4`; responsive E2E `c86a6148b2297939f92534fa185531e2b769a99e`.
+- **Verification:** CI run #467 is running for `c86a6148b2297939f92534fa185531e2b769a99e`; final pass/fail must be checked before closing this item.
