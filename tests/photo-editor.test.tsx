@@ -97,6 +97,20 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
   });
 
+  it("places the GaGet.dev brand and compact File button on the left, with Features on the right", () => {
+    render(<PhotoEditor />);
+    const menubar = screen.getByTestId("editor-menubar");
+    const brand = within(menubar).getByRole("link", { name: "GaGet.dev home" });
+    const file = within(menubar).getByRole("button", { name: "File" });
+    const features = within(menubar).getByRole("button", { name: "Open photo editor features" });
+
+    expect(brand.compareDocumentPosition(file) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(file.className).toContain("px-2");
+    expect(file.className).toContain("md:px-3");
+    expect(menubar.querySelector('[aria-hidden="true"]')?.className).toContain("inline-block");
+    expect(features.parentElement?.className).toContain("ml-auto");
+  });
+
   it("keeps site navigation outside the editor workspace and uses the shared shell", () => {
     render(<PhotoEditor />);
     expect(screen.queryByRole("complementary", { name: "GaGet.dev navigation" })).toBeNull();

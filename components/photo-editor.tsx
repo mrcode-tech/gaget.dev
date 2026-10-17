@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import Link from "next/link";
 import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, X, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -661,7 +662,9 @@ export function PhotoEditor() {
     <input ref={svgInputRef} type="file" accept="image/svg+xml,.svg" onChange={(event) => void onSvgChange(event)} className="hidden" />
     <input ref={collageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple onChange={(event) => { addCollageFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} className="hidden" />
     <div ref={menuBarRef} data-testid="editor-menubar" className="relative z-40 flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-2 text-sm">
-      <button type="button" aria-expanded={menuOpen === "File"} className={"rounded-md px-3 py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
+      <Link href="/" aria-label="GaGet.dev home" className="inline-flex shrink-0 items-center font-semibold tracking-tight text-foreground md:hidden">GaGet.dev</Link>
+      <span aria-hidden="true" className="mr-1 inline-block h-5 border-l border-border md:hidden" />
+      <button type="button" aria-expanded={menuOpen === "File"} className={"rounded-md px-2 py-1 md:px-3 md:py-1.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
       {menuOpen === "File" && <div className="absolute left-2 top-9 z-50 min-w-52 rounded-lg border border-border bg-popover p-1.5 shadow-xl"><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}>Open photo…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage || cropMode} onClick={() => { void exportImage(); setMenuOpen(null); }}>Export image…</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!hasImage} onClick={() => { resetEdits(); setMenuOpen(null); }}>Reset edits</button><div className="my-1 border-t border-border md:hidden" /><div className="md:hidden"><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canUndo} onClick={() => { undo(); setMenuOpen(null); }}>Undo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent disabled:opacity-40" disabled={!canRedo} onClick={() => { redo(); setMenuOpen(null); }}>Redo</button><button className="block w-full rounded-md px-3 py-2 text-left hover:bg-accent" onClick={() => { setMenuOpen(null); setStatus("Tip: drag a crop edge or corner to refine the selection, then close the crop panel to finish; Undo restores the previous state."); }}>Help & editing tips</button></div><p className="mt-1 border-t border-border px-3 py-2 text-xs text-muted-foreground">Images stay on this device while you edit.</p></div>}
       <div className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
         {(["Edit", "Image", "Create", "History", "Help"] as const).map((menu) => <div key={menu} className="relative shrink-0">
@@ -675,8 +678,8 @@ export function PhotoEditor() {
           </div>}
         </div>)}
       </div>
-      <div className="flex min-w-0 items-center md:hidden">
-        <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"inline-flex h-8 items-center gap-2 rounded-md px-3 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><Menu className="h-4 w-4" /><span>Features</span></button>
+      <div className="ml-auto flex min-w-0 shrink-0 items-center md:hidden">
+        <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"inline-flex h-8 items-center gap-2 rounded-md px-2 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><Menu className="h-4 w-4" /><span>Features</span></button>
         {menuOpen === "Features" && <div className="absolute left-2 right-2 top-9 z-50 max-h-[min(75dvh,560px)] overflow-y-auto rounded-lg border border-border bg-popover p-2 shadow-xl">
           {featureMenuGroups.map((group) => <section key={group.label} className="mb-2 last:mb-0"><h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h3>{group.items.map(([label, panel, Icon]) => <button key={panel} className={"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 text-muted-foreground" /><span>{label}</span></button>)}</section>)}
         </div>}
