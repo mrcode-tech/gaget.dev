@@ -60,6 +60,21 @@ for (const viewport of viewports) {
       await expect(menubar.getByRole("link", { name: "GaGet.dev home" })).toHaveCount(0);
       await expect(fileMenu).toBeVisible();
       await expect(featuresMenu).toBeVisible();
+      await featuresMenu.click();
+      const featureList = page.getByTestId("mobile-feature-menu");
+      await expect(featureList).toBeVisible();
+      const featureListBox = await featureList.boundingBox();
+      expect(featureListBox, "mobile feature list should have a measurable compact dropdown").not.toBeNull();
+      if (featureListBox) {
+        expect(featureListBox.width).toBeLessThanOrEqual(280);
+        expect(featureListBox.width).toBeLessThan(viewport.width - 80);
+        expect(featureListBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.7, 420) + 2);
+        expect(viewport.width - featureListBox.x - featureListBox.width).toBeCloseTo(viewport.width >= 640 ? 24 : 12, 0);
+      }
+      await expect(featureList.getByRole("button", { name: "Crop", exact: true })).toBeVisible();
+      await expect(featureList.getByRole("button", { name: "SVG optimize", exact: true })).toBeVisible();
+      await featuresMenu.click();
+      await expect(featureList).toBeHidden();
       const menubarBox = await menubar.boundingBox();
       const siteMenuBox = await siteMenu.boundingBox();
       const fileBox = await fileMenu.boundingBox();
