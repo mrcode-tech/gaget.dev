@@ -1,6 +1,6 @@
 # Unified Audio Editor — Proposal & Responsive Design
 
-**Status:** Proposal only — no product implementation changes  
+**Status:** Implementation in progress on `feat/unified-audio-editor`; this document remains the design and acceptance specification  
 **Base reviewed:** `main`  
 **Proposal branch:** `proposal/unified-audio-editor`  
 **Date:** 2026-10-17  
