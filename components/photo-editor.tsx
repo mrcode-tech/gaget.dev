@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent, type CSSProperties } from "react";
 import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, X, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,7 +160,9 @@ export function PhotoEditor() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [activePanel, setActivePanel] = useState("none");
-  const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [sheetHeight, setSheetHeight] = useState<number | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(800);
+  const sheetDragRef = useRef<{ pointerId: number; startY: number; startHeight: number } | null>(null);
   const [cropMode, setCropMode] = useState(false);
   const panelReturnFocusRef = useRef<HTMLElement | null>(null);
   const panelHeadingRef = useRef<HTMLHeadingElement | null>(null);
@@ -175,7 +177,6 @@ export function PhotoEditor() {
       setStatus(`Crop selected: ${doc.cropWidth} × ${doc.cropHeight} pixels. Undo restores the previous state.`);
     }
     setActivePanel("none");
-    setSheetExpanded(false);
     setCropMode(false);
     panelReturnFocusRef.current?.focus();
   }, [cropMode, doc]);
@@ -642,15 +643,72 @@ export function PhotoEditor() {
     { label: "Image", items: [["Color & filters", "adjust", SlidersHorizontal], ["Color picker", "color", Pipette], ["Image details", "metadata", Info], ["Export & convert", "convert", FileOutput], ["Print size", "print", Ruler], ["Image to Base64", "base64", Code2], ["Base64 to image", "base64decode", FileImage]] },
     { label: "Create", items: [["Favicon", "favicon", ImageIcon], ["Collage", "collage", Grid2X2], ["SVG optimize", "svg", Code2]] },
   ] as const;
+  const getPanelHeightBounds = () => {
+    const viewportHeight = window.innerHeight;
+    const maxHeight = Math.min(viewportHeight, viewportHeight * 0.7);
+    const minHeight = Math.min(maxHeight, Math.max(160, viewportHeight * 0.2));
+    return { minHeight, maxHeight, defaultHeight: Math.min(viewportHeight * 0.45, 380) };
+  };
+  const resizePanelTo = (height: number) => {
+    const { minHeight, maxHeight } = getPanelHeightBounds();
+    setSheetHeight(clamp(height, minHeight, maxHeight));
+  };
+  const handlePanelResizePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    const panel = document.getElementById("feature-panel");
+    if (!panel) return;
+    const { defaultHeight } = getPanelHeightBounds();
+    sheetDragRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startHeight: sheetHeight ?? panel.getBoundingClientRect().height ?? defaultHeight,
+    };
+    setSheetHeight(sheetDragRef.current.startHeight);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  };
+  const handlePanelResizePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = sheetDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    resizePanelTo(drag.startHeight + drag.startY - event.clientY);
+    event.preventDefault();
+  };
+  const handlePanelResizePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (sheetDragRef.current?.pointerId !== event.pointerId) return;
+    sheetDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const handlePanelResizeKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const panel = document.getElementById("feature-panel");
+    const { minHeight, maxHeight, defaultHeight } = getPanelHeightBounds();
+    const current = sheetHeight ?? panel?.getBoundingClientRect().height ?? defaultHeight;
+    if (event.key === "Home") resizePanelTo(minHeight);
+    else if (event.key === "End") resizePanelTo(maxHeight);
+    else resizePanelTo(current + (event.key === "ArrowUp" ? 32 : -32));
+  };
+  useEffect(() => {
+    const clampPanelHeight = () => {
+      setViewportHeight(window.innerHeight);
+      setSheetHeight((height) => {
+        if (height === null) return null;
+        const viewport = window.innerHeight;
+        const maxHeight = Math.min(viewport, viewport * 0.7);
+        const minHeight = Math.min(maxHeight, Math.max(160, viewport * 0.2));
+        return clamp(height, minHeight, maxHeight);
+      });
+    };
+    clampPanelHeight();
+    window.addEventListener("resize", clampPanelHeight);
+    return () => window.removeEventListener("resize", clampPanelHeight);
+  }, []);
   const selectFeature = (panel: string) => {
     const group = ["crop", "resize", "transform", "text"].includes(panel) ? "Edit" : ["adjust", "color", "metadata", "convert", "print", "base64", "base64decode"].includes(panel) ? "Image" : "Create";
     const mobileTrigger = menuBarRef.current?.querySelector<HTMLButtonElement>('button[aria-label="Open photo editor features"]');
     const desktopTrigger = Array.from(menuBarRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []).find((button) => button.textContent?.trim() === group);
     panelReturnFocusRef.current = window.innerWidth < 1024 ? mobileTrigger ?? null : desktopTrigger ?? null;
     setActivePanel(panel);
-    // Open Color & filters at a useful height on phones so the controls are not
-    // trapped in a tiny bottom sheet; the controls themselves scroll vertically.
-    setSheetExpanded(panel === "adjust" && window.innerWidth < 768);
     setZoom((current) => current > 100 ? 90 : current);
     setCropMode(panel === "crop" || panel === "transform");
     setMenuOpen(null);
@@ -747,9 +805,9 @@ export function PhotoEditor() {
         </CardContent>
       </Card>
 
-      <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm max-h-[45dvh] transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:max-h-full md:w-[320px] md:border-l md:border-t-0 md:pb-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetExpanded ? "h-[min(45dvh,380px)] translate-y-0 md:flex" : "h-[min(32dvh,280px)] translate-y-0 md:flex")} id="feature-panel" data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"}>
+      <section className={"relative z-20 flex w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm max-h-[70dvh] transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:h-full md:max-h-full md:w-[320px] md:border-l md:border-t-0 md:pb-0 " + (activePanel === "none" ? "pointer-events-none h-0 translate-y-full border-t-0 opacity-0 md:hidden" : sheetHeight === null ? "h-[min(45dvh,380px)] translate-y-0 md:flex" : "h-[var(--feature-panel-height)] translate-y-0 md:flex")} id="feature-panel" data-testid="feature-panel" role="region" aria-labelledby="feature-panel-title" aria-hidden={activePanel === "none"} inert={activePanel === "none"} style={sheetHeight === null ? undefined : ({ "--feature-panel-height": `${sheetHeight}px` } as CSSProperties)}>
         <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card md:shadow-none">
-          <button type="button" aria-label={sheetExpanded ? "Collapse editing panel" : "Expand editing panel"} aria-controls="feature-panel" aria-expanded={sheetExpanded} className="mx-auto mt-1 flex h-6 w-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onClick={() => setSheetExpanded((expanded) => !expanded)}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></button>
+          <div role="slider" aria-label="Resize editing panel" aria-orientation="vertical" aria-controls="feature-panel" aria-valuemin={Math.round(Math.min(Math.min(viewportHeight, viewportHeight * 0.7), Math.max(160, viewportHeight * 0.2)))} aria-valuemax={Math.round(Math.min(viewportHeight, viewportHeight * 0.7))} aria-valuenow={Math.round(sheetHeight ?? Math.min(viewportHeight * 0.45, 380))} tabIndex={0} className="mx-auto mt-1 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" onPointerDown={handlePanelResizePointerDown} onPointerMove={handlePanelResizePointerMove} onPointerUp={handlePanelResizePointerUp} onPointerCancel={handlePanelResizePointerUp} onKeyDown={handlePanelResizeKeyDown}><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
           <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 ref={panelHeadingRef} id="feature-panel-title" tabIndex={-1} className="text-sm font-semibold">{({adjust:"Color & filters",crop:"Crop",resize:"Resize",transform:"Crop & resize",text:"Text & watermark",color:"Color picker & palette",metadata:"Image details",convert:"Export & convert",print:"Print size",base64:"Image to Base64",base64decode:"Base64 to image",favicon:"Favicon generator",collage:"Collage maker",svg:"SVG optimizer"} as Record<string,string>)[activePanel] ?? "Editing tool"}</h2><p className="hidden text-[11px] text-muted-foreground lg:block">Changes are previewed on the canvas</p></div><button type="button" aria-label="Close feature panel" className="rounded-md p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={closeFeaturePanel}>×</button></div>
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 md:space-y-4 md:p-4">
           {!hasImage && !["svg", "collage"].includes(activePanel) && <p className="text-sm text-muted-foreground">Choose a photo to enable editing controls.</p>}
