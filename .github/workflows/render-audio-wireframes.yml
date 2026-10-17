@@ -33,7 +33,7 @@ jobs:
           for svg in *.svg; do
             name="${svg%.svg}"
             rsvg-convert --format=png --output="${name}.png" "$svg"
-            magick "${name}.png" -quality 88 "${name}.jpg"
+            convert "${name}.png" -quality 88 "${name}.jpg"
           done
 
       - name: Commit generated wireframes
