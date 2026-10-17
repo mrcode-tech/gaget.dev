@@ -124,3 +124,28 @@ test("audio editor menus and inspector dismiss with Escape", async ({ page }) =>
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("audio-feature-panel")).toBeHidden();
 });
+
+test("audio editor follows the Photo Editor navbar on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/audio/editor");
+
+  const menubar = page.getByTestId("audio-editor-menubar");
+  await expect(menubar).toBeVisible();
+  await expect(menubar.getByRole("button", { name: "Open navigation" })).toBeVisible();
+  await expect(menubar.getByRole("button", { name: "File menu" })).toBeVisible();
+  await expect(menubar.getByRole("button", { name: "Open audio editor features" })).toBeVisible();
+  await expect(page.locator("header input")).toBeHidden();
+  await expect(page.getByRole("button", { name: "Export", exact: true })).toHaveCount(0);
+  await expect(page.locator("main > div.fixed.inset-x-0.bottom-0")).toHaveCount(0);
+
+  await menubar.getByRole("button", { name: "File menu" }).click();
+  const fileMenu = page.getByTestId("audio-file-menu");
+  await expect(fileMenu.getByRole("button", { name: "Open audio…" })).toBeVisible();
+  await expect(fileMenu.getByRole("button", { name: "Export audio…" })).toBeVisible();
+});
+
+test("audio editor search returns on desktop like the shared header", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/audio/editor");
+  await expect(page.locator("header input")).toBeVisible();
+});
