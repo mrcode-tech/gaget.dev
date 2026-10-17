@@ -104,7 +104,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
     const features = within(menubar).getByRole("button", { name: "Open photo editor features" });
 
     expect(within(menubar).queryByRole("link", { name: "GaGet.dev home" })).toBeNull();
-    expect(menubar.className).toContain("pl-12");
+    expect(menubar.className).toContain("px-2");
+    expect(menubar.className).not.toContain("pl-12");
     expect(file.className).toContain("px-2");
     expect(file.className).toContain("lg:px-3");
     expect(features.parentElement?.className).toContain("ml-auto");
@@ -154,12 +155,12 @@ describe("PhotoEditor workspace UX acceptance", () => {
     openFeature("Resize");
 
     const panel = screen.getByTestId("feature-panel");
-    expect(panel.className).toContain("h-[min(24dvh,200px)]");
+    expect(panel.className).toContain("h-[min(32dvh,280px)]");
     fireEvent.click(screen.getByRole("button", { name: "Expand editing panel" }));
-    expect(panel.className).toContain("h-[min(52dvh,420px)]");
+    expect(panel.className).toContain("h-[min(45dvh,380px)]");
     expect(screen.getByRole("button", { name: "Collapse editing panel" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse editing panel" }));
-    expect(panel.className).toContain("h-[min(24dvh,200px)]");
+    expect(panel.className).toContain("h-[min(32dvh,280px)]");
   });
 
   it("keeps all feature panels in the current editing workspace and closes menus after selection", () => {
