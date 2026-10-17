@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -50,7 +50,9 @@ describe("AppSidebar", () => {
     render(<SidebarHarness />);
     expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Switch to dark mode" })).toBeNull();
-    window.dispatchEvent(new Event("gaget:open-navigation"));
+    act(() => {
+      window.dispatchEvent(new Event("gaget:open-navigation"));
+    });
     const languageCaption = screen.getAllByText("Language", { selector: "span" })[0];
     const appearanceCaption = screen.getByText("Appearance", { selector: "span" });
     expect(screen.getByRole("combobox", { name: "Language" })).toBeTruthy();
@@ -79,7 +81,9 @@ describe("AppSidebar", () => {
 
   it("keeps the drawer close button in the header instead of floating over the GaGet logo", () => {
     render(<SidebarHarness />);
-    window.dispatchEvent(new Event("gaget:open-navigation"));
+    act(() => {
+      window.dispatchEvent(new Event("gaget:open-navigation"));
+    });
     const drawer = screen.getByTestId("mobile-navigation-drawer");
     const logo = screen.getByRole("link", { name: "GaGet.dev home" });
     const close = screen.getByRole("button", { name: "Close navigation" });
@@ -95,7 +99,9 @@ describe("AppSidebar", () => {
     render(<SidebarHarness />);
     expect(screen.queryByTestId("mobile-site-navigation-trigger")).toBeNull();
     expect(screen.queryByRole("button", { name: "Open navigation" })).toBeNull();
-    window.dispatchEvent(new Event("gaget:open-navigation"));
+    act(() => {
+      window.dispatchEvent(new Event("gaget:open-navigation"));
+    });
     expect(screen.getByRole("button", { name: "Close navigation" })).toBeTruthy();
   });
 });
