@@ -30,7 +30,7 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-[80] flex h-[68px] items-center gap-3 border-b border-border bg-background/95 px-3 backdrop-blur-md sm:px-6 ${direction === "ltr" ? (sidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[272px]") : (sidebarCollapsed ? "lg:pr-[88px]" : "lg:pr-[272px]")}`}
+      className={`fixed inset-x-0 top-0 z-[80] flex h-[68px] items-center gap-3 border-b border-border bg-background/95 px-3 backdrop-blur-md sm:px-6 ${direction === "ltr" ? (sidebarCollapsed ? "lg:left-16" : "lg:left-[248px]") : (sidebarCollapsed ? "lg:right-16" : "lg:right-[248px]")}`}
     >
       <Button variant="outline" size="icon" aria-label="Open navigation" className="h-9 w-9 shrink-0 lg:hidden" onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}>
         <Menu className="h-4 w-4" />
