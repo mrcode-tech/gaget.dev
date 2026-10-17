@@ -49,6 +49,7 @@ for (const viewport of viewports) {
       const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
       const siteMenu = page.getByRole("button", { name: "Open navigation" });
       await expect(siteMenu).toBeVisible();
+      await expect(siteMenu).toHaveCSS("position", "fixed");
       await expect(menubar.getByRole("link", { name: "GaGet.dev home" })).toHaveCount(0);
       await expect(fileMenu).toBeVisible();
       await expect(featuresMenu).toBeVisible();
@@ -68,6 +69,11 @@ for (const viewport of viewports) {
       }
       await expect.poll(() => editor.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
       await expect(editor).toHaveClass(/h-dvh/);
+      const initialHamburgerY = await siteMenu.evaluate((element) => element.getBoundingClientRect().top);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect(siteMenu).toBeVisible();
+      await expect.poll(() => siteMenu.evaluate((element) => element.getBoundingClientRect().top)).toBe(initialHamburgerY);
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1)).toBe(true);
     } else {
       await expect(page.locator('header input[aria-label]')).toBeVisible();
     }
@@ -104,7 +110,7 @@ for (const viewport of viewports) {
       // The mobile feature sheet is intentionally compact; verify rendered geometry
       // rather than coupling this test to Tailwind class names.
       expect(panelBox.height).toBeGreaterThan(0);
-      expect(panelBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.24, 200) + 2);
+      expect(panelBox.height).toBeLessThanOrEqual(Math.min(viewport.height * 0.32, 280) + 2);
     } else if (canvasBox && panelBox) {
       expect(panelBox.x).toBeGreaterThanOrEqual(canvasBox.x + canvasBox.width - 2);
     }
@@ -153,7 +159,7 @@ for (const width of [320, 360, 390, 430]) {
     const panelScroller = panel.locator(".overflow-y-auto");
     const adjustments = page.getByTestId("filter-adjustments");
     await expect(panel).toBeVisible();
-    await expect(panel).toHaveClass(/h-\[min\(52dvh,420px\)\]/);
+    await expect(panel).toHaveClass(/h-\[min\(45dvh,380px\)\]/);
     await expect(adjustments.getByLabel("Brightness")).toBeVisible();
     await expect(adjustments.getByLabel("Contrast")).toBeAttached();
 
