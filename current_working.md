@@ -634,3 +634,18 @@ The mobile drawer showed language selection and theme toggle side by side, witho
 - Refactored the filter adjustments container to rely on the panel's single horizontal-clipping boundary instead of adding a second nested `overflow-x-hidden` boundary.
 - Updated E2E coverage to assert the scroller's horizontal clipping and vertical scrolling, and verify all six range controls fit within their labels' rendered bounds. Panel-level viewport containment and vertical-scroll assertions remain.
 - Verification is pending on the next CI run; do not mark the branch green until all four mobile cases pass.
+
+
+## Approved mobile Photo Editor header layout — 2026-10-17
+
+### Approved behavior
+- On mobile photo-editing tools, use one compact editor header row: **GaGet.dev | File** grouped at the left and **Features** anchored to the right.
+- Do not add a second mobile site-navigation row; this layout keeps vertical space available for the canvas.
+- Keep File compact on mobile while preserving its existing desktop sizing and leave desktop menu layout unchanged.
+
+### Implementation and regression coverage
+- Added a mobile-only GaGet.dev home link and separator before File.
+- Reduced the File button's mobile padding and used an auto left margin to anchor Features at the right edge.
+- Added a component regression test for the header grouping and an E2E geometry assertion at the responsive mobile viewport sizes.
+- [ ] Run focused Photo Editor tests and the full manually triggered CI workflow on this final implementation batch.
+- [ ] Confirm the workflow is green before marking PR #15 ready for review.

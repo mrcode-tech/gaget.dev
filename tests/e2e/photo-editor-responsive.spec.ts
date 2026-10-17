@@ -45,17 +45,25 @@ for (const viewport of viewports) {
       // Keep the global search field out of the compact photo-editing workspace.
       await expect(page.locator('header input[aria-label]')).toBeHidden();
       const menubar = page.getByTestId("editor-menubar");
+      const brand = menubar.getByRole("link", { name: "GaGet.dev home" });
       const fileMenu = menubar.getByRole("button", { name: "File", exact: true });
       const featuresMenu = menubar.getByRole("button", { name: "Open photo editor features" });
+      await expect(brand).toBeVisible();
       await expect(fileMenu).toBeVisible();
       await expect(featuresMenu).toBeVisible();
+      const menubarBox = await menubar.boundingBox();
+      const brandBox = await brand.boundingBox();
       const fileBox = await fileMenu.boundingBox();
       const featuresBox = await featuresMenu.boundingBox();
+      expect(menubarBox).not.toBeNull();
+      expect(brandBox).not.toBeNull();
       expect(fileBox).not.toBeNull();
       expect(featuresBox).not.toBeNull();
-      if (fileBox && featuresBox) {
-        expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width - 1);
-        expect(featuresBox.x - (fileBox.x + fileBox.width)).toBeLessThan(32);
+      if (menubarBox && brandBox && fileBox && featuresBox) {
+        // Brand and File stay grouped on the left; Features is anchored to the right edge.
+        expect(fileBox.x).toBeGreaterThanOrEqual(brandBox.x + brandBox.width - 1);
+        expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x + fileBox.width);
+        expect(Math.abs(menubarBox.x + menubarBox.width - featuresBox.x - featuresBox.width)).toBeLessThanOrEqual(10);
       }
     } else {
       await expect(page.locator('header input[aria-label]')).toBeVisible();
