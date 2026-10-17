@@ -112,6 +112,21 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(file.className).toContain("h-9");
     expect(file.className).toContain("px-3");
     expect(features.parentElement?.className).toContain("ml-auto");
+    expect(features.parentElement?.className).toContain("relative");
+  });
+
+  it("keeps the mobile feature list menu compact and scrollable instead of full-width", () => {
+    render(<PhotoEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "Open photo editor features" }));
+
+    const menu = screen.getByTestId("mobile-feature-menu");
+    expect(menu.className).toContain("w-[min(16rem,calc(100vw-1.5rem))]");
+    expect(menu.className).toContain("max-h-[min(70dvh,420px)]");
+    expect(menu.className).toContain("overflow-y-auto");
+    expect(menu.className).toContain("right-0");
+    expect(menu.className).not.toContain("right-3");
+    expect(within(menu).getByRole("button", { name: "Crop" })).toBeTruthy();
+    expect(within(menu).getByRole("button", { name: "SVG optimize" })).toBeTruthy();
   });
 
   it("keeps site navigation outside the editor workspace and uses the shared shell", () => {
