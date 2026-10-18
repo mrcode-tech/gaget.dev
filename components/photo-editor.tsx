@@ -749,7 +749,7 @@ export function PhotoEditor() {
     {!hasImage && <section data-testid="photo-empty-intro" className="mx-auto w-full max-w-screen-xl shrink-0 px-4 pb-4 pt-3 sm:px-6 lg:px-8">
       <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><Link href="/" className="hover:text-foreground">Home</Link><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Photo Editor</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>
+      
     </section>}
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status && <span className="hidden md:inline"> · {status}</span>}</span>
@@ -767,6 +767,7 @@ export function PhotoEditor() {
       </div>
     </div>
 
+    {!hasImage && <p data-testid="photo-empty-description" className="shrink-0 px-3 pt-3 pb-8 text-sm leading-6 text-muted-foreground sm:px-6 sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>}
     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden sm:flex-row">
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
