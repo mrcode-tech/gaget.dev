@@ -382,7 +382,7 @@ test("photo editor file and feature menus share icon rows, bounded widths, and o
       const box = await menu.boundingBox();
       expect(box).not.toBeNull();
       if (box) expect(box.width).toBeLessThanOrEqual(256);
-      await page.getByRole("heading", { name: "GaGet Photo Editor" }).click();
+      await page.mouse.click(5, 75);
       await expect(menu).toBeHidden();
     }
   }
