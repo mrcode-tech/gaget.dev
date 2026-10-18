@@ -14,7 +14,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const pathname = usePathname();
   const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
   const isAudioEditor = /(?:^|\/)audio\/editor\/?$/.test(pathname);
-  const isEditor = isPhotoEditor || isAudioEditor;
+  const isVideoEditor = /(?:^|\/)video\/editor\/?$/.test(pathname);
+  const isEditor = isPhotoEditor || isAudioEditor || isVideoEditor;
 
   return (
     <>
