@@ -137,11 +137,25 @@ test("audio editor toolbar sits below the fixed global header on mobile", async 
   await expect(menubar.getByRole("button", { name: "File menu" })).toBeVisible();
   await expect(menubar.getByRole("button", { name: "Open audio editor features" })).toBeVisible();
   const audioBox = await menubar.boundingBox();
-  const headerBox = await page.locator("header").boundingBox();
   expect(audioBox).not.toBeNull();
-  expect(headerBox).not.toBeNull();
-  // Keep the editor controls immediately below, not underneath, the fixed global header.
-  expect(Math.abs(audioBox!.y - (headerBox!.y + headerBox!.height))).toBeLessThanOrEqual(1);
+  // Match the photo editor: on mobile the editor toolbar replaces the global header,
+  // so the site hamburger, File, and Features share one in-flow navbar row.
+  await expect(page.locator("header")).toBeHidden();
+  expect(Math.abs(audioBox!.y)).toBeLessThanOrEqual(1);
+  const hamburger = menubar.getByRole("button", { name: "Open navigation" });
+  const fileButton = menubar.getByRole("button", { name: "File menu" });
+  const featuresButton = menubar.getByRole("button", { name: "Open audio editor features" });
+  const hamburgerBox = await hamburger.boundingBox();
+  const fileBox = await fileButton.boundingBox();
+  const featuresBox = await featuresButton.boundingBox();
+  expect(hamburgerBox).not.toBeNull();
+  expect(fileBox).not.toBeNull();
+  expect(featuresBox).not.toBeNull();
+  if (hamburgerBox && fileBox && featuresBox && audioBox) {
+    expect(fileBox.x).toBeGreaterThanOrEqual(hamburgerBox.x + hamburgerBox.width - 1);
+    expect(featuresBox.x).toBeGreaterThan(fileBox.x + fileBox.width);
+    expect(audioBox.x + audioBox.width - featuresBox.x - featuresBox.width).toBeCloseTo(12, 0);
+  }
   await expect(page.locator("header input")).toBeHidden();
   await expect(page.getByRole("button", { name: "Export", exact: true })).toHaveCount(0);
   await expect(page.locator("main > div.fixed.inset-x-0.bottom-0")).toHaveCount(0);
