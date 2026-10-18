@@ -374,6 +374,11 @@ test("photo editor file and feature menus share icon rows, bounded widths, and o
       if (box) expect(box.width).toBeLessThanOrEqual(320);
       await page.mouse.click(width - 10, 650);
       await expect(menu).toBeHidden();
+
+      await menubar.getByRole("button", { name: "History", exact: true }).click();
+      const historyMenu = page.getByTestId("photo-history-menu");
+      await expect(historyMenu.getByRole("button", { name: "Undo", exact: true }).locator("svg")).toBeVisible();
+      await expect(historyMenu.getByRole("button", { name: "Redo", exact: true }).locator("svg")).toBeVisible();
     } else {
       await menubar.getByRole("button", { name: "Open photo editor features" }).click();
       const menu = page.getByTestId("mobile-feature-menu");
