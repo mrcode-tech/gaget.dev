@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, FileVideo, FolderOpen, RotateCcw, ShieldCheck, SlidersHorizontal, X, Scissors, Split, Combine, Crop, Gauge, Volume2, Image as ImageIcon, Info, Film, Captions, WandSparkles, AudioLines, Camera, FileOutput, Layers, RotateCw, FlipHorizontal, FlipVertical, Type, CircleHelp } from "lucide-react";
+import { Download, FileVideo, FolderOpen, RotateCcw, ShieldCheck, SlidersHorizontal, Scissors, Split, Combine, Crop, Gauge, Volume2, Image as ImageIcon, Info, Film, Captions, WandSparkles, AudioLines, Camera, FileOutput, Layers, RotateCw, FlipHorizontal, FlipVertical, Type, CircleHelp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
