@@ -746,26 +746,23 @@ export function PhotoEditor() {
       <div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span>Private · local processing</span></div>
     </div>
 
-    {!hasImage && <section data-testid="photo-empty-intro" className="mx-auto w-full max-w-screen-xl shrink-0 px-4 pb-4 pt-3 sm:px-6 lg:px-8">
+    {!hasImage && <section data-testid="photo-empty-intro" className="w-full shrink-0 px-3 pb-4 pt-3 sm:px-6">
       <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><Link href="/" className="hover:text-foreground">Home</Link><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Photo Editor</h1>
       
     </section>}
-    <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
-      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status && <span className="hidden md:inline"> · {status}</span>}</span>
+    {hasImage && <div data-testid="photo-work-toolbar" className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
+      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{`${fileName} · ${doc.width} × ${doc.height} px`}{status && <span className="hidden md:inline"> · {status}</span>}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
       <Button size="icon" variant="outline" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo"><Undo2 className="h-4 w-4" /></Button>
       <Button size="icon" variant="outline" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo"><Redo2 className="h-4 w-4" /></Button>
-      
       <div className="ml-auto flex items-center gap-1">
-        
         <Button size="icon" variant="ghost" aria-label="Zoom out" title="Zoom out" disabled={zoom <= 25} onClick={() => setZoom((value) => Math.max(25, value - 25))}><ZoomOut className="h-4 w-4" /></Button>
         <button className="min-w-12 rounded-md px-1 py-2 text-xs tabular-nums hover:bg-accent" onClick={() => setZoom(90)} aria-label={`Reset zoom ${zoom}%`} title="Reset zoom">{zoom}%</button>
         <Button size="icon" variant="ghost" aria-label="Zoom in" title="Zoom in" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))}><ZoomIn className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Fit canvas" title="Fit canvas" onClick={() => setZoom(90)}><Maximize2 className="h-4 w-4" /></Button>
-        
       </div>
-    </div>
+    </div>}
 
     {!hasImage && <p data-testid="photo-empty-description" className="shrink-0 px-3 pt-3 pb-8 text-sm leading-6 text-muted-foreground sm:px-6 sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>}
     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden sm:flex-row">
