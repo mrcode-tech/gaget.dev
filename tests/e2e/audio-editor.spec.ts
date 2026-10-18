@@ -246,7 +246,7 @@ test("audio editor menus use icon rows, bounded desktop widths, and outside-clic
       const box = await menu.boundingBox();
       expect(box).not.toBeNull();
       if (box) expect(box.width).toBeLessThanOrEqual(320);
-      await page.getByRole("heading", { name: "Audio Editor" }).click();
+      await page.getByTestId("audio-editor").click({ position: { x: 5, y: 75 } });
       await expect(menu).toBeHidden();
     } else {
       const trigger = menubar.getByRole("button", { name: "Open audio editor features" });
