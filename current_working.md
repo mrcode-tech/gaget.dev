@@ -51,3 +51,11 @@ Use consistent left alignment with the editor toolbar/workspace gutter, a clear 
 ### Final verification
 - [x] GitHub Actions run 639 passed: unit tests, focused Photo Editor/sidebar regressions, component tests, ESLint, TypeScript, production build, smoke tests, responsive browser tests, and accessibility checks.
 - [x] Responsive empty-state geometry tests passed at all 12 configured viewport sizes, including short landscape (844×390).
+
+## Photo Editor empty state parity (2026-10-18)
+
+- [x] Align the empty-state breadcrumb and Photo Editor heading to the same horizontal gutter as the supporting description, at mobile, tablet, and desktop widths.
+- [x] Hide the entire photo work toolbar (filename/status, undo/redo, zoom, fit-canvas) while no photo is loaded; keep it visible after a photo is selected.
+- [x] Keep the “Drop a photo here or open one” prompt out of the empty state; the primary upload/drop target remains available.
+- [x] Update component and responsive Playwright tests to assert the hidden toolbar and consistent alignment across all 12 viewport sizes.
+- [ ] Run and verify the resulting CI checks before considering this change complete.
