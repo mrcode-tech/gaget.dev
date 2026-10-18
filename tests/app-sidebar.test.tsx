@@ -35,6 +35,8 @@ describe("AppSidebar", () => {
     render(<SidebarHarness />);
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Video" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "category.video" })).toBeNull();
     expect(screen.getByText("Categories")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();

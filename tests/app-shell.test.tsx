@@ -51,6 +51,18 @@ describe("AppShell", () => {
     expect(editorMenu.parentElement?.className).toContain("lg:pl-[248px]");
   });
   
+  it("treats the Video Editor as a full-screen editor route", () => {
+    navigation.pathname = "/video/editor";
+    render(<I18nProvider locale="en"><AppShell><div data-testid="video-editor-menubar">File · Edit · Adjust · Analyze · Export · Record</div></AppShell></I18nProvider>);
+    const menubar = screen.getByTestId("video-editor-menubar");
+    expect(menubar.parentElement?.className).toContain("h-dvh");
+    expect(menubar.parentElement?.className).toContain("overflow-hidden");
+    expect(menubar.parentElement?.className).toContain("lg:pl-[248px]");
+    expect(document.querySelector("header")?.parentElement?.className).toContain("hidden lg:block");
+    const spacer = Array.from(document.querySelectorAll('div[aria-hidden="true"]')).find((element) => element.className.includes("hidden h-[68px] lg:block"));
+    expect(spacer).toBeTruthy();
+  });
+
   it("keeps the shared navbar and hamburger fixed on ordinary routes", () => {
     navigation.pathname = "/tools";
     render(

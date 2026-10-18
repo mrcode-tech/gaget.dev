@@ -42,3 +42,14 @@ test("Audio category exposes one unified editor with searchable capability keywo
     assert.ok(audioTools[0].keywords.includes(keyword), `Audio Editor search keywords should include ${keyword}`);
   }
 });
+
+
+test("Video category exposes one unified editor with searchable video capabilities", () => {
+  const videoTools = tools.filter((tool) => tool.category === "Video");
+  assert.equal(videoTools.length, 1, "video capabilities should be grouped under one Video Editor entry");
+  assert.equal(videoTools[0].name, "Video Editor");
+  assert.equal(videoTools[0].href, "/video/editor");
+  for (const keyword of ["trim", "split", "merge", "crop", "watermark", "speed", "metadata", "frames", "thumbnail", "subtitles", "convert", "compress", "gif", "base64", "record"]) {
+    assert.ok(videoTools[0].keywords.includes(keyword), `Video Editor search keywords should include ${keyword}`);
+  }
+});
