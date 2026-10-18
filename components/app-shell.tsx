@@ -24,7 +24,13 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       />
       <div
         className={
-          isEditor ? "h-dvh overflow-hidden" : direction === "ltr"
+          isEditor ? (direction === "ltr"
+          ? sidebarCollapsed
+            ? "h-dvh overflow-hidden transition-[padding] duration-200 lg:pl-16"
+            : "h-dvh overflow-hidden transition-[padding] duration-200 lg:pl-[248px]"
+          : sidebarCollapsed
+            ? "h-dvh overflow-hidden transition-[padding] duration-200 lg:pr-16"
+            : "h-dvh overflow-hidden transition-[padding] duration-200 lg:pr-[248px]") : direction === "ltr"
             ? sidebarCollapsed
               ? "min-h-screen transition-[padding] duration-200 lg:pl-16"
               : "min-h-screen transition-[padding] duration-200 lg:pl-[248px]"

@@ -174,3 +174,60 @@ test("audio editor desktop search and category menus match the shared header", a
   await page.getByRole("button", { name: "Export & data", exact: true }).click();
   await expect(page.getByTestId("audio-feature-menu").getByRole("button", { name: "Audio converter" })).toBeVisible();
 });
+
+
+test("desktop audio File and category dropdowns align with the sidebar and their triggers", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/audio/editor");
+
+  const sidebar = page.locator("aside").first();
+  const menubar = page.getByTestId("audio-editor-menubar");
+  const fileTrigger = menubar.getByRole("button", { name: "File menu" });
+  const sidebarToggle = page.getByRole("button", { name: "Collapse sidebar" });
+
+  await expect(sidebar).toBeVisible();
+  await fileTrigger.click();
+  const fileMenu = page.getByTestId("audio-file-menu");
+  await expect(fileMenu).toBeVisible();
+  let sidebarBox = await sidebar.boundingBox();
+  let menuBox = await fileMenu.boundingBox();
+  expect(sidebarBox).not.toBeNull();
+  expect(menuBox).not.toBeNull();
+  if (sidebarBox && menuBox) {
+    expect(menuBox.x, "File dropdown must begin after the expanded sidebar").toBeGreaterThanOrEqual(sidebarBox.x + sidebarBox.width - 1);
+  }
+  await fileTrigger.click();
+  await expect(fileMenu).toBeHidden();
+
+  await sidebarToggle.click();
+  await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
+  await expect.poll(async () => (await sidebar.boundingBox())?.width).toBe(64);
+  await page.getByRole("button", { name: "File menu" }).click();
+  await expect(fileMenu).toBeVisible();
+  sidebarBox = await sidebar.boundingBox();
+  menuBox = await fileMenu.boundingBox();
+  expect(sidebarBox).not.toBeNull();
+  expect(menuBox).not.toBeNull();
+  if (sidebarBox && menuBox) {
+    expect(menuBox.x, "File dropdown must begin after the collapsed sidebar").toBeGreaterThanOrEqual(sidebarBox.x + sidebarBox.width - 1);
+  }
+  await page.getByRole("button", { name: "File menu" }).click();
+
+  for (const group of ["Edit", "Adjust", "Analyze", "Export & data", "Record"]) {
+    const trigger = page.getByRole("button", { name: group, exact: true });
+    await trigger.click();
+    const menu = page.getByTestId("audio-feature-menu");
+    await expect(menu).toBeVisible();
+    const triggerBox = await trigger.boundingBox();
+    const menuBox = await menu.boundingBox();
+    expect(triggerBox, group + " trigger should have a measurable position").not.toBeNull();
+    expect(menuBox, group + " dropdown should have a measurable position").not.toBeNull();
+    if (triggerBox && menuBox) {
+      expect(menuBox.y, group + " dropdown must open below its trigger").toBeGreaterThanOrEqual(triggerBox.y + triggerBox.height - 1);
+      expect(Math.abs(menuBox.x - triggerBox.x), group + " dropdown should align to its own trigger").toBeLessThanOrEqual(2);
+    }
+    await expect(menu.getByRole("button", { name: "Close feature menu" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+  }
+});

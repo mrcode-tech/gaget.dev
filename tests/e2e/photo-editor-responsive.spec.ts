@@ -313,3 +313,38 @@ test("mobile feature panel has a shared default height and supports bounded drag
 
   await expect.poll(() => page.locator("main[aria-label='GaGet Photo Editor']").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });
+
+
+test("desktop photo File dropdown stays to the right of the expanded and collapsed sidebar", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/images/editor");
+
+  const sidebar = page.locator("aside").first();
+  const fileTrigger = page.getByTestId("editor-menubar").getByRole("button", { name: "File", exact: true });
+  await expect(sidebar).toBeVisible();
+
+  await fileTrigger.click();
+  const fileMenu = page.locator("[data-testid='editor-menubar'] > div.absolute");
+  await expect(fileMenu).toBeVisible();
+  let sidebarBox = await sidebar.boundingBox();
+  let menuBox = await fileMenu.boundingBox();
+  expect(sidebarBox).not.toBeNull();
+  expect(menuBox).not.toBeNull();
+  if (sidebarBox && menuBox) {
+    expect(menuBox.x, "Photo File dropdown must start after the expanded sidebar").toBeGreaterThanOrEqual(sidebarBox.x + sidebarBox.width - 1);
+  }
+  await fileTrigger.click();
+
+  await page.getByRole("button", { name: "Collapse sidebar" }).click();
+  await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
+  await expect.poll(async () => (await sidebar.boundingBox())?.width).toBe(64);
+  await page.getByTestId("editor-menubar").getByRole("button", { name: "File", exact: true }).click();
+  await expect(fileMenu).toBeVisible();
+  sidebarBox = await sidebar.boundingBox();
+  menuBox = await fileMenu.boundingBox();
+  expect(sidebarBox).not.toBeNull();
+  expect(menuBox).not.toBeNull();
+  if (sidebarBox && menuBox) {
+    expect(menuBox.x, "Photo File dropdown must start after the collapsed sidebar").toBeGreaterThanOrEqual(sidebarBox.x + sidebarBox.width - 1);
+  }
+});

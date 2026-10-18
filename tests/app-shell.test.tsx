@@ -44,11 +44,11 @@ describe("AppShell", () => {
     expect(themeControl.parentElement?.className).toContain("lg:flex");
 
     const editorMenu = screen.getByTestId("editor-menubar");
-    // The editor owns a viewport-sized workspace; ordinary page sidebar padding
-    // must not be applied to its canvas container.
+    // The editor keeps a viewport-sized workspace while offsetting desktop content
+    // so its toolbar and dropdowns begin after the fixed sidebar.
     expect(editorMenu.parentElement?.className).toContain("h-dvh");
     expect(editorMenu.parentElement?.className).toContain("overflow-hidden");
-    expect(editorMenu.parentElement?.className).not.toContain("lg:pl-[248px]");
+    expect(editorMenu.parentElement?.className).toContain("lg:pl-[248px]");
   });
   
   it("keeps the shared navbar and hamburger fixed on ordinary routes", () => {
