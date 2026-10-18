@@ -348,3 +348,42 @@ test("desktop photo File dropdown stays to the right of the expanded and collaps
     expect(menuBox.x, "Photo File dropdown must start after the collapsed sidebar").toBeGreaterThanOrEqual(sidebarBox.x + sidebarBox.width - 1);
   }
 });
+
+
+test("photo editor file and feature menus share icon rows, bounded widths, and outside-click dismissal", async ({ page }) => {
+  for (const width of [390, 768, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/images/editor");
+    const menubar = page.getByTestId("editor-menubar");
+    await menubar.getByRole("button", { name: "File", exact: true }).click();
+    const fileMenu = page.getByTestId("photo-file-menu");
+    await expect(fileMenu.getByRole("button", { name: /Open photo/ }).locator("svg")).toBeVisible();
+    const fileBox = await fileMenu.boundingBox();
+    expect(fileBox).not.toBeNull();
+    if (fileBox) expect(fileBox.width).toBeLessThanOrEqual(320);
+    await page.mouse.click(width - 10, 650);
+    await expect(fileMenu).toBeHidden();
+
+    if (width >= 1024) {
+      await menubar.getByRole("button", { name: "Edit", exact: true }).click();
+      const menu = page.getByTestId("photo-feature-menu");
+      await expect(menu).toBeVisible();
+      await expect(menu.getByRole("button", { name: "Crop", exact: true }).locator("svg")).toBeVisible();
+      const box = await menu.boundingBox();
+      expect(box).not.toBeNull();
+      if (box) expect(box.width).toBeLessThanOrEqual(320);
+      await page.mouse.click(width - 10, 650);
+      await expect(menu).toBeHidden();
+    } else {
+      await menubar.getByRole("button", { name: "Open photo editor features" }).click();
+      const menu = page.getByTestId("mobile-feature-menu");
+      await expect(menu).toBeVisible();
+      await expect(menu.getByRole("button", { name: "Crop", exact: true }).locator("svg")).toBeVisible();
+      const box = await menu.boundingBox();
+      expect(box).not.toBeNull();
+      if (box) expect(box.width).toBeLessThanOrEqual(256);
+      await page.mouse.click(width - 10, 650);
+      await expect(menu).toBeHidden();
+    }
+  }
+});

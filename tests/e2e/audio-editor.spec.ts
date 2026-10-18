@@ -231,3 +231,34 @@ test("desktop audio File and category dropdowns align with the sidebar and their
     await expect(menu).toBeHidden();
   }
 });
+
+
+test("audio editor menus use icon rows, bounded desktop widths, and outside-click dismissal", async ({ page }) => {
+  for (const width of [768, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/audio/editor");
+    const menubar = page.getByTestId("audio-editor-menubar");
+    if (width >= 1024) {
+      await menubar.getByRole("button", { name: "Export & data", exact: true }).click();
+      const menu = page.getByTestId("audio-feature-menu");
+      await expect(menu).toBeVisible();
+      await expect(menu.getByRole("button", { name: "Audio converter" }).locator("svg")).toBeVisible();
+      const box = await menu.boundingBox();
+      expect(box).not.toBeNull();
+      if (box) expect(box.width).toBeLessThanOrEqual(320);
+      await page.getByTestId("audio-editor").click({ position: { x: 5, y: 75 } });
+      await expect(menu).toBeHidden();
+    } else {
+      const trigger = menubar.getByRole("button", { name: "Open audio editor features" });
+      await trigger.click();
+      const menu = page.getByTestId("audio-feature-menu");
+      await expect(menu).toBeVisible();
+      await expect(menu.getByRole("button", { name: "Trim & range" }).locator("svg")).toBeVisible();
+      const box = await menu.boundingBox();
+      expect(box).not.toBeNull();
+      if (box) expect(box.width).toBeLessThanOrEqual(256);
+      await page.mouse.click(5, 75);
+      await expect(menu).toBeHidden();
+    }
+  }
+});
