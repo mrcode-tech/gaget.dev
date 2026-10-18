@@ -7,15 +7,16 @@ import { tools } from "@/lib/tools/registry";
 export function CategoryLanding({ category }: { category: string }) {
   const { t } = useI18n();
   const categoryTools = tools.filter((tool) => tool.category === category);
+  const categoryLabel = category === "Video" ? t("category.video") : t(`category.${category}`);
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-10">
       <nav className="mb-4 text-xs text-muted-foreground">
-        {t("nav.categories")} / {t(`category.${category}`)}
+        {t("nav.categories")} / {categoryLabel}
       </nav>
 
       <h1 className="text-3xl font-bold tracking-tight">
-        {t(`category.${category}`)}
+        {categoryLabel}
       </h1>
 
       <p className="mt-2 text-sm text-muted-foreground">
