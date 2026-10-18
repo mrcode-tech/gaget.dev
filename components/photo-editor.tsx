@@ -749,7 +749,7 @@ export function PhotoEditor() {
     {!hasImage && <section data-testid="photo-empty-intro" className="mx-auto w-full max-w-screen-xl shrink-0 px-4 pb-4 pt-3 sm:px-6 lg:px-8">
       <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><Link href="/" className="hover:text-foreground">Home</Link><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Photo Editor</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>
+      
     </section>}
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status && <span className="hidden md:inline"> · {status}</span>}</span>
@@ -767,6 +767,7 @@ export function PhotoEditor() {
       </div>
     </div>
 
+    {!hasImage && <p data-testid="photo-empty-description" className="shrink-0 px-3 pt-3 pb-8 text-sm leading-6 text-muted-foreground sm:px-6 sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>}
     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden sm:flex-row">
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
@@ -776,7 +777,7 @@ export function PhotoEditor() {
             event.preventDefault(); setDragOver(false);
             const dropped = Array.from(event.dataTransfer.files).find((file) => file.type.startsWith("image/"));
             if (dropped) void chooseFile(dropped); else setError("Drop an image file such as PNG, JPEG, WebP, GIF, or AVIF.");
-          }} className={"relative flex min-h-0 flex-1 overflow-auto bg-muted/25 p-3 sm:p-6 lg:p-8 " + (zoom > 100 ? "items-start justify-start" : "items-center justify-center") + (dragOver ? " ring-2 ring-inset ring-primary bg-primary/5" : "")}>
+          }} className={"relative flex min-h-0 flex-1 overflow-auto bg-muted/25 p-3 sm:p-6 lg:p-8 " + (zoom > 100 ? "items-start justify-start " : "items-center justify-center ") + "[@media(max-height:500px)]:items-start [@media(max-height:500px)]:justify-start " + (dragOver ? "ring-2 ring-inset ring-primary bg-primary/5" : "")}>
             {activePanel === "collage" && collageFiles.length > 0
               ? <div data-testid="collage-canvas-preview" aria-label="Collage preview in selection order" className="grid w-[90%] max-w-4xl gap-2 rounded-lg border border-border bg-background p-3 shadow-sm" style={{ gridTemplateColumns: `repeat(${collageLayout === "row" ? collageFiles.length : collageLayout === "column" ? 1 : Math.min(collageColumns, collageFiles.length)}, minmax(0, 1fr))` }}>
                   {collageFiles.map((file, index) => <div key={file.name + file.size + file.lastModified} className="relative aspect-square min-w-0 overflow-hidden rounded-md bg-muted"><img src={collagePreviewUrls[index] || undefined} alt={file.name} className="h-full w-full object-cover" /><span className="absolute left-1.5 top-1.5 rounded bg-background/90 px-1.5 py-0.5 text-xs font-semibold text-foreground">{index + 1}</span></div>)}

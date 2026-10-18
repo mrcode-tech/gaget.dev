@@ -34,6 +34,61 @@ async function loadTestPhoto(page: Page) {
   await expect(page.locator("canvas[role='img']")).toBeVisible();
 }
 
+const emptyStateViewports = [
+  { width: 320, height: 720 },
+  { width: 360, height: 800 },
+  { width: 390, height: 844 },
+  { width: 640, height: 800 },
+  { width: 744, height: 1024 },
+  { width: 768, height: 1024 },
+  { width: 844, height: 390 },
+  { width: 1024, height: 768 },
+  { width: 1280, height: 800 },
+  { width: 1440, height: 900 },
+  { width: 1536, height: 960 },
+  { width: 1920, height: 1080 },
+] as const;
+
+for (const viewport of emptyStateViewports) {
+  test(`photo empty-state description follows the toolbar with consistent alignment and spacing at ${viewport.width}×${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/images/editor");
+
+    const toolbar = page.getByTestId("editor-menubar");
+    const description = page.getByTestId("photo-empty-description");
+    const uploadArea = page.getByTestId("empty-canvas-state");
+    await expect(toolbar).toBeVisible();
+    await expect(description).toBeVisible();
+    await expect(uploadArea).toBeVisible();
+
+    const toolbarBox = await toolbar.boundingBox();
+    const descriptionMetrics = await description.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const text = range.getBoundingClientRect();
+      return {
+        textLeft: text.left,
+        textBottom: text.bottom,
+        top: element.getBoundingClientRect().top,
+        paddingLeft: Number.parseFloat(getComputedStyle(element).paddingLeft),
+      };
+    });
+    const uploadBox = await uploadArea.boundingBox();
+    expect(toolbarBox).not.toBeNull();
+    expect(uploadBox).not.toBeNull();
+    if (toolbarBox && uploadBox) {
+      expect(descriptionMetrics.top).toBeGreaterThanOrEqual(toolbarBox.y + toolbarBox.height);
+      expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
+    }
+    if (viewport.width >= 1024) {
+      const fileMenu = await toolbar.getByRole("button", { name: "File", exact: true }).boundingBox();
+      expect(fileMenu).not.toBeNull();
+      if (fileMenu) expect(descriptionMetrics.textLeft).toBeCloseTo(fileMenu.x, 0);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
 for (const viewport of viewports) {
   test(`responsive editor and WCAG accessibility at ${viewport.width}×${viewport.height} (${viewport.label})`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -126,6 +181,7 @@ for (const viewport of viewports) {
     }
 
     await loadTestPhoto(page);
+    await expect(page.getByTestId("photo-empty-description")).toBeHidden();
     if (viewport.width >= 768) {
       await expect(page.getByRole("status")).toBeVisible();
     } else {
