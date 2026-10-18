@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - proposal/unified-editor-file-states
-    paths:
-      - 'specification/editor-file-states/wireframes/*.svg'
   workflow_dispatch:
 
 permissions:
