@@ -45,4 +45,9 @@ Use consistent left alignment with the editor toolbar/workspace gutter, a clear 
 ### Short-landscape correction
 - The first responsive CI run found that the photo upload target could vertically center outside its scroll area when the viewport was short (844×390), overlapping the newly repositioned description.
 - [x] For viewports at or below 500px tall, align the empty canvas content to the start of its scroll area instead of vertically centering an item taller than the available height. The description-to-upload spacing remains clear, and normal-height layouts remain centered.
-- [ ] Re-run the complete CI suite and confirm the 844×390 landscape case passes.
+- [x] Re-ran the complete CI suite; the 844×390 landscape case and all responsive/accessibility checks pass.
+
+
+### Final verification
+- [x] GitHub Actions run 639 passed: unit tests, focused Photo Editor/sidebar regressions, component tests, ESLint, TypeScript, production build, smoke tests, responsive browser tests, and accessibility checks.
+- [x] Responsive empty-state geometry tests passed at all 12 configured viewport sizes, including short landscape (844×390).
