@@ -64,6 +64,24 @@ describe("VideoWorkbench", () => {
     expect(screen.getByTestId("video-timeline")).toBeTruthy();
   });
 
+  it("keeps trim and split parameters and their single export action in the feature panel", () => {
+    const { container } = render(<VideoWorkbench slug="editor" />);
+    loadVideo(container);
+    chooseMobileFeature("Trim video");
+    const panel = screen.getByTestId("video-feature-panel");
+    expect(screen.queryByRole("button", { name: "Export selected range" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Apply & export WebM" })).toBeNull();
+    expect(within(panel).getByRole("button", { name: "Export trimmed video" })).toBeTruthy();
+    expect(within(panel).getByRole("spinbutton", { name: "Range start (seconds)" })).toBeTruthy();
+    expect(within(panel).getByRole("spinbutton", { name: "Range end (seconds)" })).toBeTruthy();
+
+    chooseMobileFeature("Split video");
+    expect(screen.queryByRole("button", { name: "Split video" })).toBeNull();
+    expect(within(panel).getByRole("button", { name: "Split and export video" })).toBeTruthy();
+    expect(within(panel).getByRole("spinbutton", { name: "Split point (seconds)" })).toBeTruthy();
+    expect(within(panel).queryByRole("button", { name: "Apply & export WebM" })).toBeNull();
+  });
+
   it("uses an icon-based navigation trigger rather than a text hamburger glyph", () => {
     render(<VideoWorkbench slug="editor" />);
     const navigation = screen.getByRole("button", { name: "Open navigation" });
