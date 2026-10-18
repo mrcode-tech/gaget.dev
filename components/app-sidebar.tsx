@@ -132,7 +132,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                   <NavLink
                     key={category.name}
                     href={category.href}
-                    label={t(`category.${category.name}`)}
+                    label={t(category.name === "Video" ? "category.video" : `category.${category.name}`)}
                     active={isActive(category.href)}
                     icon={<Icon className="h-4 w-4" />}
                     collapsed={isCollapsed}
