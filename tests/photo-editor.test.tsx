@@ -215,10 +215,17 @@ describe("PhotoEditor workspace UX acceptance", () => {
     }
   });
 
-  it("keeps canvas status and dimensions in one work toolbar instead of a third static row", () => {
+  it("hides the photo work toolbar until a photo is loaded", () => {
     render(<PhotoEditor />);
 
-    expect(screen.getByText("Drop a photo here or open one")).toBeTruthy();
+    expect(screen.queryByTestId("photo-work-toolbar")).toBeNull();
+    expect(screen.queryByText("Drop a photo here or open one")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Redo" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Zoom out" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Zoom in" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Fit canvas" })).toBeNull();
+    expect(screen.getByTestId("photo-empty-description")).toBeTruthy();
     expect(screen.queryByText("Edits remain reversible until you export.")).toBeNull();
     expect(screen.queryByText("Your canvas is ready")).toBeNull();
     expect(screen.getByTestId("canvas-scroll-area")).toBeTruthy();
@@ -251,9 +258,11 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getAllByRole("button", { name: "Redo" }).every((button) => button.hasAttribute("disabled"))).toBe(true);
   });
 
-  it("keeps zoom controls and the scrollable canvas available", () => {
+  it("shows zoom controls and the scrollable canvas after a photo is loaded", async () => {
     render(<PhotoEditor />);
+    await loadTestPhoto();
 
+    expect(screen.getByTestId("photo-work-toolbar")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
     expect(screen.getByText("115%")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
