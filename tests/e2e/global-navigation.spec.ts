@@ -64,3 +64,51 @@ test("desktop navbar remains fixed beside the sidebar while scrolling", async ({
   expect(headerBox).not.toBeNull();
   if (headerBox) expect(headerBox.x).toBeGreaterThanOrEqual(240);
 });
+
+
+test("desktop search is centered in the available page area and language menu layers above the navbar", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/tools");
+
+  const header = page.locator("header").first();
+  const search = page.getByRole("textbox", { name: /search/i });
+  await expect(search).toBeVisible();
+  const headerBox = await header.boundingBox();
+  const searchBox = await search.boundingBox();
+  expect(headerBox).not.toBeNull();
+  expect(searchBox).not.toBeNull();
+  if (headerBox && searchBox) {
+    const headerCenter = headerBox.x + headerBox.width / 2;
+    const searchCenter = searchBox.x + searchBox.width / 2;
+    expect(Math.abs(searchCenter - headerCenter), "desktop search should be centered in the content area beside the sidebar").toBeLessThanOrEqual(3);
+  }
+
+  const languageTrigger = page.getByRole("combobox", { name: "Language" });
+  await languageTrigger.click();
+  const languageList = page.getByRole("listbox");
+  await expect(languageList).toBeVisible();
+  await expect(page.getByRole("option", { name: "Español" })).toBeVisible();
+  const headerZIndex = Number(await header.evaluate((element) => getComputedStyle(element).zIndex));
+  const listZIndex = Number(await languageList.evaluate((element) => getComputedStyle(element).zIndex));
+  expect(listZIndex, "language options must render above the fixed navbar instead of behind it").toBeGreaterThan(headerZIndex);
+});
+
+test("mobile sidebar language selector opens its options above the navigation drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tools");
+
+  await page.getByRole("button", { name: "Open navigation" }).click();
+  const drawer = page.getByTestId("mobile-navigation-drawer");
+  await expect(drawer).toBeVisible();
+
+  const languageTrigger = drawer.getByRole("combobox", { name: "Language" });
+  await expect(languageTrigger).toBeVisible();
+  await languageTrigger.click();
+
+  const languageList = page.getByRole("listbox");
+  await expect(languageList).toBeVisible();
+  await expect(page.getByRole("option", { name: "Español" })).toBeVisible();
+  const drawerZIndex = Number(await drawer.evaluate((element) => getComputedStyle(element).zIndex));
+  const listZIndex = Number(await languageList.evaluate((element) => getComputedStyle(element).zIndex));
+  expect(listZIndex, "language options must appear above the mobile navigation drawer").toBeGreaterThan(drawerZIndex);
+});
