@@ -54,9 +54,9 @@ export function VideoWorkbench({slug}:{slug:string}){
  const fileInput=useRef<HTMLInputElement>(null),multiInput=useRef<HTMLInputElement>(null),subtitleInput=useRef<HTMLInputElement>(null),video=useRef<HTMLVideoElement>(null),canvas=useRef<HTMLCanvasElement>(null),recorder=useRef<MediaRecorder|null>(null),chunks=useRef<Blob[]>([]),raf=useRef<number>(0),menuRef=useRef<HTMLDivElement>(null);
  const feature=allFeatures.find(item=>item.slug===active)||{label:"Video Editor",slug:"editor",icon:FileVideo,description:"Edit, convert, inspect and export video locally in your browser."};
  const loaded=!!file&&!!url;
- const timelineFeatures=["trim","split","frames","thumbnail","extract-audio"];
+ const timelineFeatures=["frames","thumbnail","extract-audio"];
  const showsTimeline=timelineFeatures.includes(active);
- const showsRange=active==="trim"||active==="split"||active==="extract-audio";
+ const showsRange=active==="extract-audio";
  const showsTimestamp=active==="frames"||active==="thumbnail";
  useEffect(()=>()=>{if(url)URL.revokeObjectURL(url)},[url]);
  useEffect(()=>{if(!menu&&!panelOpen)return;const close=(event:PointerEvent)=>{if(event.target instanceof Node&&!menuRef.current?.contains(event.target))setMenu(null)};const key=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenu(null);setPanelOpen(false)}};document.addEventListener("pointerdown",close);document.addEventListener("keydown",key);return()=>{document.removeEventListener("pointerdown",close);document.removeEventListener("keydown",key)}},[menu,panelOpen]);
