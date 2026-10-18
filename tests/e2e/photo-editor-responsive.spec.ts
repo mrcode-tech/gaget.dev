@@ -181,6 +181,7 @@ for (const viewport of viewports) {
     }
 
     await loadTestPhoto(page);
+    await expect(page.getByTestId("photo-empty-description")).toBeHidden();
     if (viewport.width >= 768) {
       await expect(page.getByRole("status")).toBeVisible();
     } else {
