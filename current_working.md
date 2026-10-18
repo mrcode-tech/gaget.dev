@@ -18,9 +18,10 @@
 - [x] Added a breadcrumb, title and description to the empty Photo Editor state.
 - [x] Updated the Photo Editor drop target to a centered, bounded square-ish upload area with a primary action.
 - [x] Added the equivalent empty-state hierarchy and bounded drag/drop target to Audio Editor; loaded audio continues to use its existing workspace.
-- [ ] Add/update component and Playwright tests for empty and loaded states, file picker/drop, errors, and responsive bounds.
+- [x] Updated the existing Photo Editor component assertion to match the new empty-state copy and added intro/title assertions.
+- [ ] Add/update Audio Editor and Playwright tests for empty and loaded states, file picker/drop, errors, and responsive bounds.
 - [ ] Run lint, typecheck, production build, smoke and E2E tests; record actual results.
 - [ ] Review latest CI before proposing merge to `stage`.
 
 ## Verification
-Tests have not yet been run. Do not treat CI as passed until the branch workflow completes.
+The original Photo Editor test contained stale expectations (old upload prompt and button label) that contradicted the requested UX; these assertions are updated. Tests still need to run. Do not treat CI as passed until the branch workflow completes.
