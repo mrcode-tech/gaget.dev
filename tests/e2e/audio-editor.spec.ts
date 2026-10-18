@@ -27,7 +27,9 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/audio/editor");
   await expect(page.getByTestId("audio-editor-menubar")).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+  await expect(page.getByTestId("audio-empty-intro")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Audio Editor" })).toBeVisible();
   const openFeatures = page.getByRole("button", { name: "Open audio editor features" });
   await expect(openFeatures).toBeVisible();
   await openFeatures.click();
@@ -41,6 +43,7 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
     buffer: makeWavFixture(),
   });
   await expect(page.getByText(/Decoded locally/i)).toBeVisible();
+  await expect(page.getByTestId("audio-empty-description")).toBeHidden();
   await expect(page.locator("#audio-waveform")).toBeVisible();
 
   await openFeatures.click();
@@ -58,6 +61,43 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
   await page.getByRole("button", { name: "Compress to WAV" }).click();
   await expect(page.getByText(/Ready:/i)).toBeVisible();
   await expect(page.getByText(/compressed\.wav/i)).toBeVisible();
+});
+
+test("audio empty-state description aligns with the toolbar and keeps a clear upload gap across viewports", async ({ page }) => {
+  for (const viewport of [
+    { width: 320, height: 720 },
+    { width: 360, height: 800 },
+    { width: 390, height: 844 },
+    { width: 640, height: 800 },
+    { width: 744, height: 1024 },
+    { width: 768, height: 1024 },
+    { width: 844, height: 390 },
+    { width: 1024, height: 768 },
+    { width: 1280, height: 800 },
+    { width: 1440, height: 900 },
+    { width: 1536, height: 960 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/audio/editor");
+    const description = page.getByTestId("audio-empty-description");
+    const uploadArea = page.locator('[data-testid="audio-empty-intro"] > div').first();
+    await expect(description).toBeVisible();
+    await expect(uploadArea).toBeVisible();
+    const descriptionBox = await description.boundingBox();
+    const uploadBox = await uploadArea.boundingBox();
+    expect(descriptionBox).not.toBeNull();
+    expect(uploadBox).not.toBeNull();
+    if (descriptionBox && uploadBox) {
+      expect(uploadBox.y - (descriptionBox.y + descriptionBox.height)).toBeGreaterThanOrEqual(31);
+    }
+    if (viewport.width >= 1024) {
+      const fileMenu = await page.getByRole("button", { name: "File menu" }).boundingBox();
+      expect(fileMenu).not.toBeNull();
+      if (fileMenu && descriptionBox) expect(descriptionBox.x).toBeCloseTo(fileMenu.x, 0);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
 });
 
 for (const viewport of [
@@ -130,7 +170,9 @@ test("audio editor menus and inspector dismiss with Escape", async ({ page }) =>
 test("audio editor toolbar sits below the fixed global header on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/audio/editor");
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+  await expect(page.getByTestId("audio-empty-intro")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Audio Editor" })).toBeVisible();
   const menubar = page.getByTestId("audio-editor-menubar");
   await expect(menubar).toBeVisible();
   await expect(menubar.getByRole("button", { name: "Open navigation" })).toBeVisible();

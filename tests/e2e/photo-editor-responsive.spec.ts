@@ -34,6 +34,66 @@ async function loadTestPhoto(page: Page) {
   await expect(page.locator("canvas[role='img']")).toBeVisible();
 }
 
+const emptyStateViewports = [
+  { width: 320, height: 720 },
+  { width: 360, height: 800 },
+  { width: 390, height: 844 },
+  { width: 640, height: 800 },
+  { width: 744, height: 1024 },
+  { width: 768, height: 1024 },
+  { width: 844, height: 390 },
+  { width: 1024, height: 768 },
+  { width: 1280, height: 800 },
+  { width: 1440, height: 900 },
+  { width: 1536, height: 960 },
+  { width: 1920, height: 1080 },
+] as const;
+
+for (const viewport of emptyStateViewports) {
+  test(`photo empty state matches audio editor layout at ${viewport.width}×${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/images/editor");
+
+    const toolbar = page.getByTestId("editor-menubar");
+    const workToolbar = page.getByTestId("photo-work-toolbar");
+    const intro = page.getByTestId("photo-empty-intro");
+    const breadcrumb = intro.getByRole("navigation", { name: "Breadcrumb" });
+    const heading = page.getByRole("heading", { name: "Photo Editor" });
+    const description = page.getByTestId("photo-empty-description");
+    const uploadArea = page.getByTestId("empty-canvas-state");
+    await expect(toolbar).toBeVisible();
+    await expect(workToolbar).toHaveCount(0);
+    await expect(description).toBeVisible();
+    await expect(uploadArea).toBeVisible();
+    await expect(page.getByText("Drop a photo here or open one")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Undo", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Redo", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Zoom out" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Zoom in" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Fit canvas" })).toHaveCount(0);
+
+    const breadcrumbMetrics = await breadcrumb.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect();
+    });
+    const headingBox = await heading.boundingBox();
+    const descriptionMetrics = await description.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const text = range.getBoundingClientRect();
+      return { textLeft: text.left, textBottom: text.bottom };
+    });
+    const uploadBox = await uploadArea.boundingBox();
+    expect(headingBox).not.toBeNull();
+    expect(uploadBox).not.toBeNull();
+    expect(descriptionMetrics.textLeft).toBeCloseTo(breadcrumbMetrics.left, 0);
+    if (headingBox) expect(headingBox.x).toBeCloseTo(breadcrumbMetrics.left, 0);
+    if (uploadBox) expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
 for (const viewport of viewports) {
   test(`responsive editor and WCAG accessibility at ${viewport.width}×${viewport.height} (${viewport.label})`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -126,6 +186,7 @@ for (const viewport of viewports) {
     }
 
     await loadTestPhoto(page);
+    await expect(page.getByTestId("photo-empty-description")).toBeHidden();
     if (viewport.width >= 768) {
       await expect(page.getByRole("status")).toBeVisible();
     } else {

@@ -1,55 +1,61 @@
-# Current Working Branch: `feat/unified-audio-editor`
+# Current Working Branch: `feat/unified-editor-file-states`
 
-**Last updated:** 2026-10-17  
+**Last updated:** 2026-10-18  
 **Repository:** `mrcode-tech/gaget.dev`  
-**Base:** `proposal/unified-audio-editor`  
-**Purpose:** Track implementation and verification of the unified audio editor. Keep production-bound changes on this branch until CI passes and explicit merge approval is given.
+**Base:** `stage`  
+**Purpose:** Implement the unified empty-file entry state for Photo Editor and Audio Editor based on `proposal/unified-editor-file-states`.
 
-## Scope
-
-Consolidate the 18 existing audio tools into one Audio Editor workspace, using the unified Photo Editor as the shared UX reference. Preserve legacy routes while removing duplicate audio-tool cards from the main catalog.
-
-## Review findings
-
-- Reviewed `specification/audio-editor/design.md` and the XS (390×844), MD (768×1024), and XL (1440×900) SVG wireframes.
-- The proposal correctly defines one feature inspector, local-first processing, a waveform workspace, transport controls, responsive bottom-sheet behavior, and legacy URL compatibility.
-- Existing processing gaps include pitch-shift export, embedded metadata writing, a full frequency spectrum, downloadable waveform images, and true MP3/AAC encoding. The UI must not imply these are supported.
-- The existing CI workflow only selected a few branch names; the workflow is now configured to run on every branch push and pull request.
+## Scope and constraints
+- Only change the no-file-selected state for the unified photo and audio editors.
+- Preserve the existing loaded-file editing workspace and feature controls.
+- Reuse existing file inputs, local processing, validation and editor behavior.
+- Keep the intro and upload target bounded on desktop/tablet and fluid on mobile.
+- Do not merge without explicit approval.
 
 ## Implementation log
+- [x] Reviewed the design specification and empty-state wireframes in `proposal/unified-editor-file-states`.
+- [x] Created this feature branch from `stage`.
+- [x] Added a breadcrumb, title and description to the empty Photo Editor state.
+- [x] Updated the Photo Editor drop target to a centered, bounded square-ish upload area with a primary action.
+- [x] Added the equivalent empty-state hierarchy and bounded drag/drop target to Audio Editor; loaded audio continues to use its existing workspace.
+- [x] Updated the existing Photo Editor component assertion to match the new empty-state copy and added intro/title assertions.
+- [x] Updated Audio Editor Playwright checks to expect the breadcrumb, intro, and heading in the no-file-selected state.
+- [x] Fixed the ESLint errors by using `next/link` for the new Home breadcrumbs in both editors.
+- [x] Fixed the stale Audio Editor E2E assertions that expected no breadcrumb on the empty state.
+- [ ] Re-run lint, typecheck, production build, smoke and E2E tests; record actual results.
+- [ ] Review latest CI before proposing merge to `stage`.
 
-- [x] Created `feat/unified-audio-editor` from `proposal/unified-audio-editor`.
-- [x] Replaced the native list box with a compact File / Features command bar, grouped feature menu, and mobile File / Features / Export bottom bar.
-- [x] Added Escape dismissal for menus/inspector and kept the hidden audio file input available to File → Open across every feature mode.
-- [x] Moved active-feature controls into a contextual inspector: fixed-width desktop panel and scrollable mobile bottom sheet; reduced repetitive descriptions while retaining concise capability limitations.
-- [x] Added Playwright coverage for menu discovery, feature switching, real WAV processing, mobile bottom-sheet geometry, and 11 responsive viewport sizes.
-- [x] Consolidated the main tool registry to one Audio Editor catalog entry and added keywords for all legacy capabilities.
-- [x] Updated CI push and pull-request triggers to cover all branches.
-- [x] Consolidate the Audio category and homepage/tool catalog to one Audio Editor entry; existing homepage featured-card logic now promotes the unified editor.
-- [x] Add a tool-catalog assertion for one Audio entry and searchable feature keywords, smoke tests for all 17 legacy redirects, and Playwright tests for the 18-option selector, honest limitation messaging, and the 11 responsive viewport sizes.
-- [x] Run unit, component, lint, typecheck, production build, smoke, and E2E/accessibility checks on the compact UI refactor.
-- [x] Record the exact tested UI commit and Actions run result before requesting merge approval.
-
-## Verification status
-
-**Full CI passed for UI/test commit `fc998b08c4e9d2b67ae83d7e384b7d8254a062f3`.** Actions run [39067139775](https://github.com/mrcode-tech/gaget.dev/actions/runs/39067139775) completed successfully: 38 unit/smoke tests passed; all 32 Playwright tests passed, including 11 audio-editor viewport checks, mobile bottom-sheet behavior, Escape dismissal, and Photo Editor responsive/accessibility regressions. ESLint, TypeScript, production build, and all remaining workflow steps passed. A subsequent documentation-only tracking update may trigger a fresh CI run. Keep PR #39 as draft and do not merge without approval.
-
-## Acceptance criteria
-
-- One Audio Editor card in the homepage/tool catalog; audio operations are available in its Features selector.
-- All 18 legacy routes continue to render and are not broken during migration.
-- Feature switching preserves the loaded audio source.
-- Unsupported operations are labelled honestly.
-- CI passes on the latest commit; no horizontal overflow at the proposal viewport matrix.
-- No merge to `main` without explicit user approval.
+## Verification
+The original Photo Editor test contained stale expectations (old upload prompt and button label) that contradicted the requested UX; these assertions are updated. Unit tests and focused Photo Editor/sidebar regression tests passed in CI. The first CI run then failed at ESLint because the new breadcrumbs used raw `<a>` elements; both were changed to `next/link`. The next CI run exposed two stale Audio Editor Playwright assertions that expected no breadcrumb on the empty state. Updated both to assert the intended empty-state breadcrumb, intro, and heading. A fresh full CI run is required before considering this fixed.
 
 
-## Follow-up UI consistency fix — 2026-10-18
+## Empty-state description alignment refinement (2026-10-18)
+- [x] Audio Editor: removed the nested centered/max-width wrapper from the empty-state content so the breadcrumb, title, and description align with the File menu/workspace gutter at desktop and tablet widths.
+- [x] Audio Editor: added a deliberate 2rem minimum gap between the description and upload dropzone while preserving a bounded, centered upload target.
+- [x] Photo Editor: moved the supporting description below the editor toolbar's bottom divider, directly after the “Drop a photo here or open one” toolbar row.
+- [x] Photo Editor: aligned the description's text edge to the editor toolbar gutter and reserved 2rem below the text before the canvas/upload workspace.
+- [x] Kept both descriptions exclusive to the no-file-selected state; the existing loaded-file editor remains unchanged.
+- [x] Added Playwright coverage for description alignment, ordering, spacing, and horizontal overflow at 320, 360, 390, 640, 744, 768, 844, 1024, 1280, 1440, 1536, and 1920 CSS-pixel viewport widths; added assertions that descriptions disappear after loading a file.
+- [ ] Run and review CI for the latest branch commit; fix any failures before considering the refinement complete.
 
-- Branch: `fix/audio-editor-photo-editor-consistency`; draft PR [#41](https://github.com/mrcode-tech/gaget.dev/pull/41) targets `stage`.
-- Matched the Photo Editor's 68px in-flow editor toolbar: mobile navigation, File, and Features at the top; desktop category menus remain in the top toolbar.
-- Removed the duplicate fixed bottom navigation and standalone Export action. Export is available from File; the feature inspector remains a bottom sheet on mobile and now sits 8px above the viewport edge.
-- Hid the global search field on mobile Audio Editor pages and reduced the empty upload area's extra copy.
-- Updated XS/MD/XL wireframes and regenerated matching PNG/JPG variants with successful render workflow [39068708138](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068708138).
-- Added E2E checks for mobile/desktop search and toolbar behavior, File-menu export, and desktop access to Export & data features.
-- **Verification:** Implementation commit `3658fd254248c52d1b76756feb5ea6848975b010` passed full CI in run [39068980000](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068980000): 38 unit/smoke tests and 34 Playwright E2E tests passed, including the 11-viewport overflow matrix, Audio Editor toolbar/search/export checks, and Photo Editor regressions. ESLint, TypeScript, and the production build also passed. This tracking update is documentation-only.
+### UX rationale
+Use consistent left alignment with the editor toolbar/workspace gutter, a clear but not oversized separation between explanatory text and the primary upload action, responsive wrapping, and a real “Choose” button alongside drag-and-drop. This follows W3C/WAI guidance to use whitespace and proximity to group related content, keep layouts reflowable without horizontal scrolling, and provide non-drag alternatives for file uploads.
+
+
+### Short-landscape correction
+- The first responsive CI run found that the photo upload target could vertically center outside its scroll area when the viewport was short (844×390), overlapping the newly repositioned description.
+- [x] For viewports at or below 500px tall, align the empty canvas content to the start of its scroll area instead of vertically centering an item taller than the available height. The description-to-upload spacing remains clear, and normal-height layouts remain centered.
+- [x] Re-ran the complete CI suite; the 844×390 landscape case and all responsive/accessibility checks pass.
+
+
+### Final verification
+- [x] GitHub Actions run 639 passed: unit tests, focused Photo Editor/sidebar regressions, component tests, ESLint, TypeScript, production build, smoke tests, responsive browser tests, and accessibility checks.
+- [x] Responsive empty-state geometry tests passed at all 12 configured viewport sizes, including short landscape (844×390).
+
+## Photo Editor empty state parity (2026-10-18)
+
+- [x] Align the empty-state breadcrumb and Photo Editor heading to the same horizontal gutter as the supporting description, at mobile, tablet, and desktop widths.
+- [x] Hide the entire photo work toolbar (filename/status, undo/redo, zoom, fit-canvas) while no photo is loaded; keep it visible after a photo is selected.
+- [x] Keep the “Drop a photo here or open one” prompt out of the empty state; the primary upload/drop target remains available.
+- [x] Update component and responsive Playwright tests to assert the hidden toolbar and consistent alignment across all 12 viewport sizes.
+- [ ] Run and verify the resulting CI checks before considering this change complete.
