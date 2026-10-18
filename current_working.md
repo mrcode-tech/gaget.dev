@@ -1,55 +1,29 @@
-# Current Working Branch: `feat/unified-audio-editor`
+# Current Working Branch: `feat/unified-editor-file-states`
 
-**Last updated:** 2026-10-17  
+**Last updated:** 2026-10-18  
 **Repository:** `mrcode-tech/gaget.dev`  
-**Base:** `proposal/unified-audio-editor`  
-**Purpose:** Track implementation and verification of the unified audio editor. Keep production-bound changes on this branch until CI passes and explicit merge approval is given.
+**Base:** `stage`  
+**Purpose:** Implement the unified empty-file entry state for Photo Editor and Audio Editor based on `proposal/unified-editor-file-states`.
 
-## Scope
-
-Consolidate the 18 existing audio tools into one Audio Editor workspace, using the unified Photo Editor as the shared UX reference. Preserve legacy routes while removing duplicate audio-tool cards from the main catalog.
-
-## Review findings
-
-- Reviewed `specification/audio-editor/design.md` and the XS (390×844), MD (768×1024), and XL (1440×900) SVG wireframes.
-- The proposal correctly defines one feature inspector, local-first processing, a waveform workspace, transport controls, responsive bottom-sheet behavior, and legacy URL compatibility.
-- Existing processing gaps include pitch-shift export, embedded metadata writing, a full frequency spectrum, downloadable waveform images, and true MP3/AAC encoding. The UI must not imply these are supported.
-- The existing CI workflow only selected a few branch names; the workflow is now configured to run on every branch push and pull request.
+## Scope and constraints
+- Only change the no-file-selected state for the unified photo and audio editors.
+- Preserve the existing loaded-file editing workspace and feature controls.
+- Reuse existing file inputs, local processing, validation and editor behavior.
+- Keep the intro and upload target bounded on desktop/tablet and fluid on mobile.
+- Do not merge without explicit approval.
 
 ## Implementation log
+- [x] Reviewed the design specification and empty-state wireframes in `proposal/unified-editor-file-states`.
+- [x] Created this feature branch from `stage`.
+- [x] Added a breadcrumb, title and description to the empty Photo Editor state.
+- [x] Updated the Photo Editor drop target to a centered, bounded square-ish upload area with a primary action.
+- [x] Added the equivalent empty-state hierarchy and bounded drag/drop target to Audio Editor; loaded audio continues to use its existing workspace.
+- [x] Updated the existing Photo Editor component assertion to match the new empty-state copy and added intro/title assertions.
+- [x] Updated Audio Editor Playwright checks to expect the breadcrumb, intro, and heading in the no-file-selected state.
+- [x] Fixed the ESLint errors by using `next/link` for the new Home breadcrumbs in both editors.
+- [x] Fixed the stale Audio Editor E2E assertions that expected no breadcrumb on the empty state.
+- [ ] Re-run lint, typecheck, production build, smoke and E2E tests; record actual results.
+- [ ] Review latest CI before proposing merge to `stage`.
 
-- [x] Created `feat/unified-audio-editor` from `proposal/unified-audio-editor`.
-- [x] Replaced the native list box with a compact File / Features command bar, grouped feature menu, and mobile File / Features / Export bottom bar.
-- [x] Added Escape dismissal for menus/inspector and kept the hidden audio file input available to File → Open across every feature mode.
-- [x] Moved active-feature controls into a contextual inspector: fixed-width desktop panel and scrollable mobile bottom sheet; reduced repetitive descriptions while retaining concise capability limitations.
-- [x] Added Playwright coverage for menu discovery, feature switching, real WAV processing, mobile bottom-sheet geometry, and 11 responsive viewport sizes.
-- [x] Consolidated the main tool registry to one Audio Editor catalog entry and added keywords for all legacy capabilities.
-- [x] Updated CI push and pull-request triggers to cover all branches.
-- [x] Consolidate the Audio category and homepage/tool catalog to one Audio Editor entry; existing homepage featured-card logic now promotes the unified editor.
-- [x] Add a tool-catalog assertion for one Audio entry and searchable feature keywords, smoke tests for all 17 legacy redirects, and Playwright tests for the 18-option selector, honest limitation messaging, and the 11 responsive viewport sizes.
-- [x] Run unit, component, lint, typecheck, production build, smoke, and E2E/accessibility checks on the compact UI refactor.
-- [x] Record the exact tested UI commit and Actions run result before requesting merge approval.
-
-## Verification status
-
-**Full CI passed for UI/test commit `fc998b08c4e9d2b67ae83d7e384b7d8254a062f3`.** Actions run [39067139775](https://github.com/mrcode-tech/gaget.dev/actions/runs/39067139775) completed successfully: 38 unit/smoke tests passed; all 32 Playwright tests passed, including 11 audio-editor viewport checks, mobile bottom-sheet behavior, Escape dismissal, and Photo Editor responsive/accessibility regressions. ESLint, TypeScript, production build, and all remaining workflow steps passed. A subsequent documentation-only tracking update may trigger a fresh CI run. Keep PR #39 as draft and do not merge without approval.
-
-## Acceptance criteria
-
-- One Audio Editor card in the homepage/tool catalog; audio operations are available in its Features selector.
-- All 18 legacy routes continue to render and are not broken during migration.
-- Feature switching preserves the loaded audio source.
-- Unsupported operations are labelled honestly.
-- CI passes on the latest commit; no horizontal overflow at the proposal viewport matrix.
-- No merge to `main` without explicit user approval.
-
-
-## Follow-up UI consistency fix — 2026-10-18
-
-- Branch: `fix/audio-editor-photo-editor-consistency`; draft PR [#41](https://github.com/mrcode-tech/gaget.dev/pull/41) targets `stage`.
-- Matched the Photo Editor's 68px in-flow editor toolbar: mobile navigation, File, and Features at the top; desktop category menus remain in the top toolbar.
-- Removed the duplicate fixed bottom navigation and standalone Export action. Export is available from File; the feature inspector remains a bottom sheet on mobile and now sits 8px above the viewport edge.
-- Hid the global search field on mobile Audio Editor pages and reduced the empty upload area's extra copy.
-- Updated XS/MD/XL wireframes and regenerated matching PNG/JPG variants with successful render workflow [39068708138](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068708138).
-- Added E2E checks for mobile/desktop search and toolbar behavior, File-menu export, and desktop access to Export & data features.
-- **Verification:** Implementation commit `3658fd254248c52d1b76756feb5ea6848975b010` passed full CI in run [39068980000](https://github.com/mrcode-tech/gaget.dev/actions/runs/39068980000): 38 unit/smoke tests and 34 Playwright E2E tests passed, including the 11-viewport overflow matrix, Audio Editor toolbar/search/export checks, and Photo Editor regressions. ESLint, TypeScript, and the production build also passed. This tracking update is documentation-only.
+## Verification
+The original Photo Editor test contained stale expectations (old upload prompt and button label) that contradicted the requested UX; these assertions are updated. Unit tests and focused Photo Editor/sidebar regression tests passed in CI. The first CI run then failed at ESLint because the new breadcrumbs used raw `<a>` elements; both were changed to `next/link`. The next CI run exposed two stale Audio Editor Playwright assertions that expected no breadcrumb on the empty state. Updated both to assert the intended empty-state breadcrumb, intro, and heading. A fresh full CI run is required before considering this fixed.

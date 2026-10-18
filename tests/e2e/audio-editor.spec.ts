@@ -27,7 +27,9 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/audio/editor");
   await expect(page.getByTestId("audio-editor-menubar")).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+  await expect(page.getByTestId("audio-empty-intro")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Audio Editor" })).toBeVisible();
   const openFeatures = page.getByRole("button", { name: "Open audio editor features" });
   await expect(openFeatures).toBeVisible();
   await openFeatures.click();
@@ -130,7 +132,9 @@ test("audio editor menus and inspector dismiss with Escape", async ({ page }) =>
 test("audio editor toolbar sits below the fixed global header on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/audio/editor");
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+  await expect(page.getByTestId("audio-empty-intro")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Audio Editor" })).toBeVisible();
   const menubar = page.getByTestId("audio-editor-menubar");
   await expect(menubar).toBeVisible();
   await expect(menubar.getByRole("button", { name: "Open navigation" })).toBeVisible();

@@ -93,8 +93,10 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(workspace.className).toContain("p-6");
     expect(workspace.className).not.toContain("bg-[#1e1e1e]");
     expect(screen.getByTestId("empty-canvas-state").className).toContain("bg-background/80");
-    expect(screen.getByText("Drop your photo here")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Choose image" })).toBeTruthy();
+    expect(screen.getByTestId("photo-empty-intro")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Photo Editor" })).toBeTruthy();
+    expect(screen.getByText("Drag and drop an image here")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Choose photo" })).toBeTruthy();
   });
 
   it("keeps the editor navbar compact without a duplicate brand row and anchors Features right", () => {
