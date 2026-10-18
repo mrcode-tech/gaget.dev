@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VideoWorkbench } from "@/components/video-workbench";
 beforeEach(() => {
@@ -14,7 +14,7 @@ describe("VideoWorkbench", () => {
     expect(screen.getByText("Drop a video here")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "File menu" }));
     expect(screen.getByTestId("video-file-menu")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Open video/ })).toBeTruthy();
+    expect(within(screen.getByTestId("video-file-menu")).getByRole("button", { name: /Open video/ })).toBeTruthy();
   });
   it("exposes all 23 feature actions in grouped mobile menu", () => {
     render(<VideoWorkbench slug="editor" />);
