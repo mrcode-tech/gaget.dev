@@ -53,15 +53,19 @@ describe("VideoWorkbench", () => {
     expect(screen.getByRole("heading", { name: "Video information" })).toBeTruthy();
   });
 
-  it("shows the trim timeline only for time-range features and closes the mobile sheet", () => {
+  it("uses the native player seek bar for Trim and Split without rendering a duplicate timeline slider", () => {
     const { container } = render(<VideoWorkbench slug="editor" />);
     loadVideo(container);
+
     chooseMobileFeature("Trim video");
-    expect(screen.getByTestId("video-timeline")).toBeTruthy();
+    expect(container.querySelector("video[controls]")).toBeTruthy();
+    expect(screen.queryByTestId("video-timeline")).toBeNull();
     expect(screen.getByTestId("video-feature-panel").className).toContain("fixed");
-    fireEvent.click(screen.getByRole("button", { name: "Close video feature panel" }));
-    expect(screen.getByTestId("video-feature-panel").className).toContain("hidden");
-    expect(screen.getByTestId("video-timeline")).toBeTruthy();
+
+    chooseMobileFeature("Split video");
+    expect(container.querySelector("video[controls]")).toBeTruthy();
+    expect(screen.queryByTestId("video-timeline")).toBeNull();
+    expect(screen.getByTestId("video-feature-panel").className).toContain("fixed");
   });
 
   it("keeps trim and split parameters and their single export action in the feature panel", () => {
