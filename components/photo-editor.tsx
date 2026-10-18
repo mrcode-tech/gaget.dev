@@ -745,6 +745,11 @@ export function PhotoEditor() {
       <div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span>Private · local processing</span></div>
     </div>
 
+    {!hasImage && <section data-testid="photo-empty-intro" className="mx-auto w-full max-w-screen-xl shrink-0 px-4 pb-4 pt-3 sm:px-6 lg:px-8">
+      <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><a href="/" className="hover:text-foreground">Home</a><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
+      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Photo Editor</h1>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>
+    </section>}
     <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={fileName}>{hasImage ? `${fileName} · ${doc.width} × ${doc.height} px` : "Drop a photo here or open one"}{status && <span className="hidden md:inline"> · {status}</span>}</span>
       <div className="mx-1 hidden h-6 border-l border-border sm:block" />
@@ -796,12 +801,13 @@ export function PhotoEditor() {
                   }} onClick={(event) => {
                     handleCanvasClick(event);
                   }} onPointerDown={handleCropPointerDown} onPointerMove={handleCropPointerMove} onPointerUp={handleCropPointerUp} onPointerCancel={handleCropPointerUp} aria-label={cropMode ? "Crop selection. Drag inside to move, or drag a side or corner to resize. Focus the canvas and use arrow keys to move the crop; hold Shift to move faster." : "Photo editing canvas. In text mode, click to position the selected text, or focus the canvas and use arrow keys to nudge it."} className={"shrink-0 object-contain shadow-[0_2px_12px_rgba(0,0,0,0.18)] " + (cropMode ? "cursor-crosshair touch-none" : activePanel === "text" && selectedText ? "cursor-crosshair" : activePanel === "color" ? "cursor-crosshair" : "")} style={{ width: zoom > 100 ? `${zoom}%` : "auto", height: "auto", maxWidth: zoom > 100 ? "none" : "100%", maxHeight: zoom > 100 ? "none" : "100%", filter: cropMode ? "none" : `brightness(${doc.brightness / 100}) contrast(${doc.contrast / 100}) saturate(${doc.saturation / 100}) grayscale(${doc.grayscale / 100}) sepia(${doc.sepia / 100}) blur(${doc.blur}px)` }} />
-                : <div data-testid="empty-canvas-state" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex min-h-[min(58vh,480px)] w-full max-w-3xl flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>
-                    <p className="text-lg font-semibold">Drop your photo here</p>
-                    <p className="mt-2 hidden max-w-md text-sm leading-6 text-muted-foreground lg:block">Or click anywhere in this workspace to browse. Your original stays on this device while you crop, adjust, and export.</p>
-                    <Button className="mt-5" onClick={() => fileInputRef.current?.click()}>Choose image</Button>
-                    <p className="mt-3 hidden text-xs text-muted-foreground lg:block">PNG · JPEG · WebP · GIF · AVIF · up to 25 MB</p>
+                : <div data-testid="empty-canvas-state" role="button" aria-label="Choose or drop an image" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click(); } }} className={"flex aspect-square max-h-[400px] min-h-[280px] w-full max-w-[480px] flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-8 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (dragOver ? "border-primary bg-primary/5" : "border-border bg-background/80 hover:border-primary/50")}>
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ImagePlus className="h-8 w-8" /></div>
+                    <p className="text-lg font-semibold">Drag and drop an image here</p>
+                    <p className="mt-2 text-sm text-muted-foreground">or</p>
+                    <Button className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose photo</Button>
+                    <p className="mt-5 text-xs text-muted-foreground">PNG · JPEG · WebP · GIF · AVIF · up to 25 MB</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Your image is processed locally in your browser.</p>
                   </div>}
           </div>
         </CardContent>
