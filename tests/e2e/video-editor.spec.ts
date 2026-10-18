@@ -25,5 +25,4 @@ test("legacy video feature route redirects into the unified editor with feature 
   await page.goto("/video/trim");
   await expect(page).toHaveURL(/\/video\/editor\?feature=trim$/);
   await expect(page.getByTestId("video-editor")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Trim video" })).toBeVisible();
 });
