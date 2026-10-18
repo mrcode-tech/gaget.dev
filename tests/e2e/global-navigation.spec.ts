@@ -71,7 +71,7 @@ test("desktop search is centered in the available page area and language menu la
   await page.goto("/tools");
 
   const header = page.locator("header").first();
-  const search = page.getByRole("textbox", { name: /search/i });
+  const search = header.getByRole("textbox", { name: "Search tools" });
   await expect(search).toBeVisible();
   const headerBox = await header.boundingBox();
   const searchBox = await search.boundingBox();
