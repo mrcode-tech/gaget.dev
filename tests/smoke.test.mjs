@@ -50,3 +50,34 @@ for (const route of retiredImageRoutes) {
     assert.equal(new URL(response.headers.get("location"), baseUrl).pathname, "/images/editor");
   });
 }
+
+
+const legacyAudioRoutes = [
+  ["converter", "converter"],
+  ["compressor", "compressor"],
+  ["volume", "volume"],
+  ["trimmer", "trimmer"],
+  ["merger", "merger"],
+  ["splitter", "splitter"],
+  ["speed", "speed"],
+  ["pitch", "pitch"],
+  ["metadata", "metadata"],
+  ["metadata-editor", "metadata-editor"],
+  ["to-wav", "to-wav"],
+  ["base64", "base64"],
+  ["base64-to-audio", "base64-to-audio"],
+  ["silence-detector", "silence-detector"],
+  ["waveform", "waveform"],
+  ["frequency", "frequency"],
+  ["recorder", "recorder"],
+];
+
+for (const [route, feature] of legacyAudioRoutes) {
+  test(`legacy audio route redirects to the unified editor: /audio/${route}`, async () => {
+    const response = await fetch(new URL(`/audio/${route}`, baseUrl), { redirect: "manual" });
+    assert.equal(response.status, 307, `/audio/${route} should redirect to the unified editor`);
+    const destination = new URL(response.headers.get("location"), baseUrl);
+    assert.equal(destination.pathname, "/audio/editor");
+    assert.equal(destination.searchParams.get("feature"), feature);
+  });
+}

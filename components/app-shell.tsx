@@ -13,6 +13,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const direction = localeDirections[locale];
   const pathname = usePathname();
   const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
+  const isAudioEditor = /(?:^|\/)audio\/editor\/?$/.test(pathname);
+  const isEditor = isPhotoEditor || isAudioEditor;
 
   return (
     <>
@@ -22,7 +24,13 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       />
       <div
         className={
-          isPhotoEditor ? "h-dvh overflow-hidden" : direction === "ltr"
+          isEditor ? (direction === "ltr"
+          ? sidebarCollapsed
+            ? "h-dvh overflow-hidden transition-[padding] duration-200 lg:pl-16"
+            : "h-dvh overflow-hidden transition-[padding] duration-200 lg:pl-[248px]"
+          : sidebarCollapsed
+            ? "h-dvh overflow-hidden transition-[padding] duration-200 lg:pr-16"
+            : "h-dvh overflow-hidden transition-[padding] duration-200 lg:pr-[248px]") : direction === "ltr"
             ? sidebarCollapsed
               ? "min-h-screen transition-[padding] duration-200 lg:pl-16"
               : "min-h-screen transition-[padding] duration-200 lg:pl-[248px]"
@@ -31,10 +39,10 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
               : "min-h-screen transition-[padding] duration-200 lg:pr-[248px]"
         }
       >
-        <div className={isPhotoEditor ? "hidden lg:block" : ""}>
+        <div className={isEditor ? "hidden lg:block" : ""}>
           <AppHeader sidebarCollapsed={sidebarCollapsed} />
         </div>
-        <div aria-hidden="true" className={isPhotoEditor ? "hidden h-[68px] lg:block" : "h-[68px]"} />
+        <div aria-hidden="true" className={isEditor ? "hidden h-[68px] lg:block" : "h-[68px]"} />
         {children}
       </div>
     </>

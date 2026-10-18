@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { ToolLayout } from "@/components/tool-layout";
+import { notFound, redirect } from "next/navigation";
 import { AudioWorkbench } from "@/components/audio-workbench";
 
 const entries = [
@@ -25,4 +24,4 @@ const entries = [
 ] as const;
 export function generateStaticParams(){return entries.map(([tool])=>({tool}));}
 export async function generateMetadata({params}:{params:Promise<{tool:string}>}):Promise<Metadata>{const {tool}=await params;const entry=entries.find(([slug])=>slug===tool);if(!entry)return {title:"Audio Tools | GaGet.dev"};return {title:entry[1]+" Online | GaGet.dev",description:entry[2],alternates:{canonical:"/audio/"+tool},openGraph:{title:entry[1],description:entry[2],url:"/audio/"+tool,type:"website"}};}
-export default async function AudioToolPage({params}:{params:Promise<{tool:string}>}){const {tool}=await params;const entry=entries.find(([slug])=>slug===tool);if(!entry)notFound();return <ToolLayout category="Audio" title={entry[1]} description={entry[2]}><AudioWorkbench slug={tool}/></ToolLayout>}
+export default async function AudioToolPage({params,searchParams}:{params:Promise<{tool:string}>;searchParams:Promise<{feature?:string|string[]}>}){const {tool}=await params;const entry=entries.find(([slug])=>slug===tool);if(!entry)notFound();if(tool!=="editor")redirect("/audio/editor?feature="+encodeURIComponent(tool));const query=await searchParams;const requested=Array.isArray(query.feature)?query.feature[0]:query.feature;const feature=entries.some(([slug])=>slug===requested)?requested!:"editor";return <AudioWorkbench slug={feature}/>}
