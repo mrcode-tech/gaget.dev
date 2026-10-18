@@ -19,10 +19,11 @@
 - [x] Updated the Photo Editor drop target to a centered, bounded square-ish upload area with a primary action.
 - [x] Added the equivalent empty-state hierarchy and bounded drag/drop target to Audio Editor; loaded audio continues to use its existing workspace.
 - [x] Updated the existing Photo Editor component assertion to match the new empty-state copy and added intro/title assertions.
-- [ ] Add/update Audio Editor and Playwright tests for empty and loaded states, file picker/drop, errors, and responsive bounds.
+- [x] Updated Audio Editor Playwright checks to expect the breadcrumb, intro, and heading in the no-file-selected state.
 - [x] Fixed the ESLint errors by using `next/link` for the new Home breadcrumbs in both editors.
+- [x] Fixed the stale Audio Editor E2E assertions that expected no breadcrumb on the empty state.
 - [ ] Re-run lint, typecheck, production build, smoke and E2E tests; record actual results.
 - [ ] Review latest CI before proposing merge to `stage`.
 
 ## Verification
-The original Photo Editor test contained stale expectations (old upload prompt and button label) that contradicted the requested UX; these assertions are updated. Unit tests and focused Photo Editor/sidebar regression tests passed in CI. The first CI run then failed at ESLint because the new breadcrumbs used raw `<a>` elements; both were changed to `next/link`. A fresh full CI run is required before considering this fixed.
+The original Photo Editor test contained stale expectations (old upload prompt and button label) that contradicted the requested UX; these assertions are updated. Unit tests and focused Photo Editor/sidebar regression tests passed in CI. The first CI run then failed at ESLint because the new breadcrumbs used raw `<a>` elements; both were changed to `next/link`. The next CI run exposed two stale Audio Editor Playwright assertions that expected no breadcrumb on the empty state. Updated both to assert the intended empty-state breadcrumb, intro, and heading. A fresh full CI run is required before considering this fixed.
