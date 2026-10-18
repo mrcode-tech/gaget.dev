@@ -68,29 +68,35 @@ describe("VideoWorkbench", () => {
     expect(screen.getByTestId("video-feature-panel").className).toContain("fixed");
   });
 
-  it("places frame and audio parameters in the main workspace, not inside the timeline or mobile sheet", () => {
+  it("keeps frame and audio parameters in the consistent mobile feature sheet without duplicate position controls", () => {
     const { container } = render(<VideoWorkbench slug="editor" />);
     loadVideo(container);
 
     for (const feature of ["Extract frames", "Thumbnail generator"]) {
       chooseMobileFeature(feature);
-      const workspace = screen.getByTestId("video-workspace-controls");
-      expect(within(workspace).getByRole("spinbutton", { name: "Frame timestamp (seconds)" })).toBeTruthy();
-      expect(within(workspace).getByRole("button", { name: "Go to timestamp" })).toBeTruthy();
-      expect(within(workspace).getByRole("button", { name: "Capture frame" })).toBeTruthy();
-      expect(within(screen.getByTestId("video-timeline")).queryByRole("spinbutton")).toBeNull();
-      expect(within(screen.getByTestId("video-timeline")).queryByRole("button")).toBeNull();
-      expect(screen.getByTestId("video-feature-panel").className).toContain("hidden");
+      const panel = screen.getByTestId("video-feature-panel");
+      expect(panel.className).toContain("fixed");
+      expect(within(panel).getByRole("spinbutton", { name: "Frame timestamp (seconds)" })).toBeTruthy();
+      expect(within(panel).getByRole("button", { name: "Capture frame" })).toBeTruthy();
+      expect(within(panel).queryByRole("button", { name: "Go to timestamp" })).toBeNull();
+      expect(within(panel).queryByRole("button", { name: "Preview start" })).toBeNull();
+      expect(screen.queryByTestId("video-workspace-controls")).toBeNull();
+      expect(screen.queryByTestId("video-timeline")).toBeNull();
+      expect(within(panel).getByRole("button", { name: "Close video feature panel" })).toBeTruthy();
     }
 
     chooseMobileFeature("Video to audio");
-    const workspace = screen.getByTestId("video-workspace-controls");
-    expect(within(workspace).getByRole("spinbutton", { name: "Audio range start (seconds)" })).toBeTruthy();
-    expect(within(workspace).getByRole("spinbutton", { name: "Audio range end (seconds)" })).toBeTruthy();
-    expect(within(workspace).getByRole("button", { name: "Extract audio" })).toBeTruthy();
-    expect(within(screen.getByTestId("video-timeline")).queryByRole("spinbutton")).toBeNull();
-    expect(within(screen.getByTestId("video-timeline")).queryByRole("button")).toBeNull();
-    expect(screen.getByTestId("video-feature-panel").className).toContain("hidden");
+    const panel = screen.getByTestId("video-feature-panel");
+    expect(panel.className).toContain("fixed");
+    expect(within(panel).getByRole("spinbutton", { name: "Audio range start (seconds)" })).toBeTruthy();
+    expect(within(panel).getByRole("spinbutton", { name: "Audio range end (seconds)" })).toBeTruthy();
+    expect(within(panel).getByRole("button", { name: "Extract audio" })).toBeTruthy();
+    expect(within(panel).queryByRole("button", { name: "Preview start" })).toBeNull();
+    expect(screen.queryByTestId("video-workspace-controls")).toBeNull();
+    expect(screen.queryByTestId("video-timeline")).toBeNull();
+
+    fireEvent.click(within(panel).getByRole("button", { name: "Close video feature panel" }));
+    expect(panel.className).toContain("hidden");
   });
 
   it("keeps trim and split parameters and their single export action in the feature panel", () => {
