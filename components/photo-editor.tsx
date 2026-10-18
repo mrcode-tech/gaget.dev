@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent, type CSSProperties } from "react";
 import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, Maximize2, X, Crop, SlidersHorizontal, Pipette, Info, FileOutput, Ruler, Code2, Grid2X2, FileImage, Image as ImageIcon, Menu, FolderOpen, RotateCcw } from "lucide-react";
@@ -746,7 +747,7 @@ export function PhotoEditor() {
     </div>
 
     {!hasImage && <section data-testid="photo-empty-intro" className="mx-auto w-full max-w-screen-xl shrink-0 px-4 pb-4 pt-3 sm:px-6 lg:px-8">
-      <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><a href="/" className="hover:text-foreground">Home</a><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
+      <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><Link href="/" className="hover:text-foreground">Home</Link><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Photo Editor</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>
     </section>}
