@@ -746,9 +746,10 @@ export function PhotoEditor() {
       <div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span>Private · local processing</span></div>
     </div>
 
-    {!hasImage && <section data-testid="photo-empty-intro" className="w-full shrink-0 px-3 pb-4 pt-0 sm:px-6">
+    {!hasImage && <section data-testid="photo-empty-intro" className="w-full shrink-0 px-3 pb-4 pt-3 sm:px-6 sm:pt-6">
       <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><Link href="/" className="hover:text-foreground">Home</Link><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Photo Editor</h1>
+       <p data-testid="photo-empty-description" className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>
       
     </section>}
     {hasImage && <div data-testid="photo-work-toolbar" className="flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-3 py-1.5">
@@ -764,7 +765,6 @@ export function PhotoEditor() {
       </div>
     </div>}
 
-    {!hasImage && <p data-testid="photo-empty-description" className="mt-2 shrink-0 px-3 pb-0 text-sm leading-6 text-muted-foreground sm:px-6 sm:text-base">Edit, crop, resize, and enhance images in your browser.</p>}
     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden sm:flex-row">
       <Card className="flex min-h-0 min-w-0 flex-1 flex-col rounded-none border-0 shadow-none">
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
