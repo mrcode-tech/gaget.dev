@@ -50,41 +50,46 @@ const emptyStateViewports = [
 ] as const;
 
 for (const viewport of emptyStateViewports) {
-  test(`photo empty-state description follows the toolbar with consistent alignment and spacing at ${viewport.width}×${viewport.height}`, async ({ page }) => {
+  test(`photo empty state matches audio editor layout at ${viewport.width}×${viewport.height}`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/images/editor");
 
     const toolbar = page.getByTestId("editor-menubar");
+    const workToolbar = page.getByTestId("photo-work-toolbar");
+    const intro = page.getByTestId("photo-empty-intro");
+    const breadcrumb = intro.getByRole("navigation", { name: "Breadcrumb" });
+    const heading = page.getByRole("heading", { name: "Photo Editor" });
     const description = page.getByTestId("photo-empty-description");
     const uploadArea = page.getByTestId("empty-canvas-state");
     await expect(toolbar).toBeVisible();
+    await expect(workToolbar).toHaveCount(0);
     await expect(description).toBeVisible();
     await expect(uploadArea).toBeVisible();
+    await expect(page.getByText("Drop a photo here or open one")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Undo", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Redo", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Zoom out" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Zoom in" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Fit canvas" })).toHaveCount(0);
 
-    const toolbarBox = await toolbar.boundingBox();
+    const breadcrumbMetrics = await breadcrumb.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect();
+    });
+    const headingBox = await heading.boundingBox();
     const descriptionMetrics = await description.evaluate((element) => {
       const range = document.createRange();
       range.selectNodeContents(element);
       const text = range.getBoundingClientRect();
-      return {
-        textLeft: text.left,
-        textBottom: text.bottom,
-        top: element.getBoundingClientRect().top,
-        paddingLeft: Number.parseFloat(getComputedStyle(element).paddingLeft),
-      };
+      return { textLeft: text.left, textBottom: text.bottom };
     });
     const uploadBox = await uploadArea.boundingBox();
-    expect(toolbarBox).not.toBeNull();
+    expect(headingBox).not.toBeNull();
     expect(uploadBox).not.toBeNull();
-    if (toolbarBox && uploadBox) {
-      expect(descriptionMetrics.top).toBeGreaterThanOrEqual(toolbarBox.y + toolbarBox.height);
-      expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
-    }
-    if (viewport.width >= 1024) {
-      const fileMenu = await toolbar.getByRole("button", { name: "File", exact: true }).boundingBox();
-      expect(fileMenu).not.toBeNull();
-      if (fileMenu) expect(descriptionMetrics.textLeft).toBeCloseTo(fileMenu.x, 0);
-    }
+    expect(descriptionMetrics.textLeft).toBeCloseTo(breadcrumbMetrics.left, 0);
+    if (headingBox) expect(headingBox.x).toBeCloseTo(breadcrumbMetrics.left, 0);
+    if (uploadBox) expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
