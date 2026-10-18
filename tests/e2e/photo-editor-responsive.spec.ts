@@ -361,7 +361,7 @@ test("photo editor file and feature menus share icon rows, bounded widths, and o
     const fileBox = await fileMenu.boundingBox();
     expect(fileBox).not.toBeNull();
     if (fileBox) expect(fileBox.width).toBeLessThanOrEqual(320);
-    await page.mouse.click(width - 30, 75);
+    await page.mouse.click(width - 30, 10);
     await expect(fileMenu).toBeHidden();
 
     if (width >= 1024) {
@@ -372,7 +372,7 @@ test("photo editor file and feature menus share icon rows, bounded widths, and o
       const box = await menu.boundingBox();
       expect(box).not.toBeNull();
       if (box) expect(box.width).toBeLessThanOrEqual(320);
-      await page.mouse.click(5, 75);
+      await page.mouse.click(5, 10);
       await expect(menu).toBeHidden();
     } else {
       await menubar.getByRole("button", { name: "Open photo editor features" }).click();
