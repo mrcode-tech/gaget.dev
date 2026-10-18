@@ -40,3 +40,9 @@ The original Photo Editor test contained stale expectations (old upload prompt a
 
 ### UX rationale
 Use consistent left alignment with the editor toolbar/workspace gutter, a clear but not oversized separation between explanatory text and the primary upload action, responsive wrapping, and a real “Choose” button alongside drag-and-drop. This follows W3C/WAI guidance to use whitespace and proximity to group related content, keep layouts reflowable without horizontal scrolling, and provide non-drag alternatives for file uploads.
+
+
+### Short-landscape correction
+- The first responsive CI run found that the photo upload target could vertically center outside its scroll area when the viewport was short (844×390), overlapping the newly repositioned description.
+- [x] For viewports at or below 500px tall, align the empty canvas content to the start of its scroll area instead of vertically centering an item taller than the available height. The description-to-upload spacing remains clear, and normal-height layouts remain centered.
+- [ ] Re-run the complete CI suite and confirm the 844×390 landscape case passes.
