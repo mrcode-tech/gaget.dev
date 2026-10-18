@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen, beforeEach, afterEach, describe, expect, it, vi } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VideoWorkbench } from "@/components/video-workbench";
 beforeEach(() => {
   Object.defineProperty(URL, "createObjectURL", { configurable: true, value: vi.fn(() => "blob:video-preview") });
