@@ -43,6 +43,7 @@ test("Audio Editor loads audio, switches features, and keeps processing availabl
     buffer: makeWavFixture(),
   });
   await expect(page.getByText(/Decoded locally/i)).toBeVisible();
+  await expect(page.getByTestId("audio-empty-description")).toBeHidden();
   await expect(page.locator("#audio-waveform")).toBeVisible();
 
   await openFeatures.click();
