@@ -13,7 +13,7 @@ describe("Date & Time reusable fields", () => {
     expect(screen.getByRole("button", { name: "Today" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Today" }));
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange.mock.calls[0][0]).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+    expect(onChange.mock.calls[0][0]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it("provides a bounded quarter-hour list and keeps direct time entry available", () => {
