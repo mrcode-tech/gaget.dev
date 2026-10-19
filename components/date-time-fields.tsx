@@ -42,13 +42,15 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
       if (i > 0 && monthKey(date) !== key) break;
       dates.push(date);
     }
-    return { first, dates, offset: first.getDay() };
+    const weekStartDay = locale.startsWith("fa") ? 6 : (locale.startsWith("en-US") || locale.startsWith("ar")) ? 0 : 1;
+    return { first, dates, offset: (first.getDay() - weekStartDay + 7) % 7, weekStartDay };
   })();
   const monthLabel = format(viewMonth, { month: "long", year: "numeric" });
   const gregorianMonthLabel = format(viewMonth, { month: "short", year: "numeric" }, "gregory");
   const selectedLabel = value ? format(selected, { dateStyle: "full" }) : "Choose date";
   const weekdays = useMemo(() => Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(2023, 0, 1 + index, 12);
+    const weekStartDay = locale.startsWith("fa") ? 6 : (locale.startsWith("en-US") || locale.startsWith("ar")) ? 0 : 1;
+    const day = new Date(2023, 0, 1 + ((weekStartDay + index) % 7), 12);
     return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(day);
   }), [locale]);
   const changeMonth = (amount: number) => setViewMonth((current) => { const info = (() => { let first = new Date(current); const key = monthKey(first); for (let i = 0; i < 35; i += 1) { const previous = new Date(first); previous.setDate(previous.getDate() - 1); if (monthKey(previous) !== key) break; first = previous; } return first; })(); if (amount < 0) { info.setDate(info.getDate() - 1); return info; } const next = new Date(current); for (let i = 0; i < 35; i += 1) { next.setDate(next.getDate() + 1); if (monthKey(next) !== monthKey(current)) break; } return next; });
