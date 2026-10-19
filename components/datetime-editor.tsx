@@ -70,6 +70,8 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [showSeconds, setShowSeconds] = useState(true);
   const [activeFeature, setActiveFeature] = useState<string | null>(initialFeature && features.some((f) => f.slug === initialFeature) ? initialFeature : null);
   const [query, setQuery] = useState("");
+  const [zoneQuery, setZoneQuery] = useState("");
+  const [availableZones, setAvailableZones] = useState<string[]>(zones);
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [frozen, setFrozen] = useState(false);
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
@@ -91,15 +93,18 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
     return () => window.clearInterval(timer);
   }, []);
 
-  const displayNow = frozen && frozenAt ? frozenAt : now;
-  const filteredFeatures = useMemo(() => features.filter((f) => (f.title + " " + f.description + " " + f.group).toLowerCase().includes(query.toLowerCase())), [query]);
-  const availableZones = useMemo(() => {
+  useEffect(() => {
     try {
       const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
-      return Array.from(new Set([...zones, ...(intl.supportedValuesOf?.("timeZone") ?? [])])).sort();
-    } catch { return zones; }
+      const supported = intl.supportedValuesOf?.("timeZone");
+      if (supported) setAvailableZones(Array.from(new Set([...zones, ...supported])).sort());
+    } catch {
+      // Keep the known-good fallback zone list on older browsers.
+    }
   }, []);
-  const [zoneQuery, setZoneQuery] = useState("");
+
+  const displayNow = frozen && frozenAt ? frozenAt : now;
+  const filteredFeatures = useMemo(() => features.filter((f) => (f.title + " " + f.description + " " + f.group).toLowerCase().includes(query.toLowerCase())), [query]);
   const formattedDate = displayNow ? safeFormat(displayNow, locale, calendar, numberingSystem, timeZone) : "Loading date…";
   const formattedTime = displayNow ? new Intl.DateTimeFormat(locale, {
     timeZone, hour: "2-digit", minute: "2-digit", ...(showSeconds ? { second: "2-digit" as const } : {}),
