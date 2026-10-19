@@ -3,7 +3,7 @@
 **Status:** Proposal; no application behavior changed  
 **Repository:** `mrcode-tech/gaget.dev`  
 **Base reviewed:** `stage`  
-**Proposal branch:** `proposal/unified-date-time-app`  
+**Specification branch:** `feature/date-time-multicalendar-design-spec`  
 **Design reference:** `specification/tempalet_wirefram/README.md` and `specification/tempalet_wirefram/template_single_app.md`  
 **Reference implementation:** Photo Editor on `stage`  
 **Goal:** Consolidate the existing Date & Time tools into one comprehensive, local-first workspace with a multilingual, multi-calendar date/time centerpiece.
@@ -70,6 +70,89 @@ Do not conflate calendar system, language, numeral system, and time zone.
 - **Direction:** apply RTL to Arabic and Persian presentation regions where appropriate, while keeping timestamps, ISO strings, Unix values, and technical identifiers legible and directionally isolated.
 
 Use `Intl.DateTimeFormat` with explicit `locale`, `calendar`, `numberingSystem`, and `timeZone` options where available. Feature-detect support and handle unsupported combinations gracefully. Do not promise identical calendar algorithms across browsers without testing them.
+
+## 3A. Shared date/time input system — required design contract
+
+The date/time input is a reusable product component, not a collection of native browser inputs or plain list boxes. The same component family must be used by the default centerpiece and every feature that accepts a date, time, date range, or date-time value.
+
+### Component family and names
+
+- `CalendarDateInput`: a labeled, styled date field with a calendar popover.
+- `CalendarSystemSelect`: a searchable/styled selection control for the calendar system; never a raw unstyled `<select>`.
+- `DatePicker`: calendar popover with month/year navigation, localized weekday labels, keyboard selection, and an explicit selected-date state.
+- `TimePicker`: styled time input with a compact popover or wheel-like hour/minute selection; supports 12/24-hour mode and optional seconds.
+- `DateTimePicker`: combined date/time field with tabs or clearly separated date and time sections.
+- `DateRangePicker`: two linked date endpoints, with range highlighting and independent start/end labels.
+- `TimeZoneSelect`: searchable IANA time-zone picker with city/region, UTC offset, and query filtering.
+- `CalendarLocaleControls`: separate controls for calendar, language/locale, numeral system, and time zone.
+- `CompactDateInput` and `CompactTimeInput`: density variants of the same components for inline tables and narrow feature panels, not separate implementations.
+
+### Visual design and implementation rules
+
+- Use the project's shadcn/ui-style primitives and existing design tokens: labeled `FormField`/label, styled `Input`, `Button`, `Popover`, `PopoverTrigger`, `PopoverContent`, `Calendar`, `Select`/combobox, `Tabs`, and accessible dialog patterns already present in the repository.
+- Never use a bare browser `input[type=date]`, `input[type=time]`, or native `select` as the primary visual component. Do not build a plain, unstyled list box as the calendar selector.
+- Use consistent heights, typography, border, radius, shadow, focus ring, disabled state, error state, icon size, spacing, and popover layering across all date/time tools. Reuse existing shadcn primitives rather than inventing a parallel design system.
+- The closed field shows a clear value and calendar/clock icon; the popover is aligned to the field, has a bounded width and max height, and scrolls internally when content exceeds available space.
+- The calendar-system selector must be a styled searchable list/combobox with a visible selected state, optional short calendar examples, and a clear label. It must not expand into an unbounded page-length list. On small screens, use a bounded popover or a mobile sheet using the project's existing responsive pattern.
+- Provide explicit Apply/Cancel only where the interaction edits a draft. For simple single-date selection, selection may commit immediately if that behavior is consistent and documented. Escape closes and restores focus; clicking outside follows the existing popover contract.
+- Inputs must support controlled values, empty values, min/max bounds, required/optional states, read-only/disabled states, validation errors, helper text, and form submission without silently coercing invalid input.
+- Maintain consistent dimensions and behavior when used in Date Difference, Age Calculator, Date Calculator, Business Days, Countdown, Meeting Planner, Timestamp Converter, Calendar Generator, and all other applicable features.
+
+### Calendar system, locale, digits, and timezone must remain independent
+
+The UI must not treat “Persian”, “Arabic”, or “English” as a calendar selection. Expose separate, labeled settings:
+
+1. **Calendar system:** Gregorian, Persian Solar Hijri, and each specifically supported Islamic variant (for example Umm al-Qura or civil/tabular), plus other calendars only after runtime capability and correctness tests.
+2. **Language/locale:** English, Persian (Farsi), Arabic, Georgian, and any additional app-supported locales.
+3. **Numeral system:** locale default, Latin digits, Persian digits, and Arabic-Indic digits where supported.
+4. **Time zone:** searchable IANA zones; changing the zone changes instant-to-local-time presentation, not a date-only value.
+5. **Clock format:** 12-hour or 24-hour; seconds are optional.
+
+Show the selected calendar and locale clearly in the field/popover. Calendar month/year headings, weekday names, month navigation, selected day, today marker, and accessible labels must follow the selected calendar and locale. When a browser cannot format a requested calendar/locale combination, show an explicit supported-combination message rather than silently displaying a different calendar.
+
+### Date picker interaction details
+
+- Calendar header has previous/next period controls, a month/year heading, and an optional month/year selection affordance if supported by the calendar adapter.
+- Weekday labels and week-start convention follow locale or an explicitly selected convention. The convention must be documented; do not silently force Sunday for every locale.
+- Provide clear states for today, selected date, dates in a selected range, dates outside the current month, disabled dates, and keyboard focus. Color is not the only state indicator.
+- Keyboard: arrow keys move by day/week, PageUp/PageDown move by month, Shift+PageUp/PageDown move by year where appropriate, Home/End follow the documented week convention, Enter/Space selects, Escape closes.
+- Localized numerals are visual presentation only; parsed and emitted machine values remain stable.
+- A date-only field stores a date-only value (calendar date/year/month/day) and must not shift when the browser time zone changes. An instant-based date-time field stores an instant plus its display zone. A wall-time field must identify the zone or explicitly state that it is zone-free.
+
+### Time picker interaction details
+
+- Offer a polished time popover with hour and minute columns; seconds appear only when enabled. It must not be an infinitely tall, unbounded list.
+- Keyboard navigation and direct text entry must be supported; validate hour/minute/second ranges and AM/PM conversion.
+- In 12-hour mode, show an explicit AM/PM control. In 24-hour mode, omit AM/PM. Respect localized digits and locale labels without changing the underlying numeric value.
+- For a date-time value in an IANA zone, handle DST gaps and overlaps. If a chosen local wall time is nonexistent or ambiguous, explain the condition and let the user choose a valid interpretation; do not silently move the time.
+- Time zone and UTC offset should be visible when they materially affect interpretation. Keep technical output such as ISO 8601 in a directionally isolated LTR region inside RTL interfaces.
+
+### Combined and range pickers
+
+- Combined DateTimePicker uses one styled trigger field and a bounded popover containing Date and Time tabs/sections. Show the final selected value in the trigger. On narrow screens, stack sections and make the popover/sheet content internally scrollable.
+- DateRangePicker labels Start date and End date separately, uses a two-month view on wide screens where space permits, and a single-month stacked view on compact screens. Highlight the inclusive range and make endpoint semantics explicit.
+- Date-range feature inputs must not require users to open two unrelated full-page calendars. Both endpoints use the same reusable picker and selected calendar/locale settings.
+- For meeting planning, each local wall-time endpoint is paired with a time-zone field. For date difference, users can choose date-only or elapsed date-time difference; the UI must explain which calculation is active.
+
+### Component states and responsive rules
+
+Document and test: default, hover, focus-visible, open, selected, today, range-start, range-end, in-range, outside-month, disabled, read-only, loading (when applicable), invalid/error, and empty states. At 320–390px, popovers must fit the viewport or use the established mobile sheet; no horizontal overflow. At tablet and desktop sizes, align popovers to their field and keep widths bounded. The whole working area must scroll when vertical space is insufficient; avoid competing nested scroll regions except inside intentionally bounded picker lists/popovers.
+
+### Required component acceptance criteria
+
+- No date/time feature contains its own visually divergent calendar or raw select control.
+- Every applicable feature imports the shared input component(s), with feature-specific labels, validation, and value semantics passed through props.
+- Calendar selector is styled, searchable, bounded, keyboard accessible, and scrollable when its option list exceeds the max height.
+- Gregorian, Persian Solar Hijri, and the explicitly supported Islamic variants are verified against test vectors, not merely formatted by a demo screenshot.
+- English LTR, Persian RTL, and Arabic RTL screenshots show mirrored layout correctly; Georgian locale uses localized language without being mislabeled as a distinct calendar.
+- Component tests cover controlled/uncontrolled state where supported, validation, focus restoration, keyboard operation, date-only stability, DST ambiguity, and responsive popover bounds.
+
+## 3B. Date/time input wireframes
+
+The wireframe asset in this directory is the visual companion to this specification. It defines the reusable component family and representative use in feature panels. Treat it as structural guidance; the repository's shadcn tokens and actual component primitives remain the visual source of truth.
+
+- `date-time-input-components.svg` — component gallery for date, calendar selector, Persian-calendar picker, time picker, combined date/time picker, date range, timezone selector, input states, and compact variants.
+- The reference image should be reviewed at desktop, tablet, and mobile widths and in both LTR and RTL. If a raster JPG is needed for review/issue attachment, export the SVG or approved rendered wireframe to JPG as a build/review artifact; keep SVG as the editable repository source.
 
 ## 4. Feature inventory and menu grouping
 
