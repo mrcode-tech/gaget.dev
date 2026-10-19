@@ -23,6 +23,8 @@ const toISODate = (date: Date) => date.getFullYear() + "-" + pad(date.getMonth()
 export function CalendarDateInput({ id, value, onChange, locale = "en-US", calendar = "gregory", numberingSystem = "locale" }: DateFieldProps) {
   const selected = parseISODate(value);
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [viewMonth, setViewMonth] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1, 12));
   const format = (date: Date, options: Intl.DateTimeFormatOptions, calendarOverride = calendar) => {
     try { return new Intl.DateTimeFormat(locale, { ...options, calendar: calendarOverride, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem }).format(date); }
