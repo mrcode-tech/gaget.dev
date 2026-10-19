@@ -101,7 +101,7 @@ export function ClockTimeInput({ id, value, onChange }: DateFieldProps) {
       <button type="button" aria-label="Choose time" aria-expanded={open} onClick={() => setOpen((current) => !current)} className="inline-flex h-full items-center px-3 text-muted-foreground hover:bg-accent/40"><Clock3 className="h-4 w-4" /></button>
     </div>
     {open && <div role="listbox" aria-label="Time options" className="absolute start-0 top-[calc(100%+4px)] z-50 max-h-56 w-full min-w-40 overflow-y-auto border border-border bg-popover p-1 text-popover-foreground shadow-xl">
-      {options.map((option) => <button key={option} type="button" role="option" aria-selected={normalized === option} onMouseDown={(event) => event.preventDefault()} onClick={() => { onChange(option); setOpen(false); inputRef.current?.focus(); }} className={"block w-full px-3 py-1.5 text-start text-sm tabular-nums hover:bg-accent " + (normalized === option ? "bg-accent font-medium" : "")}>{option}</button>)}
+      {options.map((option) => <button key={option} type="button" role="option" aria-selected={normalized === option} onMouseDown={(event) => event.preventDefault()} onClick={() => { onChange(option); setOpen(false); }} className={"block w-full px-3 py-1.5 text-start text-sm tabular-nums hover:bg-accent " + (normalized === option ? "bg-accent font-medium" : "")}>{option}</button>)}
     </div>}
   </div>;
 }
