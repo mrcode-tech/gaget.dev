@@ -16,7 +16,8 @@ function bounds(viewportHeight: number) {
  * by the consuming editor.
  */
 export function useResizableFeatureSheet() {
-  const panelRef = useRef<HTMLElement | null>(null);
+  const panelElementRef = useRef<HTMLElement | null>(null);
+  const panelRef = useCallback((node: HTMLElement | null) => { panelElementRef.current = node; }, []);
   const dragRef = useRef<DragState | null>(null);
   const [sheetHeight, setSheetHeight] = useState<number | null>(null);
   const [viewportHeight, setViewportHeight] = useState(800);
@@ -42,12 +43,12 @@ export function useResizableFeatureSheet() {
   }, []);
 
   const onPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || !panelRef.current) return;
+    if (event.button !== 0 || !panelElementRef.current) return;
     const { defaultHeight } = bounds(window.innerHeight);
     dragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
-      startHeight: sheetHeight ?? panelRef.current.getBoundingClientRect().height ?? defaultHeight,
+      startHeight: sheetHeight ?? panelElementRef.current.getBoundingClientRect().height ?? defaultHeight,
     };
     setSheetHeight(dragRef.current.startHeight);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -71,14 +72,14 @@ export function useResizableFeatureSheet() {
     if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
     const { minHeight, maxHeight, defaultHeight } = bounds(window.innerHeight);
-    const current = sheetHeight ?? panelRef.current?.getBoundingClientRect().height ?? defaultHeight;
+    const current = sheetHeight ?? panelElementRef.current?.getBoundingClientRect().height ?? defaultHeight;
     if (event.key === "Home") resizeTo(minHeight);
     else if (event.key === "End") resizeTo(maxHeight);
     else resizeTo(current + (event.key === "ArrowUp" ? 32 : -32));
   }, [resizeTo, sheetHeight]);
 
   const { minHeight, maxHeight, defaultHeight } = bounds(viewportHeight);
-  const panelStyle = (sheetHeight === null ? undefined : { "--feature-panel-height": `${sheetHeight}px` }) as CSSProperties | undefined;
+  const panelStyle = { "--feature-panel-height": sheetHeight === null ? "min(45dvh, 380px)" : `${sheetHeight}px` } as CSSProperties;
 
   return {
     panelRef,
