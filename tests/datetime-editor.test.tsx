@@ -8,8 +8,12 @@ describe("DateTimeEditor", () => {
   it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
+    const intro = screen.getByTestId("datetime-editor-intro");
+    expect(intro.contains(screen.getByText(/One workspace for dates, calendars, clocks/))).toBe(true);
     const centerpiece = screen.getByRole("region", { name: "Date and time display" });
     expect(centerpiece).toBeTruthy();
+    expect(centerpiece.className).toContain("mt-4");
+    expect(centerpiece.className).not.toContain("my-auto");
     expect(centerpiece.className).toContain("rounded-2xl");
     expect(centerpiece.className).toContain("bg-card");
     expect(centerpiece.className).toContain("shadow-sm");
@@ -55,7 +59,11 @@ describe("DateTimeEditor", () => {
     expect(dateCalculator.querySelector("svg")).toBeTruthy();
     expect(dateCalculator.textContent).toContain("Add or subtract days");
     fireEvent.click(dateCalculator);
-    expect(screen.getByTestId("datetime-feature-panel")).toBeTruthy();
+    const panel = screen.getByTestId("datetime-feature-panel");
+    expect(panel).toBeTruthy();
+    const workspaceGrid = panel.parentElement;
+    expect(workspaceGrid?.className).toContain("grid");
+    expect(workspaceGrid?.firstElementChild?.contains(screen.getByTestId("datetime-editor-intro"))).toBe(true);
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
   });
 
