@@ -37,6 +37,7 @@ export default async function CategoryPage({
   if (slug === "images") redirect("/images/editor");
   if (slug === "audio") redirect("/audio/editor");
   if (slug === "video") redirect("/video/editor");
+  if (slug === "date-time") redirect("/datetime/editor");
 
   // Pass only serializable data across the Server/Client Component boundary.
   return <CategoryLanding category={category.name} />;
