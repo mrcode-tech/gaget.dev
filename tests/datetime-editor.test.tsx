@@ -29,6 +29,16 @@ describe("DateTimeEditor", () => {
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
   });
 
+  it("dismisses menus with Escape and restores focus to the trigger", () => {
+    render(<DateTimeEditor />);
+    const trigger = screen.getByRole("button", { name: "Features" });
+    fireEvent.click(trigger);
+    expect(screen.getByTestId("datetime-feature-menu")).toBeTruthy();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByTestId("datetime-feature-menu")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it("opens the shared resizable mobile feature sheet for a selected legacy feature", () => {
     render(<DateTimeEditor initialFeature="date-difference" />);
     const panel = screen.getByTestId("datetime-feature-panel");
