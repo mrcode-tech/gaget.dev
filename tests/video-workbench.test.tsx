@@ -117,6 +117,18 @@ describe("VideoWorkbench", () => {
     expect(within(panel).queryByRole("button", { name: "Apply & export WebM" })).toBeNull();
   });
 
+  it("provides an accessible resizable sheet handle with keyboard bounds", () => {
+    const { container } = render(<VideoWorkbench slug="editor" />);
+    loadVideo(container);
+    chooseMobileFeature("Video information");
+    const handle = screen.getByRole("slider", { name: "Resize editing panel" });
+    expect(Number(handle.getAttribute("aria-valuenow"))).toBeLessThanOrEqual(Number(handle.getAttribute("aria-valuemax")));
+    fireEvent.keyDown(handle, { key: "End" });
+    expect(handle.getAttribute("aria-valuenow")).toBe(handle.getAttribute("aria-valuemax"));
+    fireEvent.keyDown(handle, { key: "Home" });
+    expect(handle.getAttribute("aria-valuenow")).toBe(handle.getAttribute("aria-valuemin"));
+  });
+
   it("uses an icon-based navigation trigger rather than a text hamburger glyph", () => {
     render(<VideoWorkbench slug="editor" />);
     const navigation = screen.getByRole("button", { name: "Open navigation" });
