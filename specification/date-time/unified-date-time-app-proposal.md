@@ -1,6 +1,6 @@
 # Unified Date & Time App — Design Proposal
 
-**Status:** Proposal; no application behavior changed  
+**Status:** Design specification; implementation in progress  
 **Repository:** `mrcode-tech/gaget.dev`  
 **Base reviewed:** `stage`  
 **Specification branch:** `feature/date-time-multicalendar-design-spec`  
@@ -364,4 +364,33 @@ These are audit observations from the current source, not a claim that every lis
 
 ---
 
-**Decision requested:** approve the unified Date & Time workspace direction and this feature scope before implementation. This branch contains the proposal only; no application code has been changed.
+**Implementation status (2026-10-20):** The unified editor shell and grouped feature menus are present on this branch. The reusable calendar-aware date picker and bounded time picker have been added and integrated into the feature workbench. The centerpiece and feature settings now use square-edged fields and horizontal separators. The wireframes and template adaptation contract have been expanded. This is not a release-complete claim: calculation correctness, complete calendar/locale coverage, automated tests, browser screenshots, typecheck, lint, and production build still need to be run and reviewed before merging.
+
+
+## 16. Final component and visual contract
+
+### 16.1 Shared command bar and File menu
+
+- The command bar is exactly the shared 68px editor bar: `px-3 sm:px-6`, `gap-3`, 36px high top-level buttons, shared hover/focus/open-state styling, and logical inline-start/inline-end placement.
+- Compact widths show File at inline-start and Features at inline-end. Desktop widths show File followed immediately by Date, Time, Calendar, and Utilities groups. File dropdown placement is relative to the command bar; feature dropdowns are relative to their own trigger.
+- Keep File actions relevant to a local date/time workspace: copy the displayed value, copy ISO 8601, copy Unix seconds, print the current view, and reset the reference clock. Do not add media-only Open/Replace/Export controls or duplicate a second feature toolbar.
+- Preserve accessible menu names, Escape handling, focus restoration, bounded menu height, internal scrolling, URL feature selection, and the current 20-feature inventory.
+
+### 16.2 Square settings and separators
+
+- The live date/time centerpiece and feature settings use a flat, square-edged field treatment. Settings are grouped by thin horizontal `border-border` separators; do not wrap every row in a rounded card.
+- Inputs use repository tokens for border, foreground, background, focus ring, disabled state and typography. Popovers may have elevation for layering but their fields and calendar grid must not imitate nested cards.
+- Keep the feature inspector and mobile resizable sheet aligned with the shared editor shell. Do not redesign its resize affordance or introduce a second scroll container for the main workspace.
+- The main workspace is the primary scroll region. Feature-panel controls scroll internally; popovers have viewport-bounded height and width and do not cause horizontal page overflow.
+
+### 16.3 Reusable date/time fields
+
+- `CalendarDateInput` accepts a stable ISO Gregorian date string (`YYYY-MM-DD`) and emits that same representation. It displays calendar-specific month/year and day labels through `Intl.DateTimeFormat`; navigation follows the selected calendar month while the ISO value remains time-zone independent.
+- `ClockTimeInput` accepts and emits a local wall-time string (`HH:mm`). It supports direct entry and a bounded, scrollable 15-minute option list. Invalid/incomplete typed values remain editable and must be validated by the owning feature before calculation.
+- Both controls have explicit labels, keyboard-operable buttons, visible focus, and no dependency on native browser date/time widgets. The date popover includes previous/next calendar month, selection, Today, and Close actions.
+- Language, calendar system, numeral system, time zone, and 12/24-hour preference are independent settings. Changing language must not silently change the calendar; changing calendar must not change the underlying ISO date; changing display time zone must not rewrite a date-only value.
+- Browser calendar support varies. Use an explicit support/fallback message where `Intl` cannot render a requested calendar. Do not imply that all browser/locale combinations have identical calendar data.
+
+### 16.4 Implementation boundary and remaining release gates
+
+The current refactor introduces shared picker components and uses them for date/time fields in the workbench. It does not by itself prove every calculation or calendar convention correct. In particular, DST gap/overlap behavior, ICS zone semantics, Islamic month conventions, locale-specific first weekday, all feature outputs, and route compatibility remain explicit test gates. Never report lint, typecheck, build, or test success without running the commands against this branch.
