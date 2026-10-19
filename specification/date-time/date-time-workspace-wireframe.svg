@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+<title id="title">GaGet.dev unified Date and Time workspace wireframe</title>
+<desc id="desc">Square-edged Date and Time editor workspace with a shared 68-pixel File and feature command bar, date/time centerpiece, separated settings rows, feature inspector, and responsive mobile sheet.</desc>
+<defs><style>
+.bg{fill:#f8fafc}.surface{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.ink{fill:#0f172a;font:700 18px Arial,sans-serif}.body{fill:#334155;font:14px Arial,sans-serif}.muted{fill:#64748b;font:12px Arial,sans-serif}.label{fill:#334155;font:600 13px Arial,sans-serif}.line{stroke:#cbd5e1;stroke-width:1}.field{fill:#fff;stroke:#94a3b8;stroke-width:1.2}.accent{fill:#2563eb}.accentText{fill:#fff;font:600 13px Arial,sans-serif}.button{fill:#fff;stroke:#94a3b8;stroke-width:1.2}.code{fill:#f1f5f9;stroke:#cbd5e1;stroke-width:1}
+</style></defs>
+<rect class="bg" width="1600" height="1120"/>
+<text x="32" y="38" class="ink" style="font-size:25px">GaGet.dev · Date &amp; Time unified workspace</text>
+<text x="32" y="62" class="muted">Specification wireframe · shared editor command bar · multi-calendar inputs · settings separated by horizontal rules</text>
+<rect x="28" y="82" width="1544" height="720" class="surface"/>
+<rect x="29" y="83" width="1542" height="67" fill="#fff"/>
+<line class="line" x1="29" y1="150" x2="1571" y2="150"/>
+<text x="52" y="123" class="body">File ▾</text><text x="132" y="123" class="body">Date ▾</text><text x="218" y="123" class="body">Time ▾</text><text x="305" y="123" class="body">Calendar ▾</text><text x="420" y="123" class="body">Utilities ▾</text>
+<text x="50" y="181" class="muted">Home › Date &amp; Time</text><text x="50" y="215" class="ink" style="font-size:26px">Date &amp; Time</text><text x="50" y="239" class="muted">One local-first workspace for calendars, clocks, time zones and date calculations.</text>
+<rect x="50" y="260" width="1000" height="506" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="76" y="294" class="label">CURRENT DATE AND TIME</text><text x="76" y="354" class="ink" style="font-size:54px">14:28:36</text><text x="76" y="389" class="body">Monday, October 19, 2026</text><text x="76" y="412" class="muted">Asia/Baku · UTC+04:00</text>
+<rect x="850" y="280" width="172" height="34" class="button"/><text x="870" y="301" class="body">Freeze reference</text>
+<line class="line" x1="50" y1="438" x2="1050" y2="438"/>
+<text x="76" y="467" class="label">DISPLAY LANGUAGE</text><text x="405" y="467" class="label">CALENDAR SYSTEM</text><text x="734" y="467" class="label">TIME ZONE</text>
+<rect x="76" y="480" width="286" height="38" class="field"/><text x="90" y="504" class="body">English</text><text x="340" y="504" class="muted">⌄</text>
+<rect x="405" y="480" width="286" height="38" class="field"/><text x="419" y="504" class="body">Persian Solar Hijri</text><text x="669" y="504" class="muted">⌄</text>
+<rect x="734" y="480" width="286" height="38" class="field"/><text x="748" y="504" class="body">⌕ Search IANA zones…</text>
+<rect x="734" y="525" width="286" height="36" class="field"/><text x="748" y="548" class="body">Asia/Baku</text><text x="997" y="548" class="muted">⌄</text>
+<line class="line" x1="50" y1="579" x2="1050" y2="579"/>
+<text x="76" y="608" class="label">NUMERAL SYSTEM</text><text x="405" y="608" class="label">CLOCK FORMAT</text><text x="734" y="608" class="label">DISPLAY OPTIONS</text>
+<rect x="76" y="621" width="286" height="38" class="field"/><text x="90" y="645" class="body">Persian · ۱۲۳</text><text x="340" y="645" class="muted">⌄</text>
+<rect x="405" y="621" width="286" height="38" class="field"/><text x="419" y="645" class="body">24-hour</text><text x="669" y="645" class="muted">⌄</text>
+<text x="734" y="645" class="body">☑ Show seconds</text>
+<line class="line" x1="50" y1="680" x2="1050" y2="680"/>
+<text x="76" y="709" class="muted">Gregorian reference</text><rect x="205" y="690" width="120" height="30" class="code"/><text x="218" y="710" class="body">2026-10-19</text>
+<rect x="350" y="690" width="142" height="30" class="button"/><text x="366" y="710" class="body">Copy ISO 8601</text><rect x="506" y="690" width="170" height="30" class="button"/><text x="520" y="710" class="body">Copy Unix seconds</text>
+<rect x="1180" y="260" width="360" height="506" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1204" y="294" class="ink">Selected feature</text><line class="line" x1="1180" y1="311" x2="1540" y2="311"/>
+<text x="1204" y="342" class="body">Date difference</text><text x="1204" y="371" class="muted">Start date</text><rect x="1204" y="382" width="312" height="38" class="field"/><text x="1218" y="406" class="body">Calendar-aware date picker</text>
+<text x="1204" y="450" class="muted">End date</text><rect x="1204" y="461" width="312" height="38" class="field"/><text x="1218" y="485" class="body">Calendar-aware date picker</text>
+<line class="line" x1="1204" y1="519" x2="1516" y2="519"/><text x="1204" y="548" class="label">RESULT</text><text x="1204" y="576" class="body">30 days · 4.3 weeks</text><line class="line" x1="1204" y1="600" x2="1516" y2="600"/>
+<text x="1204" y="628" class="muted">Inputs share the workspace locale,</text><text x="1204" y="646" class="muted">calendar and numeral preferences.</text>
+<text x="32" y="850" class="ink" style="font-size:20px">Responsive behavior</text>
+<rect x="32" y="870" width="480" height="220" class="surface"/><text x="52" y="899" class="label">Desktop ≥1024px</text><text x="52" y="923" class="muted">File + Date / Time / Calendar / Utilities in one 68px bar.</text><text x="52" y="945" class="muted">Workspace and bounded feature inspector side by side.</text><text x="52" y="967" class="muted">Settings are square-edged with horizontal separators.</text><text x="52" y="989" class="muted">Feature inspector width has keyboard-operable bounds.</text>
+<rect x="540" y="870" width="480" height="220" class="surface"/><text x="560" y="899" class="label">Tablet 640–1023px</text><text x="560" y="923" class="muted">Compact File / Features command bar with same button geometry.</text><text x="560" y="945" class="muted">Feature controls open in a resizable bottom sheet.</text><text x="560" y="967" class="muted">Sheet content scrolls internally; no clipped controls.</text><text x="560" y="989" class="muted">Workspace keeps one main vertical scroll region.</text>
+<rect x="1048" y="870" width="520" height="220" class="surface"/><text x="1068" y="899" class="label">Mobile &amp; RTL</text><text x="1068" y="923" class="muted">File at inline-start, Features at inline-end; logical start/end positioning.</text><text x="1068" y="945" class="muted">Calendar popovers are bounded and scroll within the viewport.</text><text x="1068" y="967" class="muted">Calendar, language, digits and time zone remain independent.</text><text x="1068" y="989" class="muted">Touch targets, focus rings, Escape and focus restoration.</text>
+</svg>
