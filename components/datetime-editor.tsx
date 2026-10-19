@@ -218,7 +218,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
             {message && <p role="status" className="mt-3 text-sm text-muted-foreground">{message}</p>}
           </section>
 
-        </section>}
         </section>
 
         {activeFeature && <aside ref={panelRef} style={{ ...panelStyle, "--panel-width": `${desktopPanelWidth}px` } as CSSProperties} data-testid="datetime-feature-panel" aria-label="Date and time feature settings" className="fixed inset-x-2 bottom-2 z-40 h-[var(--feature-panel-height)] max-h-[70dvh] resize-y overflow-y-auto overscroll-y-contain rounded-xl border border-border bg-card p-4 shadow-xl transition-[height] duration-200 motion-reduce:transition-none lg:static lg:h-auto lg:max-h-none lg:w-[var(--panel-width)] lg:max-w-[45vw] lg:resize-none lg:overflow-auto lg:rounded-xl lg:border-l lg:shadow-none">
