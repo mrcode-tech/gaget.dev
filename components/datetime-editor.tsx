@@ -70,6 +70,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [showSeconds, setShowSeconds] = useState(true);
   const [activeFeature, setActiveFeature] = useState<string | null>(initialFeature && features.some((f) => f.slug === initialFeature) ? initialFeature : null);
   const [query, setQuery] = useState("");
+  const [featuresOpen, setFeaturesOpen] = useState(false);
   const [frozen, setFrozen] = useState(false);
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
   const [message, setMessage] = useState("");
@@ -96,6 +97,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
   function selectFeature(slug: string) {
     setActiveFeature(slug);
+    setFeaturesOpen(false);
     setMessage("");
     if (typeof window !== "undefined") window.history.replaceState(null, "", "/datetime/editor?feature=" + encodeURIComponent(slug));
   }
@@ -123,8 +125,18 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <div><h1 className="text-xl font-semibold tracking-tight">Date &amp; Time</h1><p className="text-sm text-muted-foreground">One workspace for dates, calendars, clocks, and calculations.</p></div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <details className="relative">
+            <summary className="flex h-9 cursor-pointer list-none items-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent">File</summary>
+            <div className="absolute end-0 top-11 z-30 min-w-56 space-y-1 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg">
+              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => void copyText(formattedDate + " " + formattedTime + " (" + timeZone + ")")}>Copy current display</button>
+              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => void copyText(displayNow?.toISOString() ?? "")}>Copy ISO 8601</button>
+              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => void copyText(displayNow ? String(Math.floor(displayNow.getTime() / 1000)) : "")}>Copy Unix timestamp</button>
+              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => window.print()}>Print current view</button>
+              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={resetReference}>Reset reference to now</button>
+            </div>
+          </details>
+          <Button type="button" variant={featuresOpen ? "default" : "outline"} onClick={() => setFeaturesOpen((open) => !open)}><SlidersHorizontal className="mr-2 h-4 w-4" />Features</Button>
           <Button type="button" variant="outline" onClick={() => setActiveFeature(null)}><Clock3 className="mr-2 h-4 w-4" />Live date &amp; time</Button>
-          <Button type="button" variant="outline" onClick={resetReference}><RotateCcw className="mr-2 h-4 w-4" />Reset now</Button>
         </div>
       </header>
 
@@ -159,7 +171,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
             {message && <p role="status" className="mt-3 text-sm text-muted-foreground">{message}</p>}
           </section>
 
-          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
+{featuresOpen &&           <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="font-semibold">Tools and features</h2><p className="text-sm text-muted-foreground">Choose a feature without leaving this workspace.</p></div>
               {activeFeature && <Button type="button" variant="ghost" size="sm" onClick={() => { setActiveFeature(null); setMessage(""); }}><X className="mr-1 h-4 w-4" />Close feature</Button>}
@@ -172,7 +184,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
                 return <div key={group}><h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</h3><div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">{items.map((feature) => <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"rounded-xl border p-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "border-primary bg-primary/5" : "border-border")}><span className="flex items-center justify-between gap-2 font-medium text-sm">{feature.title}<ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" /></span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{feature.description}</span></button>)}</div></div>;
               })}
             </div>
-          </section>
+          </section>}
         </section>
 
         {activeFeature && <>
