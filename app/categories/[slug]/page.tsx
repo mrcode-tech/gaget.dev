@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { CategoryLanding } from "@/components/category-landing";
 import { categories } from "@/lib/tools/registry";
@@ -34,6 +34,9 @@ export default async function CategoryPage({
   const category = categories.find((item) => item.slug === slug);
 
   if (!category) notFound();
+  if (slug === "images") redirect("/images/editor");
+  if (slug === "audio") redirect("/audio/editor");
+  if (slug === "video") redirect("/video/editor");
 
   // Pass only serializable data across the Server/Client Component boundary.
   return <CategoryLanding category={category.name} />;

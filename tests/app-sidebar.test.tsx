@@ -35,7 +35,10 @@ describe("AppSidebar", () => {
     render(<SidebarHarness />);
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Video" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Video" }).getAttribute("href")).toBe("/video/editor");
+    expect(screen.getByRole("link", { name: "Images" }).getAttribute("href")).toBe("/images/editor");
+    expect(screen.getByRole("link", { name: "Audio" }).getAttribute("href")).toBe("/audio/editor");
+    expect(screen.getByRole("link", { name: "Favorites" }).getAttribute("href")).toBe("/#favorites");
     expect(screen.queryByRole("link", { name: "category.video" })).toBeNull();
     expect(screen.getByText("Categories")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));

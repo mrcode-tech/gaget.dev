@@ -116,7 +116,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             <NavLink href="/" label={t("nav.home")} active={isActive("/")} icon={<Home className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
             <NavLink href="/#popular-tools" label={t("nav.popular")} active={false} icon={<Sparkles className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
             <NavLink href="/tools" label={t("nav.allTools")} active={isActive("/tools")} icon={<Grid2X2 className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
-            <NavLink href="/#popular-tools" label={t("nav.favorites")} active={false} icon={<Heart className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
+            <NavLink href="/#favorites" label={t("nav.favorites")} active={false} icon={<Heart className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
           </div>
 
           <div>
@@ -131,9 +131,9 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                 return (
                   <NavLink
                     key={category.name}
-                    href={category.href}
+                    href={category.name === "Images" ? "/images/editor" : category.name === "Audio" ? "/audio/editor" : category.name === "Video" ? "/video/editor" : category.href}
                     label={t(category.name === "Video" ? "category.video" : `category.${category.name}`)}
-                    active={isActive(category.href)}
+                    active={isActive(category.name === "Images" ? "/images/editor" : category.name === "Audio" ? "/audio/editor" : category.name === "Video" ? "/video/editor" : category.href)}
                     icon={<Icon className="h-4 w-4" />}
                     collapsed={isCollapsed}
                     onClick={mobile ? () => setMobileOpen(false) : undefined}
