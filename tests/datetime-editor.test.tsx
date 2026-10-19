@@ -8,7 +8,10 @@ describe("DateTimeEditor", () => {
   it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Date and time display" })).toBeTruthy();
+    const centerpiece = screen.getByRole("region", { name: "Date and time display" });
+    expect(centerpiece).toBeTruthy();
+    expect(centerpiece.className).toContain("border-y");
+    expect(centerpiece.className).not.toContain("rounded-2xl");
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
     expect(screen.getByRole("textbox", { name: "Search date and time features" })).toBeTruthy();
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(20);
