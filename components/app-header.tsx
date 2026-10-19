@@ -18,6 +18,7 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
   const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
   const isAudioEditor = /(?:^|\/)audio\/editor\/?$/.test(pathname);
   const isVideoEditor = /(?:^|\/)video\/editor\/?$/.test(pathname);
+  const isDateTimeEditor = /(?:^|\/)datetime\/(?:editor|[^/]+)\/?$/.test(pathname);
   const { locale, t } = useI18n();
   const matches = query.trim()
     ? tools
