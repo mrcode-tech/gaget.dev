@@ -61,6 +61,8 @@ describe("DateTimeEditor", () => {
     fireEvent.click(dateCalculator);
     const panel = screen.getByTestId("datetime-feature-panel");
     expect(panel).toBeTruthy();
+    expect(screen.queryByTestId("datetime-editor-description")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
     const workspaceGrid = panel.parentElement;
     expect(workspaceGrid?.className).toContain("grid");
     expect(workspaceGrid?.firstElementChild?.contains(screen.getByTestId("datetime-editor-intro"))).toBe(true);
