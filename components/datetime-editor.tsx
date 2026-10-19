@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +84,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [frozen, setFrozen] = useState(false);
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
   const [referenceRevision, setReferenceRevision] = useState(0);
-  const [desktopPanelWidth, setDesktopPanelWidth] = useState(420);
   const [message, setMessage] = useState("");
   const [seededReference, setSeededReference] = useState<{ date: string; time: string } | null>(null);
   const { panelRef, panelStyle, resizeHandleProps } = useResizableFeatureSheet();
