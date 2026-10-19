@@ -72,7 +72,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [query, setQuery] = useState("");
   const [zoneQuery, setZoneQuery] = useState("");
   const [availableZones, setAvailableZones] = useState<string[]>(zones);
-  const [menuOpen, setMenuOpen] = useState<"File" | "Features" | null>(null);
+  const [menuOpen, setMenuOpen] = useState<"File" | "Features" | Feature["group"] | null>(null);
   const [frozen, setFrozen] = useState(false);
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
   const [referenceRevision, setReferenceRevision] = useState(0);
@@ -157,7 +157,16 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <button type="button" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" aria-expanded={menuOpen === "Features"} className={"inline-flex h-9 items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
+          <div className="hidden items-center gap-1 lg:flex">
+            {groups.map((group) => <div key={group} className="relative">
+              <button type="button" aria-expanded={menuOpen === group} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === group ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === group ? null : group)}>{group}</button>
+              {menuOpen === group && <div data-testid={"datetime-" + group.toLowerCase() + "-menu"} className="absolute left-0 top-[calc(100%-1px)] z-50 max-h-[min(70dvh,520px)] w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+                <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group} features</p>
+                {features.filter((feature) => feature.group === group && (feature.title + " " + feature.description).toLowerCase().includes(query.toLowerCase())).map((feature) => <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"flex w-full items-start gap-3 rounded-md px-3 py-2 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "bg-accent" : "")}><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{feature.title}</span><span className="mt-0.5 block text-xs leading-4 text-muted-foreground">{feature.description}</span></span></button>)}
+              </div>}
+            </div>)}
+          </div>
+          <button type="button" aria-expanded={menuOpen === "Features"} className={"inline-flex h-9 items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
         </div>
         {menuOpen === "File" && <div data-testid="datetime-file-menu" className="absolute left-3 top-[calc(100%-1px)] z-50 min-w-52 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:left-6">
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { void copyText(formattedDate + " " + formattedTime + " (" + timeZone + ")"); setMenuOpen(null); }}><Copy className="h-4 w-4 text-muted-foreground" /><span>Copy current display</span></button>
@@ -166,7 +175,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { window.print(); setMenuOpen(null); }}><CalendarDays className="h-4 w-4 text-muted-foreground" /><span>Print current view</span></button>
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { resetReference(); setMenuOpen(null); }}><RotateCcw className="h-4 w-4 text-muted-foreground" /><span>Reset reference to now</span></button>
         </div>}
-        {menuOpen === "Features" && <div data-testid="datetime-feature-menu" className="absolute right-3 top-[calc(100%-1px)] z-50 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(70dvh,520px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-2 shadow-xl sm:right-6">
+        {menuOpen === "Features" && <div data-testid="datetime-feature-menu" className="absolute right-3 top-[calc(100%-1px)] z-50 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(70dvh,520px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-2 shadow-xl sm:right-6 lg:hidden">
           <div className="flex items-center justify-between gap-2 px-3 py-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date &amp; time features</span><button type="button" aria-label="Close feature menu" className="rounded p-1 hover:bg-accent" onClick={() => setMenuOpen(null)}><X className="h-4 w-4" /></button></div>
           <div className="relative px-1 pb-2"><Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input aria-label="Search date and time features" className="pl-9" placeholder="Search date, time, calendar…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
           <div className="space-y-3">
@@ -186,7 +195,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
             <h1 className="text-2xl font-semibold tracking-tight">Date &amp; Time</h1>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>
           </div>
-          <div className="grid min-w-0 flex-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid min-h-0 min-w-0 flex-1 items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
             <section className="flex min-w-0 flex-1 flex-col justify-center">
           <section aria-label="Date and time display" className="mx-auto my-auto w-full max-w-5xl rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -220,7 +229,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
         </section>
 
-        {activeFeature && <aside ref={panelRef} style={{ ...panelStyle, "--panel-width": `${desktopPanelWidth}px` } as CSSProperties} data-testid="datetime-feature-panel" aria-label="Date and time feature settings" className="fixed inset-x-2 bottom-2 z-40 h-[var(--feature-panel-height)] max-h-[70dvh] resize-y overflow-y-auto overscroll-y-contain rounded-xl border border-border bg-card p-4 shadow-xl transition-[height] duration-200 motion-reduce:transition-none lg:static lg:h-auto lg:max-h-none lg:w-[var(--panel-width)] lg:max-w-[45vw] lg:resize-none lg:overflow-auto lg:rounded-xl lg:border-l lg:shadow-none">
+        {activeFeature && <aside ref={panelRef} style={{ ...panelStyle, "--panel-width": `${desktopPanelWidth}px` } as CSSProperties} data-testid="datetime-feature-panel" aria-label="Date and time feature settings" className="fixed inset-x-2 bottom-2 z-40 h-[var(--feature-panel-height)] max-h-[70dvh] resize-y overflow-y-auto overscroll-y-contain rounded-xl border border-border bg-card p-4 shadow-xl transition-[height] duration-200 motion-reduce:transition-none lg:static lg:h-auto lg:max-h-none lg:w-[var(--panel-width)] lg:max-w-[45vw] lg:resize-none lg:overflow-auto lg:rounded-xl lg:border-l lg:shadow-none lg:self-start">
           <div {...resizeHandleProps} className="sticky top-0 z-10 mx-auto -mt-3 mb-2 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
           <div className="mb-3 flex items-center justify-between gap-2"><div><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
           <label className="mb-3 hidden items-center gap-3 text-xs text-muted-foreground lg:flex"><span>Panel width</span><input aria-label="Resize feature panel width" type="range" min="320" max="560" step="20" value={desktopPanelWidth} onChange={(event) => setDesktopPanelWidth(Number(event.target.value))} className="w-full accent-primary" /></label>
