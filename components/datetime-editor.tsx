@@ -151,7 +151,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }
 
   return (
-    <main className="flex h-full min-h-0 flex-col overflow-hidden" dir={locale.startsWith("fa") || locale.startsWith("ar") ? "rtl" : "ltr"}>
+    <main className="flex h-dvh min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground lg:h-[calc(100dvh-68px)]" dir={locale.startsWith("fa") || locale.startsWith("ar") ? "rtl" : "ltr"}>
       <nav aria-label="Date and time editor commands" className="relative z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 sm:px-6">
         <div className="flex items-center gap-1">
           <button type="button" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
