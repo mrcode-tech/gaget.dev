@@ -75,6 +75,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
   const [referenceRevision, setReferenceRevision] = useState(0);
   const [message, setMessage] = useState("");
+  const [seededReference, setSeededReference] = useState<{ date: string; time: string } | null>(null);
   const { panelRef, panelStyle, resizeHandleProps } = useResizableFeatureSheet();
 
   useEffect(() => {
@@ -84,6 +85,10 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }, [initialFeature]);
 
   useEffect(() => {
+    if (initialFeature && selectedDate && selectedTime && !seededReference) setSeededReference({ date: selectedDate, time: selectedTime });
+  }, [initialFeature, selectedDate, selectedTime, seededReference]);
+
+  useEffect(() => {
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
@@ -91,6 +96,13 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
   const displayNow = frozen && frozenAt ? frozenAt : now;
   const filteredFeatures = useMemo(() => features.filter((f) => (f.title + " " + f.description + " " + f.group).toLowerCase().includes(query.toLowerCase())), [query]);
+  const availableZones = useMemo(() => {
+    try {
+      const intl = Intl as typeof Intl & { supportedValuesOf?: (key: "timeZone") => string[] };
+      return Array.from(new Set([...zones, ...(intl.supportedValuesOf?.("timeZone") ?? [])])).sort();
+    } catch { return zones; }
+  }, []);
+  const [zoneQuery, setZoneQuery] = useState("");
   const formattedDate = displayNow ? safeFormat(displayNow, locale, calendar, numberingSystem, timeZone) : "Loading date…";
   const formattedTime = displayNow ? new Intl.DateTimeFormat(locale, {
     timeZone, hour: "2-digit", minute: "2-digit", ...(showSeconds ? { second: "2-digit" as const } : {}),
@@ -101,6 +113,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
     const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "00";
     return part("year") + "-" + part("month") + "-" + part("day");
   })() : undefined;
+  const selectedTime = displayNow ? new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(displayNow) : undefined;
   const gregorian = selectedDate ?? "—";
   let offset = "UTC";
   if (displayNow) {
@@ -109,6 +122,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
   function selectFeature(slug: string) {
     setActiveFeature(slug);
+    if (selectedDate && selectedTime) setSeededReference({ date: selectedDate, time: selectedTime });
     setFeaturesOpen(false);
     setMessage("");
     if (typeof window !== "undefined") window.history.replaceState(null, "", "/datetime/editor?feature=" + encodeURIComponent(slug));
@@ -170,7 +184,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
             <div className="mt-6 grid gap-3 border-t border-border pt-5 sm:grid-cols-2 xl:grid-cols-3">
               <label className="space-y-1.5 text-sm"><span className="font-medium">Display language</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={locale} onChange={(e) => setLocale(e.target.value)}>{locales.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
               <label className="space-y-1.5 text-sm"><span className="font-medium">Calendar system</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={calendar} onChange={(e) => setCalendar(e.target.value)}>{calendars.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-              <label className="space-y-1.5 text-sm"><span className="font-medium">Time zone</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={timeZone} onChange={(e) => setTimeZone(e.target.value)}>{zones.map((zone) => <option key={zone} value={zone}>{zone}</option>)}</select></label>
+              <label className="space-y-1.5 text-sm"><span className="font-medium">Time zone</span><Input aria-label="Search time zones" placeholder="Filter IANA zones…" value={zoneQuery} onChange={(e) => setZoneQuery(e.target.value)} /><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={timeZone} onChange={(e) => setTimeZone(e.target.value)}>{availableZones.filter((zone) => zone.toLowerCase().includes(zoneQuery.toLowerCase())).map((zone) => <option key={zone} value={zone}>{zone}</option>)}</select></label>
               <label className="space-y-1.5 text-sm"><span className="font-medium">Numeral system</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={numberingSystem} onChange={(e) => setNumberingSystem(e.target.value)}><option value="latn">Latin · 123</option><option value="arab">Arabic-Indic · ١٢٣</option><option value="arabext">Persian · ۱۲۳</option><option value="locale">Locale default</option></select></label>
               <label className="space-y-1.5 text-sm"><span className="font-medium">Clock format</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={hourCycle} onChange={(e) => setHourCycle(e.target.value as "h12" | "h23")}><option value="h23">24-hour</option><option value="h12">12-hour</option></select></label>
               <label className="flex items-center gap-2 pt-6 text-sm"><input type="checkbox" checked={showSeconds} onChange={(e) => setShowSeconds(e.target.checked)} className="h-4 w-4 accent-primary" />Show seconds</label>
@@ -179,7 +193,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               <span className="text-xs text-muted-foreground">Gregorian reference</span><code className="rounded bg-muted px-2 py-1 text-sm" dir="ltr">{gregorian}</code>
               <Button type="button" variant="outline" size="sm" onClick={() => void copyText(displayNow?.toISOString() ?? "")}><Copy className="mr-2 h-4 w-4" />Copy ISO 8601</Button>
               <Button type="button" variant="outline" size="sm" onClick={() => void copyText(displayNow ? String(Math.floor(displayNow.getTime() / 1000)) : "")}><Copy className="mr-2 h-4 w-4" />Copy Unix seconds</Button>
-              <Button type="button" variant="outline" size="sm" disabled={!activeFeature || !selectedDate} onClick={() => { setReferenceRevision((revision) => revision + 1); setMessage("Displayed date and time applied to the selected feature."); }}>Use this date/time</Button>
+              <Button type="button" variant="outline" size="sm" disabled={!activeFeature || !selectedDate} onClick={() => { if (selectedDate && selectedTime) setSeededReference({ date: selectedDate, time: selectedTime }); setReferenceRevision((revision) => revision + 1); setMessage("Displayed date and time applied to the selected feature."); }}>Use this date/time</Button>
             </div>
             {message && <p role="status" className="mt-3 text-sm text-muted-foreground">{message}</p>}
           </section>
@@ -204,7 +218,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <section ref={panelRef} style={panelStyle} data-testid="datetime-feature-panel" aria-label="Date and time feature settings" className="fixed inset-x-2 bottom-2 z-40 h-[var(--feature-panel-height)] max-h-[70dvh] overflow-y-auto overscroll-y-contain rounded-xl border border-border bg-card p-4 shadow-xl transition-[height] duration-200 motion-reduce:transition-none lg:hidden">
             <div {...resizeHandleProps} className="sticky top-0 z-10 mx-auto -mt-3 mb-2 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
             <div className="mb-3 flex items-center justify-between gap-2"><div><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
-            <DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={selectedDate} timeZone={timeZone} locale={locale} calendar={calendar} />
+            <DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={locale} calendar={calendar} />
           </section>
           <aside aria-label={features.find((f) => f.slug === activeFeature)?.title ?? "Selected feature"} className="hidden min-w-0 lg:sticky lg:top-20 lg:block lg:w-[min(38vw,480px)] lg:resize-x lg:self-start lg:overflow-auto lg:border-l lg:border-border lg:pl-4">
             <div className="mb-3 flex items-center justify-between gap-2"><div><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
