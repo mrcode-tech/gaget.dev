@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 
 type DateFieldProps = {
@@ -55,10 +55,11 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
     const day = new Date(2023, 0, 1 + ((weekStartDay + index) % 7), 12);
     return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(day);
   }), [locale]);
+  useEffect(() => { if (!open) return; const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); setOpen(false); triggerRef.current?.focus(); } }; const onPointerDown = (event: PointerEvent) => { if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false); }; document.addEventListener("keydown", onKeyDown); document.addEventListener("pointerdown", onPointerDown); return () => { document.removeEventListener("keydown", onKeyDown); document.removeEventListener("pointerdown", onPointerDown); }; }, [open]);
   const changeMonth = (amount: number) => setViewMonth((current) => { const info = (() => { let first = new Date(current); const key = monthKey(first); for (let i = 0; i < 35; i += 1) { const previous = new Date(first); previous.setDate(previous.getDate() - 1); if (monthKey(previous) !== key) break; first = previous; } return first; })(); if (amount < 0) { info.setDate(info.getDate() - 1); return info; } const next = new Date(current); for (let i = 0; i < 35; i += 1) { next.setDate(next.getDate() + 1); if (monthKey(next) !== monthKey(current)) break; } return next; });
 
-  return <div className="relative min-w-0">
-    <button id={id} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setViewMonth(parseISODate(value)); setOpen((current) => !current); }} className="flex h-10 w-full min-w-0 items-center justify-between gap-2 border border-input bg-background px-3 text-start text-sm hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+  return <div ref={rootRef} className="relative min-w-0">
+    <button ref={triggerRef} id={id} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setViewMonth(parseISODate(value)); setOpen((current) => !current); }} className="flex h-10 w-full min-w-0 items-center justify-between gap-2 border border-input bg-background px-3 text-start text-sm hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <span className="min-w-0 truncate">{selectedLabel}</span><CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
     </button>
     {open && <div role="dialog" aria-label="Choose date" className="absolute start-0 top-[calc(100%+4px)] z-50 w-[min(20rem,calc(100vw-2rem))] border border-border bg-popover p-3 text-popover-foreground shadow-xl">{!supportedCalendar && <p role="status" className="mb-2 border-b border-border pb-2 text-xs text-muted-foreground">This browser does not support the {calendar} calendar for {locale}; Gregorian formatting is being used.</p> }
@@ -73,12 +74,12 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
         {calendarMonthDates.dates.map((date) => {
           const iso = toISODate(date);
           const isSelected = iso === value;
-          return <button key={iso} type="button" aria-pressed={isSelected} aria-label={format(date, { dateStyle: "full" })} onClick={() => { onChange(iso); setOpen(false); }} className={"h-9 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>{format(date, { day: "numeric" })}</button>;
+          return <button key={iso} type="button" aria-pressed={isSelected} aria-label={format(date, { dateStyle: "full" })} onClick={() => { onChange(iso); setOpen(false); triggerRef.current?.focus(); }} className={"h-9 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>{format(date, { day: "numeric" })}</button>;
         })}
       </div>
       <div className="mt-3 flex justify-between border-t border-border pt-3">
-        <button type="button" onClick={() => { const today = new Date(); const iso = toISODate(today); onChange(iso); setViewMonth(today); setOpen(false); }} className="text-sm font-medium text-primary hover:underline">Today</button>
-        <button type="button" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Close</button>
+        <button type="button" onClick={() => { const today = new Date(); const iso = toISODate(today); onChange(iso); setViewMonth(today); setOpen(false); triggerRef.current?.focus(); }} className="text-sm font-medium text-primary hover:underline">Today</button>
+        <button type="button" onClick={() => { setOpen(false); triggerRef.current?.focus(); }} className="text-sm text-muted-foreground hover:text-foreground">Close</button>
       </div>
     </div>}
   </div>;
@@ -87,15 +88,18 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
 /** Styled time selector with direct text entry and a bounded, scrollable quarter-hour list. */
 export function ClockTimeInput({ id, value, onChange }: DateFieldProps) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => { if (!open) return; const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); setOpen(false); inputRef.current?.focus(); } }; const onPointerDown = (event: PointerEvent) => { if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false); }; document.addEventListener("keydown", onKeyDown); document.addEventListener("pointerdown", onPointerDown); return () => { document.removeEventListener("keydown", onKeyDown); document.removeEventListener("pointerdown", onPointerDown); }; }, [open]);
   const options = useMemo(() => Array.from({ length: 96 }, (_, index) => pad(Math.floor(index / 4)) + ":" + pad((index % 4) * 15)), []);
   const normalized = /^([01]\d|2[0-3]):[0-5]\d$/.test(value) ? value : "12:00";
-  return <div className="relative min-w-0">
+  return <div ref={rootRef} className="relative min-w-0">
     <div className="flex h-10 items-center border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
-      <input id={id} type="text" inputMode="numeric" autoComplete="off" aria-label="Time in 24-hour format" placeholder="HH:MM" value={value} onChange={(event) => onChange(event.target.value)} onFocus={() => setOpen(true)} onBlur={(event) => { if (!event.currentTarget.parentElement?.parentElement?.contains(event.relatedTarget as Node | null)) setOpen(false); }} className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm tabular-nums outline-none" />
+      <input ref={inputRef} id={id} type="text" inputMode="numeric" autoComplete="off" aria-label="Time in 24-hour format" placeholder="HH:MM" value={value} onChange={(event) => onChange(event.target.value)} onFocus={() => setOpen(true)} onBlur={(event) => { if (!event.currentTarget.parentElement?.parentElement?.contains(event.relatedTarget as Node | null)) setOpen(false); }} className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm tabular-nums outline-none" />
       <button type="button" aria-label="Choose time" aria-expanded={open} onClick={() => setOpen((current) => !current)} className="inline-flex h-full items-center px-3 text-muted-foreground hover:bg-accent/40"><Clock3 className="h-4 w-4" /></button>
     </div>
     {open && <div role="listbox" aria-label="Time options" className="absolute start-0 top-[calc(100%+4px)] z-50 max-h-56 w-full min-w-40 overflow-y-auto border border-border bg-popover p-1 text-popover-foreground shadow-xl">
-      {options.map((option) => <button key={option} type="button" role="option" aria-selected={normalized === option} onMouseDown={(event) => event.preventDefault()} onClick={() => { onChange(option); setOpen(false); }} className={"block w-full px-3 py-1.5 text-start text-sm tabular-nums hover:bg-accent " + (normalized === option ? "bg-accent font-medium" : "")}>{option}</button>)}
+      {options.map((option) => <button key={option} type="button" role="option" aria-selected={normalized === option} onMouseDown={(event) => event.preventDefault()} onClick={() => { onChange(option); setOpen(false); inputRef.current?.focus(); }} className={"block w-full px-3 py-1.5 text-start text-sm tabular-nums hover:bg-accent " + (normalized === option ? "bg-accent font-medium" : "")}>{option}</button>)}
     </div>}
   </div>;
 }
