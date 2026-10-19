@@ -46,6 +46,14 @@ Use the current Photo Editor on `stage` as the structural and responsive authori
 
 The center of the page should show a prominent date/time panel rather than an upload target.
 
+#### Centerpiece visual and menu parity contract
+
+- The File menu must use the Photo Editor's menu geometry and row treatment: a dropdown positioned at the command bar's leading gutter (`left-3`, `sm:left-6`), aligned to `top-[calc(100%-1px)]`, with the same rounded surface, border, padding, and shadow. Keep the actions date/time-specific; do not copy image actions.
+- File actions use the same 16px icon box, text alignment, row hit area, hover/focus treatment, and disabled semantics as the Photo Editor. Keep the compact local-processing note separated by a subtle divider.
+- Desktop feature menus and the compact Features menu use the Photo Editor's item anatomy: leading 16px icon, readable primary label, muted secondary description, consistent spacing, and active/hover/focus states. Avoid a trailing chevron where it adds no information or action.
+- The live date/time centerpiece should read as one intentional, bounded surface, not a pair of hard horizontal rules. Do not use `border-y` on this component. Use the existing card surface token, generous responsive padding, rounded corners, and a restrained shadow; keep its hierarchy clear without adding extra separators around the time value.
+- Keep preference controls below the centerpiece in square, clearly labeled sections with horizontal separators, consistent with the settings style elsewhere in this proposal. The centerpiece is the single visual focal surface; avoid nesting additional cards inside it.
+
 Primary content:
 1. Live current time, including seconds when enabled.
 2. Full date in the selected calendar and display language.
