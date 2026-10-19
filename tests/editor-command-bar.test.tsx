@@ -24,6 +24,7 @@ describe("shared media editor command-bar geometry", () => {
 
       const fileButton = Array.from(bar!.querySelectorAll("button")).find((button) => button.textContent?.trim() === "File");
       const editButton = Array.from(bar!.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Edit");
+      expect(fileButton?.parentElement?.className).toContain("shrink-0");
       for (const button of [fileButton, editButton]) {
         expect(button).toBeTruthy();
         expect(button?.className).toContain("inline-flex");
