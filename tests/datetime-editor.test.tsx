@@ -63,9 +63,14 @@ describe("DateTimeEditor", () => {
     expect(panel).toBeTruthy();
     expect(screen.queryByTestId("datetime-editor-description")).toBeNull();
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
-    const workspaceGrid = panel.parentElement;
-    expect(workspaceGrid?.className).toContain("grid");
-    expect(workspaceGrid?.firstElementChild?.contains(screen.getByTestId("datetime-editor-intro"))).toBe(true);
+    const workspaceGrid = screen.getByTestId("datetime-workspace-grid");
+    expect(workspaceGrid.className).toContain("grid");
+    expect(workspaceGrid.className).toContain("gap-3");
+    expect(workspaceGrid.firstElementChild?.contains(screen.getByTestId("datetime-editor-intro"))).toBe(true);
+    expect(screen.getByTestId("datetime-workspace").className).toContain("pt-2");
+    expect(screen.getByRole("region", { name: "Date and time display" }).className).toContain("mt-2");
+    expect(panel.className).toContain("sm:border-l");
+    expect(panel.className).not.toContain("border-dashed");
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
   });
 
