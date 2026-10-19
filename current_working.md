@@ -59,3 +59,16 @@ Use consistent left alignment with the editor toolbar/workspace gutter, a clear 
 - [x] Keep the “Drop a photo here or open one” prompt out of the empty state; the primary upload/drop target remains available.
 - [x] Update component and responsive Playwright tests to assert the hidden toolbar and consistent alignment across all 12 viewport sizes.
 - [ ] Run and verify the resulting CI checks before considering this change complete.
+
+
+## Photo Editor upload target horizontal centering (2026-10-19)
+- [x] On a fresh branch from `stage`, add horizontal auto margins to the empty Photo Editor drop target so its bounded 480px-wide layout is centered within the canvas workspace at all breakpoints.
+- [x] Add responsive Playwright geometry coverage that compares the drop target center to the canvas workspace center across the existing empty-state viewport matrix.
+- [ ] Run CI and review results before proposing merge to `stage`.
+
+
+## Photo Editor full empty-workspace scrolling (2026-10-19)
+- [x] Move the empty-state breadcrumb, title, description, and upload target into the same vertically scrollable canvas workspace, matching the Audio Editor's single scrollable working area.
+- [x] Keep horizontal overflow clipped and preserve the existing loaded-image workspace behavior.
+- [x] Add responsive Playwright assertions that verify the intro is inside the scroll container and that short-landscape layouts can scroll the complete empty state, not only the dropzone.
+- [ ] Run the focused responsive Playwright test and review CI results before merging.

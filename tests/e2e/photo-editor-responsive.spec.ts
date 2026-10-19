@@ -85,11 +85,31 @@ for (const viewport of emptyStateViewports) {
       return { textLeft: text.left, textBottom: text.bottom };
     });
     const uploadBox = await uploadArea.boundingBox();
+    const scrollArea = page.getByTestId("canvas-scroll-area");
+    const workspace = await scrollArea.boundingBox();
     expect(headingBox).not.toBeNull();
     expect(uploadBox).not.toBeNull();
     expect(descriptionMetrics.textLeft).toBeCloseTo(breadcrumbMetrics.left, 0);
     if (headingBox) expect(headingBox.x).toBeCloseTo(breadcrumbMetrics.left, 0);
-    if (uploadBox) expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
+    expect(workspace).not.toBeNull();
+    await expect(scrollArea.getByTestId("photo-empty-intro")).toBeVisible();
+    await expect.poll(() => scrollArea.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return style.overflowY === "auto" && style.overflowX === "hidden";
+    })).toBe(true);
+    if (uploadBox && workspace) {
+      expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
+      expect(uploadBox.x + uploadBox.width / 2).toBeCloseTo(workspace.x + workspace.width / 2, 0);
+    }
+    if (viewport.height <= 500) {
+      await expect.poll(() => scrollArea.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+      await scrollArea.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+      await expect.poll(() => scrollArea.evaluate((element) => element.scrollTop > 0)).toBe(true);
+      await expect.poll(() => page.getByTestId("photo-empty-description").evaluate((element) => {
+        const scrollArea = element.closest('[data-testid="canvas-scroll-area"]');
+        return Boolean(scrollArea) && element.getBoundingClientRect().bottom < scrollArea!.getBoundingClientRect().top;
+      })).toBe(true);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
