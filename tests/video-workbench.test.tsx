@@ -30,6 +30,14 @@ describe("VideoWorkbench", () => {
     expect(screen.getByRole("main", { name: "GaGet Video Editor" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Video Editor" })).toBeTruthy();
     expect(screen.getByText("Drop a video here")).toBeTruthy();
+    const breadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(breadcrumb.className).toContain("mb-5");
+    expect(screen.getByRole("heading", { name: "Video Editor" }).className).toContain("font-bold");
+    const workspace = breadcrumb.closest('[class~="overflow-y-auto"]');
+    expect(workspace).toBeTruthy();
+    expect(workspace?.className).toContain("sm:p-6");
+    expect(workspace?.className).toContain("bg-muted/25");
+    expect(breadcrumb.parentElement?.className).not.toContain("max-w-5xl");
     fireEvent.click(screen.getByRole("button", { name: "File menu" }));
     expect(screen.getByTestId("video-file-menu")).toBeTruthy();
     expect(within(screen.getByTestId("video-file-menu")).getByRole("button", { name: /Open video/ })).toBeTruthy();
@@ -115,6 +123,27 @@ describe("VideoWorkbench", () => {
     expect(within(panel).getByRole("button", { name: "Split and export video" })).toBeTruthy();
     expect(within(panel).getByRole("spinbutton", { name: "Split point (seconds)" })).toBeTruthy();
     expect(within(panel).queryByRole("button", { name: "Apply & export WebM" })).toBeNull();
+  });
+
+  it("provides an accessible resizable sheet handle with keyboard bounds", () => {
+    const { container } = render(<VideoWorkbench slug="editor" />);
+    loadVideo(container);
+    chooseMobileFeature("Video information");
+    const handle = screen.getByRole("slider", { name: "Resize editing panel" });
+    expect(Number(handle.getAttribute("aria-valuenow"))).toBeLessThanOrEqual(Number(handle.getAttribute("aria-valuemax")));
+    fireEvent.keyDown(handle, { key: "End" });
+    expect(handle.getAttribute("aria-valuenow")).toBe(handle.getAttribute("aria-valuemax"));
+    fireEvent.keyDown(handle, { key: "Home" });
+    expect(handle.getAttribute("aria-valuenow")).toBe(handle.getAttribute("aria-valuemin"));
+  });
+
+  it("opens the same resizable feature sheet before a video is selected", () => {
+    render(<VideoWorkbench slug="editor" />);
+    chooseMobileFeature("Video information");
+    const panel = screen.getByTestId("video-feature-panel");
+    expect(panel.className).toContain("fixed");
+    expect(within(panel).getByText(/Choose a video to enable/)).toBeTruthy();
+    expect(within(panel).getByRole("slider", { name: "Resize editing panel" })).toBeTruthy();
   });
 
   it("uses an icon-based navigation trigger rather than a text hamburger glyph", () => {
