@@ -15,7 +15,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
   const isAudioEditor = /(?:^|\/)audio\/editor\/?$/.test(pathname);
   const isVideoEditor = /(?:^|\/)video\/editor\/?$/.test(pathname);
-  const isDateTimeEditor = /(?:^|\/)datetime\/editor\/?$/.test(pathname);
+  const isDateTimeEditor = /(?:^|\/)datetime\/(?:editor|[^/]+)\/?$/.test(pathname);
   const isEditor = isPhotoEditor || isAudioEditor || isVideoEditor || isDateTimeEditor;
 
   return (
