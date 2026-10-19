@@ -64,7 +64,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [now, setNow] = useState<Date | null>(null);
   const [locale, setLocale] = useState("en-US");
   const [calendar, setCalendar] = useState("gregory");
-  const [numberingSystem, setNumberingSystem] = useState("latn");
+  const [numberingSystem, setNumberingSystem] = useState("locale");
   const [timeZone, setTimeZone] = useState("Asia/Baku");
   const [hourCycle, setHourCycle] = useState<"h12" | "h23">("h23");
   const [showSeconds, setShowSeconds] = useState(true);
@@ -230,7 +230,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
         </>}
       </div>
       <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Runs locally in your browser. Calendar availability depends on your browser&apos;s Intl implementation; Islamic calendar conventions may differ.</p>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground xl:hidden"><SlidersHorizontal className="h-4 w-4" />Select a feature to open its controls below the date and time display.</div>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground lg:hidden"><SlidersHorizontal className="h-4 w-4" />Select a feature to open its controls below the date and time display.</div>
     </main>
   );
 }
