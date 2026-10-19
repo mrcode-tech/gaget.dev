@@ -187,7 +187,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>
           </div>
           <div className="grid min-w-0 flex-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-            <section className="flex min-w-0 flex-col">
+            <section className="flex min-w-0 flex-1 flex-col justify-center">
           <section aria-label="Date and time display" className="mx-auto my-auto w-full max-w-5xl rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
