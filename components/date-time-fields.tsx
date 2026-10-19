@@ -9,6 +9,7 @@ type DateFieldProps = {
   onChange: (value: string) => void;
   locale?: string;
   calendar?: string;
+  numberingSystem?: string;
 };
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -19,12 +20,12 @@ const parseISODate = (value: string) => {
 const toISODate = (date: Date) => date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
 
 /** A styled, keyboard-operable calendar popover. ISO/Gregorian remains the stable value; Intl controls its calendar and digit presentation. */
-export function CalendarDateInput({ id, value, onChange, locale = "en-US", calendar = "gregory" }: DateFieldProps) {
+export function CalendarDateInput({ id, value, onChange, locale = "en-US", calendar = "gregory", numberingSystem = "locale" }: DateFieldProps) {
   const selected = parseISODate(value);
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1, 12));
   const format = (date: Date, options: Intl.DateTimeFormatOptions, calendarOverride = calendar) => {
-    try { return new Intl.DateTimeFormat(locale, { ...options, calendar: calendarOverride }).format(date); }
+    try { return new Intl.DateTimeFormat(locale, { ...options, calendar: calendarOverride, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem }).format(date); }
     catch { return new Intl.DateTimeFormat("en-US", options).format(date); }
   };
   const monthKey = (date: Date) => format(date, { era: "short", year: "numeric", month: "numeric" });
