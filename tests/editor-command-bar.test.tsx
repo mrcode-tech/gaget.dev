@@ -16,7 +16,7 @@ describe("shared media editor command-bar geometry", () => {
 
     for (const editor of editors) {
       const { container, unmount } = editor.render();
-      const bar = container.querySelector(`[data-testid="${editor.barId}"]`);
+      const bar = container.querySelector<HTMLElement>(`[data-testid="${editor.barId}"]`);
       expect(bar).toBeTruthy();
       expect(bar?.className).toContain("gap-3");
       expect(bar?.className).toContain("px-3");
