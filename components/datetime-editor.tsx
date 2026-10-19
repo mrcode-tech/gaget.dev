@@ -222,7 +222,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </section>
           <aside aria-label={features.find((f) => f.slug === activeFeature)?.title ?? "Selected feature"} className="hidden min-w-0 lg:sticky lg:top-20 lg:block lg:w-[min(38vw,480px)] lg:resize-x lg:self-start lg:overflow-auto lg:border-l lg:border-border lg:pl-4">
             <div className="mb-3 flex items-center justify-between gap-2"><div><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
-            <DateTimeWorkbench slug={activeFeature} />
+            <DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={locale} calendar={calendar} />
           </aside>
         </>}
       </div>
