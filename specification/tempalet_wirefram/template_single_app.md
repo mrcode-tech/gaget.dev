@@ -235,6 +235,9 @@ Known concrete spacing/layout details from current code/spec:
 - Empty state heading: 24px base, 30px from SM (current `text-2xl sm:text-3xl`).
 - Description: 14px base, 16px from SM; line-height 24px, muted; max text width around 42rem.
 - Breadcrumb-to-heading gap follows the current `mb-5` breadcrumb spacing.
+- **Desktop empty-state parity is structural, not just approximate visual similarity:** Photo, Audio, and Video editors must use the same workspace width ownership and horizontal gutters for the breadcrumb, title, description, and upload target. Do not constrain only the Audio/Video intro to a narrower `max-w-5xl` wrapper when Photo Editor uses the full workspace width.
+- **No extra gap before the breadcrumb:** do not apply a workspace-level `space-y-3` (or equivalent stack gap) to the empty state if it inserts unintended space above the breadcrumb. Put spacing on the intended elements, matching Photo Editor. Preserve any separate spacing required by the loaded-file state.
+- **Desktop parity review:** compare Photo, Audio, and Video empty states side by side at identical desktop viewport widths and heights. Check breadcrumb top position, title/description alignment, workspace gutters, upload-target centering/width, and the description-to-upload gap. Do not judge parity from the upload target alone.
 - Inspector design reference: approximately 300–360px, but actual component code is authoritative.
 - Mobile sheet expanded-height design reference: about 70dvh; preserve the actual snap/drag logic and current bounds from source.
 - Use existing 4px-based Tailwind spacing rhythm and utility classes; where a value is not stated, inspect the current component rather than guessing.
@@ -283,6 +286,10 @@ Run tests at widths 320, 360, 390, 640, 744, 768, 844, 1024, 1280, 1440, 1536, a
 - [ ] Run lint, typecheck, production build, relevant unit/component tests, Playwright responsive tests, and accessibility checks.
 - [ ] Record actual CI run, commit SHA, and failures. Never mark tests passed without an observed result.
 - [ ] Compare screenshots with the existing Photo Editor at the same viewport; do not accept a visually plausible but structurally different shell.
+- [ ] **Desktop empty-state parity:** at identical desktop viewport sizes, Photo, Audio, and Video breadcrumbs begin at the same workspace-relative vertical position; title and description share the same left gutter and workspace width behavior; upload targets are centered and use matching bounds/gaps.
+- [ ] **No unintended breadcrumb gap:** verify the Audio empty-state workspace does not add a stack gap (for example, `space-y-3`) above the breadcrumb. Spacing must be applied to the intended elements, not the whole empty-state stack.
+- [ ] **No constrained Video intro:** verify the Video empty-state breadcrumb/title/description wrapper is not independently narrowed by `max-w-5xl` or another max-width that makes it misalign with the Photo Editor workspace. Any content-width constraint must match the canonical Photo Editor behavior.
+- [ ] **Check the whole working area:** verify vertical scrolling belongs to the complete empty-state workspace (breadcrumb + title + description + upload target + supporting copy), not only the upload/drop area or a surrounding margin.
 
 ## 15. How to use this template in one implementation prompt
 
