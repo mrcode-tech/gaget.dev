@@ -9,6 +9,7 @@ describe("DateTimeEditor", () => {
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Date and time display" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
     expect(screen.getByRole("textbox", { name: "Search date and time features" })).toBeTruthy();
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(20);
     expect(screen.getByRole("combobox", { name: "Display language" })).toBeTruthy();
@@ -41,6 +42,7 @@ describe("DateTimeEditor", () => {
 
   it("filters the feature menu without hiding the date/time centerpiece", () => {
     render(<DateTimeEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Search date and time features" }), { target: { value: "timestamp" } });
     expect(screen.getByRole("button", { name: /Timestamp converter/ })).toBeTruthy();
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(1);
