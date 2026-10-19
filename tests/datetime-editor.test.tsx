@@ -48,4 +48,13 @@ describe("DateTimeEditor", () => {
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(1);
     expect(screen.getByRole("region", { name: "Date and time display" })).toBeTruthy();
   });
+
+  it("supports filtering the full browser-provided IANA time-zone list", () => {
+    render(<DateTimeEditor />);
+    const search = screen.getByRole("textbox", { name: "Search time zones" });
+    fireEvent.change(search, { target: { value: "Asia/Tehran" } });
+    const zoneSelect = screen.getByRole("combobox", { name: "Time zone" }) as HTMLSelectElement;
+    expect(within(zoneSelect).getByRole("option", { name: "Asia/Tehran" })).toBeTruthy();
+    expect(within(zoneSelect).queryByRole("option", { name: "Europe/London" })).toBeNull();
+  });
 });
