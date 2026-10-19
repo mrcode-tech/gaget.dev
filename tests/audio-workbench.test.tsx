@@ -25,4 +25,16 @@ describe("AudioWorkbench template parity", () => {
     expect(descriptionId).toBeTruthy();
     expect(document.getElementById(descriptionId!)?.textContent).toContain("Choose a range");
   });
+  
+  it("opens the same resizable feature sheet before an audio file is selected", () => {
+    render(<AudioWorkbench slug="editor" />);
+    fireEvent.click(screen.getByRole("button", { name: "Open audio editor features" }));
+    fireEvent.click(within(screen.getByTestId("audio-feature-menu")).getByRole("button", { name: "Trim & range" }));
+    const panel = screen.getByTestId("audio-feature-panel");
+    expect(panel.className).toContain("fixed");
+    expect(within(panel).getByRole("heading", { name: "Audio Editor" })).toBeTruthy();
+    const handle = within(panel).getByRole("slider", { name: "Resize editing panel" });
+    fireEvent.keyDown(handle, { key: "End" });
+    expect(handle.getAttribute("aria-valuenow")).toBe(handle.getAttribute("aria-valuemax"));
+  });
 });
