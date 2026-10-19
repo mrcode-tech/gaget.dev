@@ -239,7 +239,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Runs locally in your browser. Calendar availability depends on your browser&apos;s Intl implementation; Islamic calendar conventions may differ.</p>
           </div>
         </div>
-      </div>
     </main>
   );
 }
