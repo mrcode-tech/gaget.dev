@@ -100,6 +100,7 @@ Each menu item follows the existing visual pattern:
 3. Optional short description as secondary, muted text where the current menu variant uses descriptions.
 4. Entire row is a clear hit target; align icons and text to a common start edge.
 5. Keep item row padding, line height, row gaps, corner radius, menu padding, divider placement, focus ring, hover background, disabled opacity, and active state consistent with the live Photo Editor.
+9. For File and feature dropdowns alike, use `p-1.5` container padding and `px-3 py-2.5` action rows. Feature-menu section headings may keep their existing `px-3 py-2` treatment, but must not increase the menu container inset or change action-row spacing. Apply this consistently to desktop grouped menus and compact/mobile Features menus in Photo, Audio, Video, and Date & Time.
 6. Long labels wrap or truncate according to the current implementation; they must not create horizontal overflow.
 7. Icons are decorative when adjacent text provides the name; icon-only buttons require accessible names and tooltips.
 8. Keyboard navigation, Escape dismissal, focus restoration, and visible focus styling are mandatory.

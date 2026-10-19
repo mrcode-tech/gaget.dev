@@ -23,7 +23,10 @@ describe("AudioWorkbench template parity", () => {
     render(<AudioWorkbench slug="editor" />);
     fireEvent.click(screen.getByRole("button", { name: "Open audio editor features" }));
     const menu = screen.getByTestId("audio-feature-menu");
+    expect(menu.className).toContain("bg-popover");
+    expect(menu.className).toContain("p-1.5");
     const feature = within(menu).getByRole("button", { name: "Trim & range" });
+    expect(feature.className).toContain("py-2.5");
     const descriptionId = feature.getAttribute("aria-describedby");
     expect(descriptionId).toBeTruthy();
     expect(document.getElementById(descriptionId!)?.textContent).toContain("Choose a range");

@@ -8,13 +8,18 @@ describe("DateTimeEditor", () => {
   it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
+    const intro = screen.getByTestId("datetime-editor-intro");
+    expect(intro.contains(screen.getByText(/One workspace for dates, calendars, clocks/))).toBe(true);
     const centerpiece = screen.getByRole("region", { name: "Date and time display" });
     expect(centerpiece).toBeTruthy();
+    expect(centerpiece.className).toContain("mt-4");
+    expect(centerpiece.className).not.toContain("my-auto");
     expect(centerpiece.className).toContain("rounded-2xl");
     expect(centerpiece.className).toContain("bg-card");
     expect(centerpiece.className).toContain("shadow-sm");
     expect(centerpiece.className).not.toContain("border-y");
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    expect(screen.getByTestId("datetime-feature-menu").className).toContain("p-1.5");
     expect(screen.getByRole("textbox", { name: "Search date and time features" })).toBeTruthy();
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(20);
     expect(screen.getByRole("combobox", { name: "Display language" })).toBeTruthy();
@@ -47,12 +52,20 @@ describe("DateTimeEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     fireEvent.click(screen.getByRole("button", { name: /^Date$/ }));
     const dateMenu = screen.getByTestId("datetime-date-menu");
+    expect(dateMenu.className).toContain("p-1.5");
     expect(dateMenu.className).toContain("start-0");
+    expect(within(dateMenu).getByRole("button", { name: /Date calculator/ }).className).toContain("py-2.5");
     const dateCalculator = within(dateMenu).getByRole("button", { name: /Date calculator/ });
     expect(dateCalculator.querySelector("svg")).toBeTruthy();
     expect(dateCalculator.textContent).toContain("Add or subtract days");
     fireEvent.click(dateCalculator);
-    expect(screen.getByTestId("datetime-feature-panel")).toBeTruthy();
+    const panel = screen.getByTestId("datetime-feature-panel");
+    expect(panel).toBeTruthy();
+    expect(screen.queryByTestId("datetime-editor-description")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
+    const workspaceGrid = panel.parentElement;
+    expect(workspaceGrid?.className).toContain("grid");
+    expect(workspaceGrid?.firstElementChild?.contains(screen.getByTestId("datetime-editor-intro"))).toBe(true);
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
   });
 
