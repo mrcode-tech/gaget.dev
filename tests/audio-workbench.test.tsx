@@ -8,7 +8,10 @@ describe("AudioWorkbench template parity", () => {
   it("uses the shared empty-state scroll region and upload geometry", () => {
     render(<AudioWorkbench slug="editor" />);
     const intro = screen.getByTestId("audio-empty-intro");
-    expect(intro.closest('[class~="overflow-y-auto"]')).toBeTruthy();
+    const workspace = intro.closest('[class~="overflow-y-auto"]');
+    expect(workspace).toBeTruthy();
+    expect(workspace?.className).toContain("sm:p-6");
+    expect(workspace?.className).not.toContain("space-y-3");
     expect(intro.querySelector("h1")?.textContent).toBe("Audio Editor");
     const dropArea = intro.querySelector(".aspect-square");
     expect(dropArea).toBeTruthy();
