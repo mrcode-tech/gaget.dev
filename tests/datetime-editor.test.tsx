@@ -12,7 +12,7 @@ describe("DateTimeEditor", () => {
     expect(intro.contains(screen.getByText(/One workspace for dates, calendars, clocks/))).toBe(true);
     const centerpiece = screen.getByRole("region", { name: "Date and time display" });
     expect(centerpiece).toBeTruthy();
-    expect(centerpiece.className).toContain("mt-4");
+    expect(centerpiece.className).toContain("mt-2");
     expect(centerpiece.className).not.toContain("my-auto");
     expect(centerpiece.className).toContain("rounded-2xl");
     expect(centerpiece.className).toContain("bg-card");
@@ -65,9 +65,12 @@ describe("DateTimeEditor", () => {
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
     const workspaceGrid = screen.getByTestId("datetime-workspace-grid");
     expect(workspaceGrid.className).toContain("grid");
-    expect(workspaceGrid.className).toContain("gap-3");
+    expect(workspaceGrid.className).toContain("gap-0");
     expect(workspaceGrid.firstElementChild?.contains(screen.getByTestId("datetime-editor-intro"))).toBe(true);
-    expect(screen.getByTestId("datetime-workspace").className).toContain("pt-2");
+    expect(workspaceGrid.contains(panel)).toBe(true);
+    expect(workspaceGrid.lastElementChild).toBe(panel);
+    expect(screen.getByTestId("datetime-workspace").className).not.toContain("pt-2");
+    expect(workspaceGrid.firstElementChild?.className).toContain("pt-2");
     expect(screen.getByRole("region", { name: "Date and time display" }).className).toContain("mt-2");
     expect(panel.className).toContain("sm:border-l");
     expect(panel.className).not.toContain("border-dashed");
