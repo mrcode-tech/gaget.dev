@@ -22,7 +22,7 @@ describe("DateTimeEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     expect(screen.getByTestId("datetime-file-menu")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "File" }));
-    fireEvent.click(screen.getByRole("button", { name: "Date", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: /^Date$/ }));
     const dateMenu = screen.getByTestId("datetime-date-menu");
     fireEvent.click(within(dateMenu).getByRole("button", { name: /Date calculator/ }));
     expect(screen.getByTestId("datetime-feature-panel")).toBeTruthy();
