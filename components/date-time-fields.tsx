@@ -27,7 +27,7 @@ const normalizeDigits = (value: string) => value.replace(/[۰-۹٠-٩]/g, (digit
 const localizeDigits = (value: string, locale: string, numberingSystem = "locale") => {
   try {
     const formatter = new Intl.NumberFormat(locale, { useGrouping: false, ...(numberingSystem === "locale" ? {} : { numberingSystem }) });
-    return value.replace(/\\d/g, (digit) => formatter.format(Number(digit)));
+    return value.replace(/\d/g, (digit) => formatter.format(Number(digit)));
   } catch {
     return value;
   }
