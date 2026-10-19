@@ -37,7 +37,7 @@ export function AppHeader({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
       <Button variant="outline" size="icon" aria-label="Open navigation" className="h-9 w-9 shrink-0 lg:hidden" onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}>
         <Menu className="h-4 w-4" />
       </Button>
-      <div className={`relative min-w-0 w-full max-w-xl lg:absolute lg:left-1/2 lg:top-1/2 lg:w-[min(34vw,32rem)] lg:-translate-x-1/2 lg:-translate-y-1/2 ${isPhotoEditor || isAudioEditor || isVideoEditor ? "hidden md:block" : ""}`}>
+      <div className={`relative min-w-0 w-full max-w-xl lg:absolute lg:left-1/2 lg:top-1/2 lg:w-[min(34vw,32rem)] lg:-translate-x-1/2 lg:-translate-y-1/2 ${isPhotoEditor || isAudioEditor || isVideoEditor || isDateTimeEditor ? "hidden md:block" : ""}`}>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           dir={direction}
