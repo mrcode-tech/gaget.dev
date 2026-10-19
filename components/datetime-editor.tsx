@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { CalendarDays, ChevronDown, Clock3, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,9 +53,9 @@ const zones = [
 const groups: Feature["group"][] = ["Date", "Time", "Calendar", "Utilities"];
 const safeFormat = (date: Date, locale: string, calendar: string, numberingSystem: string, timeZone: string, timeStyle?: "medium" | "short") => {
   try {
-    return new Intl.DateTimeFormat(locale, { calendar, numberingSystem, timeZone, dateStyle: "full", ...(timeStyle ? { timeStyle } : {}) }).format(date);
+    return new Intl.DateTimeFormat(locale, { calendar, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem, timeZone, dateStyle: "full", ...(timeStyle ? { timeStyle } : {}) }).format(date);
   } catch {
-    return new Intl.DateTimeFormat("en-US", { timeZone, dateStyle: "full", ...(timeStyle ? { timeStyle } : {}) }).format(date);
+    return "This calendar and locale combination is not supported by this browser.";
   }
 };
 
@@ -69,8 +69,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [showSeconds, setShowSeconds] = useState(true);
   const [activeFeature, setActiveFeature] = useState<string | null>(initialFeature && features.some((f) => f.slug === initialFeature) ? initialFeature : null);
   const [query, setQuery] = useState("");
-  const [panelHeight, setPanelHeight] = useState(420);
-  const [panelWidth, setPanelWidth] = useState(420);
   const [frozen, setFrozen] = useState(false);
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
   const [message, setMessage] = useState("");
@@ -86,7 +84,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const formattedDate = displayNow ? safeFormat(displayNow, locale, calendar, numberingSystem, timeZone) : "Loading date…";
   const formattedTime = displayNow ? new Intl.DateTimeFormat(locale, {
     timeZone, hour: "2-digit", minute: "2-digit", ...(showSeconds ? { second: "2-digit" as const } : {}),
-    hourCycle, numberingSystem,
+    hourCycle, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem,
   }).format(displayNow) : "--:--";
   const gregorian = displayNow ? new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(displayNow) : "—";
   let offset = "UTC";
@@ -175,14 +173,13 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </section>
         </section>
 
-        {activeFeature && <aside aria-label={features.find((f) => f.slug === activeFeature)?.title ?? "Selected feature"} className="min-w-0 xl:sticky xl:top-20 xl:self-start xl:resize-x xl:overflow-auto xl:border-l xl:border-border xl:pl-4" style={{ width: "100%", maxWidth: "100%", minWidth: 0 }}>
-          <div className="mb-3 flex items-center justify-between gap-2"><div><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
+        {activeFeature && <aside aria-label={features.find((f) => f.slug === activeFeature)?.title ?? "Selected feature"} className="fixed inset-x-0 bottom-0 z-40 min-w-0 resize-y overflow-y-auto rounded-t-2xl border border-border bg-background p-3 shadow-2xl xl:sticky xl:top-20 xl:z-auto xl:h-auto xl:max-h-none xl:w-[var(--panel-width)] xl:max-w-[45vw] xl:self-start xl:resize-x xl:overflow-auto xl:rounded-xl xl:border-l xl:p-4 xl:shadow-none" style={{ "--panel-width": "420px", height: "420px" } as CSSProperties}>
+          <div className="mb-3 flex items-center justify-between gap-2"><div><div className="mb-2 h-1 w-10 rounded-full bg-muted-foreground/40 xl:hidden" aria-hidden="true" /><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
           <div className="min-w-0"><DateTimeWorkbench slug={activeFeature} /></div>
         </aside>}
       </div>
       <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Runs locally in your browser. Calendar availability depends on your browser&apos;s Intl implementation; Islamic calendar conventions may differ.</p>
       <div className="flex items-center gap-2 text-xs text-muted-foreground xl:hidden"><SlidersHorizontal className="h-4 w-4" />Select a feature to open its controls below the date and time display.</div>
-      <div className="hidden" aria-hidden="true">{panelHeight}{panelWidth}<Input value={frozen ? "frozen" : "live"} readOnly /></div>
     </main>
   );
 }
