@@ -49,7 +49,7 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
   const selectedLabel = value ? format(selected, { dateStyle: "full" }) : "Choose date";
   const weekdays = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const day = new Date(2023, 0, 1 + index, 12);
-    return new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }).format(day);
+    return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(day);
   }), [locale]);
   const changeMonth = (amount: number) => setViewMonth((current) => { const info = (() => { let first = new Date(current); const key = monthKey(first); for (let i = 0; i < 35; i += 1) { const previous = new Date(first); previous.setDate(previous.getDate() - 1); if (monthKey(previous) !== key) break; first = previous; } return first; })(); if (amount < 0) { info.setDate(info.getDate() - 1); return info; } const next = new Date(current); for (let i = 0; i < 35; i += 1) { next.setDate(next.getDate() + 1); if (monthKey(next) !== monthKey(current)) break; } return next; });
 
