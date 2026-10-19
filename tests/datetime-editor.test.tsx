@@ -93,7 +93,8 @@ describe("DateTimeEditor", () => {
   });
 
   it("treats display language, calendar, and numeral system as independent controls", () => {
-    render(<DateTimeEditor />);
+    // The localized time-input assertion requires a feature that actually renders a time input.
+    render(<DateTimeEditor initialFeature="world-clock" />);
     fireEvent.change(screen.getByRole("combobox", { name: "Display language" }), { target: { value: "fa-IR" } });
     expect((screen.getByRole("textbox", { name: "Time in 24-hour format" }) as HTMLInputElement).value).toMatch(/[۰-۹]/);
     fireEvent.change(screen.getByRole("combobox", { name: "Calendar system" }), { target: { value: "persian" } });
