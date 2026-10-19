@@ -71,7 +71,7 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
         {calendarMonthDates.dates.map((date) => {
           const iso = toISODate(date);
           const isSelected = iso === value;
-          return <button key={iso} type="button" role="gridcell" aria-selected={isSelected} aria-label={format(date, { dateStyle: "full" })} onClick={() => { onChange(iso); setOpen(false); }} className={"h-9 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>{format(date, { day: "numeric" })}</button>;
+          return <button key={iso} type="button" aria-pressed={isSelected} aria-label={format(date, { dateStyle: "full" })} onClick={() => { onChange(iso); setOpen(false); }} className={"h-9 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>{format(date, { day: "numeric" })}</button>;
         })}
       </div>
       <div className="mt-3 flex justify-between border-t border-border pt-3">
