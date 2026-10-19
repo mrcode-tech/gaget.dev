@@ -85,11 +85,16 @@ for (const viewport of emptyStateViewports) {
       return { textLeft: text.left, textBottom: text.bottom };
     });
     const uploadBox = await uploadArea.boundingBox();
+    const workspace = await page.getByTestId("canvas-scroll-area").boundingBox();
     expect(headingBox).not.toBeNull();
     expect(uploadBox).not.toBeNull();
     expect(descriptionMetrics.textLeft).toBeCloseTo(breadcrumbMetrics.left, 0);
     if (headingBox) expect(headingBox.x).toBeCloseTo(breadcrumbMetrics.left, 0);
-    if (uploadBox) expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
+    expect(workspace).not.toBeNull();
+    if (uploadBox && workspace) {
+      expect(uploadBox.y - descriptionMetrics.textBottom).toBeGreaterThanOrEqual(31);
+      expect(uploadBox.x + uploadBox.width / 2).toBeCloseTo(workspace.x + workspace.width / 2, 0);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
