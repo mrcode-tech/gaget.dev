@@ -17,6 +17,28 @@ describe("DateTimeEditor", () => {
     expect(screen.getByRole("combobox", { name: "Time zone" })).toBeTruthy();
   });
 
+  it("uses template-style File and grouped desktop feature menus", () => {
+    render(<DateTimeEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    expect(screen.getByTestId("datetime-file-menu")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Date$/ }));
+    const dateMenu = screen.getByTestId("datetime-date-menu");
+    fireEvent.click(within(dateMenu).getByRole("button", { name: /Date calculator/ }));
+    expect(screen.getByTestId("datetime-feature-panel")).toBeTruthy();
+    expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
+  });
+
+  it("dismisses menus with Escape and restores focus to the trigger", () => {
+    render(<DateTimeEditor />);
+    const trigger = screen.getByRole("button", { name: "Features" });
+    fireEvent.click(trigger);
+    expect(screen.getByTestId("datetime-feature-menu")).toBeTruthy();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByTestId("datetime-feature-menu")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it("opens the shared resizable mobile feature sheet for a selected legacy feature", () => {
     render(<DateTimeEditor initialFeature="date-difference" />);
     const panel = screen.getByTestId("datetime-feature-panel");

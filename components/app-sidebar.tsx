@@ -131,9 +131,9 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                 return (
                   <NavLink
                     key={category.name}
-                    href={category.name === "Images" ? "/images/editor" : category.name === "Audio" ? "/audio/editor" : category.name === "Video" ? "/video/editor" : category.href}
+                    href={category.name === "Images" ? "/images/editor" : category.name === "Audio" ? "/audio/editor" : category.name === "Video" ? "/video/editor" : category.name === "Date & Time" ? "/datetime/editor" : category.href}
                     label={t(category.name === "Video" ? "category.video" : `category.${category.name}`)}
-                    active={isActive(category.name === "Images" ? "/images/editor" : category.name === "Audio" ? "/audio/editor" : category.name === "Video" ? "/video/editor" : category.href)}
+                    active={isActive(category.name === "Images" ? "/images/editor" : category.name === "Audio" ? "/audio/editor" : category.name === "Video" ? "/video/editor" : category.name === "Date & Time" ? "/datetime/editor" : category.href)}
                     icon={<Icon className="h-4 w-4" />}
                     collapsed={isCollapsed}
                     onClick={mobile ? () => setMobileOpen(false) : undefined}
