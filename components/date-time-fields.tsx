@@ -23,43 +23,57 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
   const selected = parseISODate(value);
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1, 12));
-  const firstDay = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1, 12).getDay();
-  const daysInMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0, 12).getDate();
-  const format = (date: Date, options: Intl.DateTimeFormatOptions) => {
-    try { return new Intl.DateTimeFormat(locale, { ...options, calendar, timeZone: "UTC" }).format(date); }
+  const format = (date: Date, options: Intl.DateTimeFormatOptions, calendarOverride = calendar) => {
+    try { return new Intl.DateTimeFormat(locale, { ...options, calendar: calendarOverride, timeZone: "UTC" }).format(date); }
     catch { return new Intl.DateTimeFormat("en-US", options).format(date); }
   };
+  const monthKey = (date: Date) => format(date, { era: "short", year: "numeric", month: "numeric" });
+  const calendarMonthDates = (() => {
+    let first = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), viewMonth.getDate(), 12);
+    const key = monthKey(first);
+    for (let i = 0; i < 35; i += 1) {
+      const previous = new Date(first); previous.setDate(previous.getDate() - 1);
+      if (monthKey(previous) !== key) break;
+      first = previous;
+    }
+    const dates: Date[] = [];
+    for (let i = 0; i < 42; i += 1) {
+      const date = new Date(first); date.setDate(first.getDate() + i);
+      if (i > 0 && monthKey(date) !== key) break;
+      dates.push(date);
+    }
+    return { first, dates, offset: first.getDay() };
+  })();
   const monthLabel = format(viewMonth, { month: "long", year: "numeric" });
+  const gregorianMonthLabel = format(viewMonth, { month: "short", year: "numeric" }, "gregory");
   const selectedLabel = value ? format(selected, { dateStyle: "full" }) : "Choose date";
   const weekdays = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const day = new Date(Date.UTC(2023, 0, 1 + index));
     return new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }).format(day);
   }), [locale]);
-  const changeMonth = (amount: number) => setViewMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1, 12));
+  const changeMonth = (amount: number) => setViewMonth((current) => { const info = (() => { let first = new Date(current); const key = monthKey(first); for (let i = 0; i < 35; i += 1) { const previous = new Date(first); previous.setDate(previous.getDate() - 1); if (monthKey(previous) !== key) break; first = previous; } return first; })(); if (amount < 0) { info.setDate(info.getDate() - 1); return info; } const next = new Date(current); for (let i = 0; i < 35; i += 1) { next.setDate(next.getDate() + 1); if (monthKey(next) !== monthKey(current)) break; } return next; });
 
   return <div className="relative min-w-0">
-    <button id={id} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((current) => !current)} className="flex h-10 w-full min-w-0 items-center justify-between gap-2 border border-input bg-background px-3 text-start text-sm hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <button id={id} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setViewMonth(parseISODate(value)); setOpen((current) => !current); }} className="flex h-10 w-full min-w-0 items-center justify-between gap-2 border border-input bg-background px-3 text-start text-sm hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <span className="min-w-0 truncate">{selectedLabel}</span><CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
     </button>
     {open && <div role="dialog" aria-label="Choose date" className="absolute start-0 top-[calc(100%+4px)] z-50 w-[min(20rem,calc(100vw-2rem))] border border-border bg-popover p-3 text-popover-foreground shadow-xl">
       <div className="mb-3 flex items-center justify-between gap-2">
         <button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)} className="inline-flex h-8 w-8 items-center justify-center hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ChevronLeft className="h-4 w-4" /></button>
-        <div className="min-w-0 text-center"><p className="text-sm font-semibold">{monthLabel}</p><p className="text-xs text-muted-foreground">{format(viewMonth, { calendar: "gregory", month: "short", year: "numeric" })}</p></div>
+        <div className="min-w-0 text-center"><p className="text-sm font-semibold">{monthLabel}</p><p className="text-xs text-muted-foreground">{gregorianMonthLabel} · {calendar}</p></div>
         <button type="button" aria-label="Next month" onClick={() => changeMonth(1)} className="inline-flex h-8 w-8 items-center justify-center hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ChevronRight className="h-4 w-4" /></button>
       </div>
       <div role="grid" aria-label={monthLabel} className="grid grid-cols-7 gap-1">
         {weekdays.map((day, index) => <div role="columnheader" key={index} className="py-1 text-center text-xs font-medium text-muted-foreground">{day}</div>)}
-        {Array.from({ length: firstDay }, (_, index) => <span aria-hidden="true" key={"empty-" + index} />)}
-        {Array.from({ length: daysInMonth }, (_, index) => {
-          const day = index + 1;
-          const date = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day, 12);
+        {Array.from({ length: calendarMonthDates.offset }, (_, index) => <span aria-hidden="true" key={"empty-" + index} />)}
+        {calendarMonthDates.dates.map((date) => {
           const iso = toISODate(date);
           const isSelected = iso === value;
           return <button key={iso} type="button" role="gridcell" aria-selected={isSelected} aria-label={format(date, { dateStyle: "full" })} onClick={() => { onChange(iso); setOpen(false); }} className={"h-9 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>{format(date, { day: "numeric" })}</button>;
         })}
       </div>
       <div className="mt-3 flex justify-between border-t border-border pt-3">
-        <button type="button" onClick={() => { const today = new Date(); const iso = toISODate(today); onChange(iso); setViewMonth(new Date(today.getFullYear(), today.getMonth(), 1, 12)); setOpen(false); }} className="text-sm font-medium text-primary hover:underline">Today</button>
+        <button type="button" onClick={() => { const today = new Date(); const iso = toISODate(today); onChange(iso); setViewMonth(today); setOpen(false); }} className="text-sm font-medium text-primary hover:underline">Today</button>
         <button type="button" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">Close</button>
       </div>
     </div>}
