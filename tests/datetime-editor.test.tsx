@@ -1,0 +1,49 @@
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { DateTimeEditor } from "@/components/datetime-editor";
+
+afterEach(() => cleanup());
+
+describe("DateTimeEditor", () => {
+  it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
+    render(<DateTimeEditor />);
+    expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Date and time display" })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "Search date and time features" })).toBeTruthy();
+    expect(document.querySelectorAll("button[aria-pressed]").length).toBe(20);
+    expect(screen.getByRole("combobox", { name: "Display language" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Calendar system" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Time zone" })).toBeTruthy();
+  });
+
+  it("opens the shared resizable mobile feature sheet for a selected legacy feature", () => {
+    render(<DateTimeEditor initialFeature="date-difference" />);
+    const panel = screen.getByTestId("datetime-feature-panel");
+    expect(panel.className).toContain("fixed");
+    expect(within(panel).getByRole("heading", { name: "Date Difference Calculator" })).toBeTruthy();
+    const handle = within(panel).getByRole("slider", { name: "Resize editing panel" });
+    const max = handle.getAttribute("aria-valuemax");
+    fireEvent.keyDown(handle, { key: "End" });
+    expect(handle.getAttribute("aria-valuenow")).toBe(max);
+    fireEvent.click(within(panel).getByRole("button", { name: "Close selected feature" }));
+    expect(screen.queryByTestId("datetime-feature-panel")).toBeNull();
+  });
+
+  it("treats display language, calendar, and numeral system as independent controls", () => {
+    render(<DateTimeEditor />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Display language" }), { target: { value: "fa-IR" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Calendar system" }), { target: { value: "persian" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Numeral system" }), { target: { value: "arabext" } });
+    expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
+    expect((screen.getByRole("combobox", { name: "Calendar system" }) as HTMLSelectElement).value).toBe("persian");
+    expect((screen.getByRole("combobox", { name: "Numeral system" }) as HTMLSelectElement).value).toBe("arabext");
+  });
+
+  it("filters the feature menu without hiding the date/time centerpiece", () => {
+    render(<DateTimeEditor />);
+    fireEvent.change(screen.getByRole("textbox", { name: "Search date and time features" }), { target: { value: "timestamp" } });
+    expect(screen.getByRole("button", { name: /Timestamp converter/ })).toBeTruthy();
+    expect(document.querySelectorAll("button[aria-pressed]").length).toBe(1);
+    expect(screen.getByRole("region", { name: "Date and time display" })).toBeTruthy();
+  });
+});
