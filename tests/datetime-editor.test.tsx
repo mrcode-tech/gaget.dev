@@ -17,13 +17,24 @@ describe("DateTimeEditor", () => {
     expect(screen.getByRole("combobox", { name: "Time zone" })).toBeTruthy();
   });
 
-  it("uses template-style File and grouped desktop feature menus", () => {
+  it("keeps File and feature groups together on desktop while separating File and Features on compact screens", () => {
     render(<DateTimeEditor />);
+    const commandBar = screen.getByRole("navigation", { name: "Date and time editor commands" });
+    expect(commandBar.className).toContain("justify-between");
+    expect(commandBar.className).toContain("lg:justify-start");
+    expect(commandBar.className).toContain("gap-3");
+    const commandButtons = within(commandBar);
+    expect(commandButtons.getByRole("button", { name: "File" }).className).toContain("h-9");
+    expect(commandButtons.getByRole("button", { name: "Date" }).parentElement?.parentElement?.className).toContain("gap-3");
+    expect(commandButtons.getByRole("button", { name: "Features" }).className).toContain("lg:hidden");
     fireEvent.click(screen.getByRole("button", { name: "File" }));
-    expect(screen.getByTestId("datetime-file-menu")).toBeTruthy();
+    const fileMenu = screen.getByTestId("datetime-file-menu");
+    expect(fileMenu.className).toContain("start-3");
+    expect(fileMenu.className).toContain("sm:start-6");
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     fireEvent.click(screen.getByRole("button", { name: /^Date$/ }));
     const dateMenu = screen.getByTestId("datetime-date-menu");
+    expect(dateMenu.className).toContain("start-0");
     fireEvent.click(within(dateMenu).getByRole("button", { name: /Date calculator/ }));
     expect(screen.getByTestId("datetime-feature-panel")).toBeTruthy();
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();

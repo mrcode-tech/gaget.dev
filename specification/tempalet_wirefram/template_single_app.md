@@ -313,6 +313,7 @@ For another editor, instruct the coding agent to:
 - `wireframe-desktop.svg` — desktop sidebar, grouped menu, canvas, inspector, and history/zoom/export.
 - `wireframe-mobile-sheet.svg` — resizable mobile feature sheet and input scroll ownership.
 - `wireframe-menus.svg` — File/Features menu anatomy and feature grouping.
+- `wireframe-datetime-command-bar.svg` — Date & Time command-bar alignment at compact and desktop breakpoints.
 - `wireframe-components.svg` — breadcrumb, heading, upload target, feature input, history/zoom controls, and spacing callouts.
 
 The SVGs are structural design references; their labels and proportions explain hierarchy, not exact rendered pixels. This template folder intentionally documents the Photo Editor as currently implemented rather than proposing a new design.
@@ -375,3 +376,16 @@ Photo, Audio, and Video use one consistent command-bar layout contract. The menu
 - **Keep the common shell consistent:** media-specific labels, actions, feature counts, descriptions, and file-processing behavior may differ. Their outer bar spacing, button geometry, and dropdown anchoring may not drift independently.
 - **Regression tests:** render all three editors and assert the command-bar gap, File/feature button geometry, and File dropdown positioning classes match. Run the component suite and inspect desktop screenshots at the same viewport before accepting visual parity.
 - **Avoid fragile duplicate markup:** if a future refactor extracts a shared command-bar component, preserve accessible names and existing test IDs or update the tests intentionally. Do not change loaded workspace/canvas behavior as a side effect of this layout-only fix.
+
+
+## 20. Date & Time command-bar breakpoint contract (2026-10-19)
+
+The Date & Time editor uses the same shared command-bar geometry defined in section 19. The compact and desktop layouts are intentionally different in alignment, not in button styling or menu behavior.
+
+- **Compact layout (<1024px):** keep File at inline-start and Features at inline-end. Use the command bar's `justify-between` behavior so the controls remain separated even when the viewport is narrow.
+- **Desktop layout (≥1024px):** switch the command bar to start alignment. File must be followed immediately by the Date, Time, Calendar, and Utilities groups; do not leave the groups pushed to the opposite edge by `justify-between`.
+- **Top-level spacing:** use `gap-3` between command-bar controls and between desktop feature-group buttons. Do not use `gap-1` for the group row.
+- **Dropdown positioning:** File dropdown stays positioned against the command bar and aligns to its logical inline-start gutter (`start-3 sm:start-6`, equivalent to left gutter in LTR). Each desktop feature dropdown stays anchored to its own `relative` trigger wrapper at inline-start (`start-0`). Never interchange these positioning contexts.
+- **RTL:** use logical `start`/`end` utilities so compact controls and dropdown gutters mirror correctly for RTL locales. Do not replace them with hard-coded physical left/right utilities.
+- **No redesign:** keep the 68px bar, `px-3 sm:px-6` gutters, 36px top-level buttons, labels, dropdown contents, focus behavior, and loaded workspace unchanged.
+- **Regression coverage:** assert the responsive alignment classes, consistent `gap-3`, compact-only Features button, File dropdown anchor, and trigger-anchored desktop menus. Also inspect screenshots at 390px, 768px, 1024px, and 1440px; a DOM class assertion does not replace visual review.
