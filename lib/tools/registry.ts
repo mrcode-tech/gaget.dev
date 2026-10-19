@@ -1,4 +1,4 @@
-import {Braces,Link2,Binary,KeyRound,Fingerprint,Hash,Regex,Clock3,FileCode2,GitCompareArrows,Database,FileSpreadsheet,ShieldCheck,Code2,Image,Terminal,Music,Film,Globe2,CalendarDays,CalendarClock,Timer,BriefcaseBusiness,CalendarCheck,Cake,Users,CalendarPlus,CalendarHeart,type LucideIcon} from "lucide-react";
+import {type LucideIcon} from "lucide-react";
 export type Tool={name:string;description:string;href:string;category:string;keywords:string[];icon:LucideIcon;color:"blue"|"green"|"violet"|"rose"|"orange"|"cyan";status?:"available"|"planned"};
 export const tools:Tool[]=[
 {name:"Photo Editor",description:"One local-first image workspace for crop, resize, filters, text, color sampling and palettes, metadata-free export, format conversion, Base64 encode/decode, collage, favicon, SVG optimization, and print sizing.",href:"/images/editor",category:"Images",keywords:["image","photo","edit","filter","brightness","contrast","crop","resize","rotate","text","caption","watermark","export","compress","jpeg","png","webp","color picker","palette","metadata","base64","base64 to image","collage","favicon","svg optimizer","print dpi"],icon:Image,color:"rose"},
