@@ -363,3 +363,15 @@ The six product-level choices above are resolved. The following are implementati
 ### Refactor acceptance rule
 
 The implementation is ready for review only when the shared shell is consistent, the empty state has one full vertical scroll path, all features use the same accessible resizable mobile sheet, media-specific controls remain functional and non-duplicated, video timeline visibility is conditional, and tests plus responsive screenshots show no unintended change to loaded-file geometry. Report any unsupported feature honestly; do not call an unimplemented capability complete.
+
+## 19. Shared editor command-bar and File-menu geometry (2026-10-19)
+
+Photo, Audio, and Video use one consistent command-bar layout contract. The menu bar is a shared design surface even while each editor keeps its own media-specific actions and feature groups.
+
+- **Command-bar geometry:** use a 68px bar, the same responsive horizontal padding (`px-3 sm:px-6`), vertically centered controls, and `gap-3` between top-level controls. Do not use editor-specific parent gaps.
+- **Top-level buttons:** File and desktop feature-group buttons use the same `inline-flex h-9 items-center rounded-md px-3 py-1.5` geometry, with the same hover, focus, and open-state treatment. Do not reduce Video feature buttons to `px-2.5` or omit the vertical padding.
+- **File dropdown anchor:** all three File dropdowns use the command bar as their positioning context and the same responsive left gutter (`left-3 sm:left-6`) and border-overlap top offset (`top-[calc(100%-1px)]`). Do not make only one editor position its dropdown relative to the File wrapper while the others position it relative to the whole bar.
+- **Feature dropdown anchor:** each desktop feature menu remains anchored to its own top-level feature button using a `relative` wrapper and `left-0`; File-menu positioning must not be copied onto feature menus.
+- **Keep the common shell consistent:** media-specific labels, actions, feature counts, descriptions, and file-processing behavior may differ. Their outer bar spacing, button geometry, and dropdown anchoring may not drift independently.
+- **Regression tests:** render all three editors and assert the command-bar gap, File/feature button geometry, and File dropdown positioning classes match. Run the component suite and inspect desktop screenshots at the same viewport before accepting visual parity.
+- **Avoid fragile duplicate markup:** if a future refactor extracts a shared command-bar component, preserve accessible names and existing test IDs or update the tests intentionally. Do not change loaded workspace/canvas behavior as a side effect of this layout-only fix.
