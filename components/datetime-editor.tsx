@@ -72,7 +72,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [query, setQuery] = useState("");
   const [zoneQuery, setZoneQuery] = useState("");
   const [availableZones, setAvailableZones] = useState<string[]>(zones);
-  const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState<"File" | "Features" | null>(null);
   const [frozen, setFrozen] = useState(false);
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
   const [referenceRevision, setReferenceRevision] = useState(0);
@@ -130,7 +130,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   function selectFeature(slug: string) {
     setActiveFeature(slug);
     if (selectedDate && selectedTime) setSeededReference({ date: selectedDate, time: selectedTime });
-    setFeaturesOpen(false);
+    setMenuOpen(null);
     setMessage("");
     if (typeof window !== "undefined") window.history.replaceState(window.history.state, "", "/datetime/editor?feature=" + encodeURIComponent(slug));
   }
@@ -151,31 +151,44 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1600px] space-y-4 px-3 pb-8 pt-4 sm:px-5 lg:px-6" dir={locale.startsWith("fa") || locale.startsWith("ar") ? "rtl" : "ltr"}>
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><CalendarDays className="h-5 w-5" /></div>
-          <div><h1 className="text-xl font-semibold tracking-tight">Date &amp; Time</h1><p className="text-sm text-muted-foreground">One workspace for dates, calendars, clocks, and calculations.</p></div>
+    <main className="flex h-full min-h-0 flex-col overflow-hidden" dir={locale.startsWith("fa") || locale.startsWith("ar") ? "rtl" : "ltr"}>
+      <nav aria-label="Date and time editor commands" className="relative z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 sm:px-6">
+        <div className="flex items-center gap-1">
+          <button type="button" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>File</button>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <details className="relative">
-            <summary className="flex h-9 cursor-pointer list-none items-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent">File</summary>
-            <div className="absolute end-0 top-11 z-30 min-w-56 space-y-1 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg">
-              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => void copyText(formattedDate + " " + formattedTime + " (" + timeZone + ")")}>Copy current display</button>
-              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => void copyText(displayNow?.toISOString() ?? "")}>Copy ISO 8601</button>
-              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => void copyText(displayNow ? String(Math.floor(displayNow.getTime() / 1000)) : "")}>Copy Unix timestamp</button>
-              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => window.print()}>Print current view</button>
-              <button type="button" className="w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={resetReference}>Reset reference to now</button>
-            </div>
-          </details>
-          <Button type="button" variant={featuresOpen ? "default" : "outline"} onClick={() => setFeaturesOpen((open) => !open)}><SlidersHorizontal className="mr-2 h-4 w-4" />Features</Button>
-          <Button type="button" variant="outline" onClick={() => setActiveFeature(null)}><Clock3 className="mr-2 h-4 w-4" />Live date &amp; time</Button>
+        <div className="flex items-center gap-1">
+          <button type="button" aria-expanded={menuOpen === "Features"} className={"inline-flex h-9 items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
         </div>
-      </header>
+        {menuOpen === "File" && <div data-testid="datetime-file-menu" className="absolute left-3 top-[calc(100%-1px)] z-50 min-w-52 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:left-6">
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { void copyText(formattedDate + " " + formattedTime + " (" + timeZone + ")"); setMenuOpen(null); }}><Copy className="h-4 w-4 text-muted-foreground" /><span>Copy current display</span></button>
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { void copyText(displayNow?.toISOString() ?? ""); setMenuOpen(null); }}><Copy className="h-4 w-4 text-muted-foreground" /><span>Copy ISO 8601</span></button>
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { void copyText(displayNow ? String(Math.floor(displayNow.getTime() / 1000)) : ""); setMenuOpen(null); }}><Copy className="h-4 w-4 text-muted-foreground" /><span>Copy Unix timestamp</span></button>
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { window.print(); setMenuOpen(null); }}><CalendarDays className="h-4 w-4 text-muted-foreground" /><span>Print current view</span></button>
+          <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { resetReference(); setMenuOpen(null); }}><RotateCcw className="h-4 w-4 text-muted-foreground" /><span>Reset reference to now</span></button>
+        </div>}
+        {menuOpen === "Features" && <div data-testid="datetime-feature-menu" className="absolute right-3 top-[calc(100%-1px)] z-50 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(70dvh,520px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-2 shadow-xl sm:right-6">
+          <div className="flex items-center justify-between gap-2 px-3 py-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date &amp; time features</span><button type="button" aria-label="Close feature menu" className="rounded p-1 hover:bg-accent" onClick={() => setMenuOpen(null)}><X className="h-4 w-4" /></button></div>
+          <div className="relative px-1 pb-2"><Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input aria-label="Search date and time features" className="pl-9" placeholder="Search date, time, calendar…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
+          <div className="space-y-3">
+            {groups.map((group) => {
+              const items = filteredFeatures.filter((feature) => feature.group === group);
+              if (!items.length) return null;
+              return <section key={group} aria-label={group + " features"}><p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</p>{items.map((feature) => <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"flex w-full items-start gap-3 rounded-md px-3 py-2 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "bg-accent" : "")}><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{feature.title}</span><span className="mt-0.5 block text-xs leading-4 text-muted-foreground">{feature.description}</span></span><ChevronDown className="mt-1 h-4 w-4 shrink-0 -rotate-90 text-muted-foreground" /></button>)}</section>;
+            })}
+          </div>
+        </div>}
+      </nav>
 
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <section className="min-w-0 space-y-4">
-          <section aria-label="Date and time display" className="mx-auto w-full max-w-5xl rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 lg:p-8">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
+        <div className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col px-3 pb-8 pt-4 sm:px-6">
+          <div className="mb-2 text-xs text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight">Date &amp; Time</h1>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>
+          </div>
+          <div className="grid min-w-0 flex-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+            <section className="flex min-w-0 flex-col">
+          <section aria-label="Date and time display" className="mx-auto my-auto w-full max-w-5xl rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-muted-foreground">Current date and time</p>
@@ -205,20 +218,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
             {message && <p role="status" className="mt-3 text-sm text-muted-foreground">{message}</p>}
           </section>
 
-{featuresOpen &&           <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="font-semibold">Tools and features</h2><p className="text-sm text-muted-foreground">Choose a feature without leaving this workspace.</p></div>
-              {activeFeature && <Button type="button" variant="ghost" size="sm" onClick={() => { setActiveFeature(null); setMessage(""); }}><X className="mr-1 h-4 w-4" />Close feature</Button>}
-            </div>
-            <div className="relative mt-4"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input aria-label="Search date and time features" className="pl-9" placeholder="Search date, time, calendar…" value={query} onChange={(e) => setQuery(e.target.value)} /></div>
-            <div className="mt-4 space-y-5">
-              {groups.map((group) => {
-                const items = filteredFeatures.filter((feature) => feature.group === group);
-                if (!items.length) return null;
-                return <div key={group}><h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</h3><div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">{items.map((feature) => <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"rounded-xl border p-3 text-start transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "border-primary bg-primary/5" : "border-border")}><span className="flex items-center justify-between gap-2 font-medium text-sm">{feature.title}<ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" /></span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{feature.description}</span></button>)}</div></div>;
-              })}
-            </div>
-          </section>}
+        </section>}
         </section>
 
         {activeFeature && <aside ref={panelRef} style={{ ...panelStyle, "--panel-width": `${desktopPanelWidth}px` } as CSSProperties} data-testid="datetime-feature-panel" aria-label="Date and time feature settings" className="fixed inset-x-2 bottom-2 z-40 h-[var(--feature-panel-height)] max-h-[70dvh] resize-y overflow-y-auto overscroll-y-contain rounded-xl border border-border bg-card p-4 shadow-xl transition-[height] duration-200 motion-reduce:transition-none lg:static lg:h-auto lg:max-h-none lg:w-[var(--panel-width)] lg:max-w-[45vw] lg:resize-none lg:overflow-auto lg:rounded-xl lg:border-l lg:shadow-none">
@@ -228,8 +228,10 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={locale} calendar={calendar} />
         </aside>}
       </div>
-      <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Runs locally in your browser. Calendar availability depends on your browser&apos;s Intl implementation; Islamic calendar conventions may differ.</p>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground lg:hidden"><SlidersHorizontal className="h-4 w-4" />Select a feature to open its controls below the date and time display.</div>
+          <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Runs locally in your browser. Calendar availability depends on your browser&apos;s Intl implementation; Islamic calendar conventions may differ.</p>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }
