@@ -225,7 +225,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               <header data-testid="datetime-editor-intro" className="shrink-0 pb-1">
                 <div className="mb-2 text-xs text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
                 <h1 className="text-2xl font-semibold tracking-tight">Date &amp; Time</h1>
-                <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>
+                {!activeFeature && <p data-testid="datetime-editor-description" className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>}
               </header>
           <section aria-label="Date and time display" className="mx-auto mt-4 mb-4 w-full max-w-5xl rounded-2xl bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
