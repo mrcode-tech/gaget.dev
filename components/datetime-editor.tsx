@@ -85,10 +85,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }, [initialFeature]);
 
   useEffect(() => {
-    if (initialFeature && selectedDate && selectedTime && !seededReference) setSeededReference({ date: selectedDate, time: selectedTime });
-  }, [initialFeature, selectedDate, selectedTime, seededReference]);
-
-  useEffect(() => {
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
@@ -114,6 +110,11 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
     return part("year") + "-" + part("month") + "-" + part("day");
   })() : undefined;
   const selectedTime = displayNow ? new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(displayNow) : undefined;
+
+  useEffect(() => {
+    if (initialFeature && selectedDate && selectedTime && !seededReference) setSeededReference({ date: selectedDate, time: selectedTime });
+  }, [initialFeature, selectedDate, selectedTime, seededReference]);
+
   const gregorian = selectedDate ?? "—";
   let offset = "UTC";
   if (displayNow) {
