@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { CalendarDays, ChevronDown, Clock3, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
