@@ -26,6 +26,22 @@ describe("Date & Time reusable fields", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("localizes editable time values and options for Persian and Arabic while preserving canonical values", () => {
+    const onChange = vi.fn();
+    render(<ClockTimeInput id="persian-time" value="09:15" onChange={onChange} locale="fa-IR" numberingSystem="locale" />);
+    const persianInput = screen.getByRole("textbox", { name: "Time in 24-hour format" }) as HTMLInputElement;
+    expect(persianInput.value).toBe("۰۹:۱۵");
+    fireEvent.change(persianInput, { target: { value: "۱۲:۳۰" } });
+    expect(onChange).toHaveBeenCalledWith("12:30");
+    cleanup();
+
+    render(<ClockTimeInput id="arabic-time" value="09:15" onChange={onChange} locale="ar-SA" numberingSystem="locale" />);
+    const arabicInput = screen.getByRole("textbox", { name: "Time in 24-hour format" }) as HTMLInputElement;
+    expect(arabicInput.value).toMatch(/[٠-٩]/);
+    fireEvent.click(screen.getByRole("button", { name: "Choose time" }));
+    expect(screen.getByRole("option", { name: /٠٩:١٥/ })).toBeTruthy();
+  });
+
   it("provides a bounded quarter-hour list and keeps direct time entry available", () => {
     const onChange = vi.fn();
     render(<ClockTimeInput id="meeting-time" value="09:00" onChange={onChange} />);

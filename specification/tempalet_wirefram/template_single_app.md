@@ -177,7 +177,7 @@ Actions are **media-specific**, not a requirement to copy the Photo Editor toolb
 - Inspector is on the trailing/right side in LTR, bounded to the existing implementation width (design reference approximately 300–360px; verify live code before changing).
 - Canvas remains the primary region and uses the remaining width.
 - Inspector has a title/feature identity, close affordance where currently implemented, feature-specific controls, consistent labels, fields, slider styling, grouping, and internal vertical scrolling when needed.
-- At the 1024px threshold, preserve a usable canvas. If the existing component uses a narrower/overlay treatment at a constrained width, keep that behavior; do not force three cramped columns.
+- Follow the actual baseline component breakpoint rather than imposing a universal threshold. The current Photo Editor switches to a right-side 320px inspector at its `sm` breakpoint; layouts that need additional canvas width may defer extra columns or secondary controls until 1024px. Preserve a usable workspace and do not force cramped columns.
 - On 2XL, inspector width stays bounded; do not scale it with the viewport.
 - Closing the panel returns to the workspace without losing edits unless the feature explicitly cancels a draft.
 

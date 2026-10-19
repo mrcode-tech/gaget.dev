@@ -50,7 +50,7 @@
 <line class="line" x1="278" y1="640" x2="278" y2="704"/>
 <text class="small" x="175" y="652" text-anchor="middle">Hour</text><text class="small" x="382" y="652" text-anchor="middle">Minute</text>
 <text class="muted" x="175" y="676" text-anchor="middle">13</text><text class="muted" x="382" y="676" text-anchor="middle">29</text>
-<rect class="soft" x="118" y="682" width="114" height="28" rx="0"/><rect class="soft" x="325" y="682" width="114" height="28" rx="0"/><text class="blueText" x="175" y="701" text-anchor="middle">14</text><text class="blueText" x="382" y="701" text-anchor="middle">30</text>
+<rect class="soft" x="118" y="682" width="114" height="28" rx="0"/><rect class="soft" x="325" y="682" width="114" height="28" rx="0"/><text class="blueText" x="175" y="701" text-anchor="middle">14</text><text class="blueText" x="382" y="701" text-anchor="middle">30</text><text class="small" x="58" y="730">Localized digits: ۱۴:۳۰ · ١٤:٣٠</text>
 <!-- combined -->
 <rect class="panel" x="544" y="436" width="490" height="300" rx="0"/>
 <text class="head" x="566" y="468">05 · Combined date &amp; time picker</text><text class="muted" x="566" y="491">One field, separate sections inside a single popover</text>

@@ -18,6 +18,20 @@ const parseISODate = (value: string) => {
   return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12) : new Date();
 };
 const toISODate = (date: Date) => date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
+const normalizeDigits = (value: string) => value.replace(/[۰-۹٠-٩]/g, (digit) => {
+  const persian = "۰۱۲۳۴۵۶۷۸۹".indexOf(digit);
+  if (persian >= 0) return String(persian);
+  const arabic = "٠١٢٣٤٥٦٧٨٩".indexOf(digit);
+  return arabic >= 0 ? String(arabic) : digit;
+});
+const localizeDigits = (value: string, locale: string, numberingSystem = "locale") => {
+  try {
+    const formatter = new Intl.NumberFormat(locale, { useGrouping: false, ...(numberingSystem === "locale" ? {} : { numberingSystem }) });
+    return value.replace(/\d/g, (digit) => formatter.format(Number(digit)));
+  } catch {
+    return value;
+  }
+};
 
 /** A styled, keyboard-operable calendar popover. ISO/Gregorian remains the stable value; Intl controls its calendar and digit presentation. */
 export function CalendarDateInput({ id, value, onChange, locale = "en-US", calendar = "gregory", numberingSystem = "locale" }: DateFieldProps) {
@@ -61,10 +75,10 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
   const changeMonth = (amount: number) => setViewMonth((current) => { const info = (() => { let first = new Date(current); const key = monthKey(first); for (let i = 0; i < 35; i += 1) { const previous = new Date(first); previous.setDate(previous.getDate() - 1); if (monthKey(previous) !== key) break; first = previous; } return first; })(); if (amount < 0) { info.setDate(info.getDate() - 1); return info; } const next = new Date(current); for (let i = 0; i < 35; i += 1) { next.setDate(next.getDate() + 1); if (monthKey(next) !== monthKey(current)) break; } return next; });
 
   return <div ref={rootRef} className="relative min-w-0">
-    <button ref={triggerRef} id={id} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setViewMonth(parseISODate(value)); setOpen((current) => !current); }} className="flex h-10 w-full min-w-0 items-center justify-between gap-2 border border-input bg-background px-3 text-start text-sm hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <button ref={triggerRef} id={id} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setViewMonth(parseISODate(value)); setOpen((current) => !current); }} className="flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-start text-sm hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <span className="min-w-0 truncate">{selectedLabel}</span><CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
     </button>
-    {open && <div role="dialog" aria-label="Choose date" className="absolute start-0 top-[calc(100%+4px)] z-50 w-[min(20rem,calc(100vw-2rem))] border border-border bg-popover p-3 text-popover-foreground shadow-xl">{!supportedCalendar && <p role="status" className="mb-2 border-b border-border pb-2 text-xs text-muted-foreground">This browser does not support the {calendar} calendar for {locale}; Gregorian formatting is being used.</p> }
+    {open && <div role="dialog" aria-label="Choose date" className="absolute start-0 top-[calc(100%+4px)] z-50 w-[min(20rem,100%)] rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-xl">{!supportedCalendar && <p role="status" className="mb-2 border-b border-border pb-2 text-xs text-muted-foreground">This browser does not support the {calendar} calendar for {locale}; Gregorian formatting is being used.</p> }
       <div className="mb-3 flex items-center justify-between gap-2">
         <button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)} className="inline-flex h-8 w-8 items-center justify-center hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ChevronLeft className="h-4 w-4" /></button>
         <div className="min-w-0 text-center"><p className="text-sm font-semibold">{monthLabel}</p><p className="text-xs text-muted-foreground">{gregorianMonthLabel} · {calendar}</p></div>
@@ -88,20 +102,20 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
 }
 
 /** Styled time selector with direct text entry and a bounded, scrollable quarter-hour list. */
-export function ClockTimeInput({ id, value, onChange }: DateFieldProps) {
+export function ClockTimeInput({ id, value, onChange, locale = "en-US", numberingSystem = "locale" }: DateFieldProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => { if (!open) return; const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); setOpen(false); inputRef.current?.focus(); } }; const onPointerDown = (event: PointerEvent) => { if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false); }; document.addEventListener("keydown", onKeyDown); document.addEventListener("pointerdown", onPointerDown); return () => { document.removeEventListener("keydown", onKeyDown); document.removeEventListener("pointerdown", onPointerDown); }; }, [open]);
   const options = useMemo(() => Array.from({ length: 96 }, (_, index) => pad(Math.floor(index / 4)) + ":" + pad((index % 4) * 15)), []);
   const normalized = /^([01]\d|2[0-3]):[0-5]\d$/.test(value) ? value : "12:00";
-  return <div ref={rootRef} className="relative min-w-0">
-    <div className="flex h-10 items-center border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
-      <input ref={inputRef} id={id} type="text" inputMode="numeric" autoComplete="off" aria-label="Time in 24-hour format" placeholder="HH:MM" value={value} onChange={(event) => onChange(event.target.value)} onFocus={() => setOpen(true)} onBlur={(event) => { if (!event.currentTarget.parentElement?.parentElement?.contains(event.relatedTarget as Node | null)) setOpen(false); }} className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm tabular-nums outline-none" />
+  return <div ref={rootRef} dir="ltr" className="relative min-w-0">
+    <div className="flex h-10 items-center overflow-hidden rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
+      <input ref={inputRef} id={id} type="text" inputMode="numeric" autoComplete="off" aria-label="Time in 24-hour format" placeholder={localizeDigits("HH:MM", locale, numberingSystem)} value={localizeDigits(value, locale, numberingSystem)} onChange={(event) => onChange(normalizeDigits(event.target.value))} onFocus={() => setOpen(true)} onBlur={(event) => { if (!event.currentTarget.parentElement?.parentElement?.contains(event.relatedTarget as Node | null)) setOpen(false); }} className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm tabular-nums outline-none" />
       <button type="button" aria-label="Choose time" aria-expanded={open} onClick={() => setOpen((current) => !current)} className="inline-flex h-full items-center px-3 text-muted-foreground hover:bg-accent/40"><Clock3 className="h-4 w-4" /></button>
     </div>
-    {open && <div role="listbox" aria-label="Time options" className="absolute start-0 top-[calc(100%+4px)] z-50 max-h-56 w-full min-w-40 overflow-y-auto border border-border bg-popover p-1 text-popover-foreground shadow-xl">
-      {options.map((option) => <button key={option} type="button" role="option" aria-selected={normalized === option} onMouseDown={(event) => event.preventDefault()} onClick={() => { onChange(option); setOpen(false); }} className={"block w-full px-3 py-1.5 text-start text-sm tabular-nums hover:bg-accent " + (normalized === option ? "bg-accent font-medium" : "")}>{option}</button>)}
+    {open && <div role="listbox" aria-label="Time options" className="absolute start-0 top-[calc(100%+4px)] z-50 max-h-56 w-full min-w-40 overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-xl">
+      {options.map((option) => { const label = localizeDigits(option, locale, numberingSystem); return <button key={option} type="button" role="option" aria-label={label} aria-selected={normalized === option} onMouseDown={(event) => event.preventDefault()} onClick={() => { onChange(option); setOpen(false); }} className={"block w-full px-3 py-1.5 text-start text-sm tabular-nums hover:bg-accent " + (normalized === option ? "bg-accent font-medium" : "")}>{label}</button>; })}
     </div>}
   </div>;
 }
