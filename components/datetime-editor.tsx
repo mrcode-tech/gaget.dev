@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ChevronDown, Clock3, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
+import { useResizableFeatureSheet } from "@/components/use-resizable-feature-sheet";
 
 type Feature = { slug: string; title: string; description: string; group: "Date" | "Time" | "Calendar" | "Utilities" };
 const features: Feature[] = [
@@ -72,6 +73,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [frozen, setFrozen] = useState(false);
   const [frozenAt, setFrozenAt] = useState<Date | null>(null);
   const [message, setMessage] = useState("");
+  const { panelRef, panelStyle, resizeHandleProps } = useResizableFeatureSheet();
 
   useEffect(() => {
     setNow(new Date());
@@ -173,10 +175,17 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </section>
         </section>
 
-        {activeFeature && <aside aria-label={features.find((f) => f.slug === activeFeature)?.title ?? "Selected feature"} className="fixed inset-x-0 bottom-0 z-40 min-w-0 resize-y overflow-y-auto rounded-t-2xl border border-border bg-background p-3 shadow-2xl xl:sticky xl:top-20 xl:z-auto xl:h-auto xl:max-h-none xl:w-[var(--panel-width)] xl:max-w-[45vw] xl:self-start xl:resize-x xl:overflow-auto xl:rounded-xl xl:border-l xl:p-4 xl:shadow-none" style={{ "--panel-width": "420px", height: "420px" } as CSSProperties}>
-          <div className="mb-3 flex items-center justify-between gap-2"><div><div className="mb-2 h-1 w-10 rounded-full bg-muted-foreground/40 xl:hidden" aria-hidden="true" /><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
-          <div className="min-w-0"><DateTimeWorkbench slug={activeFeature} /></div>
-        </aside>}
+        {activeFeature && <>
+          <section ref={panelRef} style={panelStyle} data-testid="datetime-feature-panel" aria-label="Date and time feature settings" className="fixed inset-x-2 bottom-2 z-40 h-[var(--feature-panel-height)] max-h-[70dvh] overflow-y-auto overscroll-y-contain rounded-xl border border-border bg-card p-4 shadow-xl transition-[height] duration-200 motion-reduce:transition-none lg:hidden">
+            <div {...resizeHandleProps} className="sticky top-0 z-10 mx-auto -mt-3 mb-2 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
+            <div className="mb-3 flex items-center justify-between gap-2"><div><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
+            <DateTimeWorkbench slug={activeFeature} />
+          </section>
+          <aside aria-label={features.find((f) => f.slug === activeFeature)?.title ?? "Selected feature"} className="hidden min-w-0 lg:sticky lg:top-20 lg:block lg:w-[min(38vw,480px)] lg:resize-x lg:self-start lg:overflow-auto lg:border-l lg:border-border lg:pl-4">
+            <div className="mb-3 flex items-center justify-between gap-2"><div><p className="text-xs uppercase tracking-wide text-muted-foreground">Selected feature</p><h2 className="font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
+            <DateTimeWorkbench slug={activeFeature} />
+          </aside>
+        </>}
       </div>
       <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Runs locally in your browser. Calendar availability depends on your browser&apos;s Intl implementation; Islamic calendar conventions may differ.</p>
       <div className="flex items-center gap-2 text-xs text-muted-foreground xl:hidden"><SlidersHorizontal className="h-4 w-4" />Select a feature to open its controls below the date and time display.</div>
