@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-labelledby="title desc">
+<title id="title">gaget.dev Date and Time reusable multi-calendar input components</title>
+<desc id="desc">A design system wireframe gallery for styled date input, searchable calendar selector, Persian calendar picker, time picker, combined date-time picker, date range picker, timezone selector, input states and compact variants.</desc>
+<defs>
+ <style>
+ .bg{fill:#f8fafc}.panel{fill:#fff;stroke:#dbe3ef;stroke-width:1.5}.field{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.muted{fill:#64748b;font:14px Arial,sans-serif}.label{fill:#334155;font:600 15px Arial,sans-serif}.title{fill:#0f172a;font:700 22px Arial,sans-serif}.head{fill:#0f172a;font:700 17px Arial,sans-serif}.body{fill:#334155;font:14px Arial,sans-serif}.small{fill:#64748b;font:12px Arial,sans-serif}.blue{fill:#1677ff}.blueText{fill:#1677ff;font:600 14px Arial,sans-serif}.btn{fill:#1677ff;stroke:#1677ff}.btnText{fill:white;font:600 13px Arial,sans-serif}.line{stroke:#e2e8f0;stroke-width:1}.day{fill:#334155;font:12px Arial,sans-serif}.chosen{fill:#1677ff}.chosenText{fill:#fff;font:600 12px Arial,sans-serif}.soft{fill:#eff6ff}
+ </style>
+</defs>
+<rect class="bg" width="1600" height="1200"/>
+<text x="36" y="44" class="title" style="font-size:28px">gaget.dev · Date &amp; Time Input System</text>
+<text x="36" y="72" class="muted">Reusable shadcn-style components · multi-calendar · locale and digits separated · consistent states and responsive behavior</text>
+<rect x="36" y="92" width="1528" height="1" fill="#cbd5e1"/>
+<!-- row 1 card 1 -->
+<rect class="panel" x="36" y="116" width="490" height="300" rx="0"/>
+<text class="head" x="58" y="148">01 · Date input + calendar popover</text><text class="muted" x="58" y="171">Styled field, not a native browser date control</text>
+<text class="label" x="60" y="204">Date</text>
+<rect class="field" x="58" y="216" width="444" height="44" rx="0"/>
+<text class="body" x="74" y="243">2026-10-19</text><text class="blueText" x="470" y="243">⌄</text>
+<rect class="panel" x="58" y="272" width="444" height="126" rx="0"/>
+<text class="body" x="80" y="297">‹</text><text class="label" x="226" y="297">October 2026</text><text class="body" x="474" y="297">›</text>
+<line class="line" x1="74" y1="308" x2="486" y2="308"/>
+<g class="small" text-anchor="middle"><text x="90" y="329">Sun</text><text x="148" y="329">Mon</text><text x="206" y="329">Tue</text><text x="264" y="329">Wed</text><text x="322" y="329">Thu</text><text x="380" y="329">Fri</text><text x="438" y="329">Sat</text></g>
+<g class="day" text-anchor="middle"><text x="90" y="352">27</text><text x="148" y="352">28</text><text x="206" y="352">29</text><text x="264" y="352">30</text><text x="322" y="352">1</text><text x="380" y="352">2</text><text x="438" y="352">3</text><text x="90" y="376">4</text><text x="148" y="376">5</text><text x="206" y="376">6</text><text x="264" y="376">7</text><text x="322" y="376">8</text><text x="380" y="376">9</text><text x="438" y="376">10</text></g>
+<!-- row 1 card 2 -->
+<rect class="panel" x="544" y="116" width="490" height="300" rx="0"/>
+<text class="head" x="566" y="148">02 · Calendar system selector</text><text class="muted" x="566" y="171">Searchable, bounded, keyboard accessible</text>
+<text class="label" x="568" y="204">Calendar system</text>
+<rect class="field" x="566" y="216" width="446" height="42" rx="0"/><text class="body" x="582" y="242">⌕  Search calendars…</text>
+<rect class="panel" x="566" y="268" width="446" height="130" rx="0"/>
+<rect class="soft" x="575" y="277" width="428" height="30" rx="0"/><circle cx="592" cy="292" r="6" fill="none" stroke="#1677ff" stroke-width="2"/><circle cx="592" cy="292" r="3" class="blue"/><text class="body" x="610" y="297">Gregorian</text><text class="small" x="926" y="297">2026-10-19</text>
+<circle cx="592" cy="326" r="6" fill="none" stroke="#94a3b8"/><text class="body" x="610" y="331">Persian Solar Hijri</text><text class="small" x="926" y="331">۱۴۰۵/۰۷/۲۷</text>
+<circle cx="592" cy="360" r="6" fill="none" stroke="#94a3b8"/><text class="body" x="610" y="365">Islamic · Umm al-Qura</text><text class="small" x="926" y="365">۱۴۴۸/۰۴/۰۷</text>
+<text class="small" x="568" y="408">List scrolls inside bounded popover when necessary.</text>
+<!-- row 1 card 3 -->
+<rect class="panel" x="1052" y="116" width="512" height="300" rx="0"/>
+<text class="head" x="1074" y="148">03 · Multi-calendar date picker</text><text class="muted" x="1074" y="171">Calendar headings, digits, direction follow settings</text>
+<rect class="field" x="1074" y="188" width="468" height="40" rx="0"/><text class="body" x="1090" y="213">۱۴۰۵/۰۷/۲۷  ·  Persian Solar Hijri</text><text class="blueText" x="1510" y="213">⌄</text>
+<rect class="panel" x="1074" y="238" width="468" height="160" rx="0"/>
+<text class="body" x="1094" y="263">‹</text><text class="label" x="1280" y="263">مهر ۱۴۰۵</text><text class="body" x="1512" y="263">›</text>
+<line class="line" x1="1090" y1="274" x2="1526" y2="274"/>
+<g class="small" text-anchor="middle"><text x="1115" y="294">ش</text><text x="1173" y="294">ی</text><text x="1231" y="294">د</text><text x="1289" y="294">س</text><text x="1347" y="294">چ</text><text x="1405" y="294">پ</text><text x="1463" y="294">ج</text></g>
+<g class="day" text-anchor="middle"><text x="1115" y="319">۱</text><text x="1173" y="319">۲</text><text x="1231" y="319">۳</text><text x="1289" y="319">۴</text><text x="1347" y="319">۵</text><text x="1405" y="319">۶</text><text x="1463" y="319">۷</text><text x="1115" y="344">۸</text><text x="1173" y="344">۹</text><text x="1231" y="344">۱۰</text><text x="1289" y="344">۱۱</text><text x="1347" y="344">۱۲</text><text x="1405" y="344">۱۳</text><text x="1463" y="344">۱۴</text></g>
+<circle class="chosen" cx="1405" cy="369" r="13"/><text class="chosenText" x="1405" y="373" text-anchor="middle">۲۷</text><text class="small" x="1094" y="386">Calendar date stays date-only; no timezone shift.</text>
+<!-- row 2 -->
+<rect class="panel" x="36" y="436" width="490" height="300" rx="0"/>
+<text class="head" x="58" y="468">04 · Time picker</text><text class="muted" x="58" y="491">Bounded columns, direct entry, 12/24-hour support</text>
+<text class="label" x="60" y="524">Time</text><rect class="field" x="58" y="536" width="444" height="42" rx="0"/><text class="body" x="76" y="562">◷  14:30</text><text class="blueText" x="470" y="562">⌄</text>
+<rect class="panel" x="58" y="588" width="444" height="130" rx="0"/>
+<rect class="soft" x="74" y="600" width="412" height="32" rx="0"/><text class="blueText" x="280" y="621" text-anchor="middle">24-hour format</text>
+<line class="line" x1="278" y1="640" x2="278" y2="704"/>
+<text class="small" x="175" y="652" text-anchor="middle">Hour</text><text class="small" x="382" y="652" text-anchor="middle">Minute</text>
+<text class="muted" x="175" y="676" text-anchor="middle">13</text><text class="muted" x="382" y="676" text-anchor="middle">29</text>
+<rect class="soft" x="118" y="682" width="114" height="28" rx="0"/><rect class="soft" x="325" y="682" width="114" height="28" rx="0"/><text class="blueText" x="175" y="701" text-anchor="middle">14</text><text class="blueText" x="382" y="701" text-anchor="middle">30</text><text class="small" x="58" y="730">Localized digits: ۱۴:۳۰ · ١٤:٣٠</text>
+<!-- combined -->
+<rect class="panel" x="544" y="436" width="490" height="300" rx="0"/>
+<text class="head" x="566" y="468">05 · Combined date &amp; time picker</text><text class="muted" x="566" y="491">One field, separate sections inside a single popover</text>
+<text class="label" x="568" y="524">Date &amp; time</text><rect class="field" x="566" y="536" width="446" height="42" rx="0"/><text class="body" x="584" y="562">▦  2026-10-19  14:30</text><text class="blueText" x="980" y="562">⌄</text>
+<rect class="panel" x="566" y="588" width="446" height="130" rx="0"/>
+<rect class="soft" x="578" y="598" width="422" height="30" rx="0"/><text class="blueText" x="685" y="618" text-anchor="middle">Date</text><text class="body" x="895" y="618" text-anchor="middle">Time</text>
+<text class="label" x="592" y="649">October 2026</text><text class="small" x="592" y="670">Sun  Mon  Tue  Wed  Thu  Fri  Sat</text>
+<text class="body" x="594" y="694">4    5    6    7    8    9   10</text><circle class="chosen" cx="730" cy="709" r="10"/><text class="chosenText" x="730" y="713" text-anchor="middle">19</text><text class="body" x="760" y="713">20  21  22  23  24</text>
+<rect class="soft" x="842" y="640" width="146" height="60" rx="0"/><text class="blueText" x="915" y="664" text-anchor="middle">14 : 30</text><text class="small" x="915" y="686" text-anchor="middle">24-hour · zone aware</text>
+<!-- timezone -->
+<rect class="panel" x="1052" y="436" width="512" height="300" rx="0"/>
+<text class="head" x="1074" y="468">06 · Time-zone selector</text><text class="muted" x="1074" y="491">Search IANA zones; show offset and city/region</text>
+<text class="label" x="1076" y="524">Time zone</text><rect class="field" x="1074" y="536" width="468" height="42" rx="0"/><text class="body" x="1092" y="562">⌕  Search time zones…</text>
+<rect class="panel" x="1074" y="588" width="468" height="130" rx="0"/>
+<rect class="soft" x="1082" y="596" width="452" height="30" rx="0"/><text class="body" x="1098" y="616">◉  Asia/Tehran</text><text class="small" x="1462" y="616">UTC+03:30</text>
+<text class="body" x="1098" y="650">○  Asia/Baku</text><text class="small" x="1462" y="650">UTC+04:00</text><text class="body" x="1098" y="684">○  Europe/London</text><text class="small" x="1462" y="684">UTC+01:00</text>
+<!-- row 3 -->
+<rect class="panel" x="36" y="756" width="490" height="286" rx="0"/>
+<text class="head" x="58" y="788">07 · Date range picker</text><text class="muted" x="58" y="811">Linked endpoints; inclusive range clearly highlighted</text>
+<text class="label" x="60" y="844">Start date</text><text class="label" x="286" y="844">End date</text><rect class="field" x="58" y="854" width="210" height="40" rx="0"/><rect class="field" x="282" y="854" width="220" height="40" rx="0"/><text class="body" x="72" y="879">2026-10-01</text><text class="body" x="296" y="879">2026-10-31</text>
+<rect class="panel" x="58" y="906" width="444" height="116" rx="0"/><text class="label" x="80" y="931">October 2026</text><text class="small" x="80" y="954">Sun Mon Tue Wed Thu Fri Sat</text><rect class="soft" x="78" y="962" width="394" height="24" rx="0"/><text class="blueText" x="90" y="979">1   2   3   4   5   6   7   8   9   …   31</text><text class="small" x="80" y="1008">On desktop, show two months when space permits.</text>
+<!-- states -->
+<rect class="panel" x="544" y="756" width="490" height="286" rx="0"/>
+<text class="head" x="566" y="788">08 · Shared input states</text><text class="muted" x="566" y="811">Same dimensions, radius, type, and icon alignment</text>
+<text class="label" x="568" y="842">Default</text><rect class="field" x="566" y="850" width="446" height="34" rx="0"/><text class="body" x="580" y="872">▦  2026-10-19</text>
+<text class="label" x="568" y="908">Focused</text><rect x="566" y="916" width="446" height="34" rx="0" fill="#fff" stroke="#1677ff" stroke-width="2"/><text class="body" x="580" y="938">▦  2026-10-19</text>
+<text class="label" x="568" y="974">Error</text><rect x="566" y="982" width="446" height="34" rx="0" fill="#fff" stroke="#ef4444" stroke-width="1.5"/><text x="580" y="1004" fill="#b91c1c" font-family="Arial,sans-serif" font-size="13">Invalid date</text>
+<!-- locale / compact -->
+<rect class="panel" x="1052" y="756" width="512" height="286" rx="0"/>
+<text class="head" x="1074" y="788">09 · Shared locale controls + compact fields</text><text class="muted" x="1074" y="811">Calendar, language, digits and zone are separate</text>
+<text class="label" x="1076" y="842">Language / locale</text><rect class="field" x="1074" y="850" width="224" height="38" rx="0"/><text class="body" x="1088" y="874">English (en-US) ⌄</text>
+<text class="label" x="1310" y="842">Digits</text><rect class="field" x="1308" y="850" width="234" height="38" rx="0"/><text class="body" x="1322" y="874">Locale default ⌄</text>
+<text class="label" x="1076" y="914">Calendar</text><rect class="field" x="1074" y="922" width="224" height="38" rx="0"/><text class="body" x="1088" y="946">Persian Solar Hijri ⌄</text>
+<text class="label" x="1310" y="914">Clock format</text><rect class="field" x="1308" y="922" width="234" height="38" rx="0"/><text class="body" x="1322" y="946">24-hour ⌄</text>
+<text class="small" x="1076" y="986">Compact inline variant reuses the same component tokens</text><rect class="field" x="1074" y="996" width="468" height="34" rx="0"/><text class="body" x="1088" y="1018">▦  2026-10-19  ⌄</text>
+<!-- footer -->
+<rect x="36" y="1062" width="1528" height="100" rx="0" fill="#eef6ff" stroke="#bfdbfe"/>
+<text class="head" x="58" y="1096">System-wide usage</text><text class="body" x="58" y="1122">Date Difference · Age Calculator · Date Calculator · Business Days · Countdown · Meeting Planner · Timestamp Converter · Calendar Generator</text>
+<text class="body" x="58" y="1146">Required: shadcn-style primitives · keyboard navigation · focus restoration · bounded scrolling · date-only safety · DST-aware zone handling · RTL/LTR validation</text>
+<text class="small" x="36" y="1185">Wireframe is structural guidance. Use existing gaget.dev design tokens and shared accessible components for final implementation.</text>
+</svg>

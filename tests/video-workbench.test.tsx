@@ -47,6 +47,9 @@ describe("VideoWorkbench", () => {
     render(<VideoWorkbench slug="editor" />);
     fireEvent.click(screen.getByRole("button", { name: "Open video editor features" }));
     const menu = screen.getByTestId("video-feature-menu");
+    expect(menu.className).toContain("p-1.5");
+    const firstFeature = within(menu).getByRole("button", { name: "Trim video" });
+    expect(firstFeature.className).toContain("py-2.5");
     const labels = ["Trim video","Split video","Merge videos","Crop, rotate & flip","Text & watermark","Video reverser","Color adjustments","Speed changer","Audio track","Stabilization","Video information","Extract frames","Thumbnail generator","Subtitle editor","Video comparison","Video converter","Video compressor","Resolution & frame rate","Video to audio","Video to GIF","Metadata cleaner","Base64 encode/decode","Video recorder"];
     for (const label of labels) expect(menu.textContent).toContain(label);
     expect(labels).toHaveLength(23);

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="590" viewBox="0 0 1000 590" role="img" aria-labelledby="title desc">
+  <title id="title">Date and Time command bar responsive layout</title>
+  <desc id="desc">At compact widths File is aligned to the leading edge and Features to the trailing edge. At desktop widths File sits next to Date, Time, Calendar, and Utilities with consistent spacing. Dropdown anchors are shown below each bar.</desc>
+  <rect width="1000" height="590" fill="#f8fafc"/>
+  <text x="28" y="38" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#0f172a">Date &amp; Time — responsive command bar</text>
+  <text x="28" y="64" font-family="Arial, sans-serif" font-size="13" fill="#64748b">Shared 68px bar · px-3 sm:px-6 · 36px controls · 12px top-level gap</text>
+  <rect x="28" y="88" width="444" height="474" rx="12" fill="#fff" stroke="#cbd5e1"/>
+  <text x="48" y="118" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Compact · below 1024px</text>
+  <rect x="44" y="138" width="412" height="68" rx="6" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <rect x="56" y="154" width="62" height="36" rx="6" fill="#dbeafe" stroke="#93c5fd"/>
+  <text x="87" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">File</text>
+  <rect x="352" y="154" width="92" height="36" rx="6" fill="#fff" stroke="#94a3b8"/>
+  <text x="398" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#0f172a">☷ Features</text>
+  <line x1="120" y1="222" x2="120" y2="248" stroke="#64748b" stroke-width="1.5"/>
+  <path d="M115 243 L120 250 L125 243" fill="none" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="56" y="252" width="238" height="150" rx="8" fill="#fff" stroke="#93c5fd"/>
+  <text x="72" y="278" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#0f172a">File menu</text>
+  <text x="72" y="303" font-family="Arial, sans-serif" font-size="12" fill="#334155">Copy current display</text>
+  <text x="72" y="327" font-family="Arial, sans-serif" font-size="12" fill="#334155">Copy ISO 8601</text>
+  <text x="72" y="351" font-family="Arial, sans-serif" font-size="12" fill="#334155">Copy Unix timestamp</text>
+  <text x="72" y="375" font-family="Arial, sans-serif" font-size="12" fill="#334155">Print · Reset reference</text>
+  <text x="48" y="435" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#0f172a">Rules</text>
+  <text x="48" y="458" font-family="Arial, sans-serif" font-size="12" fill="#334155">• File starts at the responsive inline gutter</text>
+  <text x="48" y="480" font-family="Arial, sans-serif" font-size="12" fill="#334155">• Features remains on the opposite edge</text>
+  <text x="48" y="502" font-family="Arial, sans-serif" font-size="12" fill="#334155">• Feature list opens from the trailing gutter</text>
+  <text x="48" y="534" font-family="Arial, sans-serif" font-size="11" fill="#64748b">RTL mirrors inline-start and inline-end.</text>
+  <rect x="492" y="88" width="480" height="474" rx="12" fill="#fff" stroke="#cbd5e1"/>
+  <text x="512" y="118" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Desktop · 1024px and wider</text>
+  <rect x="508" y="138" width="448" height="68" rx="6" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <rect x="520" y="154" width="62" height="36" rx="6" fill="#dbeafe" stroke="#93c5fd"/>
+  <text x="551" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#1e3a8a">File</text>
+  <rect x="594" y="154" width="66" height="36" rx="6" fill="#fff" stroke="#94a3b8"/>
+  <text x="627" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#0f172a">Date</text>
+  <rect x="672" y="154" width="66" height="36" rx="6" fill="#fff" stroke="#94a3b8"/>
+  <text x="705" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#0f172a">Time</text>
+  <rect x="750" y="154" width="88" height="36" rx="6" fill="#fff" stroke="#94a3b8"/>
+  <text x="794" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#0f172a">Calendar</text>
+  <rect x="850" y="154" width="94" height="36" rx="6" fill="#fff" stroke="#94a3b8"/>
+  <text x="897" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#0f172a">Utilities</text>
+  <line x1="551" y1="222" x2="551" y2="248" stroke="#64748b" stroke-width="1.5"/>
+  <path d="M546 243 L551 250 L556 243" fill="none" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="520" y="252" width="238" height="150" rx="8" fill="#fff" stroke="#93c5fd"/>
+  <text x="536" y="278" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#0f172a">File menu</text>
+  <text x="536" y="303" font-family="Arial, sans-serif" font-size="12" fill="#334155">Aligned to command-bar gutter</text>
+  <text x="536" y="327" font-family="Arial, sans-serif" font-size="12" fill="#334155">Not positioned on File wrapper</text>
+  <text x="536" y="351" font-family="Arial, sans-serif" font-size="12" fill="#334155">Top overlaps bar by 1px</text>
+  <text x="536" y="375" font-family="Arial, sans-serif" font-size="12" fill="#334155">Menu scrolls internally if needed</text>
+  <rect x="776" y="252" width="168" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+  <text x="792" y="278" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#0f172a">Feature menu</text>
+  <text x="792" y="303" font-family="Arial, sans-serif" font-size="11" fill="#334155">Anchored to</text>
+  <text x="792" y="321" font-family="Arial, sans-serif" font-size="11" fill="#334155">its own button</text>
+  <path d="M705 206 V236 H776" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="512" y="435" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#0f172a">Rules</text>
+  <text x="512" y="458" font-family="Arial, sans-serif" font-size="12" fill="#334155">• Start-aligned; never spread groups to far edge</text>
+  <text x="512" y="480" font-family="Arial, sans-serif" font-size="12" fill="#334155">• Keep gap-3 between top-level controls</text>
+  <text x="512" y="502" font-family="Arial, sans-serif" font-size="12" fill="#334155">• Feature dropdowns stay trigger-anchored</text>
+  <text x="512" y="534" font-family="Arial, sans-serif" font-size="11" fill="#64748b">Keep shared button geometry and menu behavior.</text>
+</svg>

@@ -100,6 +100,7 @@ Each menu item follows the existing visual pattern:
 3. Optional short description as secondary, muted text where the current menu variant uses descriptions.
 4. Entire row is a clear hit target; align icons and text to a common start edge.
 5. Keep item row padding, line height, row gaps, corner radius, menu padding, divider placement, focus ring, hover background, disabled opacity, and active state consistent with the live Photo Editor.
+9. For File and feature dropdowns alike, use `p-1.5` container padding and `px-3 py-2.5` action rows. Feature-menu section headings may keep their existing `px-3 py-2` treatment, but must not increase the menu container inset or change action-row spacing. Apply this consistently to desktop grouped menus and compact/mobile Features menus in Photo, Audio, Video, and Date & Time.
 6. Long labels wrap or truncate according to the current implementation; they must not create horizontal overflow.
 7. Icons are decorative when adjacent text provides the name; icon-only buttons require accessible names and tooltips.
 8. Keyboard navigation, Escape dismissal, focus restoration, and visible focus styling are mandatory.
@@ -177,7 +178,7 @@ Actions are **media-specific**, not a requirement to copy the Photo Editor toolb
 - Inspector is on the trailing/right side in LTR, bounded to the existing implementation width (design reference approximately 300–360px; verify live code before changing).
 - Canvas remains the primary region and uses the remaining width.
 - Inspector has a title/feature identity, close affordance where currently implemented, feature-specific controls, consistent labels, fields, slider styling, grouping, and internal vertical scrolling when needed.
-- At the 1024px threshold, preserve a usable canvas. If the existing component uses a narrower/overlay treatment at a constrained width, keep that behavior; do not force three cramped columns.
+- Follow the actual baseline component breakpoint rather than imposing a universal threshold. The current Photo Editor switches to a right-side 320px inspector at its `sm` breakpoint; layouts that need additional canvas width may defer extra columns or secondary controls until 1024px. Preserve a usable workspace and do not force cramped columns.
 - On 2XL, inspector width stays bounded; do not scale it with the viewport.
 - Closing the panel returns to the workspace without losing edits unless the feature explicitly cancels a draft.
 
@@ -313,6 +314,7 @@ For another editor, instruct the coding agent to:
 - `wireframe-desktop.svg` — desktop sidebar, grouped menu, canvas, inspector, and history/zoom/export.
 - `wireframe-mobile-sheet.svg` — resizable mobile feature sheet and input scroll ownership.
 - `wireframe-menus.svg` — File/Features menu anatomy and feature grouping.
+- `wireframe-datetime-command-bar.svg` — Date & Time command-bar alignment at compact and desktop breakpoints.
 - `wireframe-components.svg` — breadcrumb, heading, upload target, feature input, history/zoom controls, and spacing callouts.
 
 The SVGs are structural design references; their labels and proportions explain hierarchy, not exact rendered pixels. This template folder intentionally documents the Photo Editor as currently implemented rather than proposing a new design.
@@ -375,3 +377,34 @@ Photo, Audio, and Video use one consistent command-bar layout contract. The menu
 - **Keep the common shell consistent:** media-specific labels, actions, feature counts, descriptions, and file-processing behavior may differ. Their outer bar spacing, button geometry, and dropdown anchoring may not drift independently.
 - **Regression tests:** render all three editors and assert the command-bar gap, File/feature button geometry, and File dropdown positioning classes match. Run the component suite and inspect desktop screenshots at the same viewport before accepting visual parity.
 - **Avoid fragile duplicate markup:** if a future refactor extracts a shared command-bar component, preserve accessible names and existing test IDs or update the tests intentionally. Do not change loaded workspace/canvas behavior as a side effect of this layout-only fix.
+
+
+## 20. Date & Time command-bar breakpoint contract (2026-10-19)
+
+The Date & Time editor uses the same shared command-bar geometry defined in section 19. The compact and desktop layouts are intentionally different in alignment, not in button styling or menu behavior.
+
+- **Compact layout (<1024px):** keep File at inline-start and Features at inline-end. Use the command bar's `justify-between` behavior so the controls remain separated even when the viewport is narrow.
+- **Desktop layout (≥1024px):** switch the command bar to start alignment. File must be followed immediately by the Date, Time, Calendar, and Utilities groups; do not leave the groups pushed to the opposite edge by `justify-between`.
+- **Top-level spacing:** use `gap-3` between command-bar controls and between desktop feature-group buttons. Do not use `gap-1` for the group row.
+- **Dropdown positioning:** File dropdown stays positioned against the command bar and aligns to its logical inline-start gutter (`start-3 sm:start-6`, equivalent to left gutter in LTR). Each desktop feature dropdown stays anchored to its own `relative` trigger wrapper at inline-start (`start-0`). Never interchange these positioning contexts.
+- **RTL:** use logical `start`/`end` utilities so compact controls and dropdown gutters mirror correctly for RTL locales. Do not replace them with hard-coded physical left/right utilities.
+- **No redesign:** keep the 68px bar, `px-3 sm:px-6` gutters, 36px top-level buttons, labels, dropdown contents, focus behavior, and loaded workspace unchanged.
+- **Regression coverage:** assert the responsive alignment classes, consistent `gap-3`, compact-only Features button, File dropdown anchor, and trigger-anchored desktop menus. Also inspect screenshots at 390px, 768px, 1024px, and 1440px; a DOM class assertion does not replace visual review.
+
+
+## 21. Date & Time adaptation contract
+
+Date & Time is a single-app workspace using the same editor command-bar geometry, menu placement, keyboard behavior, responsive breakpoints, and resizable feature-sheet behavior as the live Photo Editor. This is an adaptation contract, not permission to redesign the shared shell.
+
+- The command bar remains 68px high, with `px-3 sm:px-6`, 36px top-level controls, and `gap-3`. Compact layouts use File at inline-start and Features at inline-end. Desktop layouts place File and Date / Time / Calendar / Utilities feature groups together at inline-start.
+- File-menu alignment is relative to the command bar with logical `start-3 sm:start-6` gutters. Desktop feature dropdowns align to their own trigger at `start-0`. Menus use bounded height and internal scrolling.
+- The Date & Time centerpiece is not a file-drop target. It shows the live/reference date and time, with independent language, calendar, numeral, time-zone, clock-format and seconds controls.
+- Use square-edged fields and horizontal separators for settings. Do not nest each setting in a rounded card. Keep the live centerpiece and feature inspector visually quiet so the selected date/time remains the primary content.
+- Reusable date controls use a custom calendar popover, calendar-aware month navigation and stable ISO date values. Reusable time controls allow direct entry and a bounded option list. Do not use native `input[type=date]` or `input[type=time]` as the primary experience.
+- Date-only values are calendar dates, not instants; changing time zones must not shift them. Local wall times and instants require explicit zone semantics. DST gaps and overlaps must be tested instead of silently guessed.
+- Locale, calendar, digits, time zone, and 12/24-hour preference are separate state. RTL affects layout and navigation using logical properties, while ISO values, timestamps, IANA zone IDs and code-like output remain LTR.
+- Preserve all existing feature slugs and deep links. The menu is grouped into Date, Time, Calendar, and Utilities; do not remove a feature until a tested replacement exists.
+- The workspace owns one main vertical scroll region. Feature settings scroll within the shared inspector/sheet, and calendar/time popovers stay inside viewport bounds. Preserve the mobile sheet resize gesture, Escape behavior, focus restoration, reduced motion, and touch targets.
+- Design assets for this adaptation live in `specification/date-time/date-time-workspace-wireframe.svg` and `specification/date-time/date-time-input-components.svg`. They clarify intended layout; live Photo Editor behavior and responsive tests remain the shared-shell authority.
+- Required regression checks: menu geometry at 390px, 768px, 1024px and 1440px; LTR/RTL screenshots; calendar month navigation in Gregorian, Persian and supported Islamic calendars; ISO value stability; direct time entry and keyboard selection; and full lint/typecheck/test/build verification.
+

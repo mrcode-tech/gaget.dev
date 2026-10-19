@@ -53,3 +53,13 @@ test("Video category exposes one unified editor with searchable video capabiliti
     assert.ok(videoTools[0].keywords.includes(keyword), `Video Editor search keywords should include ${keyword}`);
   }
 });
+
+test("Date & Time category routes directly to one unified editor", () => {
+  const dateTimeTools = tools.filter((tool) => tool.category === "Date & Time");
+  assert.equal(dateTimeTools.length, 1, "date/time capabilities should be grouped under one unified editor entry");
+  assert.equal(dateTimeTools[0].name, "Date & Time Editor");
+  assert.equal(dateTimeTools[0].href, "/datetime/editor");
+  for (const keyword of ["date", "time", "calendar", "world clock", "time zone", "timestamp", "ics", "cron"]) {
+    assert.ok(dateTimeTools[0].keywords.includes(keyword), `Date & Time Editor search keywords should include ${keyword}`);
+  }
+});
