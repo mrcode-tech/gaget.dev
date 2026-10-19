@@ -16,6 +16,16 @@ describe("Date & Time reusable fields", () => {
     expect(onChange.mock.calls[0][0]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
+  it("dismisses the date picker with Escape and restores focus to its trigger", () => {
+    render(<CalendarDateInput id="escape-date" value="2026-10-19" onChange={() => undefined} />);
+    const trigger = screen.getByRole("button", { name: /October|2026|Choose date/i });
+    fireEvent.click(trigger);
+    expect(screen.getByRole("dialog", { name: "Choose date" })).toBeTruthy();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Choose date" })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it("provides a bounded quarter-hour list and keeps direct time entry available", () => {
     const onChange = vi.fn();
     render(<ClockTimeInput id="meeting-time" value="09:00" onChange={onChange} />);
