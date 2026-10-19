@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DateTimeEditorPage() {
-  return <DateTimeEditor />;
+export default async function DateTimeEditorPage({ searchParams }: { searchParams: Promise<{ feature?: string }> }) {
+  const { feature } = await searchParams;
+  return <DateTimeEditor initialFeature={feature} />;
 }
