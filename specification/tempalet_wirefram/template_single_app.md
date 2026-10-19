@@ -389,3 +389,21 @@ The Date & Time editor uses the same shared command-bar geometry defined in sect
 - **RTL:** use logical `start`/`end` utilities so compact controls and dropdown gutters mirror correctly for RTL locales. Do not replace them with hard-coded physical left/right utilities.
 - **No redesign:** keep the 68px bar, `px-3 sm:px-6` gutters, 36px top-level buttons, labels, dropdown contents, focus behavior, and loaded workspace unchanged.
 - **Regression coverage:** assert the responsive alignment classes, consistent `gap-3`, compact-only Features button, File dropdown anchor, and trigger-anchored desktop menus. Also inspect screenshots at 390px, 768px, 1024px, and 1440px; a DOM class assertion does not replace visual review.
+
+
+## 21. Date & Time adaptation contract
+
+Date & Time is a single-app workspace using the same editor command-bar geometry, menu placement, keyboard behavior, responsive breakpoints, and resizable feature-sheet behavior as the live Photo Editor. This is an adaptation contract, not permission to redesign the shared shell.
+
+- The command bar remains 68px high, with `px-3 sm:px-6`, 36px top-level controls, and `gap-3`. Compact layouts use File at inline-start and Features at inline-end. Desktop layouts place File and Date / Time / Calendar / Utilities feature groups together at inline-start.
+- File-menu alignment is relative to the command bar with logical `start-3 sm:start-6` gutters. Desktop feature dropdowns align to their own trigger at `start-0`. Menus use bounded height and internal scrolling.
+- The Date & Time centerpiece is not a file-drop target. It shows the live/reference date and time, with independent language, calendar, numeral, time-zone, clock-format and seconds controls.
+- Use square-edged fields and horizontal separators for settings. Do not nest each setting in a rounded card. Keep the live centerpiece and feature inspector visually quiet so the selected date/time remains the primary content.
+- Reusable date controls use a custom calendar popover, calendar-aware month navigation and stable ISO date values. Reusable time controls allow direct entry and a bounded option list. Do not use native `input[type=date]` or `input[type=time]` as the primary experience.
+- Date-only values are calendar dates, not instants; changing time zones must not shift them. Local wall times and instants require explicit zone semantics. DST gaps and overlaps must be tested instead of silently guessed.
+- Locale, calendar, digits, time zone, and 12/24-hour preference are separate state. RTL affects layout and navigation using logical properties, while ISO values, timestamps, IANA zone IDs and code-like output remain LTR.
+- Preserve all existing feature slugs and deep links. The menu is grouped into Date, Time, Calendar, and Utilities; do not remove a feature until a tested replacement exists.
+- The workspace owns one main vertical scroll region. Feature settings scroll within the shared inspector/sheet, and calendar/time popovers stay inside viewport bounds. Preserve the mobile sheet resize gesture, Escape behavior, focus restoration, reduced motion, and touch targets.
+- Design assets for this adaptation live in `specification/date-time/date-time-workspace-wireframe.svg` and `specification/date-time/date-time-input-components.svg`. They clarify intended layout; live Photo Editor behavior and responsive tests remain the shared-shell authority.
+- Required regression checks: menu geometry at 390px, 768px, 1024px and 1440px; LTR/RTL screenshots; calendar month navigation in Gregorian, Persian and supported Islamic calendars; ISO value stability; direct time entry and keyboard selection; and full lint/typecheck/test/build verification.
+
