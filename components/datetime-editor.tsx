@@ -220,14 +220,14 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
         <div className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col px-3 pb-8 pt-4 sm:px-6">
-          <div className="mb-2 text-xs text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
-          <div className="mb-6">
-            <h1 className="text-2xl font-semibold tracking-tight">Date &amp; Time</h1>
-            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>
-          </div>
           <div className={"grid min-h-0 min-w-0 flex-1 items-stretch gap-4 " + (activeFeature ? "sm:grid-cols-[minmax(0,1fr)_320px]" : "")}>
-            <section className="flex min-w-0 flex-1 flex-col justify-center">
-          <section aria-label="Date and time display" className="mx-auto my-auto w-full max-w-5xl rounded-2xl bg-card p-4 shadow-sm sm:p-6 lg:p-8">
+            <section className="flex min-w-0 flex-1 flex-col">
+              <header data-testid="datetime-editor-intro" className="shrink-0 pb-1">
+                <div className="mb-2 text-xs text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
+                <h1 className="text-2xl font-semibold tracking-tight">Date &amp; Time</h1>
+                <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>
+              </header>
+          <section aria-label="Date and time display" className="mx-auto mt-4 mb-4 w-full max-w-5xl rounded-2xl bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-muted-foreground">Current date and time</p>
@@ -256,8 +256,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
             </div>
             {message && <p role="status" className="mt-3 text-sm text-muted-foreground">{message}</p>}
           </section>
-
-        </section>
+            </section>
 
         {activeFeature && <aside ref={panelRef} style={panelStyle} data-testid="datetime-feature-panel" id="datetime-feature-panel" role="region" aria-labelledby="datetime-feature-panel-title" className="fixed inset-x-0 bottom-0 z-40 flex h-[var(--feature-panel-height)] max-h-[70dvh] flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none sm:relative sm:inset-auto sm:h-full sm:max-h-full sm:w-[320px] sm:shrink-0 sm:border-l sm:border-t-0 sm:pb-0 sm:shadow-none">
           <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card sm:shadow-none">
