@@ -77,6 +77,12 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const { panelRef, panelStyle, resizeHandleProps } = useResizableFeatureSheet();
 
   useEffect(() => {
+    if (initialFeature && features.some((feature) => feature.slug === initialFeature)) {
+      window.history.replaceState(null, "", "/datetime/editor?feature=" + encodeURIComponent(initialFeature));
+    }
+  }, [initialFeature]);
+
+  useEffect(() => {
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
@@ -181,7 +187,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               {groups.map((group) => {
                 const items = filteredFeatures.filter((feature) => feature.group === group);
                 if (!items.length) return null;
-                return <div key={group}><h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</h3><div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">{items.map((feature) => <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"rounded-xl border p-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "border-primary bg-primary/5" : "border-border")}><span className="flex items-center justify-between gap-2 font-medium text-sm">{feature.title}<ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" /></span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{feature.description}</span></button>)}</div></div>;
+                return <div key={group}><h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</h3><div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">{items.map((feature) => <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"rounded-xl border p-3 text-start transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "border-primary bg-primary/5" : "border-border")}><span className="flex items-center justify-between gap-2 font-medium text-sm">{feature.title}<ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" /></span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{feature.description}</span></button>)}</div></div>;
               })}
             </div>
           </section>}
