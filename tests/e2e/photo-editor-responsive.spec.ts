@@ -405,7 +405,7 @@ test("desktop photo File dropdown stays to the right of the expanded and collaps
   await expect(sidebar).toBeVisible();
 
   await fileTrigger.click();
-  const fileMenu = page.locator("[data-testid='editor-menubar'] > div.absolute");
+  const fileMenu = page.locator("[data-testid='photo-file-menu']");
   await expect(fileMenu).toBeVisible();
   let sidebarBox = await sidebar.boundingBox();
   let menuBox = await fileMenu.boundingBox();
