@@ -13,7 +13,7 @@ type DateFieldProps = {
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const parseISODate = (value: string) => {
-  const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12) : new Date();
 };
 const toISODate = (date: Date) => date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
@@ -24,7 +24,7 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1, 12));
   const format = (date: Date, options: Intl.DateTimeFormatOptions, calendarOverride = calendar) => {
-    try { return new Intl.DateTimeFormat(locale, { ...options, calendar: calendarOverride, timeZone: "UTC" }).format(date); }
+    try { return new Intl.DateTimeFormat(locale, { ...options, calendar: calendarOverride }).format(date); }
     catch { return new Intl.DateTimeFormat("en-US", options).format(date); }
   };
   const monthKey = (date: Date) => format(date, { era: "short", year: "numeric", month: "numeric" });
@@ -48,7 +48,7 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
   const gregorianMonthLabel = format(viewMonth, { month: "short", year: "numeric" }, "gregory");
   const selectedLabel = value ? format(selected, { dateStyle: "full" }) : "Choose date";
   const weekdays = useMemo(() => Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(Date.UTC(2023, 0, 1 + index));
+    const day = new Date(2023, 0, 1 + index, 12);
     return new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }).format(day);
   }), [locale]);
   const changeMonth = (amount: number) => setViewMonth((current) => { const info = (() => { let first = new Date(current); const key = monthKey(first); for (let i = 0; i < 35; i += 1) { const previous = new Date(first); previous.setDate(previous.getDate() - 1); if (monthKey(previous) !== key) break; first = previous; } return first; })(); if (amount < 0) { info.setDate(info.getDate() - 1); return info; } const next = new Date(current); for (let i = 0; i < 35; i += 1) { next.setDate(next.getDate() + 1); if (monthKey(next) !== monthKey(current)) break; } return next; });
@@ -84,7 +84,7 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
 export function ClockTimeInput({ id, value, onChange }: DateFieldProps) {
   const [open, setOpen] = useState(false);
   const options = useMemo(() => Array.from({ length: 96 }, (_, index) => pad(Math.floor(index / 4)) + ":" + pad((index % 4) * 15)), []);
-  const normalized = /^([01]\\d|2[0-3]):[0-5]\\d$/.test(value) ? value : "12:00";
+  const normalized = /^([01]\d|2[0-3]):[0-5]\d$/.test(value) ? value : "12:00";
   return <div className="relative min-w-0">
     <div className="flex h-10 items-center border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
       <input id={id} type="text" inputMode="numeric" autoComplete="off" aria-label="Time in 24-hour format" placeholder="HH:MM" value={value} onChange={(event) => onChange(event.target.value)} onFocus={() => setOpen(true)} onBlur={(event) => { if (!event.currentTarget.parentElement?.parentElement?.contains(event.relatedTarget as Node | null)) setOpen(false); }} className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm tabular-nums outline-none" />
