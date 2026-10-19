@@ -30,6 +30,14 @@ describe("VideoWorkbench", () => {
     expect(screen.getByRole("main", { name: "GaGet Video Editor" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Video Editor" })).toBeTruthy();
     expect(screen.getByText("Drop a video here")).toBeTruthy();
+    const breadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(breadcrumb.className).toContain("mb-5");
+    expect(screen.getByRole("heading", { name: "Video Editor" }).className).toContain("font-bold");
+    const workspace = breadcrumb.closest('[class~="overflow-y-auto"]');
+    expect(workspace).toBeTruthy();
+    expect(workspace?.className).toContain("sm:p-6");
+    expect(workspace?.className).toContain("bg-muted/25");
+    expect(breadcrumb.parentElement?.className).not.toContain("max-w-5xl");
     fireEvent.click(screen.getByRole("button", { name: "File menu" }));
     expect(screen.getByTestId("video-file-menu")).toBeTruthy();
     expect(within(screen.getByTestId("video-file-menu")).getByRole("button", { name: /Open video/ })).toBeTruthy();
