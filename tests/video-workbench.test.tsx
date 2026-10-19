@@ -129,6 +129,15 @@ describe("VideoWorkbench", () => {
     expect(handle.getAttribute("aria-valuenow")).toBe(handle.getAttribute("aria-valuemin"));
   });
 
+  it("opens the same resizable feature sheet before a video is selected", () => {
+    render(<VideoWorkbench slug="editor" />);
+    chooseMobileFeature("Video information");
+    const panel = screen.getByTestId("video-feature-panel");
+    expect(panel.className).toContain("fixed");
+    expect(within(panel).getByText(/Choose a video to enable/)).toBeTruthy();
+    expect(within(panel).getByRole("slider", { name: "Resize editing panel" })).toBeTruthy();
+  });
+
   it("uses an icon-based navigation trigger rather than a text hamburger glyph", () => {
     render(<VideoWorkbench slug="editor" />);
     const navigation = screen.getByRole("button", { name: "Open navigation" });
