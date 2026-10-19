@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef, type CSSProperties } from "react";
-import { CalendarDays, ChevronDown, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
+import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
@@ -52,6 +52,14 @@ const zones = [
   "Asia/Shanghai", "Australia/Sydney",
 ];
 const groups: Feature["group"][] = ["Date", "Time", "Calendar", "Utilities"];
+const featureIcons: Record<string, LucideIcon> = {
+  calendar: CalendarDays, "date-calculator": Calculator, "date-converter": CalendarRange,
+  "date-difference": CalendarRange, age: Calculator, "business-days": CalendarDays,
+  "week-number": CalendarDays, "leap-year": CalendarDays, "date-format": CalendarRange,
+  "world-clock": Globe2, "meeting-planner": Clock3, countdown: Timer, duration: Hourglass,
+  timestamp: FileClock, "calendar-generator": CalendarDays, holidays: CalendarDays,
+  "ics-viewer": CalendarRange, "ics-generator": CalendarRange, json: Braces, cron: Code2,
+};
 const safeFormat = (date: Date, locale: string, calendar: string, numberingSystem: string, timeZone: string, timeStyle?: "medium" | "short") => {
   try {
     return new Intl.DateTimeFormat(locale, { calendar, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem, timeZone, dateStyle: "full", ...(timeStyle ? { timeStyle } : {}) }).format(date);
@@ -191,7 +199,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </div>
           <button type="button" aria-expanded={menuOpen === "Features"} className={"inline-flex h-9 items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "Features" ? null : "Features"); }}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
         </div>
-        {menuOpen === "File" && <div data-testid="datetime-file-menu" className="absolute start-3 top-[calc(100%-1px)] z-50 min-w-52 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:start-6">
+        {menuOpen === "File" && <div data-testid="datetime-file-menu" className="absolute left-3 top-[calc(100%-1px)] z-50 min-w-52 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:left-6">
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(formattedDate + " " + formattedTime + " (" + timeZone + ")"); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy current display</span></button>
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(displayNow?.toISOString() ?? ""); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy ISO 8601</span></button>
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(displayNow ? String(Math.floor(displayNow.getTime() / 1000)) : ""); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy Unix timestamp</span></button>
@@ -220,7 +228,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </div>
           <div className="grid min-h-0 min-w-0 flex-1 items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
             <section className="flex min-w-0 flex-1 flex-col justify-center">
-          <section aria-label="Date and time display" className="mx-auto my-auto w-full max-w-5xl border-y border-border bg-background p-4 sm:p-6 lg:p-8">
+          <section aria-label="Date and time display" className="mx-auto my-auto w-full max-w-5xl rounded-2xl bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-muted-foreground">Current date and time</p>
