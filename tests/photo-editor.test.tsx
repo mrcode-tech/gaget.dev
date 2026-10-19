@@ -496,3 +496,12 @@ describe("PhotoEditor workspace UX acceptance", () => {
     expect(screen.getByRole("button", { name: "Crop & editing tips" })).toBeTruthy();
   });
 });
+  it("shows concise accessible descriptions in the mobile feature menu", () => {
+    render(<PhotoEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "Open photo editor features" }));
+    const crop = screen.getByRole("button", { name: "Crop" });
+    const descriptionId = crop.getAttribute("aria-describedby");
+    expect(descriptionId).toBeTruthy();
+    expect(document.getElementById(descriptionId!)?.textContent).toContain("Select and refine");
+  });
+
