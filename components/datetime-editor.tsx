@@ -175,12 +175,12 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
   return (
     <main className="flex h-[calc(100dvh-68px)] min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground" dir={locale.startsWith("fa") || locale.startsWith("ar") ? "rtl" : "ltr"}>
-      <nav ref={commandBarRef} aria-label="Date and time editor commands" className="relative z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 sm:px-6">
-        <div className="flex items-center gap-1">
+      <nav ref={commandBarRef} aria-label="Date and time editor commands" className="relative z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 sm:px-6 lg:justify-start">
+        <div className="flex items-center gap-3">
           <button type="button" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "File" ? null : "File"); }}>File</button>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="hidden items-center gap-1 lg:flex">
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-3 lg:flex">
             {groups.map((group) => <div key={group} className="relative">
               <button type="button" aria-expanded={menuOpen === group} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === group ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === group ? null : group); }}>{group}</button>
               {menuOpen === group && <div data-testid={"datetime-" + group.toLowerCase() + "-menu"} className="absolute start-0 top-[calc(100%-1px)] z-50 max-h-[min(70dvh,520px)] w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl">
