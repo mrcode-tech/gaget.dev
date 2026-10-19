@@ -81,7 +81,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
   useEffect(() => {
     if (initialFeature && features.some((feature) => feature.slug === initialFeature)) {
-      window.history.replaceState(null, "", "/datetime/editor?feature=" + encodeURIComponent(initialFeature));
+      window.history.replaceState(window.history.state, "", "/datetime/editor?feature=" + encodeURIComponent(initialFeature));
     }
   }, [initialFeature]);
 
@@ -127,7 +127,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
     if (selectedDate && selectedTime) setSeededReference({ date: selectedDate, time: selectedTime });
     setFeaturesOpen(false);
     setMessage("");
-    if (typeof window !== "undefined") window.history.replaceState(null, "", "/datetime/editor?feature=" + encodeURIComponent(slug));
+    if (typeof window !== "undefined") window.history.replaceState(window.history.state, "", "/datetime/editor?feature=" + encodeURIComponent(slug));
   }
   function resetReference() {
     const current = new Date();
