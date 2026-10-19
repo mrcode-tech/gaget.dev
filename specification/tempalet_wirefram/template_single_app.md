@@ -1,10 +1,10 @@
-# Single-App Editor Design Template — Photo Editor Baseline
+# Single-App Editor Design Template — Photo Baseline + Media Adaptation Contract
 
 **Status:** documentation of the existing Photo Editor design on `stage`; this is not a redesign proposal.  
 **Repository:** `mrcode-tech/gaget.dev`  
 **Template root:** `specification/tempalet_wirefram/`  
 **Baseline reviewed:** `stage` at merge commit `78ff386f6d6680101a0b55c3575b47f1fbb1f688` (2026-10-19).  
-**Purpose:** give an implementation agent one self-contained reference for refactoring another tool into the same single-page editor shell without changing the established visual design.
+**Purpose:** define the shared Photo Editor shell and explicit adaptation rules for Audio and Video, so the shared UI is consistent without inventing image-only controls or changing established loaded-file behavior.
 
 > Treat live components and the most recent merged code as authoritative when a detail in an older proposal differs. Wireframes are schematic, not pixel-perfect screenshots. Do not silently reinterpret any unspecified token as a new design decision.
 
@@ -162,14 +162,14 @@ When a file is loaded, preserve the existing workspace rather than layering the 
 
 ### Common actions
 
-The shared editing toolbar/navigation contract includes the available actions in the current tool: Undo, Redo, reset where implemented, zoom out, fit/reset zoom, zoom in, and export. Keep the order, separators, labels/tooltips, icon choices, and responsive visibility consistent with the Photo Editor baseline. Do not invent a new bottom bar or duplicate actions if the target tool has an equivalent existing toolbar.
+Actions are **media-specific**, not a requirement to copy the Photo Editor toolbar verbatim. Preserve existing loaded-file geometry and behavior. Reuse the shared toolbar placement and visual treatment where a target editor already has an equivalent action, but only expose actions that are meaningful and implemented for that media type.
 
-- **Undo / Redo:** history-aware, visibly disabled when unavailable, keyboard accessible, labels/tooltips.
-- **Zoom out / Zoom in:** change canvas scale; when zoom exceeds fit, keep both axes reachable through the canvas/workspace scroll container.
-- **Fit:** restore the canvas to the workspace fit size without clipping or an unexpected maximum-size clamp.
-- **Reset:** restore the appropriate initial edit state, with confirmation only if the current implementation requires it.
-- **Export:** explicit, accessible action; show feedback near the workflow, not via blocking browser alerts.
-- **History navigation is part of the app chrome** and must be considered in every breakpoint wireframe, even where it is integrated into a compact toolbar or menu.
+- **Undo / Redo:** show only when the target editor has real undo/redo history semantics. Disable them when history is unavailable; do not simulate history or add no-op buttons.
+- **Zoom / Fit:** use for a zoomable image/canvas/workspace only when the target already supports it or a separate product decision approves it. Do not add image-style zoom controls to audio/video just to match Photo Editor.
+- **Reset:** retain the target editor's existing reset semantics; distinguish resetting feature parameters from clearing the selected file/session.
+- **Export / Download:** retain the target workflow and supported output types. Report browser/codec limitations truthfully; never make an unsupported export appear successful.
+- Preserve each target's existing button order, separators, keyboard behavior, and responsive visibility except for a specifically agreed parity fix. Do not invent a new bottom bar or duplicate an existing action.
+- Empty state has no stale loaded-file controls. The media-specific action set must be documented in each editor's feature contract and verified in tests.
 
 ## 9. Desktop feature inspector
 
@@ -185,7 +185,7 @@ The shared editing toolbar/navigation contract includes the available actions in
 
 **This is a core interaction and must not be simplified away.** See `wireframe-mobile-sheet.svg`.
 
-- Feature selection opens a contextual sheet over the editor workspace; the canvas remains visible behind/above it where viewport height allows.
+- Selecting any feature opens the same resizable contextual sheet over the editor workspace; no feature-specific exception may silently skip the sheet. The workspace remains visible behind/above it where viewport height allows.
 - The sheet has a visible drag handle at its top edge and a clear feature title/identity. Keep the same sheet surface, border/radius, shadow, spacing, and close control as the current component.
 - User can drag the handle vertically to resize the panel between its collapsed/peek and expanded states. The resize affordance must be visually discoverable and have an adequate touch target.
 - Preserve existing snap points/state transitions and the current resize slider/handle behavior in the source. Do not replace the interaction with a static-height modal or a page-level scroll.
@@ -195,7 +195,7 @@ The shared editing toolbar/navigation contract includes the available actions in
 - Dragging/resizing must not accidentally trigger controls or select text. Respect pointer/touch cancellation and reduced-motion preferences where applicable.
 - Provide keyboard-accessible close and resize affordances when supported by the existing component; retain accessible names and focus visibility.
 - Do not introduce horizontal scrolling in the sheet. Labels and inputs wrap/stack as in the current mobile controls.
-- When switching features, keep exactly one active panel and close the feature dropdown.
+- When switching features, keep exactly one active panel and close the feature dropdown. Every feature uses the same sheet container, resize interaction, bounds, close behavior, and internal-scroll ownership; only its content varies.
 
 ## 11. Feature input area
 
@@ -261,7 +261,7 @@ Run tests at widths 320, 360, 390, 640, 744, 768, 844, 1024, 1280, 1440, 1536, a
 - [ ] Desktop groups remain File / Edit / Image / Create.
 - [ ] Menu anchors to its trigger, stays in viewport, scrolls internally, and closes after selection.
 - [ ] Menu item icons, labels, descriptions, row spacing, focus/hover/disabled states match baseline.
-- [ ] Undo, Redo, Zoom out, Fit, Zoom in, and Export are discoverable in each breakpoint's actual toolbar/menu presentation.
+- [ ] Only media-appropriate, implemented actions are shown at each breakpoint; there are no no-op Undo/Redo/Zoom/Fit controls added for parity alone.
 
 ### Empty / loaded state
 - [ ] Empty breadcrumb, title, description, and upload card share one vertically scrollable workspace.
@@ -294,7 +294,7 @@ For another editor, instruct the coding agent to:
 4. Map the target tool's features into menu groups and icon + name + optional description rows. Do not invent features or change names without product direction.
 5. Replace only tool-specific copy, file handling, canvas/preview, feature inventory, and input controls. Preserve all common geometry, breakpoints, spacing, menu treatment, scroll ownership, and sheet resizing.
 6. Keep empty and loaded states mutually exclusive. For empty state, put breadcrumb/title/description/upload into the same scroll container.
-7. Implement or preserve Undo / Redo / Zoom out / Fit / Zoom in / Export wherever applicable, with real enabled/disabled states.
+7. Preserve the target editor's real media-specific action set. Add no image-only Undo/Redo/Zoom/Fit controls to audio/video unless that capability is implemented and explicitly approved.
 8. Add responsive tests for the full viewport matrix and short landscape; include assertions for sheet bounds, scroll container ownership, menu bounds, and no horizontal overflow.
 9. Run all checks and report exact results. Do not change design as a side effect of refactoring.
 
@@ -309,3 +309,50 @@ For another editor, instruct the coding agent to:
 - `wireframe-components.svg` — breadcrumb, heading, upload target, feature input, history/zoom controls, and spacing callouts.
 
 The SVGs are structural design references; their labels and proportions explain hierarchy, not exact rendered pixels. This template folder intentionally documents the Photo Editor as currently implemented rather than proposing a new design.
+
+
+## 17. Decisions resolved for Audio and Video adaptation (2026-10-19)
+
+These decisions supersede any older proposal or target-editor spec that conflicts with them.
+
+1. **Undo / Redo / Zoom:** media-specific actions only. Keep controls that genuinely exist and are meaningful for that editor. Do not add placeholder, disabled-by-default, or no-op image-style controls simply for visual symmetry.
+2. **Mobile feature panel:** every feature uses the same resizable bottom-sheet component and interaction. Feature selection opens the sheet for every feature, including Video Extract Frames, Thumbnail Generator, and Video to Audio. A feature may retain necessary preview/timeline/action controls in the main workspace, but do not duplicate those controls in the sheet. The sheet must still have meaningful feature-specific content; if all controls must remain in the workspace, document the panel content rather than rendering an empty sheet.
+3. **Empty state:** use the same structural hierarchy, container ownership, spacing, centering, and responsive behavior as Photo Editor. Change only the editor name, title/description, upload prompt, accepted file types, multi-file affordance where required, and truthful media-specific size/format/privacy copy. Breadcrumb/title/description/upload target stay in one vertical scroll container.
+4. **Video timeline:** show a custom timeline only for features that need timestamp/range selection. Do not show a timeline for every loaded video. Trim/Split retain the native player seek bar unless the existing implementation is explicitly changed; do not add a duplicate custom timeline by default. The current Video Editor spec lists Extract Frames, Thumbnail Generator, and Video to Audio as custom-timeline candidates; validate whether their current implementation actually uses that timeline before refactoring.
+5. **Feature menus:** where the menu design supports descriptions, use icon + title + one short description. Follow the Photo Editor's live row geometry, typography, wrapping, and menu sizing. Do not force descriptions into variants that only support icon/title if doing so would break the established menu layout; document which menu variants support descriptions and verify them at mobile/tablet/desktop widths.
+6. **Loaded workspace:** preserve current loaded-file geometry, preview/canvas placement, player controls, timeline, status and processing behavior. Change only parity fixes agreed in this document (shared shell/navigation, menu consistency, common resizable sheet, empty-state scroll ownership, accessibility and regressions).
+
+## 18. Target-editor contracts and remaining implementation ambiguities
+
+The six product-level choices above are resolved. The following are implementation details to verify against the live code and tests; they should not be used as a reason to redesign the shell. Where a recommended default is provided, use it unless inspection finds a concrete conflict.
+
+### Audio Editor
+
+- **File cardinality:** retain the current single-file workflow for normal editing and keep multi-file selection only for features that actually require it (notably Merge). The empty state may explain this, but must not imply every feature accepts multiple files.
+- **Recorder lifecycle:** microphone recording may begin without a preselected audio file. Preserve a recorder-appropriate empty state/action and do not make the generic audio-file drop zone the only route into recording. The shared empty-state structure remains consistent, while the feature's primary action can be the recorder entry point.
+- **Waveform / selection:** preserve current waveform and range-selection behavior, including how selection survives switching between features. Do not replace audio range controls with image-style canvas controls.
+- **History and zoom:** the current audio component must be checked for real history/zoom support. Recommended default: do not add either control unless actual operations can be undone/redone or a meaningful waveform zoom is implemented.
+- **Feature descriptions:** source inventory has feature labels/icons, but menu descriptions need concise, accurate copy. Write descriptions from the current implemented behavior, not the aspirational feature name alone; clearly disclose unavailable or partial capabilities.
+
+### Video Editor
+
+- **Panel vs workspace controls:** the prior Video Editor spec exempted Extract Frames, Thumbnail Generator and Video to Audio from automatically opening the mobile sheet. That exception is superseded. The sheet opens for every feature, while non-duplicated preview/timestamp/range controls may remain in the main workspace where necessary.
+- **Timeline reality:** the current Video Editor spec identifies custom timelines for Extract Frames, Thumbnail Generator and Video to Audio, while Trim/Split use the native player's seek bar. Inspect the component to confirm actual rendered controls and preserve loaded-file geometry. Add no custom timeline to other features without a concrete range/timestamp need.
+- **Feature feasibility:** menu descriptions must reflect the browser-native implementation and codec limitations. Do not imply reliable MP4/MOV transcoding, GIF encoding, reverse export, motion-estimated stabilization, or multi-clip merge where the current engine does not support it. Disabled/unavailable actions need an honest explanation.
+- **Multi-file merge:** keep the existing multi-file affordance if present, but do not present Merge as working unless a real sequence/mux/export path exists. UI parity does not mean fabricating media-processing capability.
+- **Recording and seeking:** preserve current real-time recording/seek behavior, error states, and browser capability checks. Test with real supported browser codecs; static UI tests alone do not prove export correctness.
+
+### Shared implementation questions to settle by source inspection
+
+1. **Exact shell measurements:** some template dimensions are documented, while command-bar height, desktop inspector width, sheet snap points, and certain gaps remain implementation-owned. Before changing them, extract the current Photo Editor values from source and tests; do not invent new numbers.
+2. **Description support per menu variant:** determine whether compact and desktop menus both render descriptions today. Apply descriptions in the variants that support them; do not change menu dimensions as a side effect of adding copy.
+3. **Sheet resize accessibility:** identify the current handle/slider implementation and its keyboard semantics. Reuse it for every feature; verify keyboard operation, touch drag, short landscape, focus restoration, and content scrolling.
+4. **Feature-switch state:** define which state persists when switching features (selected file, decoded buffer, playback position, range, edits, generated result) and which feature-specific draft settings reset. Recommended default: preserve the loaded media/session and shared selection; reset only feature-local transient UI when current behavior already does so.
+5. **Reset semantics:** where an editor has both “reset parameters” and “remove/replace file,” ensure labels and behavior distinguish them. Do not unify them into one ambiguous Reset action.
+6. **Output and error feedback:** confirm all success/error messages are inline and accessible, and that unsupported browser capabilities are reported without false success. Keep media-specific output format and download behavior.
+7. **Feature inventory and routes:** compare each menu item with its route/slug and actual capability. Preserve existing routes and feature names unless a separate product decision approves a change; do not silently drop legacy tools.
+8. **Verification baseline:** run existing tests before refactor, then add regression coverage for the empty-state single scroll region, every-feature sheet opening, sheet resizing, feature switching, media-specific controls, conditional timeline, no horizontal overflow, and loaded-state geometry.
+
+### Refactor acceptance rule
+
+The implementation is ready for review only when the shared shell is consistent, the empty state has one full vertical scroll path, all features use the same accessible resizable mobile sheet, media-specific controls remain functional and non-duplicated, video timeline visibility is conditional, and tests plus responsive screenshots show no unintended change to loaded-file geometry. Report any unsupported feature honestly; do not call an unimplemented capability complete.
