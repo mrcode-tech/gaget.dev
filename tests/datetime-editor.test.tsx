@@ -78,6 +78,11 @@ describe("DateTimeEditor", () => {
     render(<DateTimeEditor initialFeature="date-difference" />);
     const panel = screen.getByTestId("datetime-feature-panel");
     expect(panel.className).toContain("fixed");
+    expect(panel.className).toContain("sm:w-[320px]");
+    expect(panel.className).toContain("sm:border-l");
+    expect(panel.className).toContain("sm:border-t-0");
+    expect(panel.className).toContain("max-h-[70dvh]");
+    expect(within(panel).getByText("Feature parameters")).toBeTruthy();
     expect(within(panel).getByRole("heading", { name: "Date Difference Calculator" })).toBeTruthy();
     const handle = within(panel).getByRole("slider", { name: "Resize editing panel" });
     const max = handle.getAttribute("aria-valuemax");
@@ -90,6 +95,7 @@ describe("DateTimeEditor", () => {
   it("treats display language, calendar, and numeral system as independent controls", () => {
     render(<DateTimeEditor />);
     fireEvent.change(screen.getByRole("combobox", { name: "Display language" }), { target: { value: "fa-IR" } });
+    expect((screen.getByRole("textbox", { name: "Time in 24-hour format" }) as HTMLInputElement).value).toMatch(/[۰-۹]/);
     fireEvent.change(screen.getByRole("combobox", { name: "Calendar system" }), { target: { value: "persian" } });
     fireEvent.change(screen.getByRole("combobox", { name: "Numeral system" }), { target: { value: "arabext" } });
     expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
