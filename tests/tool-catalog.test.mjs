@@ -53,3 +53,11 @@ test("Video category exposes one unified editor with searchable video capabiliti
     assert.ok(videoTools[0].keywords.includes(keyword), `Video Editor search keywords should include ${keyword}`);
   }
 });
+
+test("Date & Time tools share the unified editor while preserving feature selection", () => {
+  const dateTimeTools = tools.filter((tool) => tool.category === "Date & Time");
+  assert.equal(dateTimeTools.length, 20, "all 20 date/time capabilities remain discoverable");
+  for (const tool of dateTimeTools) {
+    assert.match(tool.href, /^\/datetime\/editor\?feature=[a-z-]+$/, `${tool.name} should open the unified editor with its feature selected`);
+  }
+});
