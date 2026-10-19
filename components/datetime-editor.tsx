@@ -219,15 +219,15 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
       </nav>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
-        <div className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col px-3 pb-8 pt-4 sm:px-6">
-          <div className={"grid min-h-0 min-w-0 flex-1 items-stretch gap-4 " + (activeFeature ? "sm:grid-cols-[minmax(0,1fr)_320px]" : "")}>
-            <section className="flex min-w-0 flex-1 flex-col">
-              <header data-testid="datetime-editor-intro" className="shrink-0 pb-1">
+        <div data-testid="datetime-workspace" className="flex min-h-full w-full flex-1 flex-col pb-8">
+          <div data-testid="datetime-workspace-grid" className={"grid min-h-0 min-w-0 flex-1 items-stretch gap-0 " + (activeFeature ? "sm:grid-cols-[minmax(0,1fr)_320px]" : "")}>
+            <section className={"flex min-h-0 min-w-0 flex-1 flex-col px-3 pt-2 sm:px-6 " + (!activeFeature ? "mx-auto w-full max-w-[1600px]" : "")}>
+              <header data-testid="datetime-editor-intro" className="shrink-0 pb-0">
                 <div className="mb-2 text-xs text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
                 <h1 className="text-2xl font-semibold tracking-tight">Date &amp; Time</h1>
                 {!activeFeature && <p data-testid="datetime-editor-description" className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>}
               </header>
-          <section aria-label="Date and time display" className="mx-auto mt-4 mb-4 w-full max-w-5xl rounded-2xl bg-card p-4 shadow-sm sm:p-6 lg:p-8">
+          <section aria-label="Date and time display" className="mx-auto mt-2 mb-3 w-full max-w-5xl rounded-2xl bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-muted-foreground">Current date and time</p>
@@ -258,7 +258,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </section>
             </section>
 
-        {activeFeature && <aside ref={panelRef} style={panelStyle} data-testid="datetime-feature-panel" id="datetime-feature-panel" role="region" aria-labelledby="datetime-feature-panel-title" className="fixed inset-x-0 bottom-0 z-40 flex h-[var(--feature-panel-height)] max-h-[70dvh] flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none sm:relative sm:inset-auto sm:h-full sm:max-h-full sm:w-[320px] sm:shrink-0 sm:border-l sm:border-t-0 sm:pb-0 sm:shadow-none">
+        {activeFeature && <aside ref={panelRef} style={panelStyle} data-testid="datetime-feature-panel" id="datetime-feature-panel" role="region" aria-labelledby="datetime-feature-panel-title" className="fixed inset-x-0 bottom-0 z-40 flex h-[var(--feature-panel-height)] max-h-[70dvh] flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none sm:relative sm:inset-auto sm:h-full sm:min-h-full sm:max-h-full sm:w-[320px] sm:shrink-0 sm:border-l sm:border-t-0 sm:pb-0 sm:shadow-none">
           <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card sm:shadow-none">
             <div {...resizeHandleProps} className="mx-auto mt-1 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:hidden"><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
             <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 id="datetime-feature-panel-title" className="text-sm font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2><p className="hidden text-[11px] text-muted-foreground sm:block">Feature parameters</p></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
