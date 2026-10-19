@@ -31,6 +31,11 @@ describe("DateTimeEditor", () => {
     const fileMenu = screen.getByTestId("datetime-file-menu");
     expect(fileMenu.className).toContain("start-3");
     expect(fileMenu.className).toContain("sm:start-6");
+    expect(within(fileMenu).getByRole("button", { name: /Copy current display/ })).toBeTruthy();
+    expect(within(fileMenu).getByRole("button", { name: /Copy ISO 8601/ })).toBeTruthy();
+    expect(within(fileMenu).getByRole("button", { name: /Copy Unix timestamp/ })).toBeTruthy();
+    expect(within(fileMenu).getByRole("button", { name: /Print current view/ })).toBeTruthy();
+    expect(within(fileMenu).getByRole("button", { name: /Reset reference to now/ })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     fireEvent.click(screen.getByRole("button", { name: /^Date$/ }));
     const dateMenu = screen.getByTestId("datetime-date-menu");
@@ -38,6 +43,14 @@ describe("DateTimeEditor", () => {
     fireEvent.click(within(dateMenu).getByRole("button", { name: /Date calculator/ }));
     expect(screen.getByTestId("datetime-feature-panel")).toBeTruthy();
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
+  });
+
+  it("uses custom date and time pickers instead of native browser date/time inputs", () => {
+    render(<DateTimeEditor initialFeature="world-clock" />);
+    expect(document.querySelector('input[type="date"], input[type="time"]')).toBeNull();
+    expect(document.getElementById("time-date")?.tagName).toBe("BUTTON");
+    expect(screen.getByRole("textbox", { name: "Time in 24-hour format" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Choose time" })).toBeTruthy();
   });
 
   it("dismisses menus with Escape and restores focus to the trigger", () => {
