@@ -88,6 +88,12 @@ jobs:
           DESIGN_BASELINE_COMMIT="${GITHUB_SHA}" \
           node scripts/capture-design-baseline.mjs
 
+      - name: Collect production server log
+        if: always()
+        run: |
+          mkdir -p artifacts/ci-logs
+          if [ -f /tmp/gaget-next.log ]; then cp /tmp/gaget-next.log artifacts/ci-logs/next.log; fi
+
       - name: Upload test and visual evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -95,8 +101,8 @@ jobs:
           name: ci-evidence-${{ github.sha }}
           path: |
             artifacts/design-baseline/
+            artifacts/ci-logs/
             test-results/
             playwright-report/
-            /tmp/gaget-next.log
           if-no-files-found: warn
           retention-days: 30
