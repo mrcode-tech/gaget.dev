@@ -55,12 +55,13 @@ const manifest = {
   generatedAt: new Date().toISOString(),
   commit,
   baseURL,
-  browser: "Chromium (Playwright)",
+  browser: "Chromium (Playwright; version recorded after launch)",
   captures: [],
   failures: [],
 };
 
 const browser = await chromium.launch({ headless: true });
+manifest.browser = `Chromium ${browser.version()} (Playwright)`;
 try {
   for (const locale of locales) {
     for (const route of locale.routes) {
@@ -108,6 +109,7 @@ try {
               direction: locale.name === "en" ? "ltr" : "rtl",
               viewport: { name: viewport.name, width: viewport.width, height: viewport.height },
               theme,
+              state: "initial-default",
               screenshot: relative,
               status: response.status(),
             });
