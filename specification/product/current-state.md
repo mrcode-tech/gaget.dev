@@ -46,8 +46,8 @@ Additional registry entries may be planned or redirect to unified editors. Verif
 
 The following are required before this document can be considered a fully verified visual baseline:
 - [ ] Capture home, catalog, standalone tools and each main workspace from the exact audited commit.
-- [ ] Inspect representative mobile, tablet and desktop widths.
-- [ ] Capture light and dark themes, and RTL where applicable.
+- [ ] Inspect representative mobile, short-height mobile, tablet and desktop widths.
+- [ ] Capture and inspect light and dark themes, including Persian and Arabic RTL routes where applicable.
 - [ ] Capture empty-file and loaded-file states for image, audio and video, plus representative feature-active panels.
 - [ ] Record browser/version, route, viewport, theme, state and commit in the artifact manifest.
 - [ ] Review screenshots for clipping, unexplained gaps, panel anchoring, scroll ownership and header/sidebar overlap.
@@ -64,10 +64,11 @@ Generated screenshots are the visual evidence for a specific build. This Markdow
 - `AGENTS.md` delegates to `specification/AI_INSTRUCTIONS.md`; `command.md` correctly remains a shortcut index rather than a competing workflow.
 - The package scripts define unit, component, lint, typecheck, build, Playwright E2E and design-baseline capture commands.
 - `.github/workflows/ci.yml` is configured to run on pushes and pull requests across branches, cancels superseded runs for the same branch, and includes unit/component tests, lint, typecheck, build, route smoke tests and Playwright checks.
-- `.github/workflows/design-baseline-screenshots.yml` captures screenshots at 390×844, 768×1024 and 1440×1000 in light and dark themes. The capture script currently enumerates 11 routes and captures each route/theme/viewport combination.
-- The capture script's current matrix does not enumerate RTL locale routes, short-height viewports, loaded media states, feature-active panels, or explicit error/disabled states. Those scenarios therefore remain unverified by this capture job unless another test covers them.
+- `.github/workflows/design-baseline-screenshots.yml` and the main CI workflow invoke `scripts/capture-design-baseline.mjs`. The updated capture matrix defines 11 English routes at 390×844, 390×640, 768×1024 and 1440×1000 in light and dark themes (88 captures), plus six key routes in Persian (`/fa`) and Arabic (`/ar`) at mobile and desktop heights in both themes (48 more; 136 expected captures total).
+- The capture script records commit, route, locale, direction, viewport, theme and screenshot path in its manifest. This is a source-level expectation only until the updated workflow runs successfully and the artifact is inspected.
+- The capture matrix still captures default/empty initial states only. Loaded media, feature-active panels, explicit error/disabled states, keyboard/focus behavior, reduced motion and visual comparison against authored target designs remain unverified by this screenshot job unless separate tests cover them.
 - The README reports that `package-lock.json` is stale and that `npm ci` fails due to missing declared dependency entries; CI currently uses `npm install`. This reported issue has not been reproduced in this audit.
-- The combined commit-status endpoint returned no status records for commit `450e3849b49dd8c6e2920305420eba594b245649`; the available workflow-run lookup is limited to pull-request-triggered runs and returned none. Neither result proves that CI passed or failed.
+- The combined commit-status endpoint returned no status records for the previously inspected baseline commit and for the latest workflow/configuration commit `0176aebba3d739a84e906f0490b26b91f3622d62`. The available workflow-run lookup is limited to pull-request-triggered runs and returned none. These connector results do not establish that the push-triggered workflows completed; CI and screenshot evidence remain unverified.
 
 ### Source-level route and capability inventory
 
