@@ -57,6 +57,8 @@ Generated screenshots are the visual evidence for a specific build. This Markdow
 
 ## Project-wide reconciliation findings (source audit, 2026-10-21)
 
+- Added [`feature-contract-reconciliation.md`](./feature-contract-reconciliation.md) after comparing this branch with `stage`. It records durable requirements from removed legacy design documents, maps them to current source/test evidence, and explicitly marks target behavior as proposed rather than approved. The shared shell and each major workspace still lack complete approved target assets and route-level visual verification.
+
 **Status: Partial / not yet verified.** The following are findings from repository files, not claims of successful runtime tests or completed visual inspection.
 
 ### Confirmed foundation and verification setup
