@@ -1,96 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" role="img" aria-labelledby="title desc">
-  <title id="title">GaGet.dev shared editor shell proposal</title>
-  <desc id="desc">Editable schematic proposal for the shared media editor shell at desktop and mobile widths. Shows global navigation, editor command bar, empty workspace, and a contextual feature panel state. Not an approved pixel-perfect design.</desc>
-  <defs>
-    <style>
-      .board{fill:#f5f6f8}.frame{fill:#fff;stroke:#9ca3af;stroke-width:1.5}.surface{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5}.line{stroke:#94a3b8;stroke-width:1.5;fill:none}.dash{stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:7 6;fill:#f8fafc}.ink{fill:#111827;font-family:Inter,Arial,sans-serif}.muted{fill:#64748b;font-family:Inter,Arial,sans-serif}.label{font-size:15px;font-weight:600}.small{font-size:12px}.body{font-size:14px}.heading{font-size:22px;font-weight:700}.tiny{font-size:10px}.accent{fill:#e0e7ff;stroke:#818cf8;stroke-width:1.5}.button{fill:#2563eb;stroke:#1d4ed8;stroke-width:1}.white{fill:#fff;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:600}
-    </style>
-  </defs>
-  <rect class="board" width="1600" height="1040"/>
-  <text class="ink" x="40" y="44" font-size="28" font-weight="700">Shared Editor Shell — Proposal</text>
-  <text class="muted" x="40" y="72" font-size="15">Status: Proposal · Route examples: /images/editor, /audio/editor, /video/editor · Schematic hierarchy, not final pixel measurements</text>
-
-  <!-- Desktop viewport -->
-  <text class="ink label" x="40" y="108">Desktop · 1440 × 900 · LTR example</text>
-  <rect class="frame" x="40" y="125" width="1000" height="800" rx="8"/>
-  <rect class="surface" x="40" y="125" width="1000" height="58" rx="8"/>
-  <rect fill="#fff" x="40" y="170" width="1000" height="13"/>
-  <circle cx="62" cy="154" r="10" fill="#0f172a"/>
-  <text class="white" x="56" y="158" font-size="10">G</text>
-  <text class="ink" x="80" y="158" font-size="15" font-weight="700">GaGet.dev</text>
-  <rect class="surface" x="360" y="140" width="330" height="28" rx="7"/>
-  <text class="muted small" x="375" y="158">Search tools…</text>
-  <text class="muted small" x="840" y="158">Language</text>
-  <text class="muted small" x="950" y="158">Theme</text>
-
-  <rect class="surface" x="40" y="183" width="205" height="742"/>
-  <text class="ink label" x="58" y="213">Site navigation</text>
-  <g class="muted body">
-    <text x="60" y="248">Home</text><text x="60" y="280">Popular tools</text><text x="60" y="312">All tools</text><text x="60" y="344">Favorites</text>
-  </g>
-  <line class="line" x1="56" y1="365" x2="225" y2="365"/>
-  <text class="muted small" x="60" y="388">CATEGORIES</text>
-  <rect class="accent" x="52" y="402" width="180" height="30" rx="7"/>
-  <text class="ink body" x="68" y="422">Images</text>
-  <text class="muted body" x="68" y="455">Audio</text>
-  <text class="muted body" x="68" y="487">Video</text>
-  <text class="muted body" x="68" y="519">Date &amp; Time</text>
-
-  <rect class="surface" x="245" y="183" width="795" height="58"/>
-  <text class="ink body" x="265" y="218">File</text>
-  <text class="ink body" x="325" y="218">Edit</text>
-  <text class="ink body" x="382" y="218">Image</text>
-  <text class="ink body" x="445" y="218">Create</text>
-  <text class="muted small" x="920" y="218">Local processing</text>
-  <line class="line" x1="245" y1="241" x2="1040" y2="241"/>
-
-  <text class="muted small" x="275" y="274">Home  ›  Photo Editor</text>
-  <text class="ink heading" x="275" y="310">Photo Editor</text>
-  <text class="muted body" x="275" y="337">Edit, crop, resize, and enhance images in your browser.</text>
-  <rect class="dash" x="470" y="382" width="360" height="280" rx="16"/>
-  <circle class="accent" cx="650" cy="438" r="27"/>
-  <path class="line" d="M639 443 L639 430 L648 430 L652 424 L663 424 L663 443 Z M645 439 L650 434 L655 439 L659 435"/>
-  <text class="ink label" x="650" y="493" text-anchor="middle">Drop a photo here</text>
-  <text class="muted body" x="650" y="519" text-anchor="middle">or choose a file</text>
-  <rect class="button" x="590" y="540" width="120" height="34" rx="7"/>
-  <text class="white" x="650" y="561" text-anchor="middle">Choose photo</text>
-  <text class="muted small" x="650" y="598" text-anchor="middle">Formats and limits shown here</text>
-  <text class="muted small" x="650" y="617" text-anchor="middle">Privacy and processing claims must be accurate</text>
-  <text class="muted small" x="265" y="897">Workspace owns scrolling; do not introduce competing page scroll or horizontal overflow.</text>
-
-  <!-- Mobile viewport -->
-  <text class="ink label" x="1120" y="108">Mobile · 390 × 844 · LTR example</text>
-  <rect class="frame" x="1120" y="125" width="390" height="800" rx="16"/>
-  <rect class="surface" x="1120" y="125" width="390" height="68" rx="16"/>
-  <rect fill="#fff" x="1120" y="176" width="390" height="17"/>
-  <rect class="surface" x="1134" y="141" width="38" height="36" rx="8"/>
-  <path class="line" d="M1145 151 H1161 M1145 159 H1161 M1145 167 H1161"/>
-  <text class="ink body" x="1185" y="164">File</text>
-  <text class="ink body" x="1410" y="164">Features</text>
-  <line class="line" x1="1120" y1="193" x2="1510" y2="193"/>
-  <text class="muted small" x="1135" y="220">Home  ›  Photo Editor</text>
-  <text class="ink heading" x="1135" y="254">Photo Editor</text>
-  <text class="muted small" x="1135" y="278">Edit, crop, resize, and enhance images</text>
-  <text class="muted small" x="1135" y="295">in your browser.</text>
-  <rect class="dash" x="1135" y="320" width="360" height="280" rx="14"/>
-  <circle class="accent" cx="1315" cy="370" r="24"/>
-  <path class="line" d="M1305 376 L1305 364 L1313 364 L1317 358 L1326 358 L1326 376 Z"/>
-  <text class="ink label" x="1315" y="424" text-anchor="middle">Drop a photo here</text>
-  <text class="muted body" x="1315" y="448" text-anchor="middle">or</text>
-  <rect class="button" x="1255" y="465" width="120" height="34" rx="7"/>
-  <text class="white" x="1315" y="486" text-anchor="middle">Choose photo</text>
-  <text class="muted tiny" x="1315" y="526" text-anchor="middle">Supported formats and limits</text>
-  <text class="muted tiny" x="1315" y="544" text-anchor="middle">Local processing note</text>
-  <rect class="surface" x="1135" y="620" width="360" height="150" rx="12"/>
-  <rect class="accent" x="1290" y="629" width="80" height="6" rx="3"/>
-  <text class="ink label" x="1152" y="658">Feature panel (when selected)</text>
-  <text class="muted small" x="1152" y="681">Viewport-bounded, internally scrollable</text>
-  <text class="muted small" x="1152" y="700">Close control and visible resize affordance</text>
-  <text class="muted small" x="1152" y="719">Keep workspace visible where possible</text>
-  <text class="muted tiny" x="1135" y="895">Short-height screens: one scroll owner, no clipped actions.</text>
-
-  <!-- Rules -->
-  <rect class="frame" x="40" y="940" width="1470" height="70" rx="8"/>
-  <text class="ink label" x="60" y="966">Acceptance focus</text>
-  <text class="muted small" x="60" y="989">Trigger-anchored menus · responsive navigation · no unexplained gaps · accessible keyboard/focus/Escape behavior · RTL-aware layout · theme tokens · empty/loaded/error states documented separately</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1160" viewBox="0 0 1600 1160" role="img" aria-labelledby="title desc">
+<title id="title">GaGet.dev shared editor shell proposal — desktop, tablet and short-height</title>
+<desc id="desc">Editable schematic proposal. Three frames show desktop with selected feature inspector, tablet with compact navigation and selected panel, and mobile short-height with bounded independently scrolling feature sheet. Not approved or pixel-perfect.</desc>
+<defs><style>
+.board{fill:#f3f5f8}.frame{fill:#fff;stroke:#94a3b8;stroke-width:2}.surface{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5}.panel{fill:#eef2ff;stroke:#818cf8;stroke-width:1.5}.line{stroke:#94a3b8;stroke-width:1.5;fill:none}.dash{fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:7 5}.ink{fill:#111827;font-family:Arial,sans-serif}.muted{fill:#64748b;font-family:Arial,sans-serif}.h{font-size:23px;font-weight:700}.sub{font-size:16px;font-weight:700}.txt{font-size:13px}.sm{font-size:11px}.tag{fill:#dbeafe;stroke:#60a5fa;stroke-width:1}.btn{fill:#2563eb}.white{fill:#fff;font-family:Arial,sans-serif;font-size:12px;font-weight:700}
+</style></defs>
+<rect class="board" width="1600" height="1160"/>
+<text class="ink h" x="40" y="42">Shared Editor Shell — Target Proposal</text>
+<text class="muted txt" x="40" y="68">Editable schematic · Proposal only · Shared shell geometry, not feature-specific controls or final pixel measurements</text>
+<!-- Desktop frame -->
+<text class="ink sub" x="40" y="108">Desktop · 1440 × 900 · selected feature panel</text>
+<rect class="frame" x="40" y="125" width="980" height="560" rx="8"/>
+<rect class="surface" x="40" y="125" width="980" height="48" rx="8"/>
+<text class="ink txt" x="58" y="154">GaGet.dev</text><rect class="surface" x="350" y="137" width="300" height="25" rx="5"/><text class="muted sm" x="363" y="154">Search tools</text><text class="muted sm" x="850" y="154">Language</text><text class="muted sm" x="940" y="154">Theme</text>
+<rect class="surface" x="40" y="173" width="150" height="512"/><text class="ink txt" x="55" y="198">Site navigation</text><text class="muted sm" x="55" y="225">Home</text><text class="muted sm" x="55" y="249">Tools</text><text class="muted sm" x="55" y="273">Images</text><text class="muted sm" x="55" y="297">Audio</text><text class="muted sm" x="55" y="321">Video</text><text class="muted sm" x="55" y="345">Date &amp; Time</text>
+<rect class="surface" x="190" y="173" width="830" height="42"/><text class="ink txt" x="210" y="199">File</text><text class="ink txt" x="262" y="199">Edit</text><text class="ink txt" x="318" y="199">Features</text><text class="muted sm" x="870" y="199">Workspace actions</text><line class="line" x1="190" y1="215" x2="1020" y2="215"/>
+<text class="muted sm" x="210" y="239">Breadcrumb / workspace context</text>
+<rect class="dash" x="210" y="253" width="500" height="400" rx="8"/><text class="ink sub" x="230" y="283">Main workspace</text><text class="muted txt" x="230" y="307">Canvas / waveform / preview / date-time view</text><text class="muted sm" x="230" y="634">Workspace owns its intended scroll and editing interactions</text>
+<rect class="panel" x="720" y="215" width="300" height="470"/><text class="ink sub" x="740" y="244">Selected feature panel</text><text class="muted sm" x="740" y="267">Anchored to workspace bounds</text><line class="line" x1="720" y1="280" x2="1020" y2="280"/><text class="ink txt" x="740" y="308">Feature controls</text><rect class="surface" x="740" y="322" width="260" height="35" rx="5"/><rect class="surface" x="740" y="367" width="260" height="35" rx="5"/><rect class="surface" x="740" y="412" width="260" height="35" rx="5"/><text class="muted sm" x="740" y="472">Panel content scrolls independently</text><text class="muted sm" x="740" y="493">No gap or overlay over command bar</text><text class="muted sm" x="740" y="514">Panel width leaves usable workspace</text>
+<!-- Tablet frame -->
+<text class="ink sub" x="1060" y="108">Tablet · 768 × 1024</text>
+<rect class="frame" x="1060" y="125" width="500" height="560" rx="8"/>
+<rect class="surface" x="1060" y="125" width="500" height="45" rx="8"/><text class="ink txt" x="1078" y="153">☰  GaGet.dev</text><text class="muted sm" x="1450" y="153">Theme</text>
+<rect class="surface" x="1060" y="170" width="500" height="44"/><text class="ink txt" x="1078" y="197">File</text><text class="ink txt" x="1130" y="197">Edit</text><text class="ink txt" x="1190" y="197">Features</text><line class="line" x1="1060" y1="214" x2="1560" y2="214"/>
+<rect class="dash" x="1078" y="236" width="464" height="270" rx="8"/><text class="ink sub" x="1095" y="265">Workspace</text><text class="muted sm" x="1095" y="288">Do not force a narrow desktop inspector</text>
+<rect class="panel" x="1078" y="518" width="464" height="148" rx="8"/><rect class="tag" x="1270" y="527" width="80" height="6" rx="3"/><text class="ink txt" x="1095" y="550">Feature sheet / controls</text><text class="muted sm" x="1095" y="574">Viewport-bounded; independent content scroll</text><text class="muted sm" x="1095" y="595">Use sheet or panel per consumer capability</text><text class="muted sm" x="1095" y="616">Close and resize controls remain reachable</text>
+<!-- Short height frame -->
+<text class="ink sub" x="40" y="731">Mobile · 390 × 640 · short-height / open menu + panel behavior</text>
+<rect class="frame" x="40" y="750" width="340" height="350" rx="12"/>
+<rect class="surface" x="40" y="750" width="340" height="48" rx="12"/><text class="ink txt" x="55" y="780">☰  File   Features</text><line class="line" x1="40" y1="798" x2="380" y2="798"/>
+<rect class="surface" x="50" y="808" width="155" height="122" rx="6"/><text class="ink txt" x="61" y="831">File menu</text><text class="muted sm" x="61" y="852">Menu owns scroll</text><text class="muted sm" x="61" y="870">Escape closes</text><text class="muted sm" x="61" y="888">Focus returns</text>
+<rect class="dash" x="215" y="808" width="155" height="122" rx="6"/><text class="ink txt" x="226" y="831">Workspace</text><text class="muted sm" x="226" y="852">Not horizontally</text><text class="muted sm" x="226" y="870">scrollable at</text><text class="muted sm" x="226" y="888">page level</text>
+<rect class="panel" x="50" y="940" width="320" height="145" rx="8"/><rect class="tag" x="170" y="948" width="80" height="6" rx="3"/><text class="ink txt" x="64" y="973">Feature sheet</text><text class="muted sm" x="64" y="993">Bounded by visible viewport</text><text class="muted sm" x="64" y="1011">Owns content scroll; close stays reachable</text><text class="muted sm" x="64" y="1029">Keyboard resize when supported</text><text class="muted sm" x="64" y="1047">No clipped bottom actions</text>
+<!-- Contract notes -->
+<rect class="frame" x="420" y="750" width="1140" height="350" rx="8"/><text class="ink sub" x="445" y="785">Shared shell acceptance focus</text>
+<text class="ink txt" x="445" y="822">1. File/Features menus stay anchored to their trigger and inside viewport bounds.</text>
+<text class="ink txt" x="445" y="854">2. Command bar, panel and workspace dividers meet without unexplained gaps or overlap.</text>
+<text class="ink txt" x="445" y="886">3. Empty-state content scrolls as one intended region; loaded workspace keeps its own interaction.</text>
+<text class="ink txt" x="445" y="918">4. Light/dark themes use semantic tokens; LTR/RTL changes shell direction, not media/data order.</text>
+<text class="ink txt" x="445" y="950">5. Keyboard focus is visible; Escape dismissal and focus restoration are predictable.</text>
+<text class="ink txt" x="445" y="982">6. Compact sheets are viewport-bounded, independently scrollable, and resizable by keyboard when supported.</text>
+<text class="ink txt" x="445" y="1014">7. Feature-specific media, calendar, processing and export behavior remains outside shell ownership.</text>
+<text class="muted sm" x="445" y="1060">Proposal only — implementation conformance and design approval require separate evidence/review.</text>
 </svg>
