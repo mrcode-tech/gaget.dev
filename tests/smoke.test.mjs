@@ -105,7 +105,7 @@ for (const route of rtlRoutes) {
     const response = await fetch(new URL(route, baseUrl), { redirect: "manual" });
     assert.equal(response.status, 200, `${route} should render successfully`);
     const body = await response.text();
-    assert.match(body, /\\bdir="rtl"/, `${route} should render an RTL document`);
+    assert.match(body, /\bdir="rtl"/, `${route} should render an RTL document`);
   });
 }
 
