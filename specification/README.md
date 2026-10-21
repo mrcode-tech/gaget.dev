@@ -35,6 +35,10 @@ Current-state browser screenshots are generated from the branch/build being eval
 - Update canonical docs before implementation when a new product/design contract is needed, and update them again after verification if the implementation changes the contract or its status.
 - Do not keep competing copies of the same specification. Prefer extending the canonical page and removing obsolete references.
 
+## Task tracking
+
+Do not use a root-level `current_working.md` or another rolling project-wide task diary. Use GitHub issues and pull requests for task scope, progress, open questions and follow-up work; use commits and CI runs for implementation history and test evidence. Keep durable product requirements and verified current-state facts in the canonical specification pages. Before deleting a legacy task log, preserve any still-relevant durable decisions in the appropriate canonical page and remove references that instruct agents to maintain the log.
+
 ## Repository context
 
 GaGet.dev is a Next.js App Router application using React, TypeScript, Tailwind CSS, Lucide icons, shared UI primitives and next-themes. The major workspaces are Photo/Image, Audio, Video, and Date & Time, alongside standalone developer tools. See the current-state baseline and inventory for audited details.
