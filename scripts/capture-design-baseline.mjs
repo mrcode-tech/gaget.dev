@@ -101,6 +101,14 @@ try {
                 `Expected document language ${locale.name}, received ${actualLanguage} for ${url}`,
               );
             }
+            if (route.name === "date-time-editor") {
+              const workspaceDirection = await page.locator("main").first().getAttribute("dir");
+              if (workspaceDirection !== expectedDirection) {
+                throw new Error(
+                  `Expected Date & Time workspace direction ${expectedDirection}, received ${workspaceDirection} for ${url}`,
+                );
+              }
+            }
             await mkdir(path.dirname(destination), { recursive: true });
             await page.screenshot({ path: destination, fullPage: true, animations: "disabled" });
             manifest.captures.push({
