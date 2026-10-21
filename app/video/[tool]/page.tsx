@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { VideoWorkbench } from "@/components/video-workbench";
 
 const entries = [
- ["editor","Video Editor","Trim, convert, compress, inspect, and enhance videos in your browser."],
+ ["editor","Video Editor","Trim and split supported ranges, inspect metadata, capture frames, and export browser-supported recordings. Advanced merge/mux, broad conversion, GIF encoding, reverse export, and stabilization may be unavailable or browser-dependent."],
  ["trim","Video Trimmer","Select a video range and export a browser-supported WebM recording."],
  ["split","Video Splitter","Select and export a video segment locally."],
  ["merge","Video Merger","Prepare multiple local video clips for merging."],

@@ -1,0 +1,69 @@
+name: Design baseline screenshots
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "app/**"
+      - "components/**"
+      - "lib/i18n/**"
+      - "lib/tools/**"
+      - "scripts/capture-design-baseline.mjs"
+      - ".github/workflows/design-baseline-screenshots.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: design-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    name: Capture current UI baseline
+    runs-on: ubuntu-latest
+    # Includes the expanded route/theme/viewport/RTL screenshot matrix.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build application
+        run: npm run build
+      - name: Start production server
+        shell: bash
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/gaget-design-baseline.log 2>&1 &
+          echo $! > /tmp/gaget-design-baseline.pid
+          for attempt in {1..45}; do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/gaget-design-baseline.log
+          exit 1
+      - name: Capture routes, viewports, themes, and RTL locales
+        env:
+          DESIGN_BASELINE_URL: http://127.0.0.1:3000
+          DESIGN_BASELINE_OUTPUT: artifacts/design-baseline
+          DESIGN_BASELINE_COMMIT: ${{ github.sha }}
+        run: node scripts/capture-design-baseline.mjs
+      - name: Upload screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-baseline-${{ github.sha }}
+          path: artifacts/design-baseline/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Stop production server
+        if: always()
+        run: if [ -f /tmp/gaget-design-baseline.pid ]; then kill "$(cat /tmp/gaget-design-baseline.pid)" 2>/dev/null || true; fi

@@ -1,10 +1,18 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { DateTimeEditor } from "@/components/datetime-editor";
+import { I18nProvider } from "@/components/i18n-provider";
 
 afterEach(() => cleanup());
 
 describe("DateTimeEditor", () => {
+
+  it.each(["fa", "ar"] as const)("keeps the workspace RTL for the %s UI locale even when date display language is English", (locale) => {
+    render(<I18nProvider locale={locale}><DateTimeEditor /></I18nProvider>);
+    expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
+    expect((screen.getByRole("combobox", { name: "Display language" }) as HTMLSelectElement).value).toBe("en-US");
+  });
+
   it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
@@ -39,8 +47,8 @@ describe("DateTimeEditor", () => {
     expect(commandButtons.getByRole("button", { name: "Features" }).className).toContain("lg:hidden");
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     const fileMenu = screen.getByTestId("datetime-file-menu");
-    expect(fileMenu.className).toContain("left-3");
-    expect(fileMenu.className).toContain("sm:left-6");
+    expect(fileMenu.className).toContain("start-3");
+    expect(fileMenu.className).toContain("sm:start-6");
     expect(fileMenu.className).toContain("top-[calc(100%-1px)]");
     expect(within(fileMenu).getByRole("button", { name: /Copy current display/ })).toBeTruthy();
     expect(within(fileMenu).getByRole("button", { name: /Copy ISO 8601/ })).toBeTruthy();
@@ -120,7 +128,8 @@ describe("DateTimeEditor", () => {
     expect((screen.getByRole("textbox", { name: "Time in 24-hour format" }) as HTMLInputElement).value).toMatch(/[۰-۹]/);
     fireEvent.change(screen.getByRole("combobox", { name: "Calendar system" }), { target: { value: "persian" } });
     fireEvent.change(screen.getByRole("combobox", { name: "Numeral system" }), { target: { value: "arabext" } });
-    expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
+    // Display-language selection must not change the UI direction; this test uses the default English UI locale.
+    expect(document.querySelector("main")?.getAttribute("dir")).toBe("ltr");
     expect((screen.getByRole("combobox", { name: "Calendar system" }) as HTMLSelectElement).value).toBe("persian");
     expect((screen.getByRole("combobox", { name: "Numeral system" }) as HTMLSelectElement).value).toBe("arabext");
   });
