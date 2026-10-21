@@ -3,7 +3,7 @@
 **Status:** Proposed reusable contract; not an approved pixel-perfect target design.  
 **Scope:** Shared layout and interaction behavior for Photo, Audio, Video, and Date & Time workspaces. Feature-specific controls, media processing, timelines, calendars, and export semantics remain owned by their feature contracts.  
 **Target wireframe:** [Shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg).  
-**Evidence baseline:** branch `feature/design-system-token-handoff`, commit `8aef8d9c3ce49d1d657cbcf50f098254cc365274`; [CI run 39668425396](https://github.com/mrcode-tech/gaget.dev/actions/runs/39668425396) passed. This proves the checks in that run, not pixel-level conformance to this proposal.
+**Verification baseline:** branch `feature/design-system-token-handoff`, commit `c5b6203c2789c9c7ed56b5c28cd22586857fd818`; [CI run 39670723789](https://github.com/mrcode-tech/gaget.dev/actions/runs/39670723789) passed the repository's configured CI job. This does not prove pixel-level conformance to this proposal; open-menu/panel visual inspection and design approval remain outstanding.
 
 ## 1. Ownership boundaries
 
