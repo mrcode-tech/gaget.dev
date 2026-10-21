@@ -86,7 +86,7 @@ Generated screenshots are the visual evidence for a specific build. This Markdow
 ### Specification and target-design gaps
 
 - The canonical index and AI instructions define the expected documentation structure, but the source inventory alone does not prove that every workspace has a complete feature contract.
-- `specification/assets/target/README.md` explicitly says no new target designs are approved at the initial baseline milestone. The baseline must not be described as having approved target wireframes unless the corresponding authored assets and approval state are found.
+- No target designs are approved. After reviewing the CI screenshot artifact, an editable [shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg) was added and linked from the feature-contract reconciliation. It is explicitly a proposal; detailed Photo/Audio states, Video feature states and Date & Time centerpiece/input wireframes remain outstanding.
 - The current-state visual checklist remains open. The screenshot capture script can produce current-state evidence, but screenshots are not target designs and the capture script does not itself compare screenshots with approved wireframes.
 - The baseline commit must be kept distinct from the live branch tip as work proceeds. This audit records the inspected source revision above; after any further changes, update the baseline to the resulting commit only when that commit is known and its checks are reported separately.
 
