@@ -18,12 +18,39 @@ const routes = [
   { name: "video-editor", path: "/video/editor" },
   { name: "date-time-editor", path: "/datetime/editor" },
 ];
+const rtlRouteNames = new Set([
+  "home",
+  "tools",
+  "photo-editor",
+  "audio-editor",
+  "video-editor",
+  "date-time-editor",
+]);
 const viewports = [
   { name: "mobile-390x844", width: 390, height: 844 },
+  { name: "mobile-short-390x640", width: 390, height: 640 },
   { name: "tablet-768x1024", width: 768, height: 1024 },
   { name: "desktop-1440x1000", width: 1440, height: 1000 },
 ];
 const themes = ["light", "dark"];
+const rtlViewports = new Set(["mobile-390x844", "desktop-1440x1000"]);
+const locales = [
+  { name: "en", prefix: "", browserLocale: "en-US", routes, viewports },
+  {
+    name: "fa",
+    prefix: "/fa",
+    browserLocale: "fa-IR",
+    routes: routes.filter((route) => rtlRouteNames.has(route.name)),
+    viewports: viewports.filter((viewport) => rtlViewports.has(viewport.name)),
+  },
+  {
+    name: "ar",
+    prefix: "/ar",
+    browserLocale: "ar",
+    routes: routes.filter((route) => rtlRouteNames.has(route.name)),
+    viewports: viewports.filter((viewport) => rtlViewports.has(viewport.name)),
+  },
+];
 const manifest = {
   generatedAt: new Date().toISOString(),
   commit,
@@ -35,28 +62,59 @@ const manifest = {
 
 const browser = await chromium.launch({ headless: true });
 try {
-  for (const route of routes) {
-    for (const viewport of viewports) {
-      for (const theme of themes) {
-        const page = await browser.newPage({ viewport, colorScheme: theme });
-        await page.addInitScript((value) => localStorage.setItem("theme", value), theme);
-        const url = new URL(route.path, baseURL).toString();
-        const relative = path.join(commit, viewport.name, theme, `${route.name}.png`);
-        const destination = path.join(outputRoot, relative);
-        try {
-          const response = await page.goto(url, { waitUntil: "networkidle", timeout: 45000 });
-          if (!response || !response.ok()) {
-            throw new Error(`HTTP ${response?.status() ?? "no response"} for ${url}`);
+  for (const locale of locales) {
+    for (const route of locale.routes) {
+      for (const viewport of locale.viewports) {
+        for (const theme of themes) {
+          const page = await browser.newPage({
+            viewport,
+            colorScheme: theme,
+            locale: locale.browserLocale,
+          });
+          await page.addInitScript((value) => localStorage.setItem("theme", value), theme);
+          const routePath = `${locale.prefix}${route.path}` || "/";
+          const url = new URL(routePath, baseURL).toString();
+          const relative = path.join(
+            commit,
+            ...(locale.name === "en" ? [] : [locale.name]),
+            viewport.name,
+            theme,
+            `${route.name}.png`,
+          );
+          const destination = path.join(outputRoot, relative);
+          try {
+            const response = await page.goto(url, { waitUntil: "networkidle", timeout: 45000 });
+            if (!response || !response.ok()) {
+              throw new Error(`HTTP ${response?.status() ?? "no response"} for ${url}`);
+            }
+            await mkdir(path.dirname(destination), { recursive: true });
+            await page.screenshot({ path: destination, fullPage: true, animations: "disabled" });
+            manifest.captures.push({
+              route: routePath,
+              locale: locale.name,
+              direction: locale.name === "en" ? "ltr" : "rtl",
+              viewport: { name: viewport.name, width: viewport.width, height: viewport.height },
+              theme,
+              screenshot: relative,
+              status: response.status(),
+            });
+            process.stdout.write(
+              `Captured ${routePath} | ${viewport.name} | ${theme} | ${locale.name}\n`,
+            );
+          } catch (error) {
+            manifest.failures.push({
+              route: routePath,
+              locale: locale.name,
+              viewport: viewport.name,
+              theme,
+              error: String(error),
+            });
+            process.stderr.write(
+              `Capture failed ${routePath} | ${viewport.name} | ${theme} | ${locale.name}: ${String(error)}\n`,
+            );
+          } finally {
+            await page.close();
           }
-          await mkdir(path.dirname(destination), { recursive: true });
-          await page.screenshot({ path: destination, fullPage: true, animations: "disabled" });
-          manifest.captures.push({ route: route.path, viewport, theme, screenshot: relative, status: response.status() });
-          process.stdout.write(`Captured ${route.path} | ${viewport.name} | ${theme}\n`);
-        } catch (error) {
-          manifest.failures.push({ route: route.path, viewport: viewport.name, theme, error: String(error) });
-          process.stderr.write(`Capture failed ${route.path} | ${viewport.name} | ${theme}: ${String(error)}\n`);
-        } finally {
-          await page.close();
         }
       }
     }
