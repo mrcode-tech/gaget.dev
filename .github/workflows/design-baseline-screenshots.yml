@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feature/design-system-token-handoff
+      - "**"
     paths:
       - "app/**"
       - "components/**"
