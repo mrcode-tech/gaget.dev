@@ -86,8 +86,8 @@ for (const [route, feature] of legacyAudioRoutes) {
 }
 
 const rtlRoutes = [
-  "/fa/",
-  "/ar/",
+  "/fa",
+  "/ar",
   "/fa/tools",
   "/ar/tools",
   "/fa/images/editor",
