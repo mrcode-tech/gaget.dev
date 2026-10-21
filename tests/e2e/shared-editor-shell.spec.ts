@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
 const onePixelPng = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r4sAAAAASUVORK5CYII=",
+  "iVBORw0KGgoAAAANSUhEUgAAAGAAAABACAIAAABqVuVZAAABz0lEQVR42u3aP0rEQBQG8OQjeAIRBMEDWG8vsqX9go0XkEVItSew2iY3sHDBXrBJYWextSew1M4DrJ3FrpO8+T+Z+V6ZnRDy43uPSTb118+uYqkLJCAQgQhUVVXb9QQa0YlihGllJ7wR2FnD1UxuarZdv17OJSuPt9d7R75nL1klSBUfSawOdVQHh6tOdic9qqDKkURBHiVMVCfYeHIJtFhtog9mYRPJew1udeyNtHT2FmuNGOFiOM+Oqxwlsg9IawaZ3a1XI7iNj02Iou8JvQCpLHSNLHX84cKHjq6Rk9vzZARPOvI1Dm/s9v1evli4V4Q/nSglNEpoJz1MmeZgtn0WM4jP88NNSJ31cq7aB+o+0CNMcx2e5TU7bdf/C2HwukMvQZaj5y9HYTpL+NrIWYJSeBYNf6EmpM5itTk7PakmVZn/L2YfIoRsrijxsTRC3jr2Rshex9IIJeh4abH8dMxCVNbXHQZGKK25dI3A0aMHVIKOVohQZnbkRii2s4RGRX+jKDECB/M4UMk6oyGqr+6emJ3Po0fVT83u/NXNNTKdU/yQnEAEIlDMUv6rMXv7GDhte3nBBLEIRCACEYhABCIQgQjEIhCBCEQgAk2xfgG3srhQVmi9cgAAAABJRU5ErkJggg==",
   "base64",
 );
 
@@ -41,6 +41,9 @@ type EditorCase = {
   panel: string;
   featureButton: RegExp;
   featureName: RegExp;
+  desktopFeatureTrigger: RegExp;
+  desktopFeatureMenu: string;
+  desktopFeatureName: RegExp;
 };
 
 const editors: EditorCase[] = [
@@ -54,6 +57,9 @@ const editors: EditorCase[] = [
     panel: '[data-testid="feature-panel"]',
     featureButton: /Open photo editor features/i,
     featureName: /^Crop$/,
+    desktopFeatureTrigger: /^Edit$/,
+    desktopFeatureMenu: '[data-testid="photo-feature-menu"]',
+    desktopFeatureName: /^Crop$/,
   },
   {
     id: "audio",
@@ -65,6 +71,9 @@ const editors: EditorCase[] = [
     panel: '[data-testid="audio-feature-panel"]',
     featureButton: /Open audio editor features/i,
     featureName: /^Trim & range$/,
+    desktopFeatureTrigger: /^Edit$/,
+    desktopFeatureMenu: '[data-testid="audio-feature-menu"]',
+    desktopFeatureName: /^Trim & range$/,
   },
   {
     id: "video",
@@ -76,6 +85,9 @@ const editors: EditorCase[] = [
     panel: '[data-testid="video-feature-panel"]',
     featureButton: /Open video editor features/i,
     featureName: /^Trim video$/,
+    desktopFeatureTrigger: /^Edit$/,
+    desktopFeatureMenu: '[data-testid="video-feature-menu"]',
+    desktopFeatureName: /^Trim video$/,
   },
   {
     id: "datetime",
@@ -87,13 +99,61 @@ const editors: EditorCase[] = [
     panel: '[data-testid="datetime-feature-panel"]',
     featureButton: /^Features$/,
     featureName: /.*/,
+    desktopFeatureTrigger: /^Date$/,
+    desktopFeatureMenu: '[data-testid="datetime-date-menu"]',
+    desktopFeatureName: /^Calendar$/,
   },
 ];
 
 const viewports = [
   { name: "mobile-short", width: 390, height: 640 },
+  { name: "tablet", width: 768, height: 1024 },
   { name: "desktop", width: 1440, height: 900 },
 ] as const;
+
+async function makeWebmFixture(page: Page): Promise<Buffer | null> {
+  const result = await page.evaluate(async () => {
+    if (typeof MediaRecorder === "undefined") return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 160;
+    canvas.height = 90;
+    const context = canvas.getContext("2d");
+    if (!context || typeof canvas.captureStream !== "function") return null;
+    const mimeType = ["video/webm;codecs=vp8", "video/webm"].find((type) => MediaRecorder.isTypeSupported(type));
+    if (!mimeType) return null;
+
+    const stream = canvas.captureStream(8);
+    const chunks: Blob[] = [];
+    const recorder = new MediaRecorder(stream, { mimeType });
+    const stopped = new Promise<void>((resolve) => {
+      recorder.addEventListener("dataavailable", (event) => {
+        if (event.data.size) chunks.push(event.data);
+      });
+      recorder.addEventListener("stop", () => resolve(), { once: true });
+    });
+    recorder.start();
+    const startedAt = performance.now();
+    while (performance.now() - startedAt < 1000) {
+      context.fillStyle = "#e8f0ff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = "#3b82f6";
+      context.fillRect(12, 12, 60, 48);
+      context.fillStyle = "#16a34a";
+      context.fillRect(80, 28, 64, 42);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    }
+    recorder.stop();
+    await stopped;
+    stream.getTracks().forEach((track) => track.stop());
+    const blob = new Blob(chunks, { type: recorder.mimeType || mimeType });
+    if (!blob.size) return null;
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let binary = "";
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    return { base64: btoa(binary), mimeType: blob.type };
+  });
+  return result ? Buffer.from(result.base64, "base64") : null;
+}
 
 async function assertWithinViewport(page: Page, selector: string, label: string) {
   const box = await page.locator(selector).boundingBox();
@@ -146,6 +206,18 @@ for (const editor of editors) {
           await page.keyboard.press("Escape");
           await expect(featureMenu).toBeHidden();
           await expect(featureTrigger).toBeFocused();
+        } else {
+          const featureTrigger = menubar.getByRole("button", { name: editor.desktopFeatureTrigger });
+          await expect(featureTrigger).toBeVisible();
+          await featureTrigger.click();
+          const featureMenu = page.locator(editor.desktopFeatureMenu);
+          await expect(featureMenu).toBeVisible();
+          await expect(featureMenu.getByRole("button", { name: editor.desktopFeatureName })).toBeVisible();
+          await assertWithinViewport(page, editor.desktopFeatureMenu, `${editor.title} desktop feature menu`);
+          await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-desktop-features-menu.png`);
+          await page.keyboard.press("Escape");
+          await expect(featureMenu).toBeHidden();
+          await expect(featureTrigger).toBeFocused();
         }
 
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -154,48 +226,86 @@ for (const editor of editors) {
   }
 }
 
+const panelViewports = [
+  { name: "mobile-short", width: 390, height: 640 },
+  { name: "tablet", width: 768, height: 1024 },
+] as const;
+
 for (const editor of editors) {
-  test(`${editor.title} shared shell keeps its feature panel inside the short mobile viewport`, async ({ page }, testInfo) => {
-    await page.setViewportSize({ width: 390, height: 640 });
-    await page.goto(editor.route);
+  for (const viewport of panelViewports) {
+    for (const theme of ["light", "dark"] as const) {
+      test(`${editor.title} shared shell keeps its feature panel inside the ${viewport.name} viewport in ${theme} theme`, async ({ page }, testInfo) => {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height });
+        await page.addInitScript((selectedTheme) => localStorage.setItem("theme", selectedTheme), theme);
+        await page.goto(editor.route);
 
-    if (editor.id === "photo") {
-      await page.locator('input[type="file"]').first().setInputFiles({
-        name: "shell-fixture.png",
-        mimeType: "image/png",
-        buffer: onePixelPng,
+        if (editor.id === "photo") {
+          await page.locator('input[type="file"]').first().setInputFiles({
+            name: "shell-fixture.png",
+            mimeType: "image/png",
+            buffer: onePixelPng,
+          });
+          await expect(page.locator("canvas[role='img']")).toBeVisible();
+        }
+
+        const menubar = page.locator(editor.menubar);
+        const featureTrigger = menubar.getByRole("button", { name: editor.featureButton });
+        await featureTrigger.click();
+        const featureMenu = page.locator(editor.featureMenu);
+        await expect(featureMenu).toBeVisible();
+
+        const featureButton = editor.id === "datetime"
+          ? featureMenu.locator("section button").first()
+          : featureMenu.getByRole("button", { name: editor.featureName });
+        await expect(featureButton).toBeVisible();
+        await featureButton.click();
+
+        if (editor.id === "audio") {
+          await page.locator("#audio-input").setInputFiles({
+            name: "shell-fixture.wav",
+            mimeType: "audio/wav",
+            buffer: makeWavFixture(),
+          });
+          await expect(page.getByText(/Decoded locally/i)).toBeVisible();
+        }
+
+        const panel = page.locator(editor.panel);
+        await expect(panel).toBeVisible();
+        await assertWithinViewport(page, editor.panel, `${editor.title} feature panel`);
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-panel.png`);
       });
-      await expect(page.locator("canvas[role='img']")).toBeVisible();
     }
-
-    const menubar = page.locator(editor.menubar);
-    const featureTrigger = menubar.getByRole("button", { name: editor.featureButton });
-    await featureTrigger.click();
-    const featureMenu = page.locator(editor.featureMenu);
-    await expect(featureMenu).toBeVisible();
-
-    const featureButton = editor.id === "datetime"
-      ? featureMenu.locator("section button").first()
-      : featureMenu.getByRole("button", { name: editor.featureName });
-    await expect(featureButton).toBeVisible();
-    await featureButton.click();
-
-    if (editor.id === "audio") {
-      await page.locator("#audio-input").setInputFiles({
-        name: "shell-fixture.wav",
-        mimeType: "audio/wav",
-        buffer: makeWavFixture(),
-      });
-      await expect(page.getByText(/Decoded locally/i)).toBeVisible();
-    }
-
-    const panel = page.locator(editor.panel);
-    await expect(panel).toBeVisible();
-    await assertWithinViewport(page, editor.panel, `${editor.title} feature panel`);
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await saveStateScreenshot(page, testInfo, `${editor.id}-mobile-short-panel.png`);
-  });
+  }
 }
+
+test("Video loaded-state feature panel remains bounded on short mobile screens", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 640 });
+  await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+  await page.goto("/video/editor");
+  const videoFixture = await makeWebmFixture(page);
+  test.skip(!videoFixture, "This Chromium runtime cannot create a supported WebM fixture with MediaRecorder.");
+
+  await page.locator('input[type="file"]').first().setInputFiles({
+    name: "shell-fixture.webm",
+    mimeType: "video/webm",
+    buffer: videoFixture!,
+  });
+  await expect(page.getByText(/Video ready\. Source stays on your device\./i)).toBeVisible({ timeout: 10000 });
+  await expect(page.locator("video")).toBeVisible();
+
+  const menubar = page.locator('[data-testid="video-editor-menubar"]');
+  const featureTrigger = menubar.getByRole("button", { name: /Open video editor features/i });
+  await featureTrigger.click();
+  const featureMenu = page.locator('[data-testid="video-feature-menu"]');
+  await expect(featureMenu).toBeVisible();
+  await featureMenu.getByRole("button", { name: /^Trim video$/ }).click();
+
+  const panel = page.locator('[data-testid="video-feature-panel"]');
+  await expect(panel).toBeVisible();
+  await assertWithinViewport(page, '[data-testid="video-feature-panel"]', "Video loaded-state feature panel");
+  await saveStateScreenshot(page, testInfo, "video-mobile-short-dark-loaded-panel.png");
+});
 
 for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor", "/fa/datetime/editor", "/ar/datetime/editor"]) {
   test(`RTL editor shell stays within viewport on ${route}`, async ({ page }, testInfo) => {
