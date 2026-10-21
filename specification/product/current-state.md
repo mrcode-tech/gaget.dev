@@ -1,8 +1,8 @@
 # Current-State Product Baseline
 
 **Baseline branch:** `feature/design-system-token-handoff`  
-**Baseline commit at initial audit:** `3b76f3127369f2d0979ff997b1bea450b4a4c1a7`  
-**Audit method:** Source and route inspection. Browser screenshots are generated separately by the design-baseline workflow; this document does not claim a completed visual browser audit.
+**Baseline commit inspected:** `450e3849b49dd8c6e2920305420eba594b245649`  
+**Audit method:** GitHub source/configuration/specification inspection at `feature/design-system-token-handoff`. This is a source-level baseline, not a claim that the working tree was clean, commands ran, or browser behavior was verified. The connected repository API does not expose the local working-tree state or provide a project runtime in this audit.
 
 ## What exists today
 
@@ -53,3 +53,46 @@ The following are required before this document can be considered a fully verifi
 - [ ] Review screenshots for clipping, unexplained gaps, panel anchoring, scroll ownership and header/sidebar overlap.
 
 Generated screenshots are the visual evidence for a specific build. This Markdown file records code-derived facts and audit status; update it when a durable current-state fact changes.
+
+
+## Project-wide reconciliation findings (source audit, 2026-10-21)
+
+**Status: Partial / not yet verified.** The following are findings from repository files, not claims of successful runtime tests or completed visual inspection.
+
+### Confirmed foundation and verification setup
+
+- `AGENTS.md` delegates to `specification/AI_INSTRUCTIONS.md`; `command.md` correctly remains a shortcut index rather than a competing workflow.
+- The package scripts define unit, component, lint, typecheck, build, Playwright E2E and design-baseline capture commands.
+- `.github/workflows/ci.yml` is configured to run on pushes and pull requests across branches, cancels superseded runs for the same branch, and includes unit/component tests, lint, typecheck, build, route smoke tests and Playwright checks.
+- `.github/workflows/design-baseline-screenshots.yml` captures screenshots at 390×844, 768×1024 and 1440×1000 in light and dark themes. The capture script currently enumerates 11 routes and captures each route/theme/viewport combination.
+- The capture script's current matrix does not enumerate RTL locale routes, short-height viewports, loaded media states, feature-active panels, or explicit error/disabled states. Those scenarios therefore remain unverified by this capture job unless another test covers them.
+- The README reports that `package-lock.json` is stale and that `npm ci` fails due to missing declared dependency entries; CI currently uses `npm install`. This reported issue has not been reproduced in this audit.
+- The combined commit-status endpoint returned no status records for commit `450e3849b49dd8c6e2920305420eba594b245649`; the available workflow-run lookup is limited to pull-request-triggered runs and returned none. Neither result proves that CI passed or failed.
+
+### Source-level route and capability inventory
+
+- Discovery routes: `/`, `/tools`, and `/categories/[slug]`.
+- Unified workspaces: `/images/editor`, `/audio/editor`, `/video/editor`, and `/datetime/editor`, with legacy feature paths and redirects described in the product inventory.
+- Standalone tools listed in the current inventory: `/json/formatter`, `/encoding/url`, `/encoding/base64`, `/security/jwt-decoder`, and `/generators/uuid`.
+- The registry also declares planned tool destinations. Registry declarations are not proof of route existence or functional capability; every planned/available status still requires comparison with the actual route tree and feature implementation.
+- The source registry descriptions advertise broad media capabilities. The product inventory correctly cautions that some browser-native video operations may be preview-only, unsupported or codec-dependent. These claims require per-feature source/test review and browser verification before the catalog can be considered capability-accurate.
+- `app/globals.css` defines semantic light/dark theme variables and a small set of component classes, while the product uses Tailwind utility values directly. Tokenization remains partial.
+- `components/app-shell.tsx` has route-specific full-viewport editor behavior and sidebar offsets; media and date/time editors do not share identical header visibility rules. Consumer-level layout and scroll behavior must be audited individually rather than assumed equivalent.
+
+### Specification and target-design gaps
+
+- The canonical index and AI instructions define the expected documentation structure, but the source inventory alone does not prove that every workspace has a complete feature contract.
+- `specification/assets/target/README.md` explicitly says no new target designs are approved at the initial baseline milestone. The baseline must not be described as having approved target wireframes unless the corresponding authored assets and approval state are found.
+- The current-state visual checklist remains open. The screenshot capture script can produce current-state evidence, but screenshots are not target designs and the capture script does not itself compare screenshots with approved wireframes.
+- The baseline commit must be kept distinct from the live branch tip as work proceeds. This audit records the inspected source revision above; after any further changes, update the baseline to the resulting commit only when that commit is known and its checks are reported separately.
+
+### Required follow-up before declaring conformance
+
+1. Enumerate the actual App Router filesystem and redirect routes, then reconcile every entry against `lib/tools/registry.ts`, the feature slugs in each workspace, the sitemap and smoke/E2E tests.
+2. Inspect every route and shared component implementation, its consumers, and existing tests; establish a route/component coverage matrix with evidence and status.
+3. Locate or author canonical feature contracts and editable target SVG wireframes where expected behavior is missing. Mark new designs as proposals until approved.
+4. Reproduce the reported dependency-install issue and establish a true baseline run for unit/component tests, lint, typecheck, build, smoke and Playwright checks.
+5. Run the application and inspect screenshots from the exact evaluated commit, including loaded/empty/error/active states, short viewports, themes, RTL, keyboard/focus, menu anchoring and scroll ownership.
+6. Refactor in staged groups only after target contracts are sufficiently clear; add regression tests and update affected inventories/contracts after each stage.
+
+No implementation or browser check is marked complete by this source audit alone.
