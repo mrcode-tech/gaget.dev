@@ -1,6 +1,6 @@
 # AI Instructions for Product Design, Refactoring, and Feature Work
 
-**Read this file before every non-trivial task** that changes product UI, interaction behavior, layout, design tokens, shared components, or feature capabilities. For a task prompt, this is the entry point: `specification/AI_INSTRUCTIONS.md`.
+**Read this file before every non-trivial task** that changes product UI, interaction behavior, layout, design tokens, shared components, or feature capabilities. For concise reusable task prompts, see the repository-root [`command.md`](../command.md). This file remains the canonical workflow and takes precedence over shorthand commands.
 
 ## Non-negotiable rule
 
