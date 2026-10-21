@@ -87,6 +87,19 @@ try {
             if (!response || !response.ok()) {
               throw new Error(`HTTP ${response?.status() ?? "no response"} for ${url}`);
             }
+            const expectedDirection = locale.name === "en" ? "ltr" : "rtl";
+            const actualDirection = await page.locator("html").getAttribute("dir");
+            if (actualDirection !== expectedDirection) {
+              throw new Error(
+                `Expected document direction ${expectedDirection}, received ${actualDirection} for ${url}`,
+              );
+            }
+            const actualLanguage = await page.locator("html").getAttribute("lang");
+            if (actualLanguage !== locale.name) {
+              throw new Error(
+                `Expected document language ${locale.name}, received ${actualLanguage} for ${url}`,
+              );
+            }
             await mkdir(path.dirname(destination), { recursive: true });
             await page.screenshot({ path: destination, fullPage: true, animations: "disabled" });
             manifest.captures.push({
