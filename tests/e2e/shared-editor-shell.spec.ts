@@ -239,7 +239,11 @@ for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor"
     expect(featureTriggerBox).not.toBeNull();
     expect(featureMenuBox).not.toBeNull();
     if (featureTriggerBox && featureMenuBox) {
-      expect(featureMenuBox.x).toBeCloseTo(featureTriggerBox.x, 0);
+      if (route.includes("/datetime/")) {
+        expect(featureMenuBox.x).toBeCloseTo(featureTriggerBox.x, 0);
+      } else {
+        expect(featureMenuBox.x + featureMenuBox.width).toBeCloseTo(featureTriggerBox.x + featureTriggerBox.width, 0);
+      }
     }
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-features-menu.png`);
