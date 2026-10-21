@@ -1,10 +1,18 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { DateTimeEditor } from "@/components/datetime-editor";
+import { I18nProvider } from "@/components/i18n-provider";
 
 afterEach(() => cleanup());
 
 describe("DateTimeEditor", () => {
+
+  it.each(["fa", "ar"] as const)("keeps the workspace RTL for the %s UI locale even when date display language is English", (locale) => {
+    render(<I18nProvider locale={locale}><DateTimeEditor /></I18nProvider>);
+    expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
+    expect((screen.getByRole("combobox", { name: "Display language" }) as HTMLSelectElement).value).toBe("en-US");
+  });
+
   it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
