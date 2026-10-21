@@ -9,8 +9,11 @@ const routes = [
   "/encoding/url",
   "/encoding/base64",
   "/security/jwt-decoder",
+  "/generators/uuid",
   "/images/editor",
   "/audio/editor",
+  "/video/editor",
+  "/datetime/editor",
   "/datetime/world-clock",
   "/robots.txt",
   "/sitemap.xml",
@@ -81,3 +84,28 @@ for (const [route, feature] of legacyAudioRoutes) {
     assert.equal(destination.searchParams.get("feature"), feature);
   });
 }
+
+const rtlRoutes = [
+  "/fa/",
+  "/ar/",
+  "/fa/tools",
+  "/ar/tools",
+  "/fa/images/editor",
+  "/ar/images/editor",
+  "/fa/audio/editor",
+  "/ar/audio/editor",
+  "/fa/video/editor",
+  "/ar/video/editor",
+  "/fa/datetime/editor",
+  "/ar/datetime/editor",
+];
+
+for (const route of rtlRoutes) {
+  test(`RTL route responds with RTL document direction: ${route}`, async () => {
+    const response = await fetch(new URL(route, baseUrl), { redirect: "manual" });
+    assert.equal(response.status, 200, `${route} should render successfully`);
+    const body = await response.text();
+    assert.match(body, /\\bdir="rtl"/, `${route} should render an RTL document`);
+  });
+}
+
