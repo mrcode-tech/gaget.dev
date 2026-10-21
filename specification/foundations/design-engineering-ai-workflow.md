@@ -24,14 +24,17 @@ Connect product intent, design decisions, implementation craft, and verification
 Keep these responsibilities in canonical documentation, not duplicated in per-feature prompt files:
 
 - `README.md` at repository root: setup, architecture and commands (repository-level, not part of the specification consolidation).
+- `specification/AI_INSTRUCTIONS.md`: required AI task entry point, baseline discovery, pre-implementation documentation gates, and post-verification closeout.
 - `specification/README.md`: canonical index, authority rules and status vocabulary.
+- `specification/product/current-state.md`: code-derived baseline and visual-audit status.
+- `specification/components/component-inventory.md`: shared component ownership and known audit needs.
 - `specification/product/product-and-feature-inventory.md`: routes, current capabilities and known limits.
 - `specification/foundations/design-engineering-ai-workflow.md`: design process, AI instructions and interaction quality rules.
 - `specification/foundations/design-system-token-contract.md`: tokens, semantic mapping, component variants and governance.
 - `specification/templates/design-specification-template.md`: reusable feature specification template.
 - `specification/foundations/quality-accessibility-verification.md`: acceptance and release gates.
 
-An AI coding agent working on a feature should read the index, inventory, workflow, token contract, relevant source/tests, then fill the template. Do not create a new specification file for a trivial change unless it introduces a lasting product contract.
+An AI coding agent must start with `specification/AI_INSTRUCTIONS.md`, then read the index, current-state baseline, relevant product specification, shared contracts, source and tests. Follow the pre-implementation and post-verification gates there. Do not create a new specification file for a trivial change unless it introduces a lasting product contract.
 
 ## 4. Workflow gates
 
@@ -118,7 +121,7 @@ Do not invent product decisions when the source is ambiguous or requirements con
 
 ## 6. AI Design Fluency checklist
 
-Before coding, the agent must:
+The full task protocol is defined in `specification/AI_INSTRUCTIONS.md`; this section summarizes the craft mindset. Before coding, the agent must:
 1. Restate the task and the intended user outcome.
 2. Identify the relevant existing pattern and source files.
 3. List constraints and what must not change.
