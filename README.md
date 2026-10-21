@@ -30,7 +30,7 @@ npm run build
 npm run test:e2e
 ```
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` runs unit and component tests, focused Photo Editor/sidebar regression tests, ESLint, TypeScript checks, a production build, HTTP smoke tests, and Playwright end-to-end tests. It runs on pushes to the active `main`, `stage`, and `feat/mobile-navigation-ux-fixes` branches, and on pull requests targeting `stage` or `main`. Feature changes should be proposed to `stage`; promote verified changes from `stage` to `main`.
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs unit and component tests, focused Photo Editor/sidebar regression tests, ESLint, TypeScript checks, a production build, HTTP smoke tests, and Playwright end-to-end tests. The design-baseline workflow separately captures route screenshots at mobile, tablet and desktop sizes in light and dark themes and uploads them as a commit-associated artifact.
 
 **Known setup issue:** the existing `package-lock.json` is stale and omits the declared `@radix-ui/react-select` dependency and its transitive packages, so `npm ci` currently fails. CI temporarily uses `npm install` to regenerate the lockfile in its runner. Regenerate and commit `package-lock.json` from a local checkout before switching CI back to reproducible `npm ci` installs.
 
@@ -52,7 +52,12 @@ The suite is a baseline and does not guarantee full coverage of every tool. Cont
 - `lib/tools/registry.ts`: central tool directory and navigation metadata
 - `lib/i18n/messages.ts`: locale metadata and translations
 - `tests/`: automated unit, component, smoke, and end-to-end tests
-- `specification/design.md`: responsive homepage, shared sidebar, unified Photo Editor, feature inventory, and wireframes for all Tailwind breakpoints
+- `specification/AI_INSTRUCTIONS.md`: required entry point for AI-assisted feature, refactor and design work
+- `specification/foundations/`: reusable design rules, tokens, accessibility and verification
+- `specification/product/`: current-state baseline, feature inventory and feature expectations
+- `specification/components/`: shared component inventory and contracts
+- `specification/templates/`: reusable design-specification template
+- `specification/assets/`: authored target SVG/PNG assets; generated screenshots are available from CI artifacts
 
 ## Security and privacy notes
 
