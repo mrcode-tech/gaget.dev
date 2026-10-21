@@ -41,6 +41,14 @@ Use this decision table:
 
 Do not create a separate Markdown file for every tiny change. Extend a canonical document unless the change introduces a distinct feature or reusable contract.
 
+### Task tracking and historical notes
+
+- Do **not** create or maintain a root-level `current_working.md` or another rolling project-wide task diary. Such files become stale when branches and tasks change.
+- Track in-progress scope, checklists, review discussion and follow-up items in the relevant GitHub issue or pull request; use commits and CI runs as implementation and verification history.
+- Keep durable product behavior and approved expectations in canonical files under `specification/`. Update `specification/product/current-state.md` only when verified current-state facts change; it is not a task log.
+- Keep exact test outcomes linked to the commit/CI run in the pull request or the relevant canonical feature specification when they are important long-term verification evidence.
+- When removing a legacy working log, search the active branch for references and replace references that prescribe using it. Preserve durable decisions or still-relevant findings in the correct canonical document before deleting the log. Do not copy stale task checklists into the current-state baseline.
+
 ## 3. Specify the expected experience
 
 Before writing UI code, the relevant specification must state:
