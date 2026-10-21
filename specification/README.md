@@ -4,7 +4,7 @@
 
 ## Start here
 
-**For every non-trivial product, UI, refactor, or feature task, read [AI Instructions](./AI_INSTRUCTIONS.md) first.** It tells AI agents how to locate the correct baseline and target design, update specifications before implementation, and keep documents/assets synchronized after tests.
+**For every non-trivial product, UI, refactor, or feature task, follow [AI Instructions](./AI_INSTRUCTIONS.md) first.** For brief reusable task prompts, use the repository-root [command patterns](../command.md); those shortcuts do not replace the canonical workflow.
 
 ## Two authored levels plus generated evidence
 
