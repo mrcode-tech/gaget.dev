@@ -1,6 +1,6 @@
 # Approved and Proposed Target Designs
 
-This directory contains authored target-state proposals and approved design assets. No proposal is approved yet. The shared editor shell has an initial editable SVG proposal created after reviewing the CI screenshot baseline; it still requires product/design review before implementation can be declared conformant. Continue adding feature-specific SVG wireframes and PNG previews from inspected current-state evidence.
+This directory contains authored target-state proposals and approved design assets. No proposal is approved yet. The shared editor shell SVG is an editable schematic covering desktop selected-panel, tablet, and mobile short-height states; it is linked from the [shared editor shell contract](../../components/shared-editor-shell.md) and still requires product/design review before implementation can be declared conformant. Continue adding feature-specific SVG wireframes and PNG previews from inspected current-state evidence.
 
 For every design asset:
 - Link it from the corresponding feature specification.
