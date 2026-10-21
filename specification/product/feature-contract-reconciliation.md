@@ -190,3 +190,14 @@ Date/time component tests exist. Calendar coverage, typed localized digits, unsu
 3. Build a feature-by-feature capability matrix for Audio and Video tied to source code and tests; disable or label unavailable operations rather than relying on registry prose.
 4. Expand date/time locale/calendar/numeral/time-zone tests and inspect the actual rendered input behavior.
 5. Re-run CI and update the current-state baseline only with evidence from the exact evaluated commit. Do not mark the project conformant until each route has an approved target contract and matching verification evidence.
+
+
+## 10. Shared shell contract handoff and verification (2026-10-21)
+
+The reusable proposed contract is documented in [Shared Editor Shell Contract](../components/shared-editor-shell.md). It defines shared-shell versus feature-workspace ownership, width and short-height behavior, command menus, panel sizing, scroll ownership, state boundaries, themes, RTL/LTR, accessibility, acceptance criteria and known evidence gaps.
+
+The latest branch head at the start of this work was `8aef8d9c3ce49d1d657cbcf50f098254cc365274`. Its [GaGet.dev CI run](https://github.com/mrcode-tech/gaget.dev/actions/runs/39668425396) completed successfully, including unit/component tests, lint, typecheck, production build, smoke and responsive/accessibility checks. This is baseline evidence for that commit only; it does not establish browser inspection of open menus/panels or approval of the wireframe.
+
+The capture script defines 390×844, 390×640, 768×1024 and 1440×1000, with light/dark and selected RTL route captures. A separate screenshot workflow on commit `dd0983eebdd60896b9b50c45594dc06c7fd931e1` succeeded, but that is not the same commit as the latest head; do not treat it as current-head visual proof. Current CI success uploads visual evidence artifacts, but screenshot capture completion and manual visual inspection must be checked from the exact run before claiming they passed.
+
+**Still open:** target wireframe remains Proposal; selected feature panel/open menu/loaded/error state screenshot inspection is not evidenced here; full keyboard and touch browser coverage and cross-consumer parity require follow-up. Do not declare the shared shell fully verified or approved solely from CI passing.
