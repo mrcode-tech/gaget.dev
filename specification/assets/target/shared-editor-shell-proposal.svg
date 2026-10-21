@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" role="img" aria-labelledby="title desc">
+  <title id="title">GaGet.dev shared editor shell proposal</title>
+  <desc id="desc">Editable schematic proposal for the shared media editor shell at desktop and mobile widths. Shows global navigation, editor command bar, empty workspace, and a contextual feature panel state. Not an approved pixel-perfect design.</desc>
+  <defs>
+    <style>
+      .board{fill:#f5f6f8}.frame{fill:#fff;stroke:#9ca3af;stroke-width:1.5}.surface{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5}.line{stroke:#94a3b8;stroke-width:1.5;fill:none}.dash{stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:7 6;fill:#f8fafc}.ink{fill:#111827;font-family:Inter,Arial,sans-serif}.muted{fill:#64748b;font-family:Inter,Arial,sans-serif}.label{font-size:15px;font-weight:600}.small{font-size:12px}.body{font-size:14px}.heading{font-size:22px;font-weight:700}.tiny{font-size:10px}.accent{fill:#e0e7ff;stroke:#818cf8;stroke-width:1.5}.button{fill:#2563eb;stroke:#1d4ed8;stroke-width:1}.white{fill:#fff;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:600}
+    </style>
+  </defs>
+  <rect class="board" width="1600" height="1040"/>
+  <text class="ink" x="40" y="44" font-size="28" font-weight="700">Shared Editor Shell — Proposal</text>
+  <text class="muted" x="40" y="72" font-size="15">Status: Proposal · Route examples: /images/editor, /audio/editor, /video/editor · Schematic hierarchy, not final pixel measurements</text>
+
+  <!-- Desktop viewport -->
+  <text class="ink label" x="40" y="108">Desktop · 1440 × 900 · LTR example</text>
+  <rect class="frame" x="40" y="125" width="1000" height="800" rx="8"/>
+  <rect class="surface" x="40" y="125" width="1000" height="58" rx="8"/>
+  <rect fill="#fff" x="40" y="170" width="1000" height="13"/>
+  <circle cx="62" cy="154" r="10" fill="#0f172a"/>
+  <text class="white" x="56" y="158" font-size="10">G</text>
+  <text class="ink" x="80" y="158" font-size="15" font-weight="700">GaGet.dev</text>
+  <rect class="surface" x="360" y="140" width="330" height="28" rx="7"/>
+  <text class="muted small" x="375" y="158">Search tools…</text>
+  <text class="muted small" x="840" y="158">Language</text>
+  <text class="muted small" x="950" y="158">Theme</text>
+
+  <rect class="surface" x="40" y="183" width="205" height="742"/>
+  <text class="ink label" x="58" y="213">Site navigation</text>
+  <g class="muted body">
+    <text x="60" y="248">Home</text><text x="60" y="280">Popular tools</text><text x="60" y="312">All tools</text><text x="60" y="344">Favorites</text>
+  </g>
+  <line class="line" x1="56" y1="365" x2="225" y2="365"/>
+  <text class="muted small" x="60" y="388">CATEGORIES</text>
+  <rect class="accent" x="52" y="402" width="180" height="30" rx="7"/>
+  <text class="ink body" x="68" y="422">Images</text>
+  <text class="muted body" x="68" y="455">Audio</text>
+  <text class="muted body" x="68" y="487">Video</text>
+  <text class="muted body" x="68" y="519">Date &amp; Time</text>
+
+  <rect class="surface" x="245" y="183" width="795" height="58"/>
+  <text class="ink body" x="265" y="218">File</text>
+  <text class="ink body" x="325" y="218">Edit</text>
+  <text class="ink body" x="382" y="218">Image</text>
+  <text class="ink body" x="445" y="218">Create</text>
+  <text class="muted small" x="920" y="218">Local processing</text>
+  <line class="line" x1="245" y1="241" x2="1040" y2="241"/>
+
+  <text class="muted small" x="275" y="274">Home  ›  Photo Editor</text>
+  <text class="ink heading" x="275" y="310">Photo Editor</text>
+  <text class="muted body" x="275" y="337">Edit, crop, resize, and enhance images in your browser.</text>
+  <rect class="dash" x="470" y="382" width="360" height="280" rx="16"/>
+  <circle class="accent" cx="650" cy="438" r="27"/>
+  <path class="line" d="M639 443 L639 430 L648 430 L652 424 L663 424 L663 443 Z M645 439 L650 434 L655 439 L659 435"/>
+  <text class="ink label" x="650" y="493" text-anchor="middle">Drop a photo here</text>
+  <text class="muted body" x="650" y="519" text-anchor="middle">or choose a file</text>
+  <rect class="button" x="590" y="540" width="120" height="34" rx="7"/>
+  <text class="white" x="650" y="561" text-anchor="middle">Choose photo</text>
+  <text class="muted small" x="650" y="598" text-anchor="middle">Formats and limits shown here</text>
+  <text class="muted small" x="650" y="617" text-anchor="middle">Privacy and processing claims must be accurate</text>
+  <text class="muted small" x="265" y="897">Workspace owns scrolling; do not introduce competing page scroll or horizontal overflow.</text>
+
+  <!-- Mobile viewport -->
+  <text class="ink label" x="1120" y="108">Mobile · 390 × 844 · LTR example</text>
+  <rect class="frame" x="1120" y="125" width="390" height="800" rx="16"/>
+  <rect class="surface" x="1120" y="125" width="390" height="68" rx="16"/>
+  <rect fill="#fff" x="1120" y="176" width="390" height="17"/>
+  <rect class="surface" x="1134" y="141" width="38" height="36" rx="8"/>
+  <path class="line" d="M1145 151 H1161 M1145 159 H1161 M1145 167 H1161"/>
+  <text class="ink body" x="1185" y="164">File</text>
+  <text class="ink body" x="1410" y="164">Features</text>
+  <line class="line" x1="1120" y1="193" x2="1510" y2="193"/>
+  <text class="muted small" x="1135" y="220">Home  ›  Photo Editor</text>
+  <text class="ink heading" x="1135" y="254">Photo Editor</text>
+  <text class="muted small" x="1135" y="278">Edit, crop, resize, and enhance images</text>
+  <text class="muted small" x="1135" y="295">in your browser.</text>
+  <rect class="dash" x="1135" y="320" width="360" height="280" rx="14"/>
+  <circle class="accent" cx="1315" cy="370" r="24"/>
+  <path class="line" d="M1305 376 L1305 364 L1313 364 L1317 358 L1326 358 L1326 376 Z"/>
+  <text class="ink label" x="1315" y="424" text-anchor="middle">Drop a photo here</text>
+  <text class="muted body" x="1315" y="448" text-anchor="middle">or</text>
+  <rect class="button" x="1255" y="465" width="120" height="34" rx="7"/>
+  <text class="white" x="1315" y="486" text-anchor="middle">Choose photo</text>
+  <text class="muted tiny" x="1315" y="526" text-anchor="middle">Supported formats and limits</text>
+  <text class="muted tiny" x="1315" y="544" text-anchor="middle">Local processing note</text>
+  <rect class="surface" x="1135" y="620" width="360" height="150" rx="12"/>
+  <rect class="accent" x="1290" y="629" width="80" height="6" rx="3"/>
+  <text class="ink label" x="1152" y="658">Feature panel (when selected)</text>
+  <text class="muted small" x="1152" y="681">Viewport-bounded, internally scrollable</text>
+  <text class="muted small" x="1152" y="700">Close control and visible resize affordance</text>
+  <text class="muted small" x="1152" y="719">Keep workspace visible where possible</text>
+  <text class="muted tiny" x="1135" y="895">Short-height screens: one scroll owner, no clipped actions.</text>
+
+  <!-- Rules -->
+  <rect class="frame" x="40" y="940" width="1470" height="70" rx="8"/>
+  <text class="ink label" x="60" y="966">Acceptance focus</text>
+  <text class="muted small" x="60" y="989">Trigger-anchored menus · responsive navigation · no unexplained gaps · accessible keyboard/focus/Escape behavior · RTL-aware layout · theme tokens · empty/loaded/error states documented separately</text>
+</svg>
