@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
 import { useResizableFeatureSheet } from "@/components/use-resizable-feature-sheet";
+import { useI18n } from "@/components/i18n-provider";
+import { localeDirections } from "@/lib/i18n/messages";
 
 type Feature = { slug: string; title: string; description: string; group: "Date" | "Time" | "Calendar" | "Utilities" };
 const features: Feature[] = [
@@ -69,6 +71,8 @@ const safeFormat = (date: Date, locale: string, calendar: string, numberingSyste
 };
 
 export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) {
+  const { locale: appLocale } = useI18n();
+  const appDirection = localeDirections[appLocale] ?? "ltr";
   const [now, setNow] = useState<Date | null>(null);
   const [locale, setLocale] = useState("en-US");
   const [calendar, setCalendar] = useState("gregory");
@@ -181,7 +185,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }
 
   return (
-    <main className="flex h-[calc(100dvh-68px)] min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground" dir={locale.startsWith("fa") || locale.startsWith("ar") ? "rtl" : "ltr"}>
+    <main className="flex h-[calc(100dvh-68px)] min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground" dir={appDirection}>
       <nav ref={commandBarRef} aria-label="Date and time editor commands" className="relative z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 sm:px-6 lg:justify-start">
         <div className="flex items-center gap-3">
           <button type="button" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "File" ? null : "File"); }}>File</button>
