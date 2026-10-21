@@ -3,7 +3,7 @@
 **Status:** Proposed reusable contract; not an approved pixel-perfect target design.  
 **Scope:** Shared layout and interaction behavior for Photo, Audio, Video, and Date & Time workspaces. Feature-specific controls, media processing, timelines, calendars, and export semantics remain owned by their feature contracts.  
 **Target wireframe:** [Shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg).  
-**Verification baseline:** branch `feature/design-system-token-handoff`, commit `c5b6203c2789c9c7ed56b5c28cd22586857fd818`; [CI run 39670723789](https://github.com/mrcode-tech/gaget.dev/actions/runs/39670723789) passed the repository's configured CI job. This does not prove pixel-level conformance to this proposal; open-menu/panel visual inspection and design approval remain outstanding.
+**Verification record:** branch `feature/design-system-token-handoff`, evaluated commit `ac9e781d159268bbd537d3c3108a5bbe705fc88d`; [latest successful CI run 39681760205](https://github.com/mrcode-tech/gaget.dev/actions/runs/39681760205). The run completed its configured CI job successfully. The associated browser evidence is retained in GitHub Actions artifacts; the [matching-commit evidence artifact from run 39677615422](https://api.github.com/repos/mrcode-tech/gaget.dev/actions/artifacts/12382203414/zip) includes menu/panel screenshots and the design-baseline manifest. This is verification evidence, not approval of the proposed target design.
 
 ## 1. Ownership boundaries
 
@@ -79,13 +79,13 @@ Actual file validation, browser APIs, processing, and export errors are feature-
 
 | Area | Existing evidence | Remaining verification |
 |---|---|---|
-| Component structure/menu classes | `tests/editor-command-bar.test.tsx` | Browser checks for open/close, focus, viewport edges and long menus |
-| Responsive baseline | CI capture script covers 390×844, 390×640, 768×1024, 1440×1000 | Open menu/panel states and matched screenshot review at each critical breakpoint |
-| Theme and RTL | CI captures light/dark and English/Persian/Arabic routes; Date & Time nested direction is asserted | Visual parity and keyboard behavior across RTL/LTR and both themes |
-| Mobile sheet | `components/use-resizable-feature-sheet.ts` provides pointer/keyboard resize bounds | Browser checks for drag, keyboard, cancel, dynamic viewport and all consumers |
-| Short-height behavior | 390×640 default screenshot is captured | Menus/panels open at short height, action reachability and no double-scroll traps |
-| Loaded/error states | Feature-specific component tests exist | Matched browser screenshots and interactions for empty, loaded, drag-over and errors |
-| Approved design conformance | No target asset approved | Product/design review required; this proposal is not approval |
+| Component structure/menu classes | `tests/editor-command-bar.test.tsx` plus `tests/e2e/shared-editor-shell.spec.ts` | CI browser tests exercise File/Features menus, viewport bounds, Escape dismissal and focus restoration for all four editors |
+| Responsive baseline | CI baseline captures 390×844, 390×640, 768×1024, and 1440×1000 | The shared-shell E2E matrix directly checks menu bounds at 390×640, 768×1024, and 1440×900; the screenshot baseline also includes 390×844 and 1440×1000 |
+| Theme and RTL | Shared-shell E2E matrix covers light/dark menus and panels; RTL menu checks cover Persian Photo/Audio/Video/Date & Time and Arabic Date & Time at 390×640 | RTL screenshots are dark-theme short-mobile only; full RTL theme/viewport parity and keyboard focus restoration in RTL remain unverified |
+| Panel visibility and bounds | Shared-shell E2E panel matrix checks Photo/Audio/Video/Date & Time at 390×640 and 768×1024 in light/dark; loaded Video has a generated WebM fixture when supported | General loaded-state coverage is incomplete for Photo/Audio/Date & Time; video fixture may be skipped if runtime MediaRecorder lacks WebM support |
+| Short-height behavior | Open menu and panel screenshots captured at 390×640; Video loaded-panel screenshot captured when fixture supported | Independent scroll ownership, panel content scroll reachability, orientation changes, and dynamic visual viewport behavior are not exhaustively asserted |
+| Keyboard/focus | File/feature menu Escape dismissal and trigger focus restoration are asserted in the shared-shell matrix | Tab/Shift+Tab, Enter/Space, outside-click consistency, resize keyboard/cancel, and reduced-motion/zoom are not comprehensively covered by this suite |
+| Approved design conformance | `shared-editor-shell-proposal.svg` remains Proposal | Product/design review required; this proposal is not approval |
 
 ## 8. Acceptance criteria
 
@@ -95,6 +95,8 @@ Actual file validation, browser APIs, processing, and export errors are feature-
 - [ ] Compact panels are bounded and internally scrollable; resize affordance works by keyboard and pointer where provided.
 - [ ] Empty and loaded states retain intentional scroll ownership and do not leak stale controls.
 - [ ] Light/dark and LTR/RTL use semantic tokens and correct direction without changing feature data ordering.
-- [ ] Tests cover critical shared interactions; browser screenshots are inspected for default and open-panel/menu states.
-- [ ] CI and visual evidence are tied to the exact evaluated commit.
+- [x] Critical File/Features menu open/close, Escape, focus restoration, viewport bounds, theme, responsive menu states, panel bounds, and short-mobile RTL menu behavior have automated Playwright coverage on the evaluated commit.
+- [x] CI and visual evidence are available for commit `ac9e781d159268bbd537d3c3108a5bbe705fc88d`; inspect the artifact linked above for the manifest and screenshots.
+- [ ] Complete visual inspection of every artifact screenshot and every state/viewport combination; this review inspected a representative subset of desktop/tablet/mobile-short menus, panels, loaded Video and RTL states.
+- [ ] Complete loaded/error/drag-over parity, panel internal scrolling and resizing across all consumers, keyboard navigation beyond Escape, zoom/orientation/dynamic viewport checks.
 - [ ] Product/design approval is recorded separately before marking this target Approved.
