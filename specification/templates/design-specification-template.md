@@ -11,6 +11,8 @@
 - **Date audited:**
 - **Related canonical docs:**
 - **Source files and tests inspected:**
+- **Current-state screenshot artifact / manifest:**
+- **Approved target SVG/PNG assets:**
 
 ## 2. Product intent
 
@@ -97,6 +99,9 @@ Include pointer, touch and keyboard operation; focus entry/return; Escape and ou
 
 ## 10. Visual and token contract
 
+- Current-state evidence (commit, route, viewport, theme, state):
+- Approved target design assets (editable SVG and PNG preview):
+- Difference between current state and target state:
 - Semantic tokens and existing component variants:
 - Typography hierarchy and wrapping:
 - Spacing/alignment/density:
@@ -134,6 +139,8 @@ Write observable, testable criteria. Avoid subjective-only criteria such as “l
 - [ ] Privacy and browser capability disclosures are accurate.
 - [ ] Relevant unit/component/E2E checks pass.
 - [ ] Browser visual QA was performed and findings recorded.
+- [ ] Current-state screenshots identify the exact commit and were not mistaken for target assets.
+- [ ] Approved target SVG/PNG assets were added or updated when the target visual contract changed.
 - [ ] Canonical inventory/docs were updated.
 
 ## 13. Verification record
