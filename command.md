@@ -10,6 +10,19 @@ Write a brief request in this form:
 
 Replace the bracketed text with the actual task. The agent must infer the relevant repository scope, inspect the active branch and existing implementation, and follow the required specification and verification workflow. Do not create or switch branches, or merge, unless explicitly requested.
 
+## Shortest commands
+
+Use any of these one-line prompts; replace the example scope with your task:
+
+- **New feature:** `Based on command.md, add feature: [feature]. Specify it, create/update its wireframes, implement it, test it, and sync affected docs.`
+- **Refactor:** `Based on command.md, refactor [scope] to [outcome]. Update affected specs/wireframes, implement, and test.`
+- **Bug fix:** `Based on command.md, fix [bug]. Find the root cause, add a regression test, fix it, and verify.`
+- **Tests only / diagnose:** `Based on command.md, test [scope], diagnose failures, fix regressions from this task, and report exact results.`
+- **Design and wireframe sync:** `Based on command.md, sync all affected specs, wireframes, component contracts, inventories, and implementation for [scope].`
+- **Audit only:** `Based on command.md, audit [scope] and report prioritized findings; do not implement yet.`
+
+The command name and task scope are enough to start. Follow-up details can be added in ordinary language; the agent must still inspect repository evidence and apply the canonical workflow below.
+
 ## Commands
 
 ### 1. Add a feature
