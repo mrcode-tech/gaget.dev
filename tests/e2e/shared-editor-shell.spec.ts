@@ -213,11 +213,34 @@ for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor"
     const menubar = route.includes("/datetime/")
       ? page.locator('nav[aria-label="Date and time editor commands"]')
       : page.locator(route.includes("/images/") ? '[data-testid="editor-menubar"]' : route.includes("/audio/") ? '[data-testid="audio-editor-menubar"]' : '[data-testid="video-editor-menubar"]');
+    const fileTrigger = menubar.getByRole("button", { name: /^File( menu)?$/ });
+    const fileMenuSelector = route.includes("/datetime/") ? '[data-testid="datetime-file-menu"]' : route.includes("/images/") ? '[data-testid="photo-file-menu"]' : route.includes("/audio/") ? '[data-testid="audio-file-menu"]' : '[data-testid="video-file-menu"]';
+    await fileTrigger.click();
+    await expect(page.locator(fileMenuSelector)).toBeVisible();
+    await assertWithinViewport(page, fileMenuSelector, `RTL File menu for ${route}`);
+    const fileTriggerBox = await fileTrigger.boundingBox();
+    const fileMenuBox = await page.locator(fileMenuSelector).boundingBox();
+    expect(fileTriggerBox).not.toBeNull();
+    expect(fileMenuBox).not.toBeNull();
+    if (fileTriggerBox && fileMenuBox) {
+      expect(fileMenuBox.x + fileMenuBox.width).toBeCloseTo(fileTriggerBox.x + fileTriggerBox.width, 0);
+    }
+    await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-file-menu.png`);
+    await page.keyboard.press("Escape");
+    await expect(page.locator(fileMenuSelector)).toBeHidden();
+
     const featureTrigger = menubar.getByRole("button", { name: route.includes("/datetime/") ? /^Features$/ : /Open .* editor features/i });
     await featureTrigger.click();
     const menuSelector = route.includes("/datetime/") ? '[data-testid="datetime-feature-menu"]' : route.includes("/images/") ? '[data-testid="mobile-feature-menu"]' : route.includes("/audio/") ? '[data-testid="audio-feature-menu"]' : '[data-testid="video-feature-menu"]';
     await expect(page.locator(menuSelector)).toBeVisible();
     await assertWithinViewport(page, menuSelector, `RTL Features menu for ${route}`);
+    const featureTriggerBox = await featureTrigger.boundingBox();
+    const featureMenuBox = await page.locator(menuSelector).boundingBox();
+    expect(featureTriggerBox).not.toBeNull();
+    expect(featureMenuBox).not.toBeNull();
+    if (featureTriggerBox && featureMenuBox) {
+      expect(featureMenuBox.x).toBeCloseTo(featureTriggerBox.x, 0);
+    }
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-features-menu.png`);
   });
