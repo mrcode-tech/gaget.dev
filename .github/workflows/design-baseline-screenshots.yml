@@ -24,7 +24,8 @@ jobs:
   capture:
     name: Capture current UI baseline
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Includes the expanded route/theme/viewport/RTL screenshot matrix.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,7 +50,7 @@ jobs:
           done
           cat /tmp/gaget-design-baseline.log
           exit 1
-      - name: Capture routes, viewports, and themes
+      - name: Capture routes, viewports, themes, and RTL locales
         env:
           DESIGN_BASELINE_URL: http://127.0.0.1:3000
           DESIGN_BASELINE_OUTPUT: artifacts/design-baseline
