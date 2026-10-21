@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
-const onePixelPng = Buffer.from(
+const shellPhotoPng = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAGAAAABACAIAAABqVuVZAAABz0lEQVR42u3aP0rEQBQG8OQjeAIRBMEDWG8vsqX9go0XkEVItSew2iY3sHDBXrBJYWextSew1M4DrJ3FrpO8+T+Z+V6ZnRDy43uPSTb118+uYqkLJCAQgQhUVVXb9QQa0YlihGllJ7wR2FnD1UxuarZdv17OJSuPt9d7R75nL1klSBUfSawOdVQHh6tOdic9qqDKkURBHiVMVCfYeHIJtFhtog9mYRPJew1udeyNtHT2FmuNGOFiOM+Oqxwlsg9IawaZ3a1XI7iNj02Iou8JvQCpLHSNLHX84cKHjq6Rk9vzZARPOvI1Dm/s9v1evli4V4Q/nSglNEpoJz1MmeZgtn0WM4jP88NNSJ31cq7aB+o+0CNMcx2e5TU7bdf/C2HwukMvQZaj5y9HYTpL+NrIWYJSeBYNf6EmpM5itTk7PakmVZn/L2YfIoRsrijxsTRC3jr2Rshex9IIJeh4abH8dMxCVNbXHQZGKK25dI3A0aMHVIKOVohQZnbkRii2s4RGRX+jKDECB/M4UMk6oyGqr+6emJ3Po0fVT83u/NXNNTKdU/yQnEAEIlDMUv6rMXv7GDhte3nBBLEIRCACEYhABCIQgQjEIhCBCEQgAk2xfgG3srhQVmi9cgAAAABJRU5ErkJggg==",
   "base64",
 );
@@ -101,7 +101,7 @@ const editors: EditorCase[] = [
     featureName: /.*/,
     desktopFeatureTrigger: /^Date$/,
     desktopFeatureMenu: '[data-testid="datetime-date-menu"]',
-    desktopFeatureName: /^Calendar$/,
+    desktopFeatureName: /^Calendar\b/,
   },
 ];
 
@@ -243,7 +243,7 @@ for (const editor of editors) {
           await page.locator('input[type="file"]').first().setInputFiles({
             name: "shell-fixture.png",
             mimeType: "image/png",
-            buffer: onePixelPng,
+            buffer: shellPhotoPng,
           });
           await expect(page.locator("canvas[role='img']")).toBeVisible();
         }
