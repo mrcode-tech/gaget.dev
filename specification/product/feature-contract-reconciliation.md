@@ -8,7 +8,7 @@
 ## 1. Evidence and status rules
 
 - **Current implementation:** source files and tests on the audit branch. A test file indicates intended/tested behavior, not necessarily complete browser coverage.
-- **Expected behavior:** requirements retained below from the legacy design proposals and shared editor template. Since the prior documents were marked proposal/design reference and no target assets are approved in `specification/assets/target/`, these requirements are carried forward as **proposed contracts** until reviewed and approved.
+- **Expected behavior:** requirements retained below from the legacy design proposals and shared editor template. Since the prior documents were marked proposal/design reference and no target assets are approved in `specification/assets/target/`, these requirements are carried forward as **proposed contracts** until reviewed and approved. The first authored target asset is [`shared-editor-shell-proposal.svg`](../assets/target/shared-editor-shell-proposal.svg); its status is Proposal, not Approved.
 - **Verified:** only a behavior supported by an executed test or direct browser inspection of the evaluated commit. Source inspection alone is not runtime verification.
 - **Not verified:** visual geometry, interaction, or browser-dependent capability not established by the evidence listed here.
 
@@ -36,6 +36,8 @@ The branch replaces the former broad specification set with foundations, invento
 **Tests:** `tests/app-shell.test.tsx`, `tests/app-sidebar.test.tsx`, `tests/editor-command-bar.test.tsx`.
 
 ### Proposed shared contract
+
+**Target asset:** [`shared-editor-shell-proposal.svg`](../assets/target/shared-editor-shell-proposal.svg) — Proposal, desktop and mobile empty-state shell. It is schematic and does not replace the detailed state/feature wireframes still required.
 
 - Breakpoints follow the repository's Tailwind ranges; they are width-based, not device-name assumptions. XS/SM/MD use compact navigation through 1023px; LG and wider use desktop navigation, with content bounded on wide displays.
 - The mobile/tablet site navigation overlays the page with a backdrop rather than pushing or resizing page content. The desktop sidebar is direction-aware and the main workspace must account for its expanded/collapsed width.
