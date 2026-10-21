@@ -104,8 +104,8 @@ No implementation or browser check is marked complete by this source audit alone
 
 ## Shared editor shell verification checkpoint — 2026-10-21
 
-- Latest inspected branch head before the shell-contract documentation update: `8aef8d9c3ce49d1d657cbcf50f098254cc365274` on `feature/design-system-token-handoff`.
-- [GaGet.dev CI run 39668425396](https://github.com/mrcode-tech/gaget.dev/actions/runs/39668425396) passed unit tests, focused Photo Editor/sidebar regressions, component tests, ESLint, TypeScript, production build, smoke routes and responsive/accessibility tests.
-- The CI capture script is configured for 390×844, 390×640, 768×1024 and 1440×1000; English captures use both themes and selected RTL routes use Persian/Arabic at mobile and desktop widths. These are configured coverage dimensions, not a claim that every open-menu, open-panel, loaded/error state has been captured or manually reviewed.
+- Latest verified branch head for this checkpoint: `c5b6203c2789c9c7ed56b5c28cd22586857fd818` on `feature/design-system-token-handoff`.
+- [GaGet.dev CI run 39670723789](https://github.com/mrcode-tech/gaget.dev/actions/runs/39670723789) passed unit tests, focused Photo Editor/sidebar regressions, component tests, ESLint, TypeScript, production build, smoke routes and responsive/accessibility tests for this checkpoint commit.
+- The CI capture script is configured for 390×844, 390×640, 768×1024 and 1440×1000; English captures use both themes and selected RTL routes use Persian/Arabic at mobile and desktop widths. The successful CI run uploaded a combined test and visual-evidence artifact for this commit. The configured default-state captures do not cover every open-menu, open-panel, loaded/error state, and the artifact has not been manually visually reviewed here.
 - The [shared shell contract](../components/shared-editor-shell.md) and [editable wireframe proposal](../assets/target/shared-editor-shell-proposal.svg) define the proposed baseline. Proposal is not approval. Open-panel/menu visual inspection, loaded/error-state visual parity and keyboard/touch browser checks remain gaps.
 - This section records durable baseline evidence and its limitations, not an in-progress task diary.
