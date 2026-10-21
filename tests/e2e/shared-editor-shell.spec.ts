@@ -101,7 +101,7 @@ const editors: EditorCase[] = [
     featureName: /.*/,
     desktopFeatureTrigger: /^Date$/,
     desktopFeatureMenu: '[data-testid="datetime-date-menu"]',
-    desktopFeatureName: /^Calendar\b/,
+    desktopFeatureName: /^Calendar Browse/
   },
 ];
 
@@ -291,8 +291,9 @@ test("Video loaded-state feature panel remains bounded on short mobile screens",
     mimeType: "video/webm",
     buffer: videoFixture!,
   });
-  await expect(page.getByText(/Video ready\. Source stays on your device\./i)).toBeVisible({ timeout: 10000 });
-  await expect(page.locator("video")).toBeVisible();
+  const loadedVideo = page.locator("video");
+  await expect(loadedVideo).toBeVisible();
+  await expect.poll(() => loadedVideo.evaluate((element) => (element as HTMLVideoElement).readyState)).toBeGreaterThanOrEqual(1);
 
   const menubar = page.locator('[data-testid="video-editor-menubar"]');
   const featureTrigger = menubar.getByRole("button", { name: /Open video editor features/i });
