@@ -128,7 +128,8 @@ describe("DateTimeEditor", () => {
     expect((screen.getByRole("textbox", { name: "Time in 24-hour format" }) as HTMLInputElement).value).toMatch(/[۰-۹]/);
     fireEvent.change(screen.getByRole("combobox", { name: "Calendar system" }), { target: { value: "persian" } });
     fireEvent.change(screen.getByRole("combobox", { name: "Numeral system" }), { target: { value: "arabext" } });
-    expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
+    // Display-language selection must not change the UI direction; this test uses the default English UI locale.
+    expect(document.querySelector("main")?.getAttribute("dir")).toBe("ltr");
     expect((screen.getByRole("combobox", { name: "Calendar system" }) as HTMLSelectElement).value).toBe("persian");
     expect((screen.getByRole("combobox", { name: "Numeral system" }) as HTMLSelectElement).value).toBe("arabext");
   });
