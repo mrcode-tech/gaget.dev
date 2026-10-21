@@ -82,3 +82,24 @@ jobs:
 
           SMOKE_BASE_URL=http://127.0.0.1:3000 node --test tests/smoke.test.mjs
           npm run test:e2e
+
+      - name: Capture current-state visual evidence
+        if: success()
+        env:
+          DESIGN_BASELINE_URL: http://127.0.0.1:3000
+          DESIGN_BASELINE_OUTPUT: artifacts/design-baseline
+          DESIGN_BASELINE_COMMIT: ${{ github.sha }}
+        run: node scripts/capture-design-baseline.mjs
+
+      - name: Upload test and visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-evidence-${{ github.sha }}
+          path: |
+            artifacts/design-baseline/
+            test-results/
+            playwright-report/
+            /tmp/gaget-next.log
+          if-no-files-found: warn
+          retention-days: 30
