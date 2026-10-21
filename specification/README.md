@@ -17,6 +17,7 @@
 ### Level 2 — Gadget.dev product design
 - [Current-State Product Baseline](./product/current-state.md)
 - [Product and Feature Inventory](./product/product-and-feature-inventory.md)
+- [Feature Contract Reconciliation](./product/feature-contract-reconciliation.md) — preserves durable requirements from legacy proposals and records route-level verification gaps; requirements remain proposals until approved.
 - [Component Inventory](./components/component-inventory.md)
 - Feature specifications belong under `product/`; shared reusable component contracts belong under `components/`.
 - Approved editable target wireframes belong under `assets/target/` as SVG, with PNG renderings for review where useful.
