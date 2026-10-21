@@ -183,4 +183,8 @@ Line-height بر اساس نقش تایپوگرافی دسته‌بندی می�
 - `wireframes/token-handoff-mobile.svg` — نمای فشرده/موبایل
 - `wireframes/token-hierarchy.svg` — نمودار درختی لایه‌ها
 
-PNGها باید از SVGهای همراه رندر شوند تا کیفیت و تناسب میان فرمت‌ها حفظ شود.
+فایل‌های PNG به‌صورت خودکار توسط GitHub Actions از SVGها ساخته و در همین پوشه commit می‌شوند. برای اجرای دستی، از تب Actions ورک‌فلو `Render design-system wireframes` را انتخاب و `Run workflow` را اجرا کنید.
+
+- `wireframes/token-hierarchy.png` — نمودار درختی قابل نمایش مستقیم در موبایل
+- `wireframes/token-handoff-desktop.png` — تصویر wireframe دسکتاپ
+- `wireframes/token-handoff-mobile.png` — تصویر wireframe موبایل
