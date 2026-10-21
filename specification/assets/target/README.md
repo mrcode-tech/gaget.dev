@@ -1,6 +1,6 @@
 # Approved and Proposed Target Designs
 
-This directory is reserved for authored target-state design assets. At the initial baseline milestone, no new target designs are approved yet: first capture and review the current implementation, then create feature-specific SVG wireframes and PNG previews from evidence.
+This directory contains authored target-state proposals and approved design assets. No proposal is approved yet. The shared editor shell has an initial editable SVG proposal created after reviewing the CI screenshot baseline; it still requires product/design review before implementation can be declared conformant. Continue adding feature-specific SVG wireframes and PNG previews from inspected current-state evidence.
 
 For every design asset:
 - Link it from the corresponding feature specification.
