@@ -48,6 +48,7 @@ try {
           if (!response || !response.ok()) {
             throw new Error(`HTTP ${response?.status() ?? "no response"} for ${url}`);
           }
+          await mkdir(path.dirname(destination), { recursive: true });
           await page.screenshot({ path: destination, fullPage: true, animations: "disabled" });
           manifest.captures.push({ route: route.path, viewport, theme, screenshot: relative, status: response.status() });
           process.stdout.write(`Captured ${route.path} | ${viewport.name} | ${theme}\n`);
