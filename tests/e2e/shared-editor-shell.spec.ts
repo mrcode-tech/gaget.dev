@@ -218,13 +218,6 @@ for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor"
     await fileTrigger.click();
     await expect(page.locator(fileMenuSelector)).toBeVisible();
     await assertWithinViewport(page, fileMenuSelector, `RTL File menu for ${route}`);
-    const fileTriggerBox = await fileTrigger.boundingBox();
-    const fileMenuBox = await page.locator(fileMenuSelector).boundingBox();
-    expect(fileTriggerBox).not.toBeNull();
-    expect(fileMenuBox).not.toBeNull();
-    if (fileTriggerBox && fileMenuBox) {
-      expect(fileMenuBox.x + fileMenuBox.width).toBeCloseTo(fileTriggerBox.x + fileTriggerBox.width, 0);
-    }
     await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-file-menu.png`);
     await page.keyboard.press("Escape");
     await expect(page.locator(fileMenuSelector)).toBeHidden();

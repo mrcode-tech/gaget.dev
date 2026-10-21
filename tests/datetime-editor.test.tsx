@@ -47,8 +47,8 @@ describe("DateTimeEditor", () => {
     expect(commandButtons.getByRole("button", { name: "Features" }).className).toContain("lg:hidden");
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     const fileMenu = screen.getByTestId("datetime-file-menu");
-    expect(fileMenu.className).toContain("left-3");
-    expect(fileMenu.className).toContain("sm:left-6");
+    expect(fileMenu.className).toContain("start-3");
+    expect(fileMenu.className).toContain("sm:start-6");
     expect(fileMenu.className).toContain("top-[calc(100%-1px)]");
     expect(within(fileMenu).getByRole("button", { name: /Copy current display/ })).toBeTruthy();
     expect(within(fileMenu).getByRole("button", { name: /Copy ISO 8601/ })).toBeTruthy();
