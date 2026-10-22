@@ -190,13 +190,13 @@ async function saveStateScreenshot(page: Page, testInfo: TestInfo, name: string)
 test("mobile feature-search threshold renders correctly at eight and nine features", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 640 });
   await page.addInitScript(() => localStorage.setItem("theme", "light"));
-  await page.goto("/__ci__/feature-menu-search?count=8");
+  await page.goto("/ci/feature-menu-search?count=8");
   const menu = page.getByTestId("threshold-feature-menu");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(8);
   await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
   await saveStateScreenshot(page, testInfo, "feature-search-threshold-8-mobile-390x640-light.png");
 
-  await page.goto("/__ci__/feature-menu-search?count=9");
+  await page.goto("/ci/feature-menu-search?count=9");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
   const search = menu.getByRole("searchbox", { name: "Search features" });
   await expect(search).toBeVisible();
@@ -257,7 +257,7 @@ for (const editor of editors) {
             await expect(featureMenu.getByRole("status")).toContainText("No matching features");
             await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-search-no-match.png`);
             await searchInput.fill("");
-            await expect(featureMenu.getByRole("button")).toHaveCount(editor.featureCount);
+            await expect(featureMenu.locator('button[aria-describedby], button[aria-pressed]')).toHaveCount(editor.featureCount);
           } else {
             await expect(searchInput).toHaveCount(0);
           }
@@ -271,7 +271,7 @@ for (const editor of editors) {
             await featureTrigger.click();
             await expect(featureMenu).toBeVisible();
             await expect(featureMenu.getByRole("searchbox", { name: "Search features" })).toHaveValue("");
-            await expect(featureMenu.getByRole("button")).toHaveCount(editor.featureCount);
+            await expect(featureMenu.locator('button[aria-describedby], button[aria-pressed]')).toHaveCount(editor.featureCount);
             await page.keyboard.press("Escape");
             await expect(featureMenu).toBeHidden();
             await expect(featureTrigger).toBeFocused();

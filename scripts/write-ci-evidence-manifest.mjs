@@ -64,7 +64,7 @@ function inferScreenshotMetadata(filePath) {
   const direction = locale === "en" ? "ltr" : "rtl";
   const theme = file.includes("-dark-") ? "dark" : file.includes("-light-") ? "light" : undefined;
   let route;
-  if (file.startsWith("feature-search-threshold-")) route = "/__ci__/feature-menu-search";
+  if (file.startsWith("feature-search-threshold-")) route = "/ci/feature-menu-search";
   else if (file.startsWith("photo-")) route = locale === "en" ? "/images/editor" : "/"+locale+"/images/editor";
   else if (file.startsWith("audio-")) route = locale === "en" ? "/audio/editor" : "/"+locale+"/audio/editor";
   else if (file.startsWith("video-")) route = locale === "en" ? "/video/editor" : "/"+locale+"/video/editor";
