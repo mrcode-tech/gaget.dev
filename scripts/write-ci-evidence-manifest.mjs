@@ -121,6 +121,8 @@ const screenshots = files
     };
   });
 const testResults = {
+  dependencyInstall: process.env.CI_DEPENDENCY_INSTALL ?? "unknown",
+  browserInstall: process.env.CI_BROWSER_INSTALL ?? "unknown",
   unitTests: process.env.CI_UNIT_TESTS ?? "unknown",
   focusedPhotoAndSidebarRegressions: process.env.CI_FOCUSED_REGRESSIONS ?? "unknown",
   componentTests: process.env.CI_COMPONENT_TESTS ?? "unknown",
