@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { PhotoEditor } from "@/components/photo-editor";
 import { AudioWorkbench } from "@/components/audio-workbench";
@@ -92,7 +92,7 @@ describe("shared mobile feature search contract", () => {
     const menu = screen.getByTestId("mobile-feature-menu");
     fireEvent.change(within(menu).getByRole("searchbox", { name: "Search features" }), { target: { value: "favicon" } });
     expect(menu.querySelectorAll("section button").length).toBe(1);
-    setViewport(768);
+    act(() => setViewport(768));
     expect(within(menu).queryByRole("searchbox", { name: "Search features" })).toBeNull();
     expect(menu.querySelectorAll("section button").length).toBe(13);
   });
