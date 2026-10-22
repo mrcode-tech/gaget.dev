@@ -57,7 +57,7 @@ describe("shared mobile feature search contract", () => {
 
     fireEvent.click(within(featureMenu).getByRole("button", { name: "Close feature menu" }));
     fireEvent.click(screen.getByRole("button", { name: trigger }));
-    expect(within(screen.getByTestId(menu)).getByRole("searchbox", { name: "Search features" }).getAttribute("value")).not.toBe("no-such-feature-xyz");
+    expect((within(screen.getByTestId(menu)).getByRole("searchbox", { name: "Search features" }) as HTMLInputElement).value).toBe("");
   });
 
   it.each(editors)("$name does not show search at tablet width", ({ render: renderEditor, trigger }) => {
