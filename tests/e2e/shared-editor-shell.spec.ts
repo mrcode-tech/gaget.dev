@@ -399,6 +399,22 @@ for (const editor of editors) {
           expect(panelBox.x, `${editor.title} panel left edge at ${viewport.width}px`).toBeCloseTo(0, 0);
           expect(panelBox.width, `${editor.title} panel width at ${viewport.width}px`).toBeCloseTo(viewport.width, 0);
           expect(panelBox.x + panelBox.width, `${editor.title} panel right edge at ${viewport.width}px`).toBeCloseTo(viewport.width, 0);
+
+          const resizeHandle = panel.getByRole("slider", { name: "Resize editing panel" });
+          await expect(resizeHandle).toBeVisible();
+          await resizeHandle.focus();
+          await resizeHandle.press("ArrowUp");
+          const resizedPanelBox = await panel.boundingBox();
+          expect(resizedPanelBox?.height, `${editor.title} keyboard resize should increase panel height`).toBeGreaterThan(panelBox.height);
+
+          await expect(panel.getByRole("button", { name: /close/i })).toBeVisible();
+          await panel.getByRole("button", { name: /close/i }).click();
+          await expect(panel).toBeHidden();
+
+          await featureTrigger.click();
+          await expect(featureMenu).toBeVisible();
+          await featureButton.click();
+          await expect(panel).toBeVisible();
         }
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-panel.png`);
