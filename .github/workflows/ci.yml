@@ -35,15 +35,26 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        id: install-dependencies
         # npm install is used because the current lockfile is stale and omits dependencies.
         # Once package-lock.json is regenerated and committed, switch this to npm ci.
-        run: npm install --no-audit --no-fund
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm install --no-audit --no-fund 2>&1 | tee artifacts/ci-logs/dependency-install.log
 
       - name: Install Chromium for responsive and accessibility tests
-        run: npx playwright install --with-deps chromium
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npx playwright install --with-deps chromium 2>&1 | tee artifacts/ci-logs/browser-install.log
 
       - name: Run unit tests
         id: unit-tests
+        if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -52,6 +63,7 @@ jobs:
 
       - name: Run focused Photo Editor and sidebar regression tests
         id: focused-regressions
+        if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -60,6 +72,7 @@ jobs:
 
       - name: Run component tests
         id: component-tests
+        if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -68,6 +81,7 @@ jobs:
 
       - name: Run ESLint
         id: lint
+        if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -76,6 +90,7 @@ jobs:
 
       - name: Check TypeScript
         id: typecheck
+        if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -84,6 +99,7 @@ jobs:
 
       - name: Build production app
         id: build
+        if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -92,6 +108,7 @@ jobs:
 
       - name: Start production server, smoke-test routes, and run responsive accessibility tests
         id: browser-validation
+        if: always() && steps.install-dependencies.outcome == 'success' && steps.build.outcome == 'success'
         shell: bash
         run: |
           set -o pipefail
