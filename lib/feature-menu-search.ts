@@ -22,17 +22,10 @@ export function useFeatureMenuSearch(isOpen: boolean, featureCount: number, edit
   const editorKeyRef = useRef(editorKey);
 
   useEffect(() => {
-    const media = typeof window.matchMedia === "function"
-      ? window.matchMedia(`(max-width: ${MOBILE_FEATURE_SEARCH_BREAKPOINT - 1}px)`)
-      : null;
-    const update = () => setIsMobile(media ? media.matches : window.innerWidth < MOBILE_FEATURE_SEARCH_BREAKPOINT);
+    const update = () => setIsMobile(window.innerWidth < MOBILE_FEATURE_SEARCH_BREAKPOINT);
     update();
-    media?.addEventListener?.("change", update);
     window.addEventListener("resize", update);
-    return () => {
-      media?.removeEventListener?.("change", update);
-      window.removeEventListener("resize", update);
-    };
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   useEffect(() => {
