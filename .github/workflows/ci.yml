@@ -44,11 +44,19 @@ jobs:
 
       - name: Run unit tests
         id: unit-tests
-        run: npm run test:unit
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run test:unit 2>&1 | tee artifacts/ci-logs/unit-tests.log
 
       - name: Run focused Photo Editor and sidebar regression tests
         id: focused-regressions
-        run: npx vitest run tests/photo-editor.test.tsx tests/app-sidebar.test.tsx
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npx vitest run tests/photo-editor.test.tsx tests/app-sidebar.test.tsx 2>&1 | tee artifacts/ci-logs/focused-regressions.log
 
       - name: Run component tests
         id: component-tests
@@ -60,20 +68,34 @@ jobs:
 
       - name: Run ESLint
         id: lint
-        run: npm run lint
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run lint 2>&1 | tee artifacts/ci-logs/lint.log
 
       - name: Check TypeScript
         id: typecheck
-        run: npm run typecheck
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run typecheck 2>&1 | tee artifacts/ci-logs/typecheck.log
 
       - name: Build production app
         id: build
-        run: npm run build
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run build 2>&1 | tee artifacts/ci-logs/build.log
 
       - name: Start production server, smoke-test routes, and run responsive accessibility tests
         id: browser-validation
         shell: bash
         run: |
+          set -o pipefail
+          mkdir -p artifacts/ci-logs
           node node_modules/next/dist/bin/next start --hostname 127.0.0.1 > /tmp/gaget-next.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
@@ -88,17 +110,41 @@ jobs:
           done
 
           if [ "$ready" != true ]; then
+            cp /tmp/gaget-next.log artifacts/ci-logs/next-startup.log
             cat /tmp/gaget-next.log
+            echo "browser-validation=server-start-failed" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
-          SMOKE_BASE_URL=http://127.0.0.1:3000 node --test tests/smoke.test.mjs
-          npm run test:e2e
+          validation_status=0
+          if SMOKE_BASE_URL=http://127.0.0.1:3000 node --test tests/smoke.test.mjs 2>&1 | tee artifacts/ci-logs/smoke-tests.log; then
+            smoke_status=passed
+          else
+            smoke_status=failed
+            validation_status=1
+          fi
+          echo "smoke-tests=$smoke_status" >> "$GITHUB_OUTPUT"
 
-          DESIGN_BASELINE_URL=http://127.0.0.1:3000 \
-          DESIGN_BASELINE_OUTPUT=artifacts/design-baseline \
-          DESIGN_BASELINE_COMMIT="${GITHUB_SHA}" \
-          node scripts/capture-design-baseline.mjs
+          if npm run test:e2e 2>&1 | tee artifacts/ci-logs/e2e-tests.log; then
+            e2e_status=passed
+          else
+            e2e_status=failed
+            validation_status=1
+          fi
+          echo "e2e-tests=$e2e_status" >> "$GITHUB_OUTPUT"
+
+          if DESIGN_BASELINE_URL=http://127.0.0.1:3000 \
+            DESIGN_BASELINE_OUTPUT=artifacts/design-baseline \
+            DESIGN_BASELINE_COMMIT="${GITHUB_SHA}" \
+            node scripts/capture-design-baseline.mjs 2>&1 | tee artifacts/ci-logs/design-baseline.log; then
+            baseline_status=passed
+          else
+            baseline_status=failed
+            validation_status=1
+          fi
+          echo "design-baseline=$baseline_status" >> "$GITHUB_OUTPUT"
+          echo "browser-validation=$([ "$validation_status" -eq 0 ] && echo passed || echo failed)" >> "$GITHUB_OUTPUT"
+          exit "$validation_status"
 
       - name: Collect production server log
         if: always()
@@ -116,6 +162,9 @@ jobs:
           CI_TYPECHECK: ${{ steps.typecheck.outcome }}
           CI_BUILD: ${{ steps.build.outcome }}
           CI_BROWSER_VALIDATION: ${{ steps.browser-validation.outcome }}
+          CI_SMOKE_TESTS: ${{ steps.browser-validation.outputs.smoke-tests }}
+          CI_E2E_TESTS: ${{ steps.browser-validation.outputs.e2e-tests }}
+          CI_DESIGN_BASELINE: ${{ steps.browser-validation.outputs.design-baseline }}
           CI_JOB_STATUS: ${{ job.status }}
           CI_RUN_ID: ${{ github.run_id }}
           CI_RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -127,7 +176,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ci-evidence-${{ github.sha }}
+          name: ci-evidence-${{ github.sha }}-attempt-${{ github.run_attempt }}
           path: |
             artifacts/design-baseline/
             artifacts/ci-logs/
