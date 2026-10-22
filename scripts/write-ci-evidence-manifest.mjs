@@ -144,9 +144,65 @@ for (const screenshot of screenshots) {
     viewportCoverage.push(screenshot.viewport);
   }
 }
+const validationErrors = [];
+if (!/^[a-f0-9]{40}$/i.test(commit)) {
+  validationErrors.push(`Expected a full 40-character tested commit SHA, received "${commit}".`);
+}
+if (baseline && baseline.commit !== commit) {
+  validationErrors.push(`Baseline commit ${baseline.commit ?? "missing"} does not match tested commit ${commit}.`);
+}
+if (baseline?.failures?.length) {
+  validationErrors.push(`Design baseline reported ${baseline.failures.length} failed capture(s).`);
+}
+
+const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+for (const screenshot of screenshots) {
+  try {
+    const image = await readFile(screenshot.path);
+    if (image.length < 24 || !image.subarray(0, 8).equals(pngSignature)) {
+      validationErrors.push(`Screenshot is not a readable PNG: ${screenshot.path}`);
+      continue;
+    }
+    if (image.readUInt32BE(16) < 1 || image.readUInt32BE(20) < 1) {
+      validationErrors.push(`Screenshot has invalid PNG dimensions: ${screenshot.path}`);
+    }
+  } catch (error) {
+    validationErrors.push(`Screenshot could not be read: ${screenshot.path}: ${String(error)}`);
+  }
+  if (screenshot.commit !== commit) {
+    validationErrors.push(`Screenshot commit mismatch: ${screenshot.path}`);
+  }
+  if (screenshot.state && !screenshot.viewport) {
+    validationErrors.push(`Screenshot state has no viewport metadata: ${screenshot.path}`);
+  }
+}
+
+const requiredViewportKeys = [
+  "320x844", "360x844", "390x844", "430x844",
+  "390x640", "768x1024", "1440x900",
+];
+for (const key of requiredViewportKeys) {
+  if (!viewportCoverage.some((viewport) => `${viewport.width}x${viewport.height}` === key)) {
+    validationErrors.push(`Required viewport evidence is missing: ${key}`);
+  }
+}
+for (const route of ["/images/editor", "/audio/editor", "/video/editor", "/datetime/editor"]) {
+  const hasShortMobilePanel = screenshots.some((screenshot) =>
+    screenshot.route === route
+    && screenshot.state === "panel-resized-reopened"
+    && screenshot.viewport?.width === 390
+    && screenshot.viewport?.height === 640
+  );
+  if (!hasShortMobilePanel) {
+    validationErrors.push(`Missing short-mobile resized/reopened panel screenshot for ${route}.`);
+  }
+}
+
 const manifest = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
+  valid: validationErrors.length === 0,
+  validationErrors,
   repository,
   branch: process.env.GITHUB_REF_NAME ?? "unknown",
   commit,
@@ -166,4 +222,8 @@ const manifest = {
 };
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, JSON.stringify(manifest, null, 2) + "\n");
-process.stdout.write(`Wrote ${outputPath} for commit ${commit}; ${screenshots.length} screenshots indexed.\n`);
+process.stdout.write(`Wrote ${outputPath} for commit ${commit}; ${screenshots.length} screenshots indexed; validation ${manifest.valid ? "passed" : "failed"}.\n`);
+if (validationErrors.length) {
+  for (const error of validationErrors) process.stderr.write(`Evidence validation error: ${error}\n`);
+  process.exitCode = 1;
+}
