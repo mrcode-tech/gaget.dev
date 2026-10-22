@@ -5,7 +5,7 @@ import { AudioWorkbench } from "@/components/audio-workbench";
 import { VideoWorkbench } from "@/components/video-workbench";
 import { DateTimeEditor } from "@/components/datetime-editor";
 import { I18nProvider } from "@/components/i18n-provider";
-import { matchesFeatureSearch, shouldShowFeatureSearch } from "@/lib/feature-menu-search";
+import { matchesFeatureSearch, shouldShowFeatureSearch, useFeatureMenuSearch } from "@/lib/feature-menu-search";
 
 function setViewport(width: number) {
   window.innerWidth = width;
@@ -24,6 +24,11 @@ afterEach(() => {
   setViewport(1024);
 });
 
+function SearchHarness({ editorKey }: { editorKey: string }) {
+  const search = useFeatureMenuSearch(true, 9, editorKey, "en");
+  return <input aria-label="Harness search" value={search.query} onChange={(event) => search.setQuery(event.target.value)} />;
+}
+
 describe("shared mobile feature search contract", () => {
   it("shows search only below 768px and only for more than eight features", () => {
     expect(shouldShowFeatureSearch(8, 390)).toBe(false);
@@ -31,6 +36,16 @@ describe("shared mobile feature search contract", () => {
     expect(shouldShowFeatureSearch(9, 767)).toBe(true);
     expect(shouldShowFeatureSearch(9, 768)).toBe(false);
     expect(shouldShowFeatureSearch(20, 1440)).toBe(false);
+  });
+
+  it("clears the query when the editor identity changes", () => {
+    setViewport(390);
+    const view = render(<SearchHarness editorKey="photo" />);
+    const input = screen.getByRole("textbox", { name: "Harness search" }) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "crop" } });
+    expect(input.value).toBe("crop");
+    view.rerender(<SearchHarness editorKey="audio" />);
+    expect((screen.getByRole("textbox", { name: "Harness search" }) as HTMLInputElement).value).toBe("");
   });
 
   it("matches trimmed, case-insensitive title, description, and group text", () => {
@@ -68,6 +83,18 @@ describe("shared mobile feature search contract", () => {
     render(renderEditor());
     fireEvent.click(screen.getByRole("button", { name: trigger }));
     expect(screen.queryByRole("searchbox", { name: "Search features" })).toBeNull();
+  });
+
+  it("restores the full feature list when a mobile menu is resized to tablet width", () => {
+    setViewport(390);
+    render(<PhotoEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "Open photo editor features" }));
+    const menu = screen.getByTestId("mobile-feature-menu");
+    fireEvent.change(within(menu).getByRole("searchbox", { name: "Search features" }), { target: { value: "favicon" } });
+    expect(menu.querySelectorAll("section button").length).toBe(1);
+    setViewport(768);
+    expect(within(menu).queryByRole("searchbox", { name: "Search features" })).toBeNull();
+    expect(menu.querySelectorAll("section button").length).toBe(13);
   });
 
   it("localizes search controls and keeps Persian input direction RTL", () => {
