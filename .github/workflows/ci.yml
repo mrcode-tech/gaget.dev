@@ -44,14 +44,35 @@ jobs:
           set -o pipefail
           npm install --no-audit --no-fund 2>&1 | tee artifacts/ci-logs/dependency-install.log
 
-      - name: Install Chromium for responsive and accessibility tests
-        id: install-chromium
+      # Cache browser binaries between runs. The key changes when the lockfile
+      # changes, so a Playwright version update cannot reuse an incompatible browser.
+      - name: Cache Playwright browsers
+        id: playwright-browser-cache
+        if: always() && steps.install-dependencies.outcome == 'success'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Chromium system dependencies
+        id: install-chromium-deps
         if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
           set -o pipefail
-          npx playwright install --with-deps chromium 2>&1 | tee artifacts/ci-logs/browser-install.log
+          npx playwright install-deps chromium 2>&1 | tee artifacts/ci-logs/browser-dependencies.log
+
+      - name: Install Chromium browser
+        id: install-chromium
+        if: always() && steps.install-dependencies.outcome == 'success' && steps.playwright-browser-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npx playwright install chromium 2>&1 | tee artifacts/ci-logs/browser-install.log
 
       - name: Run unit tests
         id: unit-tests
@@ -175,6 +196,8 @@ jobs:
         env:
           CI_DEPENDENCY_INSTALL: ${{ steps.install-dependencies.outcome }}
           CI_BROWSER_INSTALL: ${{ steps.install-chromium.outcome }}
+          CI_BROWSER_DEPENDENCIES: ${{ steps.install-chromium-deps.outcome }}
+          CI_BROWSER_CACHE_HIT: ${{ steps.playwright-browser-cache.outputs.cache-hit }}
           CI_UNIT_TESTS: ${{ steps.unit-tests.outcome }}
           CI_FOCUSED_REGRESSIONS: ${{ steps.focused-regressions.outcome }}
           CI_COMPONENT_TESTS: ${{ steps.component-tests.outcome }}
