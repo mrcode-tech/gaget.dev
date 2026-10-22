@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/messages";
 
 export const MOBILE_FEATURE_SEARCH_BREAKPOINT = 768;
@@ -19,6 +19,7 @@ export function matchesFeatureSearch(query: string, fields: readonly string[], l
 export function useFeatureMenuSearch(isOpen: boolean, featureCount: number, editorKey: string, locale: Locale) {
   const [isMobile, setIsMobile] = useState(false);
   const [query, setQuery] = useState("");
+  const editorKeyRef = useRef(editorKey);
 
   useEffect(() => {
     const media = typeof window.matchMedia === "function"
@@ -35,6 +36,10 @@ export function useFeatureMenuSearch(isOpen: boolean, featureCount: number, edit
   }, []);
 
   useEffect(() => {
+    if (editorKeyRef.current !== editorKey) {
+      editorKeyRef.current = editorKey;
+      setQuery("");
+    }
     if (!isOpen || !isMobile || featureCount <= FEATURE_SEARCH_THRESHOLD) setQuery("");
   }, [isOpen, isMobile, featureCount, editorKey]);
 
