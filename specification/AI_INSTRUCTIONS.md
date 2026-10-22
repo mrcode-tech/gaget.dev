@@ -8,16 +8,16 @@ Treat design documentation as a maintained contract, not a one-time deliverable.
 
 ## 1. Resolve the task and baseline
 
-1. Confirm the current branch and baseline commit. Do not create or switch branches unless the user asks.
+1. Inspect the active task context and exact source revision before making changes. Record transient branch/commit details in the task handoff or CI evidence, not in application-wide specification pages. Do not create or switch branches unless the user asks.
 2. Read `specification/README.md`, this file, and `specification/foundations/design-engineering-ai-workflow.md`.
 3. Read `specification/foundations/design-system-token-contract.md` for visual/component changes and `specification/foundations/quality-accessibility-verification.md` for quality expectations.
 4. Read `specification/product/current-state.md`, `specification/product/product-and-feature-inventory.md`, and the relevant feature page(s) under `specification/product/`. When working on the shared shell or any Photo, Audio, Video, or Date & Time workspace, also read `specification/product/feature-contract-reconciliation.md` so requirements retained from legacy proposals and known verification gaps are not lost. Read `specification/components/component-inventory.md` and component specifications when shared UI is involved.
 5. Inspect actual source code, route definitions, registry data, tests, and relevant Git history on the active branch. Search for existing patterns before creating new ones.
-6. Inspect current-state screenshots and their manifest when available. Verify their branch/commit and route/state/viewport metadata. Never assume a screenshot is current merely because it exists.
+6. Inspect current-state screenshots and their manifest when available. Verify their build identifier and route/state/viewport metadata. Never assume a screenshot is current merely because it exists.
 7. Find the approved target-state specification and its SVG/PNG design assets. If none exists, determine whether the task is a small local fix or introduces a new lasting product/design contract.
 
 **Evidence hierarchy**
-- Current behavior: running app, source code and tests on the task's baseline branch/commit.
+- Current behavior: running app, source code and tests on the exact build being evaluated; use its matching CI artifacts for build-specific evidence.
 - Approved expected behavior: accepted target-state feature specification and explicitly approved design assets.
 - Shared rules: foundation documents.
 - Generated screenshots and test reports: evidence of a particular build, not design authority.
@@ -46,7 +46,7 @@ Do not create a separate Markdown file for every tiny change. Extend a canonical
 - Do **not** create or maintain a root-level `current_working.md` or another rolling project-wide task diary. Such files become stale when branches and tasks change.
 - Track in-progress scope, checklists, review discussion and follow-up items in the relevant GitHub issue or pull request; use commits and CI runs as implementation and verification history.
 - Keep durable product behavior and approved expectations in canonical files under `specification/`. Update `specification/product/current-state.md` only when verified current-state facts change; it is not a task log.
-- Keep exact test outcomes linked to the commit/CI run in the pull request or the relevant canonical feature specification when they are important long-term verification evidence.
+- Keep exact test outcomes and CI links in the pull request or CI artifacts, not in application-wide canonical specification pages.
 - When removing a legacy working log, search the active branch for references and replace references that prescribe using it. Preserve durable decisions or still-relevant findings in the correct canonical document before deleting the log. Do not copy stale task checklists into the current-state baseline.
 
 ## 3. Specify the expected experience
@@ -84,7 +84,7 @@ A screenshot alone is not a specification. Pair visuals with written behavior an
 5. Compare implementation with the approved target design and acceptance criteria, not with a stale current-state screenshot.
 6. If a command or visual check could not run, report it as **not verified**. Never claim tests or visual QA passed without evidence.
 
-Current-state screenshots should be generated from the exact build/commit being evaluated. The capture workflow stores screenshots as a commit-associated CI artifact; it must not silently overwrite target design assets.
+Current-state screenshots should be generated from the exact build being evaluated. The capture workflow stores screenshots as a build-associated CI artifact; it must not silently overwrite target design assets.
 
 ## 6. Close the documentation loop after implementation
 
@@ -94,7 +94,7 @@ Before declaring the task complete:
 - [ ] Update foundation/component contracts if a reusable rule, token, component API, breakpoint, or shared interaction pattern changed.
 - [ ] Update the product/current-state inventory for routes, navigation, tool availability, capabilities or limitations.
 - [ ] Add or revise approved target SVG/PNG assets if the intended design changed.
-- [ ] Regenerate current-state screenshots for affected routes when appropriate; identify the exact branch/commit and state.
+- [ ] Regenerate current-state screenshots for affected routes when appropriate; identify the exact evaluated build and state.
 - [ ] Update tests and the verification record to reflect the final implementation.
 - [ ] Remove obsolete/contradictory docs and assets, update all links, and search for stale paths.
 - [ ] Report modified docs/assets alongside code changes; mention every test result and remaining limitation.
@@ -113,7 +113,7 @@ The user may simply say “implement X” and link this file. The agent should t
 
 ## 8. Required handoff format
 
-- **Baseline:** branch and commit inspected.
+- **Baseline:** source revision inspected.
 - **Design contract:** current-state and target specification links.
 - **Changes:** code, docs, SVG/PNG assets, and inventory changes.
 - **Verification:** exact commands, results, browser/viewport/theme coverage, screenshot artifact link if available.
