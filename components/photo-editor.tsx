@@ -6,6 +6,9 @@ import { Download, Undo2, Redo2, ShieldCheck, Type, ImagePlus, ZoomIn, ZoomOut, 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/components/i18n-provider";
+import { FeatureMenuNoResults, FeatureMenuSearch } from "@/components/feature-menu-search";
+import { useFeatureMenuSearch } from "@/lib/feature-menu-search";
 
 type TextLayer = {
   id: number;
@@ -149,6 +152,7 @@ function applyCanvasAdjustments(canvas: HTMLCanvasElement, state: EditorState) {
 }
 
 export function PhotoEditor() {
+  const { locale } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -645,6 +649,9 @@ export function PhotoEditor() {
     { label: "Create", items: [["Favicon", "favicon", ImageIcon], ["Collage", "collage", Grid2X2], ["SVG optimize", "svg", Code2]] },
   ] as const;
   const featureDescriptions: Record<string, string> = { crop: "Select and refine an area of the image.", resize: "Change image dimensions and output size.", transform: "Crop, rotate, and resize the image.", text: "Add text and watermark overlays.", adjust: "Tune brightness, contrast, saturation, and filters.", color: "Pick colors and inspect a palette.", metadata: "Inspect image dimensions and file details.", convert: "Export or convert the image format.", print: "Calculate print dimensions at a selected DPI.", base64: "Encode an image as a Base64 data URL.", base64decode: "Decode Base64 data into an image.", favicon: "Generate favicon assets from an image.", collage: "Arrange multiple images into a collage.", svg: "Optimize SVG markup." };
+  const photoFeatureCount = featureMenuGroups.reduce((count, group) => count + group.items.length, 0);
+  const featureSearch = useFeatureMenuSearch(menuOpen === "Features", photoFeatureCount, "photo", locale);
+  const filteredPhotoFeatureGroups = featureMenuGroups.map((group) => ({ ...group, items: group.items.filter(([label, panel]) => featureSearch.matches([label, featureDescriptions[panel], group.label])) })).filter((group) => group.items.length > 0);
   const getPanelHeightBounds = () => {
     const viewportHeight = window.innerHeight;
     const maxHeight = Math.min(viewportHeight, viewportHeight * 0.7);
@@ -743,7 +750,8 @@ export function PhotoEditor() {
         <button type="button" aria-label="Open photo editor features" aria-expanded={menuOpen === "Features"} className={"inline-flex h-9 items-center gap-2 rounded-md px-3 hover:bg-accent " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
         {menuOpen === "Features" && <div data-testid="mobile-feature-menu" className="absolute right-0 top-[calc(100%-1px)] z-50 w-[min(16rem,calc(100vw-1.5rem))] max-h-[min(70dvh,420px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl">
           <div className="flex items-center justify-between px-3 py-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">All features</span><button type="button" aria-label="Close feature menu" className="rounded p-1 hover:bg-accent" onClick={() => setMenuOpen(null)}><X className="h-4 w-4" /></button></div>
-          {featureMenuGroups.map((group) => <section key={group.label} className="mb-2 last:mb-0"><h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h3>{group.items.map(([label, panel, Icon]) => <button key={panel} aria-label={label} aria-describedby={`photo-feature-desc-${panel}`} className={"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block text-sm leading-5">{label}</span><span id={`photo-feature-desc-${panel}`} className="block text-xs leading-4 text-muted-foreground">{featureDescriptions[panel]}</span></span></button>)}</section>)}
+          {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
+          {featureSearch.canSearch && featureSearch.query.trim() && filteredPhotoFeatureGroups.length === 0 ? <FeatureMenuNoResults /> : filteredPhotoFeatureGroups.map((group) => <section key={group.label} className="mb-2 last:mb-0"><h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h3>{group.items.map(([label, panel, Icon]) => <button key={panel} aria-label={label} aria-describedby={`photo-feature-desc-${panel}`} className={"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-start hover:bg-accent " + (activePanel === panel ? "bg-accent" : "")} onClick={() => selectFeature(panel)}><Icon className="h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block text-sm leading-5">{label}</span><span id={`photo-feature-desc-${panel}`} className="block text-xs leading-4 text-muted-foreground">{featureDescriptions[panel]}</span></span></button>)}</section>)}
         </div>}
       </div>
       <div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span>Private · local processing</span></div>
