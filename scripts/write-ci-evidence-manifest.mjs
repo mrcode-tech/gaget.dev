@@ -123,10 +123,11 @@ const testResults = {
   lint: process.env.CI_LINT ?? "unknown",
   typecheck: process.env.CI_TYPECHECK ?? "unknown",
   productionBuild: process.env.CI_BUILD ?? "unknown",
+  smokeTests: process.env.CI_SMOKE_TESTS ?? "unknown",
+  e2eTests: process.env.CI_E2E_TESTS ?? "unknown",
   smokeE2EAndBaselineStep: process.env.CI_BROWSER_VALIDATION ?? "unknown",
-  designBaselineCapture: baseline
-    ? (baseline.failures?.length ? "failure" : "success")
-    : "not-produced",
+  designBaselineCapture: process.env.CI_DESIGN_BASELINE
+    ?? (baseline ? (baseline.failures?.length ? "failure" : "success") : "not-produced"),
   jobStatusAtManifestGeneration: process.env.CI_JOB_STATUS ?? "unknown",
 };
 const viewportCoverage = [];
