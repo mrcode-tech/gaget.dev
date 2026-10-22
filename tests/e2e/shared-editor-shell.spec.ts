@@ -32,6 +32,7 @@ function makeWavFixture() {
 }
 
 type EditorCase = {
+  featureCount: number;
   id: string;
   title: string;
   route: string;
@@ -51,6 +52,7 @@ type EditorCase = {
 const editors: EditorCase[] = [
   {
     id: "photo",
+    featureCount: 13,
     title: "Photo",
     route: "/images/editor",
     menubar: '[data-testid="editor-menubar"]',
@@ -67,6 +69,7 @@ const editors: EditorCase[] = [
   },
   {
     id: "audio",
+    featureCount: 18,
     title: "Audio",
     route: "/audio/editor",
     menubar: '[data-testid="audio-editor-menubar"]',
@@ -83,6 +86,7 @@ const editors: EditorCase[] = [
   },
   {
     id: "video",
+    featureCount: 23,
     title: "Video",
     route: "/video/editor",
     menubar: '[data-testid="video-editor-menubar"]',
@@ -99,6 +103,7 @@ const editors: EditorCase[] = [
   },
   {
     id: "datetime",
+    featureCount: 20,
     title: "Date & Time",
     route: "/datetime/editor",
     menubar: 'nav[aria-label="Date and time editor commands"]',
@@ -182,6 +187,37 @@ async function saveStateScreenshot(page: Page, testInfo: TestInfo, name: string)
   await page.screenshot({ path: testInfo.outputPath(name), animations: "disabled" });
 }
 
+test("mobile feature-search threshold renders correctly at eight and nine features", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 640 });
+  await page.goto("/__ci__/feature-menu-search?count=8");
+  const menu = page.getByTestId("threshold-feature-menu");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(8);
+  await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-8-mobile-390x640.png");
+
+  await page.goto("/__ci__/feature-menu-search?count=9");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
+  const search = menu.getByRole("searchbox", { name: "Search features" });
+  await expect(search).toBeVisible();
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-default.png");
+
+  await search.fill("Feature 9");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(1);
+  await expect(menu.getByRole("button", { name: "Feature 9" })).toBeVisible();
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-search-match.png");
+
+  await search.fill("no-such-feature-xyz");
+  await expect(menu.getByRole("status")).toContainText("No matching features");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-search-no-match.png");
+
+  await search.fill("");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-tablet-768x1024.png");
+});
+
 for (const editor of editors) {
   for (const viewport of viewports) {
     for (const theme of ["light", "dark"] as const) {
@@ -220,6 +256,7 @@ for (const editor of editors) {
             await expect(featureMenu.getByRole("status")).toContainText("No matching features");
             await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-search-no-match.png`);
             await searchInput.fill("");
+            await expect(featureMenu.getByRole("button")).toHaveCount(editor.featureCount);
           } else {
             await expect(searchInput).toHaveCount(0);
           }
@@ -229,6 +266,15 @@ for (const editor of editors) {
           await page.keyboard.press("Escape");
           await expect(featureMenu).toBeHidden();
           await expect(featureTrigger).toBeFocused();
+          if (viewport.width < 768) {
+            await featureTrigger.click();
+            await expect(featureMenu).toBeVisible();
+            await expect(featureMenu.getByRole("searchbox", { name: "Search features" })).toHaveValue("");
+            await expect(featureMenu.getByRole("button")).toHaveCount(editor.featureCount);
+            await page.keyboard.press("Escape");
+            await expect(featureMenu).toBeHidden();
+            await expect(featureTrigger).toBeFocused();
+          }
         } else {
           const featureTrigger = menubar.getByRole("button", { name: editor.desktopFeatureTrigger });
           await expect(featureTrigger).toBeVisible();
