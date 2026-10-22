@@ -201,3 +201,31 @@ The verified checkpoint commit was `c5b6203c2789c9c7ed56b5c28cd22586857fd818`. I
 The capture script defines 390×844, 390×640, 768×1024 and 1440×1000, with light/dark and selected RTL route captures. A separate screenshot workflow on commit `dd0983eebdd60896b9b50c45594dc06c7fd931e1` succeeded, but that is not the same commit as the latest head; do not treat it as current-head visual proof. Current CI success uploads visual evidence artifacts, but screenshot capture completion and manual visual inspection must be checked from the exact run before claiming they passed.
 
 **Still open:** target wireframe remains Proposal; selected feature panel/open menu/loaded/error state screenshot inspection is not evidenced here; full keyboard and touch browser coverage and cross-consumer parity require follow-up. Do not declare the shared shell fully verified or approved solely from CI passing.
+
+## 10. Enhanced mobile Features-menu search
+
+**Status:** Proposed contract; not approved pixel-perfect target design.
+**Source files inspected on the task baseline:** components/photo-editor.tsx, components/audio-workbench.tsx, components/video-workbench.tsx, components/datetime-editor.tsx, tests/datetime-editor.test.tsx, and tests/e2e/shared-editor-shell.spec.ts.
+
+### Source-derived baseline
+
+| Editor | Feature entries in source | Current mobile/compact search behavior |
+|---|---:|---|
+| Photo/Image | 13 | No search input; grouped Edit/Image/Create list in mobile Features menu |
+| Audio | 18 | No search input; grouped feature menus, each currently opens one group at a time |
+| Video | 23 | No search input; grouped feature menus, each currently opens one group at a time |
+| Date & Time | 20 | Search input exists in the Features menu; it matches title, description and group using lowercase substring matching, but is currently shown throughout the compact menu breakpoint and its query persists when the menu closes |
+
+These counts and behaviors are source inspections, not a claim that browser tests have run. Audio and Video currently expose group-triggered menus rather than a single all-groups mobile list. The implementation must preserve the existing menu/navigation structure while applying a consistent search experience to the feature list actually available in each open menu. The product contract requires searching the current editor's available features, not another editor or global navigation.
+
+### Target rule
+
+Follow the Shared Editor Shell Contract — Mobile Features-menu search. In short: below 768 px only, show the search field when the current Features menu has more than 8 selectable feature entries; at 8 or fewer, omit it. Do not add the search field at tablet widths (768–1023 px) or desktop widths (1024 px and above). Keep the current groups/order/labels/descriptions/icons and feature activation semantics.
+
+**Architecture note:** Because Audio and Video currently open one group at a time while Photo and Date & Time present broader lists, do not flatten or redesign their navigation merely to imitate another editor. Count the available selectable features represented by the current Features menu interaction, and apply the same visibility rule and matching semantics to the current menu's available feature set. If implementation inspection establishes that the user intends all Audio/Video groups to become one combined menu, that would be a material navigation redesign and must be confirmed separately.
+
+### Search lifecycle and verification
+
+The query starts empty for every menu opening and clears on menu close, Escape, outside click, feature selection, and editor identity change. Match trimmed, case-insensitive substrings across title, description and group label; preserve source ordering and suppress empty groups. Show a localized no-results state for a non-empty query with no matches. Use existing i18n fallback and logical-direction styles for Persian/Arabic.
+
+The existing shared-shell Playwright matrix covers 390×640 mobile-short, 768×1024 tablet and 1440×900 desktop for menu geometry and Escape focus restoration, but it does not yet verify the new search threshold/results/RTL contract. Add targeted unit/component and browser coverage, and associate generated screenshots and a manifest with the exact tested commit. No implementation or visual verification is claimed by this baseline entry.
