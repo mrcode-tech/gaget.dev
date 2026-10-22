@@ -4,7 +4,8 @@ import { chromium } from "@playwright/test";
 
 const baseURL = process.env.DESIGN_BASELINE_URL ?? "http://127.0.0.1:3000";
 const outputRoot = process.env.DESIGN_BASELINE_OUTPUT ?? "artifacts/design-baseline";
-const commit = (process.env.GITHUB_SHA ?? process.env.DESIGN_BASELINE_COMMIT ?? "local").slice(0, 12);
+const commit = (process.env.GITHUB_SHA ?? process.env.DESIGN_BASELINE_COMMIT ?? "local").trim();
+const commitSlug = commit.slice(0, 12);
 const routes = [
   { name: "home", path: "/" },
   { name: "tools", path: "/tools" },
@@ -76,7 +77,7 @@ try {
           const routePath = `${locale.prefix}${route.path}` || "/";
           const url = new URL(routePath, baseURL).toString();
           const relative = path.join(
-            commit,
+            commitSlug,
             ...(locale.name === "en" ? [] : [locale.name]),
             viewport.name,
             theme,

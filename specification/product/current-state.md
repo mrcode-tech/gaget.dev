@@ -9,7 +9,7 @@
 ### Application shell
 - Next.js App Router with shared `AppShell`, `AppHeader`, and `AppSidebar`.
 - Desktop sidebar expands to 248px and collapses to 64px at the large-screen breakpoint; the shell offsets content according to sidebar state and text direction.
-- Header height is 68px. The shell hides the standard header on media editor routes at smaller sizes and provides editor-specific spacing/controls.
+- Header height is 68px. On Photo, Audio, Video, and Date & Time editor routes, the global header and its spacer are hidden below the large-screen breakpoint; the editor command bar is the single compact-screen navigation row. Date & Time places its hamburger and File trigger on the left and Features on the right, and the hamburger opens the shared mobile sidebar drawer. Desktop retains the global header and editor offset.
 - Mobile/tablet navigation uses a drawer opened through a shared custom event.
 - Theme toggle and language switcher are shared controls. Persian and Arabic are RTL; locale translation completeness varies.
 

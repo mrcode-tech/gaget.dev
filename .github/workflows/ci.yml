@@ -43,12 +43,15 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run unit tests
+        id: unit-tests
         run: npm run test:unit
 
       - name: Run focused Photo Editor and sidebar regression tests
+        id: focused-regressions
         run: npx vitest run tests/photo-editor.test.tsx tests/app-sidebar.test.tsx
 
       - name: Run component tests
+        id: component-tests
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -56,15 +59,19 @@ jobs:
           npm run test:component 2>&1 | tee artifacts/ci-logs/component-tests.log
 
       - name: Run ESLint
+        id: lint
         run: npm run lint
 
       - name: Check TypeScript
+        id: typecheck
         run: npm run typecheck
 
       - name: Build production app
+        id: build
         run: npm run build
 
       - name: Start production server, smoke-test routes, and run responsive accessibility tests
+        id: browser-validation
         shell: bash
         run: |
           node node_modules/next/dist/bin/next start --hostname 127.0.0.1 > /tmp/gaget-next.log 2>&1 &
@@ -98,6 +105,23 @@ jobs:
         run: |
           mkdir -p artifacts/ci-logs
           if [ -f /tmp/gaget-next.log ]; then cp /tmp/gaget-next.log artifacts/ci-logs/next.log; fi
+
+      - name: Generate CI evidence manifest
+        if: always()
+        env:
+          CI_UNIT_TESTS: ${{ steps.unit-tests.outcome }}
+          CI_FOCUSED_REGRESSIONS: ${{ steps.focused-regressions.outcome }}
+          CI_COMPONENT_TESTS: ${{ steps.component-tests.outcome }}
+          CI_LINT: ${{ steps.lint.outcome }}
+          CI_TYPECHECK: ${{ steps.typecheck.outcome }}
+          CI_BUILD: ${{ steps.build.outcome }}
+          CI_BROWSER_VALIDATION: ${{ steps.browser-validation.outcome }}
+          CI_JOB_STATUS: ${{ job.status }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_ATTEMPT: ${{ github.run_attempt }}
+          CI_WORKFLOW: ${{ github.workflow }}
+          CI_REPOSITORY: ${{ github.repository }}
+        run: node scripts/write-ci-evidence-manifest.mjs
 
       - name: Upload test and visual evidence
         if: always()
