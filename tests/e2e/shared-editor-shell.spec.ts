@@ -417,7 +417,8 @@ for (const editor of editors) {
           await expect(panel).toBeVisible();
         }
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-        await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-panel.png`);
+        const panelScenario = viewport.width < 768 ? "panel-resized-reopened" : "panel";
+        await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-${panelScenario}.png`);
       });
     }
   }
