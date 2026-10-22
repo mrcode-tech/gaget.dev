@@ -72,7 +72,8 @@ describe("shared mobile feature search contract", () => {
     expect(within(featureMenu).getByText("No matching features. Try a different search.")).toBeTruthy();
     expect(featureMenu.querySelectorAll("section button").length).toBe(0);
 
-    fireEvent.click(within(featureMenu).getByRole("button", { name: "Close feature menu" }));
+    fireEvent.click(screen.getByRole("button", { name: trigger }));
+    expect(screen.queryByTestId(menu)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: trigger }));
     expect((within(screen.getByTestId(menu)).getByRole("searchbox", { name: "Search features" }) as HTMLInputElement).value).toBe("");
     expect(screen.getByTestId(menu).querySelectorAll("section button").length).toBe(count);
