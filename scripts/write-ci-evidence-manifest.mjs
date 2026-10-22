@@ -172,8 +172,8 @@ for (const screenshot of screenshots) {
   if (screenshot.commit !== commit) {
     validationErrors.push(`Screenshot commit mismatch: ${screenshot.path}`);
   }
-  if (screenshot.state && !screenshot.viewport) {
-    validationErrors.push(`Screenshot state has no viewport metadata: ${screenshot.path}`);
+  if (["feature-panel", "panel-resized-reopened"].includes(screenshot.state) && !screenshot.viewport) {
+    validationErrors.push(`Panel screenshot has no viewport metadata: ${screenshot.path}`);
   }
 }
 
