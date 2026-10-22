@@ -347,6 +347,8 @@ const panelViewports = [
   { name: "mobile-360x844", width: 360, height: 844 },
   { name: "mobile-390x844", width: 390, height: 844 },
   { name: "mobile-430x844", width: 430, height: 844 },
+  { name: "mobile-640x844", width: 640, height: 844 },
+  { name: "mobile-767x844", width: 767, height: 844 },
   { name: "mobile-short-390x640", width: 390, height: 640 },
   { name: "tablet-768x1024", width: 768, height: 1024 },
   { name: "desktop-1440x900", width: 1440, height: 900 },
