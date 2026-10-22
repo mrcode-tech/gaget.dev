@@ -226,6 +226,51 @@ for (const editor of editors) {
   }
 }
 
+for (const viewport of [{ name: "mobile", width: 390, height: 844 }, { name: "tablet", width: 768, height: 1024 }] as const) {
+  test(`Date & Time keeps hamburger, File, and Features in one command bar at ${viewport.name} width`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/datetime/editor");
+    const menubar = page.locator('nav[aria-label="Date and time editor commands"]');
+    const navigation = menubar.getByRole("button", { name: "Open navigation" });
+    const fileTrigger = menubar.getByRole("button", { name: "File menu" });
+    const featuresTrigger = menubar.getByRole("button", { name: /^Features$/ });
+    await expect(navigation).toBeVisible();
+    await expect(fileTrigger).toBeVisible();
+    await expect(featuresTrigger).toBeVisible();
+    const [navigationBox, fileBox, featuresBox, barBox] = await Promise.all([
+      navigation.boundingBox(), fileTrigger.boundingBox(), featuresTrigger.boundingBox(), menubar.boundingBox(),
+    ]);
+    expect(navigationBox).not.toBeNull();
+    expect(fileBox).not.toBeNull();
+    expect(featuresBox).not.toBeNull();
+    expect(barBox).not.toBeNull();
+    if (navigationBox && fileBox && featuresBox && barBox) {
+      expect(Math.abs(navigationBox.y - fileBox.y)).toBeLessThanOrEqual(1);
+      expect(Math.abs(fileBox.y - featuresBox.y)).toBeLessThanOrEqual(1);
+    }
+    await fileTrigger.click();
+    const fileMenu = page.locator('[data-testid="datetime-file-menu"]');
+    await expect(fileMenu).toBeVisible();
+    expect(await fileMenu.evaluate((element) => element.closest("nav")?.getAttribute("aria-label"))).toBe("Date and time editor commands");
+    await assertWithinViewport(page, '[data-testid="datetime-file-menu"]', "Date & Time File menu");
+    await expect.poll(() => fileMenu.boundingBox().then((box) => box && barBox && box.y >= barBox.y + barBox.height - 1)).toBe(true);
+    await saveStateScreenshot(page, testInfo, `datetime-${viewport.name}-file-menu.png`);
+    await page.keyboard.press("Escape");
+    await featuresTrigger.click();
+    const featuresMenu = page.locator('[data-testid="datetime-feature-menu"]');
+    await expect(featuresMenu).toBeVisible();
+    await assertWithinViewport(page, '[data-testid="datetime-feature-menu"]', "Date & Time Features menu");
+    await expect.poll(() => featuresMenu.boundingBox().then((box) => box && barBox && box.y >= barBox.y + barBox.height - 1)).toBe(true);
+    await saveStateScreenshot(page, testInfo, `datetime-${viewport.name}-features-menu.png`);
+    await page.keyboard.press("Escape");
+    await navigation.click();
+    const drawer = page.getByTestId("mobile-navigation-drawer");
+    await expect(drawer).toBeVisible();
+    await drawer.getByRole("button", { name: "Close navigation", exact: true }).click();
+    await expect(drawer).toBeHidden();
+  });
+}
+
 const panelViewports = [
   { name: "mobile-short", width: 390, height: 640 },
   { name: "tablet", width: 768, height: 1024 },

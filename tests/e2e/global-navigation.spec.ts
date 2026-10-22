@@ -13,6 +13,23 @@ for (const route of routes) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(route);
 
+    if (route.startsWith("/datetime/")) {
+      const header = page.locator("header").first();
+      const commandBar = page.getByRole("navigation", { name: "Date and time editor commands" });
+      const hamburger = commandBar.getByRole("button", { name: "Open navigation" });
+      await expect(header).toBeHidden();
+      await expect(commandBar).toBeVisible();
+      await expect(hamburger).toBeVisible();
+      await expect(page.getByRole("button", { name: "Open navigation" })).toHaveCount(1);
+
+      await hamburger.click();
+      const drawer = page.getByTestId("mobile-navigation-drawer");
+      await expect(drawer).toBeVisible();
+      await drawer.getByRole("button", { name: "Close navigation", exact: true }).click();
+      await expect(drawer).toBeHidden();
+      return;
+    }
+
     const header = page.locator("header").first();
     const hamburger = page.getByRole("button", { name: "Open navigation" });
     await expect(header).toBeVisible();

@@ -42,10 +42,10 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
               : "min-h-screen transition-[padding] duration-200 lg:pr-[248px]"
         }
       >
-        <div className={isMediaEditor ? "hidden lg:block" : ""}>
+        <div className={isEditor ? "hidden lg:block" : ""}>
           <AppHeader sidebarCollapsed={sidebarCollapsed} />
         </div>
-        <div aria-hidden="true" className={isMediaEditor ? "hidden h-[68px] lg:block" : "h-[68px]"} />
+        <div aria-hidden="true" className={isEditor ? "hidden h-[68px] lg:block" : "h-[68px]"} />
         {children}
       </div>
     </>

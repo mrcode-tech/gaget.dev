@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
+import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Menu, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
@@ -185,11 +185,12 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }
 
   return (
-    <main className="flex h-[calc(100dvh-68px)] min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground" dir={appDirection}>
+    <main className="flex h-dvh min-h-[280px] lg:h-[calc(100dvh-68px)] min-w-0 flex-col overflow-hidden bg-background text-foreground" dir={appDirection}>
       <nav ref={commandBarRef} aria-label="Date and time editor commands" className="relative z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 sm:px-6 lg:justify-start">
-        <div className="flex items-center gap-3">
-          <button type="button" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "File" ? null : "File"); }}>File</button>
-        {menuOpen === "File" && <div data-testid="datetime-file-menu" className="absolute start-3 top-[calc(100%-1px)] z-50 min-w-52 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:start-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <button type="button" aria-label="Open navigation" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background hover:bg-accent lg:hidden" onClick={() => window.dispatchEvent(new CustomEvent("gaget:open-navigation"))}><Menu aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" aria-label="File menu" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "File" ? null : "File"); }}>File</button>
+        {menuOpen === "File" && <div data-testid="datetime-file-menu" className="absolute start-3 top-full z-50 min-w-52 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:start-6">
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(formattedDate + " " + formattedTime + " (" + timeZone + ")"); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy current display</span></button>
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(displayNow?.toISOString() ?? ""); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy ISO 8601</span></button>
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(displayNow ? String(Math.floor(displayNow.getTime() / 1000)) : ""); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy Unix timestamp</span></button>
@@ -197,11 +198,11 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { resetReference(); setMenuOpen(null); }}><RotateCcw className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Reset reference to now</span></button><div className="my-1 border-t border-border lg:hidden" /><p className="mt-1 hidden border-t border-border px-3 py-2 text-xs text-muted-foreground lg:block">Date and time values stay in this browser.</p>
         </div>}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <div className="hidden items-center gap-3 lg:flex">
             {groups.map((group) => <div key={group} className="relative">
               <button type="button" aria-expanded={menuOpen === group} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === group ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === group ? null : group); }}>{group}</button>
-              {menuOpen === group && <div data-testid={"datetime-" + group.toLowerCase() + "-menu"} className="absolute start-0 top-[calc(100%-1px)] z-50 max-h-[min(70dvh,520px)] w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+              {menuOpen === group && <div data-testid={"datetime-" + group.toLowerCase() + "-menu"} className="absolute start-0 top-full z-50 max-h-[min(70dvh,520px)] w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl">
                 <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group} features</p>
                 {features.filter((feature) => feature.group === group && (feature.title + " " + feature.description).toLowerCase().includes(query.toLowerCase())).map((feature) => { const FeatureIcon = featureIcons[feature.slug] ?? CalendarDays; return <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-start hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "bg-accent" : "")}><FeatureIcon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{feature.title}</span><span className="mt-0.5 block text-xs leading-4 text-muted-foreground">{feature.description}</span></span></button>; })}
               </div>}
@@ -209,7 +210,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </div>
           <button type="button" aria-expanded={menuOpen === "Features"} className={"inline-flex h-9 items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "Features" ? null : "Features"); }}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
         </div>
-        {menuOpen === "Features" && <div data-testid="datetime-feature-menu" className="absolute end-3 top-[calc(100%-1px)] z-50 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(70dvh,520px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:end-6 lg:hidden">
+        {menuOpen === "Features" && <div data-testid="datetime-feature-menu" className="absolute end-3 top-full z-50 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(70dvh,520px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:end-6 lg:hidden">
           <div className="flex items-center justify-between gap-2 px-3 py-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date &amp; time features</span><button type="button" aria-label="Close feature menu" className="rounded p-1 hover:bg-accent" onClick={() => setMenuOpen(null)}><X className="h-4 w-4" /></button></div>
           <div className="relative px-1 pb-2"><Search className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input aria-label="Search date and time features" className="ps-9" placeholder="Search date, time, calendar…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
           <div className="space-y-3">
