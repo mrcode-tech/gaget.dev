@@ -40,7 +40,7 @@ export function useFeatureMenuSearch(isOpen: boolean, featureCount: number, edit
 
   return {
     canSearch: isOpen && shouldShowFeatureSearch(featureCount, isMobile ? MOBILE_FEATURE_SEARCH_BREAKPOINT - 1 : MOBILE_FEATURE_SEARCH_BREAKPOINT),
-    query,
+    query: isOpen && isMobile && featureCount > FEATURE_SEARCH_THRESHOLD ? query : "",
     setQuery,
     matches: (fields: readonly string[]) => matchesFeatureSearch(isOpen && isMobile && featureCount > FEATURE_SEARCH_THRESHOLD ? query : "", fields, locale),
   };
