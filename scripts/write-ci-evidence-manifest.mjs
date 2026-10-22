@@ -37,6 +37,10 @@ async function readBaselineManifest() {
 
 function inferViewport(filePath) {
   const file = path.basename(filePath).toLowerCase();
+  // Prefer explicit dimensions embedded in E2E screenshot names so every
+  // viewport in the responsive panel matrix is represented in the manifest.
+  const dimensions = file.match(/(?:^|[^0-9])(\\d{3,4})x(\\d{3,4})(?:[^0-9]|$)/);
+  if (dimensions) return { width: Number(dimensions[1]), height: Number(dimensions[2]) };
   if (file.includes("tablet") || file.includes("768x1024")) return { width: 768, height: 1024 };
   if (file.includes("desktop") && filePath.startsWith("test-results/")) return { width: 1440, height: 900 };
   if (file.includes("mobile-390x844")) return { width: 390, height: 844 };
