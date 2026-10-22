@@ -189,33 +189,34 @@ async function saveStateScreenshot(page: Page, testInfo: TestInfo, name: string)
 
 test("mobile feature-search threshold renders correctly at eight and nine features", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 640 });
+  await page.addInitScript(() => localStorage.setItem("theme", "light"));
   await page.goto("/__ci__/feature-menu-search?count=8");
   const menu = page.getByTestId("threshold-feature-menu");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(8);
   await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
-  await saveStateScreenshot(page, testInfo, "feature-search-threshold-8-mobile-390x640.png");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-8-mobile-390x640-light.png");
 
   await page.goto("/__ci__/feature-menu-search?count=9");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
   const search = menu.getByRole("searchbox", { name: "Search features" });
   await expect(search).toBeVisible();
-  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-default.png");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-light-default.png");
 
   await search.fill("Feature 9");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(1);
   await expect(menu.getByRole("button", { name: "Feature 9" })).toBeVisible();
-  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-search-match.png");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-light-search-match.png");
 
   await search.fill("no-such-feature-xyz");
   await expect(menu.getByRole("status")).toContainText("No matching features");
-  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-search-no-match.png");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-light-search-no-match.png");
 
   await search.fill("");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
   await page.setViewportSize({ width: 768, height: 1024 });
   await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
-  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-tablet-768x1024.png");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-tablet-768x1024-light.png");
 });
 
 for (const editor of editors) {

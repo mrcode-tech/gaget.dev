@@ -110,7 +110,7 @@ describe("shared mobile feature search contract", () => {
   it("localizes the shared search control and direction for Arabic", () => {
     setViewport(390);
     render(<I18nProvider locale="ar"><DateTimeEditor /></I18nProvider>);
-    fireEvent.click(screen.getByRole("button", { name: "الميزات" }));
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
     const search = screen.getByRole("searchbox", { name: "البحث عن الميزات" });
     expect(search.getAttribute("dir")).toBe("rtl");
     expect((search as HTMLInputElement).placeholder).toBe("ابحث عن ميزة…");
