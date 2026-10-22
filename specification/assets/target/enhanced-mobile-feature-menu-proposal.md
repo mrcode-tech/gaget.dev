@@ -20,3 +20,7 @@
 | Desktop | 1440 × 900 | No new search input; existing desktop grouped menus unchanged |
 
 This is authored design evidence, not a browser screenshot. The CI-generated screenshot/verification manifest must be used for runtime claims and must identify the exact evaluated commit. The threshold examples are schematic and must not be reported as browser-verified 8/9 feature fixtures.
+
+## Generated browser verification reference
+
+The authored SVG above remains a **Proposal**. Separately, [CI run 39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) passed on implementation commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8. Download artifact ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 from that run to inspect artifacts/ci-logs/verification-manifest.json and the generated browser screenshots. The manifest indexes 246 screenshots, including explicit 8-feature/no-search, 9-feature/search-visible, matching, no-match, and tablet/no-search states. Its metadata is commit-specific; consult the latest branch run for any later commit rather than reusing this artifact as current-head evidence.

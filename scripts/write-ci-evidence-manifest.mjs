@@ -73,6 +73,9 @@ function inferScreenshotMetadata(filePath) {
   else if (file.startsWith("fa-audio-editor-")) route = "/fa/audio/editor";
   else if (file.startsWith("fa-video-editor-")) route = "/fa/video/editor";
   else if (file.startsWith("fa-datetime-editor-")) route = "/fa/datetime/editor";
+  else if (file.startsWith("ar-images-editor-")) route = "/ar/images/editor";
+  else if (file.startsWith("ar-audio-editor-")) route = "/ar/audio/editor";
+  else if (file.startsWith("ar-video-editor-")) route = "/ar/video/editor";
   else if (file.startsWith("ar-datetime-editor-")) route = "/ar/datetime/editor";
   return { ...(route ? { route } : {}), locale, direction, ...(theme ? { theme } : {}) };
 }

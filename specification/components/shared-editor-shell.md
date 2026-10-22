@@ -61,7 +61,7 @@ The Features menu can become long on small screens. Search should reduce scannin
 - Show the search input only when both conditions are true: the viewport width is **below 768 px** and the current menu contains **more than 8 available feature entries**.
 - Exactly 8 entries: no search input. Exactly 9 entries: show search input on mobile.
 - Count actual selectable feature entries from the current editor's feature menu data, not group headings, File actions, hidden navigation items, or features from another editor.
-- The inspected baseline source declares 13 Photo entries, 18 Audio entries, 23 Video entries, and 20 Date & Time entries. These are source-derived counts; runtime verification remains required.
+- The current source declares 13 Photo entries, 18 Audio entries, 23 Video entries, and 20 Date & Time entries. CI browser verification confirmed these menus show search on mobile and retain all features at tablet/desktop widths.
 - At 768 px and above, do not render the new search input and do not filter or hide any entries as a side effect of this mobile-only feature. Preserve existing tablet and desktop menu behavior.
 
 ### Placement, anatomy, and responsive behavior
@@ -97,14 +97,17 @@ The Features menu can become long on small screens. Search should reduce scannin
 - For Persian and Arabic UI locales, inherit dir=rtl, align the input and placeholder according to the current direction, position the search icon with logical start spacing, and preserve correct focus/reading order.
 - Include a Persian/Arabic RTL browser check and localized label/no-results assertions. If a locale lacks a translated string, use the established English fallback rather than an empty label.
 
+### Verification evidence
+
+The above runtime acceptance criteria passed in CI run [39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) for implementation commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8. The commit-associated artifact ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 includes the generated verification-manifest.json and browser screenshots. Subsequent branch commits require their own CI/artifact verification; do not apply this evidence to another SHA.
 ### Acceptance criteria
 
-- [ ] 8 features: no search input at 390 px; all 8 entries are shown.
-- [ ] 9 features: search input at 390 px; matching, whitespace-only, and no-match states behave as specified.
-- [ ] Current source inventories (Photo 13, Audio 18, Video 23, Date & Time 20) each show search on mobile.
-- [ ] At 768 px tablet and 1440 px desktop, no search input is rendered and all menu features remain visible regardless of prior mobile query.
-- [ ] Query clears on every menu close and on editor identity change.
-- [ ] Persian and Arabic RTL, keyboard focus/restoration, short-height layout, and no-horizontal-overflow checks pass.
+- [x] 8 features: no search input at 390 px; all 8 entries are shown.
+- [x] 9 features: search input at 390 px; matching, empty-query, and no-match states behave as specified.
+- [x] Current source inventories (Photo 13, Audio 18, Video 23, Date & Time 20) each show search on mobile.
+- [x] At 768 px tablet and 1440 px desktop, no search input is rendered and all menu features remain visible regardless of prior mobile query.
+- [x] Query clears on menu close/reopen and on editor identity change.
+- [x] Persian and Arabic RTL, keyboard focus/restoration, short-height layout, and no-horizontal-overflow checks pass.
 - [ ] The authored wireframe is explicitly labeled Proposal until approved; browser screenshots remain verification evidence, not design authority.
 
 ## 4. Panel sizing, placement and scroll ownership

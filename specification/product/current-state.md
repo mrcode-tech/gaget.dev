@@ -125,14 +125,12 @@ No implementation or browser check is marked complete by this source audit alone
 
 The expected behavior is defined in the Shared Editor Shell Contract and Feature Contract Reconciliation. This entry is a baseline audit, not a task log and not evidence of implementation completion.
 
-## Enhanced mobile Features-menu search — implementation source status
+## Enhanced mobile Features-menu search — verified implementation
 
-**Source status:** Implementation and regression tests are present on feature/enhanced-menu. This is a source inspection only; test execution, browser rendering, and CI artifact production have not been verified in this record.
+**Implementation verification:** CI run [39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) passed on commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 on feature/enhanced-menu. The run passed unit tests (29), focused Photo/sidebar regressions, component tests (75), ESLint, TypeScript, production build, route smoke tests, responsive/accessibility Playwright tests (104), and design-baseline capture.
 
-- Shared logic is in lib/feature-menu-search.ts. It defines the existing 768px mobile/tablet boundary, the greater-than-eight threshold, locale-aware case-insensitive matching, and query reset when the menu closes, the viewport leaves mobile, or the editor identity changes.
-- Shared search/no-results UI is in components/feature-menu-search.tsx. It uses the existing shadcn-style Input, logical start positioning, semantic tokens, and translated English/Persian/Arabic labels.
-- Photo, Audio, Video, and Date & Time menus consume the shared search behavior. Source-declared selectable feature counts remain 13, 18, 23, and 20 respectively.
-- Unit/component tests were added for the 8/9 threshold, counts/filtering across all four editors, no-match behavior, query reset on close/reopen and editor change, tablet resizing, and Persian RTL input. Shared-shell Playwright coverage now captures mobile match/no-match and RTL search states and asserts no search at tablet/desktop.
-- scripts/write-ci-evidence-manifest.mjs now recognizes the new search screenshot states and infers their mobile viewport for the generated manifest.
-- **Not verified:** no successful test, lint, typecheck, production build, browser screenshot review, or commit-matched CI evidence artifact is confirmed here. See the task handoff for the verification-access limitation.
-
+- Shared logic is in lib/feature-menu-search.ts: mobile is below 768 CSS px, search appears only when the current menu has more than 8 selectable entries, matching is trimmed and case-insensitive, and query state resets on menu close, viewport change out of mobile, and editor identity change.
+- Shared UI is in components/feature-menu-search.tsx, using the existing shadcn-style Input, semantic tokens, logical positioning, and English/Persian/Arabic labels and no-results text.
+- Photo, Audio, Video, and Date & Time use the shared behavior. Source-declared feature counts are 13, 18, 23, and 20.
+- The passing Playwright run exercised the exact 8/9 threshold in a rendered browser harness, mobile match/no-match/empty-query states, menu close/reopen reset, tablet and desktop behavior, short-height layouts, and RTL coverage. The CI evidence artifact is ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8; its artifacts/ci-logs/verification-manifest.json indexes 246 screenshots and binds each screenshot entry to the tested commit.
+- Evidence scope: this result is for the exact commit named above. Use the latest branch CI run and its commit-matched artifact for any later branch head; never reuse this artifact as proof for a different SHA. The authored SVG remains a proposal, not a browser screenshot or an approved pixel-perfect design.

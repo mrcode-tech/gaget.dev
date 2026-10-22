@@ -194,7 +194,7 @@ test("mobile feature-search threshold renders correctly at eight and nine featur
   const menu = page.getByTestId("threshold-feature-menu");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(8);
   await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
-  await saveStateScreenshot(page, testInfo, "feature-search-threshold-8-mobile-390x640-light.png");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-8-mobile-390x640-light-default.png");
 
   await page.goto("/ci/feature-menu-search?count=9");
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
@@ -216,7 +216,7 @@ test("mobile feature-search threshold renders correctly at eight and nine featur
   await page.setViewportSize({ width: 768, height: 1024 });
   await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
   await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
-  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-tablet-768x1024-light.png");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-tablet-768x1024-light-tablet.png");
 });
 
 for (const editor of editors) {
@@ -424,7 +424,7 @@ test("Video loaded-state feature panel remains bounded on short mobile screens",
   await saveStateScreenshot(page, testInfo, "video-mobile-short-dark-loaded-panel.png");
 });
 
-for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor", "/fa/datetime/editor", "/ar/datetime/editor"]) {
+for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor", "/fa/datetime/editor", "/ar/images/editor", "/ar/audio/editor", "/ar/video/editor", "/ar/datetime/editor"]) {
   test(`RTL editor shell stays within viewport on ${route}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 640 });
     await page.addInitScript(() => localStorage.setItem("theme", "dark"));
