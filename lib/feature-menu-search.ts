@@ -42,6 +42,6 @@ export function useFeatureMenuSearch(isOpen: boolean, featureCount: number, edit
     canSearch: isOpen && shouldShowFeatureSearch(featureCount, isMobile ? MOBILE_FEATURE_SEARCH_BREAKPOINT - 1 : MOBILE_FEATURE_SEARCH_BREAKPOINT),
     query,
     setQuery,
-    matches: (fields: readonly string[]) => matchesFeatureSearch(query, fields, locale),
+    matches: (fields: readonly string[]) => matchesFeatureSearch(isOpen && isMobile && featureCount > FEATURE_SEARCH_THRESHOLD ? query : "", fields, locale),
   };
 }
