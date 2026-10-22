@@ -37,10 +37,18 @@ async function readBaselineManifest() {
 
 function inferViewport(filePath) {
   const file = path.basename(filePath).toLowerCase();
-  if (file.includes("mobile-short") || file.includes("mobile-390x640")) return { width: 390, height: 640 };
+  if (file.includes("mobile-short") || file.includes("mobile-390x640") || (file.includes("rtl") && file.includes("search"))) return { width: 390, height: 640 };
   if (file.includes("datetime-mobile-file-menu") || file.includes("datetime-mobile-features-menu")) return { width: 390, height: 844 };
   if (file.includes("tablet") || file.includes("768x1024")) return { width: 768, height: 1024 };
   if (file.includes("desktop") && filePath.startsWith("test-results/")) return { width: 1440, height: 900 };
+  return null;
+}
+
+function inferState(filePath) {
+  const file = path.basename(filePath).toLowerCase();
+  if (file.includes("search-no-match")) return "feature-search-no-match";
+  if (file.includes("search-match")) return "feature-search-match";
+  if (file.includes("features-menu")) return "features-menu-default";
   return null;
 }
 
@@ -68,7 +76,9 @@ const screenshots = files
         direction: capture.direction,
         theme: capture.theme,
         state: capture.state,
-      } : {}),
+      } : {
+        ...(inferState(filePath) ? { state: inferState(filePath) } : {}),
+      }),
     };
   });
 const testResults = {
