@@ -320,7 +320,12 @@ export function PhotoEditor() {
       if (event.target instanceof Node && !menuBarRef.current?.contains(event.target)) setMenuOpen(null);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(null);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        const trigger = menuBarRef.current?.querySelector<HTMLButtonElement>('button[aria-expanded="true"]');
+        setMenuOpen(null);
+        trigger?.focus();
+      }
     };
     document.addEventListener("pointerdown", closeOnOutsidePointer);
     document.addEventListener("keydown", closeOnEscape);
