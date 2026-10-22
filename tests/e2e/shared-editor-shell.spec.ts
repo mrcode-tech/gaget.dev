@@ -343,8 +343,13 @@ for (const viewport of [{ name: "mobile", width: 390, height: 844 }, { name: "ta
 }
 
 const panelViewports = [
-  { name: "mobile-short", width: 390, height: 640 },
-  { name: "tablet", width: 768, height: 1024 },
+  { name: "mobile-320x844", width: 320, height: 844 },
+  { name: "mobile-360x844", width: 360, height: 844 },
+  { name: "mobile-390x844", width: 390, height: 844 },
+  { name: "mobile-430x844", width: 430, height: 844 },
+  { name: "mobile-short-390x640", width: 390, height: 640 },
+  { name: "tablet-768x1024", width: 768, height: 1024 },
+  { name: "desktop-1440x900", width: 1440, height: 900 },
 ] as const;
 
 for (const editor of editors) {
@@ -388,6 +393,13 @@ for (const editor of editors) {
         const panel = page.locator(editor.panel);
         await expect(panel).toBeVisible();
         await assertWithinViewport(page, editor.panel, `${editor.title} feature panel`);
+        const panelBox = await panel.boundingBox();
+        expect(panelBox, `${editor.title} feature panel bounding box`).not.toBeNull();
+        if (panelBox && viewport.width < 768) {
+          expect(panelBox.x, `${editor.title} panel left edge at ${viewport.width}px`).toBeCloseTo(0, 0);
+          expect(panelBox.width, `${editor.title} panel width at ${viewport.width}px`).toBeCloseTo(viewport.width, 0);
+          expect(panelBox.x + panelBox.width, `${editor.title} panel right edge at ${viewport.width}px`).toBeCloseTo(viewport.width, 0);
+        }
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-panel.png`);
       });
