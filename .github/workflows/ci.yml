@@ -49,7 +49,11 @@ jobs:
         run: npx vitest run tests/photo-editor.test.tsx tests/app-sidebar.test.tsx
 
       - name: Run component tests
-        run: npm run test:component
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run test:component 2>&1 | tee artifacts/ci-logs/component-tests.log
 
       - name: Run ESLint
         run: npm run lint
@@ -105,5 +109,5 @@ jobs:
             artifacts/ci-logs/
             test-results/
             playwright-report/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
