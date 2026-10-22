@@ -44,6 +44,8 @@ type EditorCase = {
   desktopFeatureTrigger: RegExp;
   desktopFeatureMenu: string;
   desktopFeatureName: RegExp;
+  searchQuery: string;
+  searchResult: RegExp;
 };
 
 const editors: EditorCase[] = [
@@ -60,6 +62,8 @@ const editors: EditorCase[] = [
     desktopFeatureTrigger: /^Edit$/,
     desktopFeatureMenu: '[data-testid="photo-feature-menu"]',
     desktopFeatureName: /^Crop$/,
+    searchQuery: "crop",
+    searchResult: /^Crop$/,
   },
   {
     id: "audio",
@@ -74,6 +78,8 @@ const editors: EditorCase[] = [
     desktopFeatureTrigger: /^Edit$/,
     desktopFeatureMenu: '[data-testid="audio-feature-menu"]',
     desktopFeatureName: /^Trim & range$/,
+    searchQuery: "trim & range",
+    searchResult: /^Trim & range$/,
   },
   {
     id: "video",
@@ -88,6 +94,8 @@ const editors: EditorCase[] = [
     desktopFeatureTrigger: /^Edit$/,
     desktopFeatureMenu: '[data-testid="video-feature-menu"]',
     desktopFeatureName: /^Trim video$/,
+    searchQuery: "trim video",
+    searchResult: /^Trim video$/,
   },
   {
     id: "datetime",
@@ -101,7 +109,9 @@ const editors: EditorCase[] = [
     featureName: /.*/,
     desktopFeatureTrigger: /^Date$/,
     desktopFeatureMenu: '[data-testid="datetime-date-menu"]',
-    desktopFeatureName: /^Calendar Browse/
+    desktopFeatureName: /^Calendar Browse/,
+    searchQuery: "world clock",
+    searchResult: /World clock/,
   },
 ];
 
@@ -200,6 +210,19 @@ for (const editor of editors) {
           await featureTrigger.click();
           const featureMenu = page.locator(editor.featureMenu);
           await expect(featureMenu).toBeVisible();
+          const searchInput = featureMenu.getByRole("searchbox", { name: "Search features" });
+          if (viewport.width < 768) {
+            await expect(searchInput).toBeVisible();
+            await searchInput.fill(editor.searchQuery);
+            await expect(featureMenu.getByRole("button", { name: editor.searchResult })).toBeVisible();
+            await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-search-match.png`);
+            await searchInput.fill("no-such-feature-xyz");
+            await expect(featureMenu.getByRole("status")).toContainText("No matching features");
+            await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-search-no-match.png`);
+            await searchInput.fill("");
+          } else {
+            await expect(searchInput).toHaveCount(0);
+          }
           await assertWithinViewport(page, editor.featureMenu, `${editor.title} Features menu`);
           await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
           await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-features-menu.png`);
@@ -212,6 +235,7 @@ for (const editor of editors) {
           await featureTrigger.click();
           const featureMenu = page.locator(editor.desktopFeatureMenu);
           await expect(featureMenu).toBeVisible();
+          await expect(featureMenu.getByRole("searchbox")).toHaveCount(0);
           await expect(featureMenu.getByRole("button", { name: editor.desktopFeatureName })).toBeVisible();
           await assertWithinViewport(page, editor.desktopFeatureMenu, `${editor.title} desktop feature menu`);
           await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-desktop-features-menu.png`);
