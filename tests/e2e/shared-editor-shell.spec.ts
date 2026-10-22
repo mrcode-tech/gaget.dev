@@ -251,7 +251,7 @@ for (const viewport of [{ name: "mobile", width: 390, height: 844 }, { name: "ta
     await fileTrigger.click();
     const fileMenu = page.locator('[data-testid="datetime-file-menu"]');
     await expect(fileMenu).toBeVisible();
-    await expect(fileMenu).toHaveJSProperty("parentElement", await menubar.elementHandle());
+    expect(await fileMenu.evaluate((element) => element.closest("nav")?.getAttribute("aria-label"))).toBe("Date and time editor commands");
     await assertWithinViewport(page, '[data-testid="datetime-file-menu"]', "Date & Time File menu");
     await expect.poll(() => fileMenu.boundingBox().then((box) => box && barBox && box.y >= barBox.y + barBox.height - 1)).toBe(true);
     await saveStateScreenshot(page, testInfo, `datetime-${viewport.name}-file-menu.png`);
