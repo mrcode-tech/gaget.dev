@@ -143,7 +143,7 @@ describe("DateTimeEditor", () => {
   it("filters the feature menu without hiding the date/time centerpiece", () => {
     render(<DateTimeEditor />);
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Search date and time features" }), { target: { value: "timestamp" } });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search features" }), { target: { value: "timestamp" } });
     expect(screen.getByRole("button", { name: /Timestamp converter/ })).toBeTruthy();
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(1);
     expect(screen.getByRole("region", { name: "Date and time display" })).toBeTruthy();
