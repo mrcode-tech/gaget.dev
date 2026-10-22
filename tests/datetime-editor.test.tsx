@@ -1,11 +1,20 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { DateTimeEditor } from "@/components/datetime-editor";
+import { I18nProvider } from "@/components/i18n-provider";
 
-afterEach(() => cleanup());
+afterEach(() => { cleanup(); Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1024 }); window.dispatchEvent(new Event("resize")); });
 
 describe("DateTimeEditor", () => {
+
+  it.each(["fa", "ar"] as const)("keeps the workspace RTL for the %s UI locale even when date display language is English", (locale) => {
+    render(<I18nProvider locale={locale}><DateTimeEditor /></I18nProvider>);
+    expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
+    expect((screen.getByRole("combobox", { name: "Display language" }) as HTMLSelectElement).value).toBe("en-US");
+  });
+
   it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
     const intro = screen.getByTestId("datetime-editor-intro");
@@ -20,7 +29,7 @@ describe("DateTimeEditor", () => {
     expect(centerpiece.className).not.toContain("border-y");
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
     expect(screen.getByTestId("datetime-feature-menu").className).toContain("p-1.5");
-    expect(screen.getByRole("textbox", { name: "Search date and time features" })).toBeTruthy();
+    expect(screen.getByRole("searchbox", { name: "Search features" })).toBeTruthy();
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(20);
     expect(screen.getByRole("combobox", { name: "Display language" })).toBeTruthy();
     expect(screen.getByRole("combobox", { name: "Calendar system" })).toBeTruthy();
@@ -34,14 +43,19 @@ describe("DateTimeEditor", () => {
     expect(commandBar.className).toContain("lg:justify-start");
     expect(commandBar.className).toContain("gap-3");
     const commandButtons = within(commandBar);
-    expect(commandButtons.getByRole("button", { name: "File" }).className).toContain("h-9");
+    expect(commandButtons.getByRole("button", { name: "Open navigation" })).toBeTruthy();
+    expect(commandButtons.getByRole("button", { name: "File menu" })).toBeTruthy();
+    expect(commandButtons.getByRole("button", { name: "Features" })).toBeTruthy();
+    expect(commandButtons.getByRole("button", { name: "File menu" }).className).toContain("h-9");
     expect(commandButtons.getByRole("button", { name: "Date" }).parentElement?.parentElement?.className).toContain("gap-3");
     expect(commandButtons.getByRole("button", { name: "Features" }).className).toContain("lg:hidden");
-    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    fireEvent.click(screen.getByRole("button", { name: "File menu" }));
     const fileMenu = screen.getByTestId("datetime-file-menu");
-    expect(fileMenu.className).toContain("left-3");
-    expect(fileMenu.className).toContain("sm:left-6");
-    expect(fileMenu.className).toContain("top-[calc(100%-1px)]");
+    expect(fileMenu.closest("nav")).toBe(commandBar);
+    expect(commandBar.contains(screen.getByRole("button", { name: "Open navigation" }))).toBe(true);
+    expect(fileMenu.className).toContain("start-3");
+    expect(fileMenu.className).toContain("sm:start-6");
+    expect(fileMenu.className).toContain("top-full");
     expect(within(fileMenu).getByRole("button", { name: /Copy current display/ })).toBeTruthy();
     expect(within(fileMenu).getByRole("button", { name: /Copy ISO 8601/ })).toBeTruthy();
     expect(within(fileMenu).getByRole("button", { name: /Copy Unix timestamp/ })).toBeTruthy();
@@ -49,7 +63,7 @@ describe("DateTimeEditor", () => {
     expect(within(fileMenu).getByRole("button", { name: /Reset reference to now/ })).toBeTruthy();
     expect(fileMenu.querySelectorAll("svg").length).toBe(5);
     expect(within(fileMenu).getByRole("button", { name: /Copy current display/ }).className).toContain("py-2.5");
-    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    fireEvent.click(screen.getByRole("button", { name: "File menu" }));
     fireEvent.click(screen.getByRole("button", { name: /^Date$/ }));
     const dateMenu = screen.getByTestId("datetime-date-menu");
     expect(dateMenu.className).toContain("p-1.5");
@@ -120,15 +134,18 @@ describe("DateTimeEditor", () => {
     expect((screen.getByRole("textbox", { name: "Time in 24-hour format" }) as HTMLInputElement).value).toMatch(/[۰-۹]/);
     fireEvent.change(screen.getByRole("combobox", { name: "Calendar system" }), { target: { value: "persian" } });
     fireEvent.change(screen.getByRole("combobox", { name: "Numeral system" }), { target: { value: "arabext" } });
-    expect(document.querySelector("main")?.getAttribute("dir")).toBe("rtl");
+    // Display-language selection must not change the UI direction; this test uses the default English UI locale.
+    expect(document.querySelector("main")?.getAttribute("dir")).toBe("ltr");
     expect((screen.getByRole("combobox", { name: "Calendar system" }) as HTMLSelectElement).value).toBe("persian");
     expect((screen.getByRole("combobox", { name: "Numeral system" }) as HTMLSelectElement).value).toBe("arabext");
   });
 
   it("filters the feature menu without hiding the date/time centerpiece", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
+    window.dispatchEvent(new Event("resize"));
     render(<DateTimeEditor />);
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Search date and time features" }), { target: { value: "timestamp" } });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search features" }), { target: { value: "timestamp" } });
     expect(screen.getByRole("button", { name: /Timestamp converter/ })).toBeTruthy();
     expect(document.querySelectorAll("button[aria-pressed]").length).toBe(1);
     expect(screen.getByRole("region", { name: "Date and time display" })).toBeTruthy();

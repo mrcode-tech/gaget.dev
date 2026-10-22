@@ -36,9 +36,9 @@ describe("shared media editor command-bar geometry", () => {
 
       fireEvent.click(fileButton!);
       const fileMenu = within(bar!).getByTestId(editor.fileMenuId);
-      expect(fileMenu.className).toContain("left-3");
+      expect(fileMenu.className).toContain("start-3");
       expect(fileMenu.className).toContain("top-[calc(100%-1px)]");
-      expect(fileMenu.className).toContain("sm:left-6");
+      expect(fileMenu.className).toContain("sm:start-6");
       unmount();
     }
   });
