@@ -262,6 +262,12 @@ for (const viewport of [{ name: "mobile", width: 390, height: 844 }, { name: "ta
     await assertWithinViewport(page, '[data-testid="datetime-feature-menu"]', "Date & Time Features menu");
     await expect.poll(() => featuresMenu.boundingBox().then((box) => box && barBox && box.y >= barBox.y + barBox.height - 1)).toBe(true);
     await saveStateScreenshot(page, testInfo, `datetime-${viewport.name}-features-menu.png`);
+    await page.keyboard.press("Escape");
+    await navigation.click();
+    const drawer = page.getByTestId("mobile-navigation-drawer");
+    await expect(drawer).toBeVisible();
+    await drawer.getByRole("button", { name: "Close navigation", exact: true }).click();
+    await expect(drawer).toBeHidden();
   });
 }
 

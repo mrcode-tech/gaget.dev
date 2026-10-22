@@ -54,7 +54,7 @@ describe("DateTimeEditor", () => {
     expect(commandBar.contains(screen.getByRole("button", { name: "Open navigation" }))).toBe(true);
     expect(fileMenu.className).toContain("start-3");
     expect(fileMenu.className).toContain("sm:start-6");
-    expect(fileMenu.className).toContain("top-[calc(100%-1px)]");
+    expect(fileMenu.className).toContain("top-full");
     expect(within(fileMenu).getByRole("button", { name: /Copy current display/ })).toBeTruthy();
     expect(within(fileMenu).getByRole("button", { name: /Copy ISO 8601/ })).toBeTruthy();
     expect(within(fileMenu).getByRole("button", { name: /Copy Unix timestamp/ })).toBeTruthy();
