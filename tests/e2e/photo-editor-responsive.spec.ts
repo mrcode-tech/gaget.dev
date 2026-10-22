@@ -225,7 +225,7 @@ for (const viewport of viewports) {
     if (viewport.width < 640) {
       await expect(page.getByRole("slider", { name: "Resize editing panel" })).toBeVisible();
     } else {
-      await expect(panel).toHaveClass(/sm:w-\[320px\]/);
+      await expect(panel).toHaveClass(/md:w-\[320px\]/);
     }
 
     const workspace = page.getByTestId("canvas-scroll-area");

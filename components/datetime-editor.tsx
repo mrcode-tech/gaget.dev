@@ -226,8 +226,8 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
       </nav>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
-        <div data-testid="datetime-workspace" className="flex min-h-full w-full flex-1 flex-col pb-8">
-          <div data-testid="datetime-workspace-grid" className={"grid min-h-0 min-w-0 flex-1 items-stretch gap-0 md:h-full md:grid-rows-[minmax(0,1fr)] " + (activeFeature ? "md:grid-cols-[minmax(0,1fr)_320px]" : "")}>
+        <div data-testid="datetime-workspace" className="flex h-full min-h-0 w-full flex-1 flex-col pb-8">
+          <div data-testid="datetime-workspace-grid" className={"grid h-full min-h-0 min-w-0 flex-1 items-stretch gap-0 md:grid-rows-[minmax(0,1fr)] " + (activeFeature ? "md:grid-cols-[minmax(0,1fr)_320px]" : "")}>
             <section className={"flex min-h-0 min-w-0 flex-1 flex-col px-3 pt-2 sm:px-6 " + (!activeFeature ? "mx-auto w-full max-w-[1600px]" : "")}>
               <header data-testid="datetime-editor-intro" className="shrink-0 pb-0">
                 <div className="mb-2 text-xs text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
