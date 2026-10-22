@@ -11,11 +11,11 @@ on:
       - "**"
   workflow_dispatch:
 
-# One active CI run per branch, shared across push, pull_request, and workflow_dispatch.
-# For pull requests use the source branch name; for pushes/manual runs use ref_name.
-# When a newer run starts for the same branch, GitHub cancels the older in-progress run.
+# Allow only one active run of this workflow across the entire repository.
+# A newly queued run cancels the previous in-progress run, regardless of branch
+# or trigger (push, pull_request, or workflow_dispatch).
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  group: ci-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
