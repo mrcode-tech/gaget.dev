@@ -58,7 +58,10 @@ function inferState(filePath) {
   if (file.includes("threshold-8")) return "threshold-8-no-search";
   if (file.includes("threshold-9") && file.includes("tablet")) return "threshold-9-tablet-no-search";
   if (file.includes("threshold-9")) return "threshold-9-search-visible";
+  if (file.includes("file-menu")) return "file-menu";
+  if (file.includes("desktop-features-menu")) return "desktop-features-menu";
   if (file.includes("features-menu")) return "features-menu-default";
+  if (file.includes("-panel")) return "feature-panel";
   return null;
 }
 
