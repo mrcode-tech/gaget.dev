@@ -13,10 +13,10 @@ function setViewport(width: number) {
 }
 
 const editors = [
-  { name: "Photo", render: () => <PhotoEditor />, trigger: "Open photo editor features", menu: "mobile-feature-menu", match: "Favicon", query: "fAvIcOn" },
-  { name: "Audio", render: () => <AudioWorkbench slug="editor" />, trigger: "Open audio editor features", menu: "audio-feature-menu", match: "Trim & range", query: "TRIM & RANGE" },
-  { name: "Video", render: () => <VideoWorkbench slug="editor" />, trigger: "Open video editor features", menu: "video-feature-menu", match: "Video recorder", query: "VIDEO RECORDER" },
-  { name: "Date & Time", render: () => <DateTimeEditor />, trigger: "Features", menu: "datetime-feature-menu", match: /World clock/, query: "WORLD CLOCK" },
+  { name: "Photo", count: 13, render: () => <PhotoEditor />, trigger: "Open photo editor features", menu: "mobile-feature-menu", match: "Favicon", query: "fAvIcOn" },
+  { name: "Audio", count: 18, render: () => <AudioWorkbench slug="editor" />, trigger: "Open audio editor features", menu: "audio-feature-menu", match: "Trim & range", query: "TRIM & RANGE" },
+  { name: "Video", count: 23, render: () => <VideoWorkbench slug="editor" />, trigger: "Open video editor features", menu: "video-feature-menu", match: "Video recorder", query: "VIDEO RECORDER" },
+  { name: "Date & Time", count: 20, render: () => <DateTimeEditor />, trigger: "Features", menu: "datetime-feature-menu", match: /World clock/, query: "WORLD CLOCK" },
 ] as const;
 
 afterEach(() => {
@@ -40,24 +40,27 @@ describe("shared mobile feature search contract", () => {
     expect(matchesFeatureSearch("missing", ["Crop", "Image"], "en")).toBe(false);
   });
 
-  it.each(editors)("$name exposes the shared search, filters only its features, shows no matches, and clears on reopen", ({ render: renderEditor, trigger, menu, match, query }) => {
+  it.each(editors)("$name exposes the shared search, filters only its features, shows no matches, and clears on reopen", ({ render: renderEditor, trigger, menu, match, query, count }) => {
     setViewport(390);
     render(renderEditor());
     fireEvent.click(screen.getByRole("button", { name: trigger }));
     const featureMenu = screen.getByTestId(menu);
     const search = within(featureMenu).getByRole("searchbox", { name: "Search features" });
     expect(search).toBeTruthy();
+    expect(featureMenu.querySelectorAll("section button").length).toBe(count);
 
     fireEvent.change(search, { target: { value: query } });
     expect(within(featureMenu).getByRole("button", { name: match })).toBeTruthy();
-    expect(within(featureMenu).queryByRole("button", { name: /No matching features/ })).toBeNull();
+    expect(featureMenu.querySelectorAll("section button").length).toBe(1);
 
     fireEvent.change(search, { target: { value: "no-such-feature-xyz" } });
     expect(within(featureMenu).getByText("No matching features. Try a different search.")).toBeTruthy();
+    expect(featureMenu.querySelectorAll("section button").length).toBe(0);
 
     fireEvent.click(within(featureMenu).getByRole("button", { name: "Close feature menu" }));
     fireEvent.click(screen.getByRole("button", { name: trigger }));
     expect((within(screen.getByTestId(menu)).getByRole("searchbox", { name: "Search features" }) as HTMLInputElement).value).toBe("");
+    expect(screen.getByTestId(menu).querySelectorAll("section button").length).toBe(count);
   });
 
   it.each(editors)("$name does not show search at tablet width", ({ render: renderEditor, trigger }) => {
