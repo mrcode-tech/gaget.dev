@@ -110,7 +110,7 @@ No implementation or browser check is marked complete by this source audit alone
 - The [shared shell contract](../components/shared-editor-shell.md) and [editable wireframe proposal](../assets/target/shared-editor-shell-proposal.svg) define the proposed baseline. Proposal is not approval. Open-panel/menu visual inspection, loaded/error-state visual parity and keyboard/touch browser checks remain gaps.
 - This section records durable baseline evidence and its limitations, not an in-progress task diary.
 
-## Enhanced mobile Features-menu search — baseline audit
+## Enhanced mobile Features-menu search — pre-implementation baseline audit
 
 **Audit branch:** feature/enhanced-menu
 **Audit commit:** bb77db5ea3317bbe7aea00f1f4e516cc2d550838 (same as stage at task start)
@@ -124,3 +124,15 @@ No implementation or browser check is marked complete by this source audit alone
 - These are source-derived facts only. Actual rendered threshold, RTL, empty-results, and tablet/desktop behavior remain Not verified until tests and browser evidence run on the implementation commit.
 
 The expected behavior is defined in the Shared Editor Shell Contract and Feature Contract Reconciliation. This entry is a baseline audit, not a task log and not evidence of implementation completion.
+
+## Enhanced mobile Features-menu search — implementation source status
+
+**Source status:** Implementation and regression tests are present on feature/enhanced-menu. This is a source inspection only; test execution, browser rendering, and CI artifact production have not been verified in this record.
+
+- Shared logic is in lib/feature-menu-search.ts. It defines the existing 768px mobile/tablet boundary, the greater-than-eight threshold, locale-aware case-insensitive matching, and query reset when the menu closes, the viewport leaves mobile, or the editor identity changes.
+- Shared search/no-results UI is in components/feature-menu-search.tsx. It uses the existing shadcn-style Input, logical start positioning, semantic tokens, and translated English/Persian/Arabic labels.
+- Photo, Audio, Video, and Date & Time menus consume the shared search behavior. Source-declared selectable feature counts remain 13, 18, 23, and 20 respectively.
+- Unit/component tests were added for the 8/9 threshold, counts/filtering across all four editors, no-match behavior, query reset on close/reopen and editor change, tablet resizing, and Persian RTL input. Shared-shell Playwright coverage now captures mobile match/no-match and RTL search states and asserts no search at tablet/desktop.
+- scripts/write-ci-evidence-manifest.mjs now recognizes the new search screenshot states and infers their mobile viewport for the generated manifest.
+- **Not verified:** no successful test, lint, typecheck, production build, browser screenshot review, or commit-matched CI evidence artifact is confirmed here. See the task handoff for the verification-access limitation.
+
