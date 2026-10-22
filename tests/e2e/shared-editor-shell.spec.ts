@@ -371,15 +371,31 @@ for (const editor of editors) {
           await expect(page.locator("canvas[role='img']")).toBeVisible();
         }
 
+        const isDesktop = viewport.width >= 1024;
+        if (editor.id === "video" && isDesktop) {
+          const videoFixture = await makeWebmFixture(page);
+          test.skip(!videoFixture, "This Chromium runtime cannot create a supported WebM fixture with MediaRecorder.");
+          await page.locator('input[type="file"]').first().setInputFiles({
+            name: "shell-fixture.webm",
+            mimeType: "video/webm",
+            buffer: videoFixture!,
+          });
+          await expect(page.locator("video")).toBeVisible();
+        }
+
         const menubar = page.locator(editor.menubar);
-        const featureTrigger = menubar.getByRole("button", { name: editor.featureButton });
+        const featureTrigger = menubar.getByRole("button", {
+          name: isDesktop ? editor.desktopFeatureTrigger : editor.featureButton,
+        });
         await featureTrigger.click();
-        const featureMenu = page.locator(editor.featureMenu);
+        const featureMenu = page.locator(isDesktop ? editor.desktopFeatureMenu : editor.featureMenu);
         await expect(featureMenu).toBeVisible();
 
-        const featureButton = editor.id === "datetime"
-          ? featureMenu.locator("section button").first()
-          : featureMenu.getByRole("button", { name: editor.featureName });
+        const featureButton = isDesktop
+          ? featureMenu.getByRole("button", { name: editor.desktopFeatureName })
+          : editor.id === "datetime"
+            ? featureMenu.locator("section button").first()
+            : featureMenu.getByRole("button", { name: editor.featureName });
         await expect(featureButton).toBeVisible();
         await featureButton.click();
 
@@ -417,6 +433,12 @@ for (const editor of editors) {
           await expect(featureMenu).toBeVisible();
           await featureButton.click();
           await expect(panel).toBeVisible();
+        } else if (panelBox && viewport.width >= 768 && viewport.width < 1024 && ["audio", "video"].includes(editor.id)) {
+          expect(panelBox.x, `${editor.title} tablet panel left inset`).toBeCloseTo(8, 0);
+          expect(panelBox.width, `${editor.title} tablet panel width`).toBeCloseTo(viewport.width - 16, 0);
+        } else if (panelBox && viewport.width >= 1024) {
+          const expectedInspectorWidth = editor.id === "video" ? 300 : 320;
+          expect(panelBox.width, `${editor.title} desktop inspector width`).toBeCloseTo(expectedInspectorWidth, 0);
         }
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         const panelScenario = viewport.width < 768 ? "panel-resized-reopened" : "panel";
