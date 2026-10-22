@@ -406,6 +406,18 @@ for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor"
     await featureTrigger.click();
     const menuSelector = route.includes("/datetime/") ? '[data-testid="datetime-feature-menu"]' : route.includes("/images/") ? '[data-testid="mobile-feature-menu"]' : route.includes("/audio/") ? '[data-testid="audio-feature-menu"]' : '[data-testid="video-feature-menu"]';
     await expect(page.locator(menuSelector)).toBeVisible();
+    const featureMenu = page.locator(menuSelector);
+    const searchInput = featureMenu.getByRole("searchbox");
+    await expect(searchInput).toBeVisible();
+    const searchQuery = route.includes("/images/") ? "crop" : route.includes("/audio/") ? "trim & range" : route.includes("/video/") ? "trim video" : "world clock";
+    const matchingFeature = route.includes("/images/") ? /^Crop$/ : route.includes("/audio/") ? /^Trim & range$/ : route.includes("/video/") ? /^Trim video$/ : /World clock/;
+    await searchInput.fill(searchQuery);
+    await expect(featureMenu.getByRole("button", { name: matchingFeature })).toBeVisible();
+    await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-search-match.png`);
+    await searchInput.fill("no-such-feature-xyz");
+    await expect(featureMenu.getByRole("status")).toBeVisible();
+    await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-search-no-match.png`);
+    await searchInput.fill("");
     await assertWithinViewport(page, menuSelector, `RTL Features menu for ${route}`);
     const featureTriggerBox = await featureTrigger.boundingBox();
     const featureMenuBox = await page.locator(menuSelector).boundingBox();
