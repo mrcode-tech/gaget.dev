@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { DateTimeEditor } from "@/components/datetime-editor";
 import { I18nProvider } from "@/components/i18n-provider";
 
-afterEach(() => { cleanup(); window.innerWidth = 1024; window.dispatchEvent(new Event("resize")); });
+afterEach(() => { cleanup(); Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1024 }); window.dispatchEvent(new Event("resize")); });
 
 describe("DateTimeEditor", () => {
 
@@ -14,7 +14,7 @@ describe("DateTimeEditor", () => {
   });
 
   it("renders the live date/time centerpiece and keeps all 20 tools discoverable", () => {
-    window.innerWidth = 390;
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
     const intro = screen.getByTestId("datetime-editor-intro");
