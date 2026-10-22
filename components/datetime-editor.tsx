@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Menu, X, type LucideIcon } from "lucide-react";
+import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, ShieldCheck, SlidersHorizontal, Menu, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
 import { useResizableFeatureSheet } from "@/components/use-resizable-feature-sheet";
 import { useI18n } from "@/components/i18n-provider";
 import { localeDirections } from "@/lib/i18n/messages";
+import { FeatureMenuNoResults, FeatureMenuSearch } from "@/components/feature-menu-search";
+import { useFeatureMenuSearch } from "@/lib/feature-menu-search";
 
 type Feature = { slug: string; title: string; description: string; group: "Date" | "Time" | "Calendar" | "Utilities" };
 const features: Feature[] = [
@@ -81,7 +83,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [hourCycle, setHourCycle] = useState<"h12" | "h23">("h23");
   const [showSeconds, setShowSeconds] = useState(true);
   const [activeFeature, setActiveFeature] = useState<string | null>(initialFeature && features.some((f) => f.slug === initialFeature) ? initialFeature : null);
-  const [query, setQuery] = useState("");
   const [zoneQuery, setZoneQuery] = useState("");
   const [availableZones, setAvailableZones] = useState<string[]>(zones);
   const [menuOpen, setMenuOpen] = useState<"File" | "Features" | Feature["group"] | null>(null);
@@ -93,6 +94,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const { panelRef, panelStyle, resizeHandleProps } = useResizableFeatureSheet();
   const commandBarRef = useRef<HTMLElement | null>(null);
   const lastMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const featureSearch = useFeatureMenuSearch(menuOpen === "Features", features.length, "datetime", appLocale);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -137,7 +139,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }, []);
 
   const displayNow = frozen && frozenAt ? frozenAt : now;
-  const filteredFeatures = useMemo(() => features.filter((f) => (f.title + " " + f.description + " " + f.group).toLowerCase().includes(query.toLowerCase())), [query]);
+  const filteredFeatures = useMemo(() => features.filter((feature) => featureSearch.matches([feature.title, feature.description, feature.group])), [featureSearch.query, appLocale]);
   const formattedDate = displayNow ? safeFormat(displayNow, locale, calendar, numberingSystem, timeZone) : "Loading date…";
   const formattedTime = displayNow ? new Intl.DateTimeFormat(locale, {
     timeZone, hour: "2-digit", minute: "2-digit", ...(showSeconds ? { second: "2-digit" as const } : {}),
@@ -212,9 +214,9 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
         </div>
         {menuOpen === "Features" && <div data-testid="datetime-feature-menu" className="absolute end-3 top-full z-50 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(70dvh,520px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:end-6 lg:hidden">
           <div className="flex items-center justify-between gap-2 px-3 py-2"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date &amp; time features</span><button type="button" aria-label="Close feature menu" className="rounded p-1 hover:bg-accent" onClick={() => setMenuOpen(null)}><X className="h-4 w-4" /></button></div>
-          <div className="relative px-1 pb-2"><Search className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input aria-label="Search date and time features" className="ps-9" placeholder="Search date, time, calendar…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
+          {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
           <div className="space-y-3">
-            {groups.map((group) => {
+            {featureSearch.canSearch && featureSearch.query.trim() && filteredFeatures.length === 0 ? <FeatureMenuNoResults /> : groups.map((group) => {
               const items = filteredFeatures.filter((feature) => feature.group === group);
               if (!items.length) return null;
               return <section key={group} aria-label={group + " features"}><p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</p>{items.map((feature) => { const FeatureIcon = featureIcons[feature.slug] ?? CalendarDays; return <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-start hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "bg-accent" : "")}><FeatureIcon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block text-sm leading-5">{feature.title}</span><span className="block text-xs leading-4 text-muted-foreground">{feature.description}</span></span></button>; })}</section>;
