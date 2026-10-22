@@ -8,7 +8,7 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { matchesFeatureSearch, shouldShowFeatureSearch, useFeatureMenuSearch } from "@/lib/feature-menu-search";
 
 function setViewport(width: number) {
-  window.innerWidth = width;
+  Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: width });
   window.dispatchEvent(new Event("resize"));
 }
 
