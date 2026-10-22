@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
+import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Menu, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
@@ -187,8 +187,9 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   return (
     <main className="flex h-[calc(100dvh-68px)] min-h-[280px] min-w-0 flex-col overflow-hidden bg-background text-foreground" dir={appDirection}>
       <nav ref={commandBarRef} aria-label="Date and time editor commands" className="relative z-30 flex h-[68px] shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 sm:px-6 lg:justify-start">
-        <div className="flex items-center gap-3">
-          <button type="button" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "File" ? null : "File"); }}>File</button>
+        <div className="flex min-w-0 items-center gap-3">
+          <button type="button" aria-label="Open navigation" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background hover:bg-accent lg:hidden" onClick={() => window.dispatchEvent(new CustomEvent("gaget:open-navigation"))}><Menu aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" aria-label="File menu" aria-expanded={menuOpen === "File"} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === "File" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "File" ? null : "File"); }}>File</button>
         {menuOpen === "File" && <div data-testid="datetime-file-menu" className="absolute start-3 top-[calc(100%-1px)] z-50 min-w-52 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:start-6">
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(formattedDate + " " + formattedTime + " (" + timeZone + ")"); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy current display</span></button>
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { void copyText(displayNow?.toISOString() ?? ""); setMenuOpen(null); }}><Copy className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Copy ISO 8601</span></button>
@@ -197,7 +198,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm hover:bg-accent" onClick={() => { resetReference(); setMenuOpen(null); }}><RotateCcw className="h-4 w-4 shrink-0 text-muted-foreground" /><span>Reset reference to now</span></button><div className="my-1 border-t border-border lg:hidden" /><p className="mt-1 hidden border-t border-border px-3 py-2 text-xs text-muted-foreground lg:block">Date and time values stay in this browser.</p>
         </div>}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <div className="hidden items-center gap-3 lg:flex">
             {groups.map((group) => <div key={group} className="relative">
               <button type="button" aria-expanded={menuOpen === group} className={"inline-flex h-9 items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (menuOpen === group ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === group ? null : group); }}>{group}</button>
