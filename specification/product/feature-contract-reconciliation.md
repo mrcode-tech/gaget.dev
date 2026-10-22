@@ -216,13 +216,13 @@ The capture script defines 390×844, 390×640, 768×1024 and 1440×1000, with li
 | Video | 23 | No search input; grouped feature menus, each currently opens one group at a time |
 | Date & Time | 20 | Search input exists in the Features menu; it matches title, description and group using lowercase substring matching, but is currently shown throughout the compact menu breakpoint and its query persists when the menu closes |
 
-These counts and behaviors are source inspections, not a claim that browser tests have run. Audio and Video currently expose group-triggered menus rather than a single all-groups mobile list. The implementation must preserve the existing menu/navigation structure while applying a consistent search experience to the feature list actually available in each open menu. The product contract requires searching the current editor's available features, not another editor or global navigation.
+These counts and behaviors are source inspections, not a claim that browser tests have run. Audio and Video use group-triggered menus on desktop, but their compact Features menus expose all feature groups in one list. Search applies to that compact all-features list. Preserve desktop group menus and do not alter them as part of this task. The product contract requires searching the current editor's available features, not another editor or global navigation.
 
 ### Target rule
 
 Follow the Shared Editor Shell Contract — Mobile Features-menu search. In short: below 768 px only, show the search field when the current Features menu has more than 8 selectable feature entries; at 8 or fewer, omit it. Do not add the search field at tablet widths (768–1023 px) or desktop widths (1024 px and above). Keep the current groups/order/labels/descriptions/icons and feature activation semantics.
 
-**Architecture note:** Because Audio and Video currently open one group at a time while Photo and Date & Time present broader lists, do not flatten or redesign their navigation merely to imitate another editor. Count the available selectable features represented by the current Features menu interaction, and apply the same visibility rule and matching semantics to the current menu's available feature set. If implementation inspection establishes that the user intends all Audio/Video groups to become one combined menu, that would be a material navigation redesign and must be confirmed separately.
+**Architecture note:** Mobile Audio and Video already expose their groups together in the compact Features menu, so filtering can operate across their existing group data without changing the navigation structure. Desktop group menus remain unchanged.
 
 ### Search lifecycle and verification
 
