@@ -141,6 +141,7 @@ describe("DateTimeEditor", () => {
   });
 
   it("filters the feature menu without hiding the date/time centerpiece", () => {
+    setViewport(390);
     render(<DateTimeEditor />);
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
     fireEvent.change(screen.getByRole("searchbox", { name: "Search features" }), { target: { value: "timestamp" } });
