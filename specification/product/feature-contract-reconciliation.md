@@ -207,7 +207,7 @@ The capture script defines 390×844, 390×640, 768×1024 and 1440×1000, with li
 **Status:** Proposed contract; not approved pixel-perfect target design.
 **Source files inspected on the task baseline:** components/photo-editor.tsx, components/audio-workbench.tsx, components/video-workbench.tsx, components/datetime-editor.tsx, tests/datetime-editor.test.tsx, and tests/e2e/shared-editor-shell.spec.ts.
 
-### Source-derived baseline
+### Source-derived baseline before this task's implementation
 
 | Editor | Feature entries in source | Current mobile/compact search behavior |
 |---|---:|---|
@@ -229,3 +229,10 @@ Follow the Shared Editor Shell Contract — Mobile Features-menu search. In shor
 The query starts empty for every menu opening and clears on menu close, Escape, outside click, feature selection, and editor identity change. Match trimmed, case-insensitive substrings across title, description and group label; preserve source ordering and suppress empty groups. Show a localized no-results state for a non-empty query with no matches. Use existing i18n fallback and logical-direction styles for Persian/Arabic.
 
 The existing shared-shell Playwright matrix covers 390×640 mobile-short, 768×1024 tablet and 1440×900 desktop for menu geometry and Escape focus restoration, but it does not yet verify the new search threshold/results/RTL contract. Add targeted unit/component and browser coverage, and associate generated screenshots and a manifest with the exact tested commit. No implementation or visual verification is claimed by this baseline entry.
+
+### Implementation source reconciliation (verification pending)
+
+The feature branch now contains shared search logic/UI and consumes them in all four editor menus. The implementation is source-aligned with the target rule: mobile widths below 768px and more than eight available feature entries; no new search control at tablet/desktop widths. The Date & Time input is no longer a separate bespoke control, and all four editors use the same matching helper and translated no-results state. The mobile Audio/Video all-features menus retain their existing grouped list, while desktop group menus are unchanged.
+
+Automated coverage has been authored for the 8/9 boundary, actual feature counts (13/18/23/20), filtering/no-match states, query lifecycle, RTL, and responsive regression. This section records source changes only. Do not label the behavior Verified until the focused tests, full CI quality gate, browser captures, and the commit-associated evidence manifest have actually been inspected.
+
