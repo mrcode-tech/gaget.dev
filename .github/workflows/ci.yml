@@ -45,6 +45,7 @@ jobs:
           npm install --no-audit --no-fund 2>&1 | tee artifacts/ci-logs/dependency-install.log
 
       - name: Install Chromium for responsive and accessibility tests
+        id: install-chromium
         if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
@@ -172,6 +173,8 @@ jobs:
       - name: Generate CI evidence manifest
         if: always()
         env:
+          CI_DEPENDENCY_INSTALL: ${{ steps.install-dependencies.outcome }}
+          CI_BROWSER_INSTALL: ${{ steps.install-chromium.outcome }}
           CI_UNIT_TESTS: ${{ steps.unit-tests.outcome }}
           CI_FOCUSED_REGRESSIONS: ${{ steps.focused-regressions.outcome }}
           CI_COMPONENT_TESTS: ${{ steps.component-tests.outcome }}
