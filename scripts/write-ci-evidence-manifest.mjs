@@ -61,6 +61,7 @@ function inferState(filePath) {
   if (file.includes("file-menu")) return "file-menu";
   if (file.includes("desktop-features-menu")) return "desktop-features-menu";
   if (file.includes("features-menu")) return "features-menu-default";
+  if (file.includes("panel-resized-reopened")) return "panel-resized-reopened";
   if (file.includes("-panel")) return "feature-panel";
   return null;
 }
