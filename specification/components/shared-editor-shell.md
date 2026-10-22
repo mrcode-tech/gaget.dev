@@ -2,7 +2,7 @@
 
 **Status:** Proposed reusable contract; not an approved pixel-perfect target design.  
 **Scope:** Shared layout and interaction behavior for Photo, Audio, Video, and Date & Time workspaces. Feature-specific controls, media processing, timelines, calendars, and export semantics remain owned by their feature contracts.  
-**Target wireframe:** [Shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg).  
+**Target wireframes:** [Shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg); [Enhanced mobile Features-menu proposal](../assets/target/enhanced-mobile-feature-menu-proposal.svg). Both remain Proposal, not approved pixel-perfect targets.  
 **Verification evidence:** Each CI run uploads commit-associated screenshots, test logs, Playwright failure context and a verification manifest with the full tested SHA, browser, viewport coverage, test outcomes and screenshot paths. Use the artifact from the exact evaluated commit. This is verification evidence, not approval of the proposed target design.
 
 ## 1. Ownership boundaries
