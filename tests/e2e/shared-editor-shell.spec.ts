@@ -32,6 +32,7 @@ function makeWavFixture() {
 }
 
 type EditorCase = {
+  featureCount: number;
   id: string;
   title: string;
   route: string;
@@ -44,11 +45,14 @@ type EditorCase = {
   desktopFeatureTrigger: RegExp;
   desktopFeatureMenu: string;
   desktopFeatureName: RegExp;
+  searchQuery: string;
+  searchResult: RegExp;
 };
 
 const editors: EditorCase[] = [
   {
     id: "photo",
+    featureCount: 13,
     title: "Photo",
     route: "/images/editor",
     menubar: '[data-testid="editor-menubar"]',
@@ -60,9 +64,12 @@ const editors: EditorCase[] = [
     desktopFeatureTrigger: /^Edit$/,
     desktopFeatureMenu: '[data-testid="photo-feature-menu"]',
     desktopFeatureName: /^Crop$/,
+    searchQuery: "crop",
+    searchResult: /^Crop$/,
   },
   {
     id: "audio",
+    featureCount: 18,
     title: "Audio",
     route: "/audio/editor",
     menubar: '[data-testid="audio-editor-menubar"]',
@@ -74,9 +81,12 @@ const editors: EditorCase[] = [
     desktopFeatureTrigger: /^Edit$/,
     desktopFeatureMenu: '[data-testid="audio-feature-menu"]',
     desktopFeatureName: /^Trim & range$/,
+    searchQuery: "trim & range",
+    searchResult: /^Trim & range$/,
   },
   {
     id: "video",
+    featureCount: 23,
     title: "Video",
     route: "/video/editor",
     menubar: '[data-testid="video-editor-menubar"]',
@@ -88,9 +98,12 @@ const editors: EditorCase[] = [
     desktopFeatureTrigger: /^Edit$/,
     desktopFeatureMenu: '[data-testid="video-feature-menu"]',
     desktopFeatureName: /^Trim video$/,
+    searchQuery: "trim video",
+    searchResult: /^Trim video$/,
   },
   {
     id: "datetime",
+    featureCount: 20,
     title: "Date & Time",
     route: "/datetime/editor",
     menubar: 'nav[aria-label="Date and time editor commands"]',
@@ -101,7 +114,9 @@ const editors: EditorCase[] = [
     featureName: /.*/,
     desktopFeatureTrigger: /^Date$/,
     desktopFeatureMenu: '[data-testid="datetime-date-menu"]',
-    desktopFeatureName: /^Calendar Browse/
+    desktopFeatureName: /^Calendar Browse/,
+    searchQuery: "world clock",
+    searchResult: /World clock/,
   },
 ];
 
@@ -172,6 +187,38 @@ async function saveStateScreenshot(page: Page, testInfo: TestInfo, name: string)
   await page.screenshot({ path: testInfo.outputPath(name), animations: "disabled" });
 }
 
+test("mobile feature-search threshold renders correctly at eight and nine features", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 640 });
+  await page.addInitScript(() => localStorage.setItem("theme", "light"));
+  await page.goto("/ci/feature-menu-search?count=8");
+  const menu = page.getByTestId("threshold-feature-menu");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(8);
+  await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-8-mobile-390x640-light-default.png");
+
+  await page.goto("/ci/feature-menu-search?count=9");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
+  const search = menu.getByRole("searchbox", { name: "Search features" });
+  await expect(search).toBeVisible();
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-light-default.png");
+
+  await search.fill("Feature 9");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(1);
+  await expect(menu.getByRole("button", { name: "Feature 9" })).toBeVisible();
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-light-search-match.png");
+
+  await search.fill("no-such-feature-xyz");
+  await expect(menu.getByRole("status")).toContainText("No matching features");
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-mobile-390x640-light-search-no-match.png");
+
+  await search.fill("");
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await expect(menu.getByRole("searchbox", { name: "Search features" })).toHaveCount(0);
+  await expect(menu.getByTestId("threshold-feature")).toHaveCount(9);
+  await saveStateScreenshot(page, testInfo, "feature-search-threshold-9-tablet-768x1024-light-tablet.png");
+});
+
 for (const editor of editors) {
   for (const viewport of viewports) {
     for (const theme of ["light", "dark"] as const) {
@@ -200,18 +247,42 @@ for (const editor of editors) {
           await featureTrigger.click();
           const featureMenu = page.locator(editor.featureMenu);
           await expect(featureMenu).toBeVisible();
+          const searchInput = featureMenu.getByRole("searchbox", { name: "Search features" });
+          if (viewport.width < 768) {
+            await expect(searchInput).toBeVisible();
+            await searchInput.fill(editor.searchQuery);
+            await expect(featureMenu.getByRole("button", { name: editor.searchResult })).toBeVisible();
+            await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-search-match.png`);
+            await searchInput.fill("no-such-feature-xyz");
+            await expect(featureMenu.getByRole("status")).toContainText("No matching features");
+            await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-search-no-match.png`);
+            await searchInput.fill("");
+            await expect(featureMenu.locator('button[aria-describedby], button[aria-pressed]')).toHaveCount(editor.featureCount);
+          } else {
+            await expect(searchInput).toHaveCount(0);
+          }
           await assertWithinViewport(page, editor.featureMenu, `${editor.title} Features menu`);
           await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
           await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-features-menu.png`);
           await page.keyboard.press("Escape");
           await expect(featureMenu).toBeHidden();
           await expect(featureTrigger).toBeFocused();
+          if (viewport.width < 768) {
+            await featureTrigger.click();
+            await expect(featureMenu).toBeVisible();
+            await expect(featureMenu.getByRole("searchbox", { name: "Search features" })).toHaveValue("");
+            await expect(featureMenu.locator('button[aria-describedby], button[aria-pressed]')).toHaveCount(editor.featureCount);
+            await page.keyboard.press("Escape");
+            await expect(featureMenu).toBeHidden();
+            await expect(featureTrigger).toBeFocused();
+          }
         } else {
           const featureTrigger = menubar.getByRole("button", { name: editor.desktopFeatureTrigger });
           await expect(featureTrigger).toBeVisible();
           await featureTrigger.click();
           const featureMenu = page.locator(editor.desktopFeatureMenu);
           await expect(featureMenu).toBeVisible();
+          await expect(featureMenu.getByRole("searchbox")).toHaveCount(0);
           await expect(featureMenu.getByRole("button", { name: editor.desktopFeatureName })).toBeVisible();
           await assertWithinViewport(page, editor.desktopFeatureMenu, `${editor.title} desktop feature menu`);
           await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-desktop-features-menu.png`);
@@ -353,7 +424,7 @@ test("Video loaded-state feature panel remains bounded on short mobile screens",
   await saveStateScreenshot(page, testInfo, "video-mobile-short-dark-loaded-panel.png");
 });
 
-for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor", "/fa/datetime/editor", "/ar/datetime/editor"]) {
+for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor", "/fa/datetime/editor", "/ar/images/editor", "/ar/audio/editor", "/ar/video/editor", "/ar/datetime/editor"]) {
   test(`RTL editor shell stays within viewport on ${route}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 640 });
     await page.addInitScript(() => localStorage.setItem("theme", "dark"));
@@ -382,6 +453,18 @@ for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor"
     await featureTrigger.click();
     const menuSelector = route.includes("/datetime/") ? '[data-testid="datetime-feature-menu"]' : route.includes("/images/") ? '[data-testid="mobile-feature-menu"]' : route.includes("/audio/") ? '[data-testid="audio-feature-menu"]' : '[data-testid="video-feature-menu"]';
     await expect(page.locator(menuSelector)).toBeVisible();
+    const featureMenu = page.locator(menuSelector);
+    const searchInput = featureMenu.getByRole("searchbox");
+    await expect(searchInput).toBeVisible();
+    const searchQuery = route.includes("/images/") ? "crop" : route.includes("/audio/") ? "trim & range" : route.includes("/video/") ? "trim video" : "world clock";
+    const matchingFeature = route.includes("/images/") ? /^Crop$/ : route.includes("/audio/") ? /^Trim & range$/ : route.includes("/video/") ? /^Trim video$/ : /World clock/;
+    await searchInput.fill(searchQuery);
+    await expect(featureMenu.getByRole("button", { name: matchingFeature })).toBeVisible();
+    await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-search-match.png`);
+    await searchInput.fill("no-such-feature-xyz");
+    await expect(featureMenu.getByRole("status")).toBeVisible();
+    await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-search-no-match.png`);
+    await searchInput.fill("");
     await assertWithinViewport(page, menuSelector, `RTL Features menu for ${route}`);
     const featureTriggerBox = await featureTrigger.boundingBox();
     const featureMenuBox = await page.locator(menuSelector).boundingBox();

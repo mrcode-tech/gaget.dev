@@ -109,3 +109,28 @@ No implementation or browser check is marked complete by this source audit alone
 - The CI capture script is configured for 390×844, 390×640, 768×1024 and 1440×1000; English captures use both themes and selected RTL routes use Persian/Arabic at mobile and desktop widths. The successful CI run uploaded a combined test and visual-evidence artifact for this commit. The configured default-state captures do not cover every open-menu, open-panel, loaded/error state, and the artifact has not been manually visually reviewed here.
 - The [shared shell contract](../components/shared-editor-shell.md) and [editable wireframe proposal](../assets/target/shared-editor-shell-proposal.svg) define the proposed baseline. Proposal is not approval. Open-panel/menu visual inspection, loaded/error-state visual parity and keyboard/touch browser checks remain gaps.
 - This section records durable baseline evidence and its limitations, not an in-progress task diary.
+
+## Enhanced mobile Features-menu search — pre-implementation baseline audit
+
+**Audit branch:** feature/enhanced-menu
+**Audit commit:** bb77db5ea3317bbe7aea00f1f4e516cc2d550838 (same as stage at task start)
+**Method:** Remote source/specification inspection. No local working tree, browser runtime, or test process was available during this source audit.
+
+- components/datetime-editor.tsx declares 20 feature entries and filters the list using a lowercase substring over title, description, and group. Its search input is inside a menu with lg:hidden, so source classes allow it across the compact range, including tablet widths below 1024 px. The query state is not reset when the menu closes.
+- components/photo-editor.tsx declares 13 selectable entries across Edit/Image/Create and renders a separate mobile Features menu without search.
+- components/audio-workbench.tsx declares 18 feature entries grouped under Edit/Adjust/Analyze/Export & data/Record. Its compact menu opens one group at a time and has no search input.
+- components/video-workbench.tsx declares 23 entries grouped under Edit/Adjust/Analyze/Export & data/Record. Its compact menu opens one group at a time and has no search input.
+- Existing source imports the shared shadcn-style Input, Lucide Search, semantic border/popover/ring tokens, and uses start/logical alignment in parts of the shell. Existing test coverage includes Date & Time search presence and shared-shell viewport/focus checks, but does not establish the requested 8/9 threshold or full cross-editor search behavior.
+- These are source-derived facts only. Actual rendered threshold, RTL, empty-results, and tablet/desktop behavior remain Not verified until tests and browser evidence run on the implementation commit.
+
+The expected behavior is defined in the Shared Editor Shell Contract and Feature Contract Reconciliation. This entry is a baseline audit, not a task log and not evidence of implementation completion.
+
+## Enhanced mobile Features-menu search — verified implementation
+
+**Implementation verification:** CI run [39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) passed on commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 on feature/enhanced-menu. The run passed unit tests (29), focused Photo/sidebar regressions, component tests (75), ESLint, TypeScript, production build, route smoke tests, responsive/accessibility Playwright tests (104), and design-baseline capture.
+
+- Shared logic is in lib/feature-menu-search.ts: mobile is below 768 CSS px, search appears only when the current menu has more than 8 selectable entries, matching is trimmed and case-insensitive, and query state resets on menu close, viewport change out of mobile, and editor identity change.
+- Shared UI is in components/feature-menu-search.tsx, using the existing shadcn-style Input, semantic tokens, logical positioning, and English/Persian/Arabic labels and no-results text.
+- Photo, Audio, Video, and Date & Time use the shared behavior. Source-declared feature counts are 13, 18, 23, and 20.
+- The passing Playwright run exercised the exact 8/9 threshold in a rendered browser harness, mobile match/no-match/empty-query states, menu close/reopen reset, tablet and desktop behavior, short-height layouts, and RTL coverage. The CI evidence artifact is ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8; its artifacts/ci-logs/verification-manifest.json indexes 246 screenshots and binds each screenshot entry to the tested commit.
+- Evidence scope: this result is for the exact commit named above. Use the latest branch CI run and its commit-matched artifact for any later branch head; never reuse this artifact as proof for a different SHA. The authored SVG remains a proposal, not a browser screenshot or an approved pixel-perfect design.

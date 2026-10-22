@@ -25,6 +25,10 @@
 | Date/time fields | `components/date-time-fields.tsx` | Shared date/time inputs | Verify calendar style, keyboard operation and invalid-value behavior. |
 | Theme/locale | `components/theme-provider.tsx`, `components/theme-toggle.tsx`, `components/i18n-provider.tsx`, `components/language-switcher.tsx` | Theme and locale state | Check contrast, RTL and long translated labels. |
 
+## Enhanced mobile Features-menu search
+
+The reusable behavior contract lives in [Shared Editor Shell Contract](./shared-editor-shell.md#31-mobile-features-menu-search-contract). The authored design reference is [enhanced-mobile-feature-menu-proposal.svg](../assets/target/enhanced-mobile-feature-menu-proposal.svg), currently a Proposal. The search input remains mobile-only below 768px and renders only when the current editor menu contains more than eight feature entries. Commit-matched browser evidence was generated in [CI run 39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) for implementation commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8; the artifact includes the exact 8/9 threshold, filtering, empty state, RTL and tablet/desktop regression screenshots. Use the latest CI artifact for any later branch head.
+
 ## Component contract policy
 
 Before adding a shared variant or extracting a new primitive, inspect all consumers and tests. Document anatomy, variants, state behavior, responsive constraints, accessibility semantics, and token dependencies in a dedicated component specification under this directory only when the contract is reused or non-trivial. Feature pages should link to shared contracts rather than duplicate them.

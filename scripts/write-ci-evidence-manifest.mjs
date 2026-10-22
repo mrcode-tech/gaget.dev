@@ -37,11 +37,47 @@ async function readBaselineManifest() {
 
 function inferViewport(filePath) {
   const file = path.basename(filePath).toLowerCase();
-  if (file.includes("mobile-short") || file.includes("mobile-390x640")) return { width: 390, height: 640 };
-  if (file.includes("datetime-mobile-file-menu") || file.includes("datetime-mobile-features-menu")) return { width: 390, height: 844 };
   if (file.includes("tablet") || file.includes("768x1024")) return { width: 768, height: 1024 };
   if (file.includes("desktop") && filePath.startsWith("test-results/")) return { width: 1440, height: 900 };
+  if (file.includes("mobile-390x844")) return { width: 390, height: 844 };
+  if (file.includes("mobile-short") || file.includes("mobile-390x640") || file.includes("rtl")) return { width: 390, height: 640 };
+  if (file.includes("datetime-mobile-file-menu") || file.includes("datetime-mobile-features-menu")) return { width: 390, height: 844 };
   return null;
+}
+
+function inferState(filePath) {
+  const file = path.basename(filePath).toLowerCase();
+  if (file.includes("threshold-9") && file.includes("search-no-match")) return "threshold-9-search-no-match";
+  if (file.includes("threshold-9") && file.includes("search-match")) return "threshold-9-search-match";
+  if (file.includes("search-no-match")) return "feature-search-no-match";
+  if (file.includes("search-match")) return "feature-search-match";
+  if (file.includes("threshold-8")) return "threshold-8-no-search";
+  if (file.includes("threshold-9") && file.includes("tablet")) return "threshold-9-tablet-no-search";
+  if (file.includes("threshold-9")) return "threshold-9-search-visible";
+  if (file.includes("features-menu")) return "features-menu-default";
+  return null;
+}
+
+function inferScreenshotMetadata(filePath) {
+  const file = path.basename(filePath).toLowerCase();
+  const locale = file.startsWith("fa-") ? "fa" : file.startsWith("ar-") ? "ar" : "en";
+  const direction = locale === "en" ? "ltr" : "rtl";
+  const theme = file.includes("-dark-") ? "dark" : file.includes("-light-") ? "light" : undefined;
+  let route;
+  if (file.startsWith("feature-search-threshold-")) route = "/ci/feature-menu-search";
+  else if (file.startsWith("photo-")) route = locale === "en" ? "/images/editor" : "/"+locale+"/images/editor";
+  else if (file.startsWith("audio-")) route = locale === "en" ? "/audio/editor" : "/"+locale+"/audio/editor";
+  else if (file.startsWith("video-")) route = locale === "en" ? "/video/editor" : "/"+locale+"/video/editor";
+  else if (file.startsWith("datetime-") || file.startsWith("date-time-")) route = locale === "en" ? "/datetime/editor" : "/"+locale+"/datetime/editor";
+  else if (file.startsWith("fa-images-editor-")) route = "/fa/images/editor";
+  else if (file.startsWith("fa-audio-editor-")) route = "/fa/audio/editor";
+  else if (file.startsWith("fa-video-editor-")) route = "/fa/video/editor";
+  else if (file.startsWith("fa-datetime-editor-")) route = "/fa/datetime/editor";
+  else if (file.startsWith("ar-images-editor-")) route = "/ar/images/editor";
+  else if (file.startsWith("ar-audio-editor-")) route = "/ar/audio/editor";
+  else if (file.startsWith("ar-video-editor-")) route = "/ar/video/editor";
+  else if (file.startsWith("ar-datetime-editor-")) route = "/ar/datetime/editor";
+  return { ...(route ? { route } : {}), locale, direction, ...(theme ? { theme } : {}) };
 }
 
 const commit = process.env.GITHUB_SHA ?? "unknown";
@@ -59,8 +95,10 @@ const screenshots = files
   .filter((filePath) => filePath.toLowerCase().endsWith(".png"))
   .map((filePath) => {
     const capture = baselineCaptureMap.get(filePath);
+    const inferred = inferScreenshotMetadata(filePath);
     return {
       path: filePath,
+      commit,
       viewport: capture?.viewport ?? inferViewport(filePath),
       ...(capture ? {
         route: capture.route,
@@ -68,7 +106,10 @@ const screenshots = files
         direction: capture.direction,
         theme: capture.theme,
         state: capture.state,
-      } : {}),
+      } : {
+        ...inferred,
+        ...(inferState(filePath) ? { state: inferState(filePath) } : {}),
+      }),
     };
   });
 const testResults = {

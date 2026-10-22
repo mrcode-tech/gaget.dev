@@ -20,6 +20,8 @@
 - [Feature Contract Reconciliation](./product/feature-contract-reconciliation.md) — preserves durable requirements from legacy proposals and records route-level verification gaps; requirements remain proposals until approved.
 - [Component Inventory](./components/component-inventory.md)
 - [Shared Editor Shell Contract](./components/shared-editor-shell.md) — proposed shared layout/interaction contract for Photo, Audio, Video, and Date & Time; not approved yet.
+- [Enhanced mobile Features-menu proposal](./assets/target/enhanced-mobile-feature-menu-proposal.svg) — threshold, search results, no-results, RTL, tablet and desktop schematic; Proposal, not approved.
+- [Enhanced mobile Features-menu evidence manifest](./assets/target/enhanced-mobile-feature-menu-proposal.md) — state/viewport inventory; distinguishes authored proposal from generated browser verification.
 - Feature specifications belong under `product/`; shared reusable component contracts belong under `components/`.
 - Approved editable target wireframes belong under `assets/target/` as SVG, with PNG renderings for review where useful.
 

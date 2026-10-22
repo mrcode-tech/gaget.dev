@@ -201,3 +201,40 @@ The verified checkpoint commit was `c5b6203c2789c9c7ed56b5c28cd22586857fd818`. I
 The capture script defines 390×844, 390×640, 768×1024 and 1440×1000, with light/dark and selected RTL route captures. A separate screenshot workflow on commit `dd0983eebdd60896b9b50c45594dc06c7fd931e1` succeeded, but that is not the same commit as the latest head; do not treat it as current-head visual proof. Current CI success uploads visual evidence artifacts, but screenshot capture completion and manual visual inspection must be checked from the exact run before claiming they passed.
 
 **Still open:** target wireframe remains Proposal; selected feature panel/open menu/loaded/error state screenshot inspection is not evidenced here; full keyboard and touch browser coverage and cross-consumer parity require follow-up. Do not declare the shared shell fully verified or approved solely from CI passing.
+
+## 10. Enhanced mobile Features-menu search
+
+**Status:** Proposed contract; not approved pixel-perfect target design.
+**Source files inspected on the task baseline:** components/photo-editor.tsx, components/audio-workbench.tsx, components/video-workbench.tsx, components/datetime-editor.tsx, tests/datetime-editor.test.tsx, and tests/e2e/shared-editor-shell.spec.ts.
+
+### Source-derived baseline before this task's implementation
+
+| Editor | Feature entries in source | Current mobile/compact search behavior |
+|---|---:|---|
+| Photo/Image | 13 | No search input; grouped Edit/Image/Create list in mobile Features menu |
+| Audio | 18 | No search input; grouped feature menus, each currently opens one group at a time |
+| Video | 23 | No search input; grouped feature menus, each currently opens one group at a time |
+| Date & Time | 20 | Search input exists in the Features menu; it matches title, description and group using lowercase substring matching, but is currently shown throughout the compact menu breakpoint and its query persists when the menu closes |
+
+These counts and behaviors are source inspections, not a claim that browser tests have run. Audio and Video use group-triggered menus on desktop, but their compact Features menus expose all feature groups in one list. Search applies to that compact all-features list. Preserve desktop group menus and do not alter them as part of this task. The product contract requires searching the current editor's available features, not another editor or global navigation.
+
+### Target rule
+
+Follow the Shared Editor Shell Contract — Mobile Features-menu search. In short: below 768 px only, show the search field when the current Features menu has more than 8 selectable feature entries; at 8 or fewer, omit it. Do not add the search field at tablet widths (768–1023 px) or desktop widths (1024 px and above). Keep the current groups/order/labels/descriptions/icons and feature activation semantics.
+
+**Architecture note:** Mobile Audio and Video already expose their groups together in the compact Features menu, so filtering can operate across their existing group data without changing the navigation structure. Desktop group menus remain unchanged.
+
+### Search lifecycle and verification
+
+The query starts empty for every menu opening and clears on menu close, Escape, outside click, feature selection, and editor identity change. Match trimmed, case-insensitive substrings across title, description and group label; preserve source ordering and suppress empty groups. Show a localized no-results state for a non-empty query with no matches. Use existing i18n fallback and logical-direction styles for Persian/Arabic.
+
+The baseline Playwright suite originally covered 390×640 mobile-short, 768×1024 tablet and 1440×900 desktop menu geometry and Escape focus restoration. The enhanced mobile search contract is now covered by focused component tests and a passing browser run; see the implementation reconciliation below for the exact commit and artifact.
+
+### Implementation and verification reconciliation
+
+The shared search logic/UI is consumed by all four editor menus. The verified implementation uses the existing 768px mobile/tablet boundary and shows search only when the current editor has more than eight selectable features. Date & Time no longer has a separate bespoke search implementation. Mobile Audio/Video menus retain their grouped list; desktop group menus are unchanged.
+
+CI run [39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) passed on commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8. It passed unit tests (29), component tests (75), ESLint, TypeScript, production build, smoke tests, and 104 Playwright tests. Browser tests captured the 8-feature no-search and 9-feature search states, match/no-match/empty-query states, query reset after close/reopen, Persian RTL across the editors, Arabic RTL on Date & Time, and tablet/desktop regressions. The artifact ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 contains artifacts/ci-logs/verification-manifest.json, which indexes 246 screenshots with commit, route, viewport, locale/direction and state metadata where available.
+
+This evidence is bound to the named commit only. Follow-up commits must be validated using their own CI run and evidence manifest; do not treat a prior artifact as evidence for a different head SHA. The SVG under assets/target remains explicitly a proposal, not an approved design or browser screenshot.
+
