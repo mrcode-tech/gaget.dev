@@ -9,7 +9,7 @@ import { useResizableFeatureSheet } from "@/components/use-resizable-feature-she
 import { useI18n } from "@/components/i18n-provider";
 import { localeDirections } from "@/lib/i18n/messages";
 import { FeatureMenuNoResults, FeatureMenuSearch } from "@/components/feature-menu-search";
-import { useFeatureMenuSearch } from "@/lib/feature-menu-search";
+import { matchesFeatureSearch, useFeatureMenuSearch } from "@/lib/feature-menu-search";
 
 type Feature = { slug: string; title: string; description: string; group: "Date" | "Time" | "Calendar" | "Utilities" };
 const features: Feature[] = [
@@ -139,7 +139,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   }, []);
 
   const displayNow = frozen && frozenAt ? frozenAt : now;
-  const filteredFeatures = useMemo(() => features.filter((feature) => featureSearch.matches([feature.title, feature.description, feature.group])), [featureSearch.query, appLocale]);
+  const filteredFeatures = useMemo(() => features.filter((feature) => matchesFeatureSearch(featureSearch.query, [feature.title, feature.description, feature.group], appLocale)), [featureSearch.query, appLocale]);
   const formattedDate = displayNow ? safeFormat(displayNow, locale, calendar, numberingSystem, timeZone) : "Loading date…";
   const formattedTime = displayNow ? new Intl.DateTimeFormat(locale, {
     timeZone, hour: "2-digit", minute: "2-digit", ...(showSeconds ? { second: "2-digit" as const } : {}),
