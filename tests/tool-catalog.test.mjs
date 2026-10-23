@@ -84,19 +84,23 @@ test("tool identity, availability, and workspace ownership are explicit and vali
     assert.ok(["workspace", "standalone"].includes(tool.kind), `${tool.name} needs an explicit tool kind`);
     if (tool.kind === "workspace") {
       assert.ok(tool.workspaceId, `${tool.name} must identify its workspace`);
-      assert.equal(tool.href, ({ image: "/images/editor", audio: "/audio/editor", video: "/video/editor", "date-time": "/datetime/editor" })[tool.workspaceId], `${tool.name} must point to its canonical workspace route`);
+      assert.equal(tool.href, ({ image: "/images/editor", audio: "/audio/editor", video: "/video/editor", "date-time": "/datetime/editor", json: "/json/formatter" })[tool.workspaceId], `${tool.name} must point to its canonical workspace route`);
     } else {
       assert.equal(tool.workspaceId, undefined, `${tool.name} must not claim a shared workspace`);
     }
   }
 });
 
-test("JSON Diff and Hash Generator remain planned until implementation is verified", () => {
-  for (const id of ["json-diff", "hash-generator"]) {
-    const tool = tools.find((candidate) => candidate.id === id);
-    assert.ok(tool, `missing catalog entry: ${id}`);
-    assert.equal(tool.status, "planned");
-  }
+test("JSON operations are consolidated into one available workspace", () => {
+  const json = tools.filter((tool) => tool.category === "JSON");
+  assert.equal(json.length, 1);
+  assert.equal(json[0].id, "json-workspace");
+  assert.equal(json[0].kind, "workspace");
+  assert.equal(json[0].workspaceId, "json");
+  assert.equal(json[0].href, "/json/formatter");
+  for (const operation of ["format", "minify", "validate", "compare"]) assert.ok(json[0].keywords.includes(operation));
+  const hash = tools.find((candidate) => candidate.id === "hash-generator");
+  assert.ok(hash); assert.equal(hash.status, "planned");
 });
 
 test("JWT Decoder copy accurately limits its security claim", () => {
@@ -104,4 +108,13 @@ test("JWT Decoder copy accurately limits its security claim", () => {
   assert.ok(jwt);
   assert.match(jwt.description, /inspect|decode/i);
   assert.doesNotMatch(jwt.description, /verify signature|authenticity verified/i);
+});
+
+
+test("JSON comparison ignores object key order and reports structural changes", async () => {
+  const { compareJsonDocuments } = await import("../lib/tools/json-workspace.ts");
+  assert.deepEqual(compareJsonDocuments('{"a":1,"b":{"x":true}}', '{"b":{"x":true},"a":1}'), []);
+  const changes = compareJsonDocuments('{"name":"GaGet","version":1,"old":true,"items":[1,2,3]}', '{"name":"GaGet","version":2,"new":"yes","items":[1,4]}');
+  assert.deepEqual(changes.map(({path,kind}) => [path,kind]), [["$.items[1]","changed"],["$.items[2]","removed"],["$.new","added"],["$.old","removed"],["$.version","changed"]]);
+  assert.throws(() => compareJsonDocuments('{"valid":true}', "{bad json"));
 });
