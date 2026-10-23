@@ -9,7 +9,7 @@ function utcMillis(parts: WallTime): number {
 
 function parseWallTime(date: string, time: string): WallTime {
   const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
-  const timeMatch = /^(\d{2}):([0-5]\d)(?::([0-5]\d)(?:\.(\d{1,3}))?)?$/.exec(time);
+  const timeMatch = /^(\d{2}):([0-5]\d)(?::([0-5]\d)(?:\.(\d+))?)?$/.exec(time);
   if (!dateMatch || !timeMatch) throw new Error("Enter a valid ISO date and 24-hour time.");
 
   const parts: WallTime = {
@@ -19,7 +19,7 @@ function parseWallTime(date: string, time: string): WallTime {
     hour: Number(timeMatch[1]),
     minute: Number(timeMatch[2]),
     second: Number(timeMatch[3] ?? 0),
-    millisecond: Number((timeMatch[4] ?? "").padEnd(3, "0") || 0),
+    millisecond: Number((timeMatch[4] ?? "").slice(0, 3).padEnd(3, "0") || 0),
   };
   if (parts.hour > 23) throw new Error("Enter a valid ISO date and 24-hour time.");
   const check = new Date(utcMillis({ ...parts, hour: 0, minute: 0, second: 0, millisecond: 0 }));
