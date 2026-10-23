@@ -1,9 +1,9 @@
 # Shared Editor Shell Contract
 
-**Status:** Proposed reusable contract; not an approved pixel-perfect target design.  
-**Scope:** Shared layout and interaction behavior for Photo, Audio, Video, and Date & Time workspaces. Feature-specific controls, media processing, timelines, calendars, and export semantics remain owned by their feature contracts.  
-**Target wireframes:** [Shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg); [Enhanced mobile Features-menu proposal](../assets/target/enhanced-mobile-feature-menu-proposal.svg). Both remain Proposal, not approved pixel-perfect targets.  
-**Verification evidence:** Each CI run uploads commit-associated screenshots, test logs, Playwright failure context and a verification manifest with the full tested SHA, browser, viewport coverage, test outcomes and screenshot paths. Use the artifact from the exact evaluated commit. This is verification evidence, not approval of the proposed target design.
+**Status:** Proposed reusable contract; not an approved pixel-perfect target design.
+**Scope:** Shared layout and interaction behavior for Photo, Audio, Video, and Date & Time workspaces. Feature-specific controls, media processing, timelines, calendars, and export semantics remain owned by their feature contracts.
+**Target wireframes:** [Shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg); [Enhanced mobile Features-menu proposal](../assets/target/enhanced-mobile-feature-menu-proposal.svg). Both remain Proposal, not approved pixel-perfect targets.
+**Verification evidence:** CI uploads build-associated screenshots, test logs, Playwright failure context and a verification manifest with browser, viewport coverage, test outcomes and screenshot paths. Use the artifact from the exact build being evaluated. This evidence does not approve the proposed target design.
 
 ## 1. Ownership boundaries
 
@@ -98,8 +98,7 @@ The Features menu can become long on small screens. Search should reduce scannin
 - Include a Persian/Arabic RTL browser check and localized label/no-results assertions. If a locale lacks a translated string, use the established English fallback rather than an empty label.
 
 ### Verification evidence
-
-The above runtime acceptance criteria passed in CI run [39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) for implementation commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8. The commit-associated artifact ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 includes the generated verification-manifest.json and browser screenshots. Subsequent branch commits require their own CI/artifact verification; do not apply this evidence to another SHA.
+Runtime acceptance must be checked against the latest CI run for the exact build under review; historical artifacts are not evidence for a different build.
 ### Acceptance criteria
 
 - [x] 8 features: no search input at 390 px; all 8 entries are shown.
@@ -144,7 +143,8 @@ Actual file validation, browser APIs, processing, and export errors are feature-
 | Area | Existing evidence | Remaining verification |
 |---|---|---|
 | Component structure/menu classes | `tests/editor-command-bar.test.tsx` plus `tests/e2e/shared-editor-shell.spec.ts` | CI browser tests exercise File/Features menus, viewport bounds, Escape dismissal and focus restoration for all four editors |
-| Date & Time mobile navigation parity | Dedicated shared-shell Playwright checks assert one command bar, File/Features menu bounds and real sidebar-drawer open/close at 390×844 and 768×1024; matching screenshots are stored in the CI artifact | Repeat on each changed commit; wider RTL/landscape and additional keyboard scenarios remain separate coverage |\n| Responsive baseline | CI baseline captures 390×844, 390×640, 768×1024, and 1440×1000 | The shared-shell E2E matrix directly checks menu bounds at 390×640, 768×1024, and 1440×900; the screenshot baseline also includes 390×844 and 1440×1000 |
+| Date & Time mobile navigation parity | Dedicated shared-shell Playwright checks assert one command bar, File/Features menu bounds and real sidebar-drawer open/close at compact widths | Repeat on the evaluated build; wider RTL/landscape and additional keyboard scenarios remain separate coverage |
+| Responsive baseline | CI baseline captures 390×844, 390×640, 768×1024, and 1440×1000 | The shared-shell E2E matrix directly checks menu bounds at 390×640, 768×1024, and 1440×900; the screenshot baseline also includes 390×844 and 1440×1000 |
 | Theme and RTL | Shared-shell E2E matrix covers light/dark menus and panels; RTL menu checks cover Persian Photo/Audio/Video/Date & Time and Arabic Date & Time at 390×640 | RTL screenshots are dark-theme short-mobile only; full RTL theme/viewport parity and keyboard focus restoration in RTL remain unverified |
 | Panel visibility and bounds | Shared-shell E2E panel matrix checks Photo/Audio/Video/Date & Time at 390×640 and 768×1024 in light/dark; loaded Video has a generated WebM fixture when supported | General loaded-state coverage is incomplete for Photo/Audio/Date & Time; video fixture may be skipped if runtime MediaRecorder lacks WebM support |
 | Short-height behavior | Open menu and panel screenshots captured at 390×640; Video loaded-panel screenshot captured when fixture supported | Independent scroll ownership, panel content scroll reachability, orientation changes, and dynamic visual viewport behavior are not exhaustively asserted |
@@ -161,7 +161,7 @@ Actual file validation, browser APIs, processing, and export errors are feature-
 - [ ] Empty and loaded states retain intentional scroll ownership and do not leak stale controls.
 - [ ] Light/dark and LTR/RTL use semantic tokens and correct direction without changing feature data ordering.
 - [x] Critical File/Features menu open/close, Escape, focus restoration, viewport bounds, theme, responsive menu states, panel bounds, and short-mobile RTL menu behavior have automated Playwright coverage on the evaluated commit.
-- [x] CI and visual evidence are available for commit `ac9e781d159268bbd537d3c3108a5bbe705fc88d`; inspect the artifact linked above for the manifest and screenshots.
+- [ ] CI and visual evidence are available for the exact build under review; inspect its artifact manifest and screenshots before marking verification complete.
 - [ ] Complete visual inspection of every artifact screenshot and every state/viewport combination; this review inspected a representative subset of desktop/tablet/mobile-short menus, panels, loaded Video and RTL states.
 - [ ] Complete loaded/error/drag-over parity, panel internal scrolling and resizing across all consumers, keyboard navigation beyond Escape, zoom/orientation/dynamic viewport checks.
 - [ ] Product/design approval is recorded separately before marking this target Approved.

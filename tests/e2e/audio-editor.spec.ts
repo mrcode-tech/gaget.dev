@@ -143,7 +143,8 @@ test("mobile audio features use the compact bottom sheet instead of a list box",
   const box = await panel.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.y).toBeGreaterThan(100);
-  expect(box!.y + box!.height).toBeLessThanOrEqual(840);
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewportHeight + 1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 

@@ -1,7 +1,7 @@
 # Design System & Token Contract
 
-**Status:** Canonical design-system specification  
-**Implementation source:** `app/globals.css`, Tailwind configuration, `components/ui/*`, and component usage on the target branch.  
+**Status:** Canonical design-system specification
+**Implementation source:** `app/globals.css`, Tailwind configuration, `components/ui/*`, and component usage in the current source.
 **Policy:** Document current reality separately from future recommendations. Token examples below name semantic roles; they do not authorize unreviewed brand changes.
 
 ## 1. Current implementation

@@ -1,6 +1,6 @@
 # Design Engineering & AI Design Workflow
 
-**Status:** Canonical process specification  
+**Status:** Canonical process specification
 **Influences:** Design Engineering craft principles associated with Emil Kowalski; Impeccable's structured design guidance for AI-assisted coding. This document is an adaptation for GaGet.dev, not a claim of endorsement or an exact copy of either project.
 
 ## 1. Purpose

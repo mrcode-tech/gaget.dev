@@ -1,26 +1,26 @@
 # Current-State Product Baseline
 
-**Baseline branch:** `feature/design-system-token-handoff`  
-**Baseline commit inspected:** `450e3849b49dd8c6e2920305420eba594b245649`  
-**Audit method:** GitHub source/configuration/specification inspection at `feature/design-system-token-handoff`. This is a source-level baseline, not a claim that the working tree was clean, commands ran, or browser behavior was verified. The connected repository API does not expose the local working-tree state or provide a project runtime in this audit.
+**Scope:** Application-wide source baseline. Re-check source, tests, and the latest matching CI evidence before relying on any implementation claim.
+
+**Evidence policy:** This page records durable source-derived facts and open verification gaps. It does not identify a task branch or commit. CI results and generated screenshots are tied to the exact build that produced them; inspect the latest run for the change being evaluated. Source inspection alone is not runtime or visual verification.
 
 ## What exists today
 
 ### Application shell
 - Next.js App Router with shared `AppShell`, `AppHeader`, and `AppSidebar`.
-- Desktop sidebar expands to 248px and collapses to 64px at the large-screen breakpoint; the shell offsets content according to sidebar state and text direction.
-- Header height is 68px. On Photo, Audio, Video, and Date & Time editor routes, the global header and its spacer are hidden below the large-screen breakpoint; the editor command bar is the single compact-screen navigation row. Date & Time places its hamburger and File trigger on the left and Features on the right, and the hamburger opens the shared mobile sidebar drawer. Desktop retains the global header and editor offset.
-- Mobile/tablet navigation uses a drawer opened through a shared custom event.
-- Theme toggle and language switcher are shared controls. Persian and Arabic are RTL; locale translation completeness varies.
+- Desktop sidebar expands to 248px and collapses to 64px at the large-screen breakpoint; shell offsets content according to sidebar state and text direction.
+- The global header is 68px high. Photo, Audio, Video, and Date & Time editor routes use a compact editor command bar as the single navigation row below the large-screen breakpoint.
+- The Date & Time compact command bar places the hamburger and File trigger on the left and Features on the right; the hamburger opens the shared mobile sidebar drawer.
+- Theme and language controls are shared. Persian and Arabic are RTL; translation completeness varies by route and string.
 
 ### Home and discovery
 - `/` is the home/discovery experience.
 - `/tools` is the tool catalog.
 - `/categories/[slug]` is a category landing page.
-- Tool registry metadata drives search, categories, featured/favorite experiences and tool links. Registry entries are not proof of a working destination or complete capability.
+- Tool registry metadata drives search, categories, featured/favorite experiences and tool links. A registry entry is not proof that a destination exists or that a capability works.
 
 ### Main workspaces
-- `/images/editor`: unified image/photo workspace. Legacy image slugs redirect to the editor. Source includes canvas-based image adjustments, crop/resize, transforms, text layers, and format/quality export controls; capability claims must be checked against each active path.
+- `/images/editor`: unified image/photo workspace. Legacy image slugs redirect to the editor. Source includes canvas-based image adjustments, crop/resize, transforms, text layers, and format/quality export controls; verify each active path before making broader capability claims.
 - `/audio/editor`: unified audio workspace with feature selection, file workflow and browser-native audio operations. Export and metadata behavior vary by feature.
 - `/video/editor`: unified video workspace based on browser media, canvas and MediaRecorder capabilities. Codec/export support is browser-dependent; some features are preview-only or experimental.
 - `/datetime/editor`: unified date/time workspace with date, time, calendar and utility features. Locale/calendar behavior depends partly on browser internationalization data.
@@ -38,99 +38,24 @@ Additional registry entries may be planned or redirect to unified editors. Verif
 
 - Semantic theme CSS variables are defined in `app/globals.css` using HSL channels, with light and dark values.
 - Shared primitives exist under `components/ui/`; application styling also uses Tailwind utilities directly, so design tokenization is partial.
-- Media and date/time editor routes use a full-viewport shell, with specialized command bars and feature controls. Do not assume their internal panels or scroll ownership are identical without inspecting the route.
-- Shared shell and workbench components have automated tests, including selected Playwright end-to-end tests. Existing coverage is not complete visual regression coverage.
+- Media and date/time editor routes use a full-viewport shell, specialized command bars and feature controls. Their internal panels and scroll ownership are not assumed to be identical.
+- The shared editor contract describes compact navigation, trigger-anchored File/Features menus, responsive panel bounds, theme/RTL behavior, and mobile-only Features search. The contract and authored SVGs remain proposals unless separately approved.
 - Browser-native media processing is constrained by codec availability, file size, memory and browser APIs. Documentation must distinguish actual export from preview, sidecar output and unavailable processing.
 
-## Visual audit status
+## Verification status and known gaps
 
-The following are required before this document can be considered a fully verified visual baseline:
-- [ ] Capture home, catalog, standalone tools and each main workspace from the exact audited commit.
-- [ ] Inspect representative mobile, short-height mobile, tablet and desktop widths.
-- [ ] Capture and inspect light and dark themes, including Persian and Arabic RTL routes where applicable.
-- [ ] Capture empty-file and loaded-file states for image, audio and video, plus representative feature-active panels.
-- [ ] Record browser/version, route, viewport, theme, state and commit in the artifact manifest.
-- [ ] Review screenshots for clipping, unexplained gaps, panel anchoring, scroll ownership and header/sidebar overlap.
+- Automated unit, component, lint, typecheck, production build, route smoke, Playwright E2E and design-baseline capture scripts are defined in `package.json` and `.github/workflows/ci.yml`.
+- CI uploads test logs, Playwright output, screenshot captures and a verification manifest. Use the artifact from the exact run for the change under review; do not treat an older artifact as evidence for a different build.
+- The CI screenshot matrix covers initial/default states at representative mobile, short-height mobile, tablet and desktop dimensions, light/dark themes and selected Persian/Arabic routes. This does not by itself establish complete visual conformance.
+- Loaded media, feature-active panels, explicit error/disabled states, keyboard/focus behavior, reduced motion and comparison against authored target designs require additional targeted evidence where not covered by tests.
+- The repository workflow currently uses `npm install` because its comments identify the lockfile as stale. The dependency-install concern should be reproduced and resolved before changing the workflow to `npm ci`.
+- This source-level specification alone does not imply that tests, a build, or visual review passed.
 
-Generated screenshots are the visual evidence for a specific build. This Markdown file records code-derived facts and audit status; update it when a durable current-state fact changes.
+## Required follow-up before declaring conformance
 
-
-## Project-wide reconciliation findings (source audit, 2026-10-21)
-
-- Added [`feature-contract-reconciliation.md`](./feature-contract-reconciliation.md) after comparing this branch with `stage`. It records durable requirements from removed legacy design documents, maps them to current source/test evidence, and explicitly marks target behavior as proposed rather than approved. The shared shell and each major workspace still lack complete approved target assets and route-level visual verification.
-
-**Status: Partial / not yet verified.** The following are findings from repository files, not claims of successful runtime tests or completed visual inspection.
-
-### Confirmed foundation and verification setup
-
-- `AGENTS.md` delegates to `specification/AI_INSTRUCTIONS.md`; `command.md` correctly remains a shortcut index rather than a competing workflow.
-- The package scripts define unit, component, lint, typecheck, build, Playwright E2E and design-baseline capture commands.
-- `.github/workflows/ci.yml` is configured to run on pushes and pull requests across branches, cancels superseded runs for the same branch, and includes unit/component tests, lint, typecheck, build, route smoke tests, Playwright checks and the expanded design-baseline capture. The timeout is 30 minutes to allow for the larger capture matrix.
-- `tests/smoke.test.mjs` includes the video workspace, UUID generator and date/time editor, plus twelve Persian/Arabic route checks for server-rendered RTL direction. These checks passed in CI run [39608491873](https://github.com/mrcode-tech/gaget.dev/actions/runs/39608491873) for commit `1f9a7e37c07bc329092b67632732668acb9eb40f`; they assert the document root, not every nested workspace.
-- `.github/workflows/design-baseline-screenshots.yml` and the main CI workflow invoke `scripts/capture-design-baseline.mjs`. The updated capture matrix defines 11 English routes at 390×844, 390×640, 768×1024 and 1440×1000 in light and dark themes (88 captures), plus six key routes in Persian (`/fa`) and Arabic (`/ar`) at mobile and desktop heights in both themes (48 more; 136 expected captures total).
-- The successful screenshot run [39608491878](https://github.com/mrcode-tech/gaget.dev/actions/runs/39608491878) produced 136 captures with zero capture failures for commit `1f9a7e37c07bc329092b67632732668acb9eb40f`. The manifest records Chromium `156.0.8078.4`, commit, route, locale, direction, viewport, theme and state. Representative desktop, short-height mobile, Persian desktop and Arabic mobile captures were visually inspected.
-- The capture matrix captures initial/default states only. Loaded media, feature-active panels, explicit error/disabled states, keyboard/focus behavior, reduced motion and comparison against authored target designs are not covered by screenshots, although some interactions have separate Playwright coverage. Visual review of the Arabic Date & Time capture found its nested workspace was LTR while the route UI was RTL because direction followed the independent display-language selector (default `en-US`). The implementation now binds workspace direction to the app locale and adds RTL component/screenshot assertions; this fix is awaiting CI verification on the current head.
-- The README reports that `package-lock.json` is stale and that `npm ci` fails due to missing declared dependency entries; CI currently uses `npm install`. This reported issue has not been reproduced in this audit.
-- The CI and screenshot workflows passed for commit `1f9a7e37c07bc329092b67632732668acb9eb40f` (links above). Later changes include the feature-contract reconciliation and the Date & Time nested-direction fix. The current head `dd0983eebdd60896b9b50c45594dc06c7fd931e1` has new CI and screenshot runs queued; do not infer their outcome from the earlier successful run.
-
-### Source-level route and capability inventory
-
-- Discovery routes: `/`, `/tools`, and `/categories/[slug]`.
-- Unified workspaces: `/images/editor`, `/audio/editor`, `/video/editor`, and `/datetime/editor`, with legacy feature paths and redirects described in the product inventory.
-- Standalone tools listed in the current inventory: `/json/formatter`, `/encoding/url`, `/encoding/base64`, `/security/jwt-decoder`, and `/generators/uuid`.
-- The registry also declares planned tool destinations. Registry declarations are not proof of route existence or functional capability; every planned/available status still requires comparison with the actual route tree and feature implementation.
-- The source registry descriptions advertise broad media capabilities. The product inventory correctly cautions that some browser-native video operations may be preview-only, unsupported or codec-dependent. These claims require per-feature source/test review and browser verification before the catalog can be considered capability-accurate.
-- `app/globals.css` defines semantic light/dark theme variables and a small set of component classes, while the product uses Tailwind utility values directly. Tokenization remains partial.
-- `components/app-shell.tsx` has route-specific full-viewport editor behavior and sidebar offsets; media and date/time editors do not share identical header visibility rules. Consumer-level layout and scroll behavior must be audited individually rather than assumed equivalent.
-
-### Specification and target-design gaps
-
-- The canonical index and AI instructions define the expected documentation structure, but the source inventory alone does not prove that every workspace has a complete feature contract.
-- No target designs are approved. After reviewing the CI screenshot artifact, an editable [shared editor shell proposal](../assets/target/shared-editor-shell-proposal.svg) was added and linked from the feature-contract reconciliation. It is explicitly a proposal; detailed Photo/Audio states, Video feature states and Date & Time centerpiece/input wireframes remain outstanding.
-- The current-state visual checklist remains open. The screenshot capture script can produce current-state evidence, but screenshots are not target designs and the capture script does not itself compare screenshots with approved wireframes.
-- The baseline commit must be kept distinct from the live branch tip as work proceeds. This audit records the inspected source revision above; after any further changes, update the baseline to the resulting commit only when that commit is known and its checks are reported separately.
-
-### Required follow-up before declaring conformance
-
-1. Enumerate the actual App Router filesystem and redirect routes, then reconcile every entry against `lib/tools/registry.ts`, the feature slugs in each workspace, the sitemap and smoke/E2E tests.
-2. Inspect every route and shared component implementation, its consumers, and existing tests; establish a route/component coverage matrix with evidence and status.
-3. Locate or author canonical feature contracts and editable target SVG wireframes where expected behavior is missing. Mark new designs as proposals until approved.
-4. Reproduce the reported dependency-install issue and establish a true baseline run for unit/component tests, lint, typecheck, build, smoke and Playwright checks.
-5. Run the application and inspect screenshots from the exact evaluated commit, including loaded/empty/error/active states, short viewports, themes, RTL, keyboard/focus, menu anchoring and scroll ownership.
-6. Refactor in staged groups only after target contracts are sufficiently clear; add regression tests and update affected inventories/contracts after each stage.
-
-No implementation or browser check is marked complete by this source audit alone.
-
-
-## Shared editor shell verification checkpoint — 2026-10-21
-
-- Latest verified branch head for this checkpoint: `c5b6203c2789c9c7ed56b5c28cd22586857fd818` on `feature/design-system-token-handoff`.
-- [GaGet.dev CI run 39670723789](https://github.com/mrcode-tech/gaget.dev/actions/runs/39670723789) passed unit tests, focused Photo Editor/sidebar regressions, component tests, ESLint, TypeScript, production build, smoke routes and responsive/accessibility tests for this checkpoint commit.
-- The CI capture script is configured for 390×844, 390×640, 768×1024 and 1440×1000; English captures use both themes and selected RTL routes use Persian/Arabic at mobile and desktop widths. The successful CI run uploaded a combined test and visual-evidence artifact for this commit. The configured default-state captures do not cover every open-menu, open-panel, loaded/error state, and the artifact has not been manually visually reviewed here.
-- The [shared shell contract](../components/shared-editor-shell.md) and [editable wireframe proposal](../assets/target/shared-editor-shell-proposal.svg) define the proposed baseline. Proposal is not approval. Open-panel/menu visual inspection, loaded/error-state visual parity and keyboard/touch browser checks remain gaps.
-- This section records durable baseline evidence and its limitations, not an in-progress task diary.
-
-## Enhanced mobile Features-menu search — pre-implementation baseline audit
-
-**Audit branch:** feature/enhanced-menu
-**Audit commit:** bb77db5ea3317bbe7aea00f1f4e516cc2d550838 (same as stage at task start)
-**Method:** Remote source/specification inspection. No local working tree, browser runtime, or test process was available during this source audit.
-
-- components/datetime-editor.tsx declares 20 feature entries and filters the list using a lowercase substring over title, description, and group. Its search input is inside a menu with lg:hidden, so source classes allow it across the compact range, including tablet widths below 1024 px. The query state is not reset when the menu closes.
-- components/photo-editor.tsx declares 13 selectable entries across Edit/Image/Create and renders a separate mobile Features menu without search.
-- components/audio-workbench.tsx declares 18 feature entries grouped under Edit/Adjust/Analyze/Export & data/Record. Its compact menu opens one group at a time and has no search input.
-- components/video-workbench.tsx declares 23 entries grouped under Edit/Adjust/Analyze/Export & data/Record. Its compact menu opens one group at a time and has no search input.
-- Existing source imports the shared shadcn-style Input, Lucide Search, semantic border/popover/ring tokens, and uses start/logical alignment in parts of the shell. Existing test coverage includes Date & Time search presence and shared-shell viewport/focus checks, but does not establish the requested 8/9 threshold or full cross-editor search behavior.
-- These are source-derived facts only. Actual rendered threshold, RTL, empty-results, and tablet/desktop behavior remain Not verified until tests and browser evidence run on the implementation commit.
-
-The expected behavior is defined in the Shared Editor Shell Contract and Feature Contract Reconciliation. This entry is a baseline audit, not a task log and not evidence of implementation completion.
-
-## Enhanced mobile Features-menu search — verified implementation
-
-**Implementation verification:** CI run [39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) passed on commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 on feature/enhanced-menu. The run passed unit tests (29), focused Photo/sidebar regressions, component tests (75), ESLint, TypeScript, production build, route smoke tests, responsive/accessibility Playwright tests (104), and design-baseline capture.
-
-- Shared logic is in lib/feature-menu-search.ts: mobile is below 768 CSS px, search appears only when the current menu has more than 8 selectable entries, matching is trimmed and case-insensitive, and query state resets on menu close, viewport change out of mobile, and editor identity change.
-- Shared UI is in components/feature-menu-search.tsx, using the existing shadcn-style Input, semantic tokens, logical positioning, and English/Persian/Arabic labels and no-results text.
-- Photo, Audio, Video, and Date & Time use the shared behavior. Source-declared feature counts are 13, 18, 23, and 20.
-- The passing Playwright run exercised the exact 8/9 threshold in a rendered browser harness, mobile match/no-match/empty-query states, menu close/reopen reset, tablet and desktop behavior, short-height layouts, and RTL coverage. The CI evidence artifact is ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8; its artifacts/ci-logs/verification-manifest.json indexes 246 screenshots and binds each screenshot entry to the tested commit.
-- Evidence scope: this result is for the exact commit named above. Use the latest branch CI run and its commit-matched artifact for any later branch head; never reuse this artifact as proof for a different SHA. The authored SVG remains a proposal, not a browser screenshot or an approved pixel-perfect design.
+1. Reconcile App Router routes and redirects against `lib/tools/registry.ts`, feature slugs, sitemap and smoke/E2E tests.
+2. Inspect each route and shared component with its consumers and tests; maintain an evidence-based route/component coverage matrix.
+3. Add canonical feature contracts and editable target wireframes where expected behavior is missing. New designs remain proposals until approved.
+4. Reproduce the dependency-install issue and run unit/component tests, lint, typecheck, build, smoke and Playwright checks on the evaluated build.
+5. Inspect rendered screenshots from the exact evaluated build, including empty/loaded/error/active states, short viewports, themes, RTL, keyboard/focus, menu anchoring and scroll ownership.
+6. Update this page only when durable implementation facts or verification status change. Keep task progress and build-specific evidence in pull requests and CI artifacts, not as a rolling audit diary.

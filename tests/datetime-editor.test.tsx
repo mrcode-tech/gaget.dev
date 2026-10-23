@@ -86,7 +86,7 @@ describe("DateTimeEditor", () => {
     expect(screen.getByTestId("datetime-workspace").className).not.toContain("pt-2");
     expect(workspaceGrid.firstElementChild?.className).toContain("pt-2");
     expect(screen.getByRole("region", { name: "Date and time display" }).className).toContain("mt-2");
-    expect(panel.className).toContain("sm:border-l");
+    expect(panel.className).toContain("md:border-l");
     expect(panel.className).not.toContain("border-dashed");
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
   });
@@ -113,9 +113,9 @@ describe("DateTimeEditor", () => {
     render(<DateTimeEditor initialFeature="date-difference" />);
     const panel = screen.getByTestId("datetime-feature-panel");
     expect(panel.className).toContain("fixed");
-    expect(panel.className).toContain("sm:w-[320px]");
-    expect(panel.className).toContain("sm:border-l");
-    expect(panel.className).toContain("sm:border-t-0");
+    expect(panel.className).toContain("md:w-[320px]");
+    expect(panel.className).toContain("md:border-l");
+    expect(panel.className).toContain("md:border-t-0");
     expect(panel.className).toContain("max-h-[70dvh]");
     expect(within(panel).getByText("Feature parameters")).toBeTruthy();
     expect(within(panel).getByRole("heading", { name: "Date Difference Calculator" })).toBeTruthy();
