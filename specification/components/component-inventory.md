@@ -22,7 +22,7 @@
 | Audio workbench | `components/audio-workbench.tsx` | Audio editor features and command/panel behavior | Specialized browser audio/export behavior. |
 | Video workbench | `components/video-workbench.tsx` | Video editor features and command/panel behavior | Browser codec and recording limits must remain visible. |
 | Date/time workbench | `components/datetime-editor.tsx`, `components/datetime-workbench.tsx` | Date/time feature selection and tools | Locale, calendar and timezone edge cases require feature-specific contracts. |
-| Date/time fields | `components/date-time-fields.tsx` | Shared date/time inputs | Verify calendar style, keyboard operation and invalid-value behavior. |
+| Date/time fields | `components/date-time-fields.tsx`, `lib/date-time/calendar.ts` | Shared date/time inputs and calendar-native formatting | Day cells are formatted directly with the selected Intl calendar; ISO/Gregorian values remain stable internal identifiers. Verify all supported calendar systems, keyboard operation and unsupported combinations. |
 | Theme/locale | `components/theme-provider.tsx`, `components/theme-toggle.tsx`, `components/i18n-provider.tsx`, `components/language-switcher.tsx` | Theme and locale state | Check contrast, RTL and long translated labels. |
 
 ## Enhanced mobile Features-menu search
@@ -34,3 +34,5 @@ The reusable behavior contract lives in [Shared Editor Shell Contract](./shared-
 Before adding a shared variant or extracting a new primitive, inspect all consumers and tests. Document anatomy, variants, state behavior, responsive constraints, accessibility semantics, and token dependencies in a dedicated component specification under this directory only when the contract is reused or non-trivial. Feature pages should link to shared contracts rather than duplicate them.
 
 A component's existence does not imply that all its states or consumers have been visually verified. Update this inventory when responsibilities or ownership change.
+
+| Date & Time select field | `components/ui/native-select.tsx` | Consistent native select trigger surface and logical chevron inset | Shared by workspace settings and feature controls; verify LTR/RTL, themes, focus and long values. |

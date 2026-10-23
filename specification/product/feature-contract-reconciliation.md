@@ -1,12 +1,12 @@
 # Feature Contract Reconciliation
 
 **Status:** Audit baseline / proposed expected behavior; not approved target design.
-**Audit branch:** the evaluated source
+**Evidence scope:** application-wide contract; implementation is checked against the evaluated source revision
 **Purpose:** Preserve durable requirements from legacy feature specifications while separating them from verified implementation facts. This document does not imply pixel-level conformance or approval of a new visual design.
 
 ## 1. Evidence and status rules
 
-- **Current implementation:** source files and tests on the audit branch. A test file indicates intended/tested behavior, not necessarily complete browser coverage.
+- **Current implementation:** source files and tests on the evaluated revision. A test file indicates intended/tested behavior, not necessarily complete browser coverage.
 - **Expected behavior:** requirements retained below from the legacy design proposals and shared editor template. Since the prior documents were marked proposal/design reference and no target assets are approved in `specification/assets/target/`, these requirements are carried forward as **proposed contracts** until reviewed and approved. The first authored target asset is [`shared-editor-shell-proposal.svg`](../assets/target/shared-editor-shell-proposal.svg); its status is Proposal, not Approved.
 - **Verified:** only a behavior supported by an executed test or direct browser inspection of the evaluated commit. Source inspection alone is not runtime verification.
 - **Not verified:** visual geometry, interaction, or browser-dependent capability not established by the evidence listed here.
@@ -161,7 +161,7 @@ The workspace consolidates date/time utilities. Locale/calendar behavior depends
 ### Proposed contract to preserve
 
 - The default workspace is a live date/time explorer, not a file-upload state. A bounded centerpiece shows the selected date/time context and offers a clear way to apply it to the active feature.
-- Calendar system, display language/locale, numeral system, clock format, and time zone are independent settings. Keep technical values such as ISO dates, Unix timestamps, and IANA zone identifiers legible and directionally isolated in RTL presentation.
+- The global application locale is the single source of truth for interface language and localized month/weekday labels; Date & Time must not expose a duplicate language selector. Calendar system, numeral system, clock format, and time zone remain independent preferences. Keep technical values such as ISO dates, Unix timestamps, and IANA zone identifiers legible and directionally isolated in RTL presentation.
 - Use a shared styled input family for date, time, date-time, ranges, calendar system, locale/numerals, and time zone. Do not use raw browser date/time inputs or an unstyled native select as the primary designed control.
 - Date/time inputs need localized labels and digits, month/year navigation, explicit selected state, keyboard operation, bounded popovers, internal scrolling, and validation feedback.
 - Normalize localized digits to canonical internal values where appropriate. Preserve canonical ISO date and 24-hour time representations internally.
@@ -169,7 +169,7 @@ The workspace consolidates date/time utilities. Locale/calendar behavior depends
 
 ### Verification status
 
-Date/time component tests exist. Calendar coverage, typed localized digits, unsupported locale/calendar combinations, timezone edge cases, keyboard operation, RTL layout, and active feature-panel visuals need explicit acceptance tests and browser review. No target SVGs for the centerpiece or input family are currently approved.
+Date/time component tests exist. Calendar day-number, month-boundary, year-length and leap-year regression tests cover Gregorian, Persian, Islamic, Islamic Umm al-Qura, Hebrew, Buddhist, and Indian calendars, with a Persian date-picker integration test for 1 Aban and stable ISO-date selection. Time-zone, timestamp, JSON and fixed-date holiday outputs now include selected-calendar display while preserving technical ISO/Unix values. Remaining gaps include broader independently verified locale/calendar reference coverage, typed localized digits, unsupported locale/calendar combinations, timezone edge cases, complete keyboard operation, RTL layout, and active feature-panel browser review. Calendar-year lookup no longer depends on hardcoded Gregorian offsets and named-month calendars use stable ordinal identities. A regression now requires the global locale to drive Date & Time labels and removes the competing local language state. The canonical [Date & Time Workspace and Controls](./date-time-workspace.md) contract and [`date-time-workspace-controls-proposal.svg`](../assets/target/date-time-workspace-controls-proposal.svg) now capture the missing introduction/control design baseline as a proposal; the target is not approved and browser conformance remains unverified.
 
 ## 10. Cross-route audit matrix
 
@@ -179,7 +179,7 @@ Date/time component tests exist. Calendar coverage, typed localized digits, unsu
 | Photo | Photo editor and image workbench | `photo-editor.test.tsx` | Empty/loaded/error/active feature states and exports need matched screenshot + functional coverage |
 | Audio | Audio workbench | `audio-workbench.test.tsx` | Loaded waveform, capability-specific export and metadata claims need browser validation |
 | Video | Video workbench and legacy route | `video-workbench.test.tsx` plus smoke route | Codec-specific behavior, unsupported features, timeline variants and audio preservation need validation |
-| Date & Time | Date-time editor/workbench and field components | `datetime-editor`, `date-time-fields` tests | Locale/calendar/timezone combinations, localized input, keyboard behavior and active feature panels need broader coverage |
+| Date & Time | Date-time editor/workbench and field components | `datetime-editor`, `date-time-fields` tests | Selected-calendar day/month-boundary coverage has been expanded; locale/numeral/unsupported-combination, timezone, keyboard, and active feature-panel browser coverage remain incomplete. |
 | Localization | i18n provider, middleware, message catalog | `i18n.test.mjs`, smoke tests | RTL and language assertions are now in CI; verify all localized routes and translated content, not only `dir` metadata |
 | Visual evidence | `scripts/capture-design-baseline.mjs` | CI screenshot capture | Default/empty state only; no target comparison or interaction-state capture |
 

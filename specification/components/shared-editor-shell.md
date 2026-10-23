@@ -114,6 +114,7 @@ Runtime acceptance must be checked against the latest CI run for the exact build
 - At most one contextual feature panel is active per workspace unless a feature contract explicitly says otherwise.
 - Desktop inspector placement is consumer-owned but must align with editor content bounds and must not cover command-bar controls or make the main work area unusable.
 - On compact screens, a sheet must be bounded by the visual viewport, expose an obvious close affordance, and scroll its content independently.
+- Compact Audio and Video feature sheets must use an opaque theme-aware surface so the underlying workspace form/content does not show through the open panel. Do not use translucent panel backgrounds or backdrop effects that reveal interactive content beneath the sheet.
 - Where resize is supported, the handle must have a visible affordance, keyboard support, an accessible name/role and truthful min/max/current values. Pointer cancellation and viewport changes must leave the panel in a valid size.
 - The shell must not introduce nested competing scroll regions. Empty-state heading, description and upload target scroll together where the consumer uses the empty-workspace pattern. A loaded canvas/timeline/player retains its own intended interaction and scroll behavior.
 - Avoid unexplained large gaps, clipped separators, overlapping dividers, page-level horizontal overflow, or a panel positioned far from the command bar when the interaction implies a relationship.
@@ -165,3 +166,36 @@ Actual file validation, browser APIs, processing, and export errors are feature-
 - [ ] Complete visual inspection of every artifact screenshot and every state/viewport combination; this review inspected a representative subset of desktop/tablet/mobile-short menus, panels, loaded Video and RTL states.
 - [ ] Complete loaded/error/drag-over parity, panel internal scrolling and resizing across all consumers, keyboard navigation beyond Escape, zoom/orientation/dynamic viewport checks.
 - [ ] Product/design approval is recorded separately before marking this target Approved.
+
+
+## 9. Workspace introduction and form-control consistency
+
+**Status:** Proposed reusable visual contract; it does not approve a pixel-perfect target for any editor.
+
+### Workspace introduction geometry
+
+For the empty/default introduction at the top of Photo, Audio, Video and Date & Time workspaces, use one shared spacing and typography rhythm unless a documented feature need requires a difference:
+
+- Workspace content gutters: `p-3` on XS, `p-6` from SM, and `p-8` at LG where the content region supports the desktop gutter.
+- Breadcrumb: `text-sm`, muted foreground, horizontally aligned with the title and main content; use a consistent `mb-5` gap before the heading.
+- Main heading: `text-2xl font-bold tracking-tight`, increasing to `sm:text-3xl` from SM.
+- Supporting description: `mt-2 max-w-2xl text-sm leading-6`, increasing to `sm:text-base`; retain muted semantic text color.
+- The breadcrumb, title and description share the same content start edge. At compact widths that edge must align with the command bar's logical content inset; do not add an extra top-level padding wrapper that shifts only one editor.
+- Date & Time is not a file-upload editor. It keeps its live date/time centerpiece and configuration controls after the introduction rather than inheriting media drop-zone content or empty-file behavior.
+- When a feature is active, preserve the heading and shell relationship unless the feature contract explicitly says otherwise; keep the description hidden only where current interaction design intentionally makes room for the active workspace.
+
+### Form controls and select affordance
+
+- Date & Time text inputs use the shared `Input` primitive. Select controls use the Date & Time `NativeSelect` wrapper, which preserves native select keyboard/option semantics while standardizing the trigger surface.
+- Every select trigger uses a consistent 40px control height, one semantic `border-input` border, `rounded-md`, `bg-background`, `text-sm`, and visible `focus-visible:ring-ring` focus state in both themes.
+- Use logical `ps-3` / `pe-9` padding and position the decorative chevron at logical `end-3`. The arrow must have a clear inset from the control edge and must not overlap selected text in LTR or RTL. Do not use physical left/right offsets.
+- Keep labels and helper/error text outside the control border. Do not add a border to a label as a substitute for a control boundary; avoid inconsistent square/rounded controls and ad hoc per-select padding.
+- Do not style a select differently only because it appears in the main workspace or a feature panel. Feature-specific dimensions may vary only when justified and documented.
+- Native option popups remain browser-rendered; this contract standardizes the closed control, not cross-browser popup appearance.
+
+### Acceptance checks
+
+- Compare Date & Time with the Photo/Audio/Video empty-state introductions at 390px, 768px and 1440px widths. Verify shared gutter rhythm, breadcrumb-to-heading spacing, heading weight/size and description line height.
+- Verify mobile breadcrumb/title alignment against the compact command bar; no extra row or horizontal overflow is introduced.
+- Check every Date & Time select in the main workspace and feature controls in light/dark themes and LTR/RTL. Border, height, corner radius, text padding, focus ring and chevron inset must remain consistent.
+- Keep native select keyboard navigation and accessible labels. Run the Date & Time component tests and relevant E2E visual/interaction checks.
