@@ -118,3 +118,43 @@ The user may simply say “implement X” and link this file. The agent should t
 - **Changes:** code, docs, SVG/PNG assets, and inventory changes.
 - **Verification:** exact commands, results, browser/viewport/theme coverage, screenshot artifact link if available.
 - **Remaining gaps:** failures, unsupported scenarios and anything not verified.
+
+## 9. General implementation, CI, and evidence verification requirements
+
+These requirements apply to every implementation task, not only UI work.
+
+### Before implementation
+- Inspect the actual source revision, branch and working-tree state, recent relevant commits, pull request status, CI configuration, and latest relevant workflow results before editing. Preserve unrelated work.
+- Read the applicable canonical specifications, source, tests, and approved design evidence. Define observable acceptance criteria and the checks that will prove the change works.
+- Reproduce the issue when practical. Distinguish verified root causes from hypotheses.
+
+### During implementation
+- Make the smallest maintainable change that satisfies the approved contract. Add regression tests for the reported failure and adjacent state transitions likely to regress.
+- Do not weaken tests, suppress errors, skip quality gates, or alter product contracts merely to make the implementation pass.
+- Update canonical specifications only when behavior, acceptance criteria, reusable rules, or documented implementation status genuinely changes. Keep application-wide specifications free of temporary branch names, commit hashes, PR numbers, and CI run IDs.
+
+### Local verification
+- Run focused tests first, then all applicable repository-required checks, including unit/component tests, lint, type checking, production build, smoke tests, end-to-end tests, and accessibility/visual checks where configured.
+- Inspect real browser behavior for affected routes and relevant viewports, states, themes, locales and RTL behavior when applicable. Use the existing design-baseline/evidence workflow for visual changes.
+- Rerun affected checks after each material fix. Record exact commands and outcomes. Mark unavailable checks as **not verified**, not passed.
+
+### GitHub Actions verification
+- Determine the intended workflow trigger from the checked-in workflow. Do not assume a push starts CI when the workflow does not include a push trigger. Use an authorized pull request or manual dispatch mechanism when appropriate.
+- Confirm that a workflow run exists for the intended change and verify its exact head commit SHA, branch/event, attempt, status and conclusion.
+- Wait for completion and inspect every required job and relevant step. Review failure logs, cancellations, skipped steps and missing jobs; a green summary alone is insufficient when required work did not run.
+- Inspect the required artifact list and open/download available evidence when possible. Check the manifest and verify that test reports, screenshots and other outputs belong to the same tested SHA/run attempt and cover the required states/viewports.
+- An artifact's existence does not prove its contents are complete or correct. A prior green run cannot verify later code changes. If the run tests an earlier SHA, rerun validation for the final intended revision.
+- For failures, diagnose the cause, make an in-scope fix, rerun local checks and obtain a new completed CI result for the new SHA. Repeat until all required gates pass or a real blocker prevents completion.
+- Never claim CI passed merely because it was requested, queued, running, or because a different commit passed. If permissions, quotas, tooling or infrastructure prevent verification, state the exact limitation and outstanding checks.
+
+### Completion report
+Report separately:
+1. Changes actually implemented.
+2. Local commands executed and their outcomes.
+3. Browser/visual checks actually performed and their coverage.
+4. The exact CI run URL, tested commit SHA, job conclusions and inspected artifact status, when available.
+5. Failed, skipped, pending, unavailable or unverified checks.
+6. Remaining risks and blockers.
+
+Do not invent results or run identifiers. A task is verified only when its required checks have actually completed successfully and relevant evidence has been inspected, or when any blocker is clearly disclosed without claiming completion.
+
