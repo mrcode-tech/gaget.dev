@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
-import { addDays, calendarMonth, calendarParts, calendarWeekStart, formatCalendarDate, formatCalendarNumber, localizeCalendarDigits, normalizeCalendarDigits, parseISODate, toISODate } from "@/lib/date-time/calendar";
+import { addDays, calendarMonth, calendarParts, calendarWeekStart, formatCalendarDate, formatCalendarDay, formatCalendarNumber, localizeCalendarDigits, normalizeCalendarDigits, parseISODate, toISODate } from "@/lib/date-time/calendar";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -48,7 +48,7 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
     {open && <div role="dialog" aria-label="Choose date" className="absolute start-0 top-[calc(100%+4px)] z-50 w-[min(20rem,100%)] rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-xl">{!supportedCalendar && <p role="status" className="mb-2 border-b border-border pb-2 text-xs text-muted-foreground">This browser does not support the {calendar} calendar for {locale}; Gregorian formatting is being used.</p> }
       <div className="mb-3 flex items-center justify-between gap-2">
         <button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)} className="inline-flex h-8 w-8 items-center justify-center hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ChevronLeft className="h-4 w-4" /></button>
-        <div className="min-w-0 text-center"><p className="text-sm font-semibold">{monthLabel}</p><p className="text-xs text-muted-foreground">{gregorianMonthLabel} · {calendar}</p></div>
+        <div className="min-w-0 text-center"><p className="text-sm font-semibold">{monthLabel}</p><p className="text-xs text-muted-foreground">Gregorian equivalent: {gregorianMonthLabel} · {calendar}</p></div>
         <button type="button" aria-label="Next month" onClick={() => changeMonth(1)} className="inline-flex h-8 w-8 items-center justify-center hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ChevronRight className="h-4 w-4" /></button>
       </div>
       <div role="grid" aria-label={monthLabel} className="grid grid-cols-7 gap-1">
@@ -57,7 +57,7 @@ export function CalendarDateInput({ id, value, onChange, locale = "en-US", calen
         {calendarMonthDates.dates.map((date) => {
           const iso = toISODate(date);
           const isSelected = iso === value;
-          return <button key={iso} type="button" aria-pressed={isSelected} aria-label={format(date, { dateStyle: "full" })} onClick={() => { onChange(iso); setOpen(false); triggerRef.current?.focus(); }} className={"h-9 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>{formatCalendarNumber(calendarParts(date, locale, calendar, numberingSystem).day, locale, numberingSystem)}</button>;
+          return <button key={iso} type="button" aria-pressed={isSelected} aria-label={format(date, { dateStyle: "full" })} onClick={() => { onChange(iso); setOpen(false); triggerRef.current?.focus(); }} className={"h-9 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>{formatCalendarDay(date, locale, calendar, numberingSystem)}</button>;
         })}
       </div>
       <div className="mt-3 flex justify-between border-t border-border pt-3">

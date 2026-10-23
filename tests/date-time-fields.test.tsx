@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CalendarDateInput, ClockTimeInput } from "@/components/date-time-fields";
-import { addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, findCalendarMonth, formatCalendarDate, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
+import { addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, findCalendarMonth, formatCalendarDate, formatCalendarDay, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
 
 afterEach(() => cleanup());
 
@@ -140,5 +140,50 @@ describe("calendar-system date engine", () => {
   it("rejects malformed ISO dates instead of silently substituting today", () => {
     expect(Number.isNaN(parseISODate("2026-02-30").getTime())).toBe(true);
     expect(Number.isNaN(parseISODate("not-a-date").getTime())).toBe(true);
+  });
+});
+
+
+describe("calendar-native day formatting", () => {
+  it.each([
+    ["Gregorian", "en-US", "gregory", "locale"],
+    ["Persian Solar Hijri", "fa-IR", "persian", "locale"],
+    ["Islamic", "ar-SA", "islamic", "locale"],
+    ["Islamic Umm al-Qura", "ar-SA", "islamic-umalqura", "locale"],
+    ["Hebrew", "en-US", "hebrew", "latn"],
+    ["Buddhist", "th-TH", "buddhist", "locale"],
+    ["Indian National", "en-IN", "indian", "locale"],
+  ])("formats each visible day from the %s calendar", (_name, locale, calendar, numberingSystem) => {
+    const date = parseISODate("2026-10-23");
+    const parts = calendarParts(date, locale, calendar, numberingSystem);
+    expect(formatCalendarDay(date, locale, calendar, numberingSystem))
+      .toBe(formatCalendarNumber(parts.day, locale, numberingSystem));
+  });
+
+  it("shows Persian 1 Aban as day 1 even though its Gregorian date is October 23", () => {
+    const firstAban = parseISODate("2026-10-23");
+    expect(calendarParts(firstAban, "fa-IR", "persian").day).toBe(1);
+    expect(formatCalendarDay(firstAban, "fa-IR", "persian")).toBe(formatCalendarNumber(1, "fa-IR"));
+    expect(formatCalendarDay(firstAban, "fa-IR", "persian")).not.toBe(formatCalendarNumber(firstAban.getDate(), "fa-IR"));
+    expect(formatCalendarDate(firstAban, "fa-IR", "persian", "locale", { dateStyle: "full" })).toMatch(/آبان|Aban/i);
+  });
+
+  it.each([
+    ["en-US", "gregory"],
+    ["fa-IR", "persian"],
+    ["ar-SA", "islamic"],
+    ["ar-SA", "islamic-umalqura"],
+    ["en-US", "hebrew"],
+    ["th-TH", "buddhist"],
+    ["en-IN", "indian"],
+  ])("keeps the entire %s / %s month in sequential native calendar days", (locale, calendar) => {
+    const selected = parseISODate("2026-10-23");
+    const parts = calendarParts(selected, locale, calendar);
+    const month = calendarMonth(selected, locale, calendar);
+    expect(calendarParts(month.first, locale, calendar).day).toBe(1);
+    expect(month.dates.map(date => calendarParts(date, locale, calendar).day))
+      .toEqual(Array.from({ length: month.dates.length }, (_, index) => index + 1));
+    expect(month.dates.every(date => calendarParts(date, locale, calendar).key === parts.key)).toBe(true);
+    expect(calendarParts(addDays(month.last, 1), locale, calendar).key).not.toBe(parts.key);
   });
 });

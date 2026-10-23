@@ -51,6 +51,10 @@ export const calendarParts = (date: Date, locale = "en-US", calendar = "gregory"
 };
 export const formatCalendarDate = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale", options: Intl.DateTimeFormatOptions = { dateStyle: "full" }) =>
   makeFormatter(locale, calendar, numberingSystem, options).format(date);
+
+/** Format the day number directly with Intl's selected calendar, rather than deriving its display from a Gregorian Date.getDate(). */
+export const formatCalendarDay = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale") =>
+  makeFormatter(locale, calendar, numberingSystem, { day: "numeric" }).format(date);
 export const formatCalendarNumber = (value: number, locale = "en-US", numberingSystem = "locale") =>
   new Intl.NumberFormat(locale, { useGrouping: false, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem }).format(value);
 export const localizeCalendarDigits = (value: string, locale = "en-US", numberingSystem = "locale") =>
