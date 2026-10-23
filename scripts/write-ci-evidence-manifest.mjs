@@ -146,6 +146,9 @@ for (const screenshot of screenshots) {
   }
 }
 const validationErrors = [];
+if (process.env.CI_CHECKOUT_IDENTITY !== "success") {
+  validationErrors.push(`Checkout identity verification did not succeed: ${process.env.CI_CHECKOUT_IDENTITY ?? "missing"}.`);
+}
 if (!/^[a-f0-9]{40}$/i.test(commit)) {
   validationErrors.push(`Expected a full 40-character tested commit SHA, received "${commit}".`);
 }

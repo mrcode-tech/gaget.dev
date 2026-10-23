@@ -71,7 +71,7 @@ test("global Persian locale stays RTL while every supported calendar formats the
       const date = new Date(0);
       date.setFullYear(year, month - 1, day);
       date.setHours(12, 0, 0, 0);
-      return new Intl.DateTimeFormat("fa", { calendar: selectedCalendar, dateStyle: "full" }).format(date);
+      return new Intl.DateTimeFormat("fa", { calendar: selectedCalendar, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(date);
     }, { selectedCalendar: value, isoDate: canonicalDate });
     await expect(page.locator("pre")).toContainText(formatted);
   }
@@ -135,12 +135,24 @@ test("Persian and Islamic calendar arithmetic respects month and year boundaries
   }
 });
 
-test("timestamp JSON and ICS exports keep the canonical date and selected-zone instant", async ({ page }) => {
-  await seedWorkspace(page, "json", "persian", "Asia/Baku", { dateA: "2026-10-23" });
+test("date-only values, timestamps, JSON, and ICS exports keep canonical dates and selected-zone instants", async ({ page }) => {
+  await seedWorkspace(page, "date-format", "persian", "Pacific/Kiritimati", { dateA: "2026-10-23" });
+  await page.goto("/datetime/editor?feature=date-format");
+  await expect(page.locator("pre")).toContainText("ISO date: 2026-10-23");
+
+  await seedWorkspace(page, "timestamp", "persian", "Pacific/Kiritimati", { timestamp: "2026-10-23" });
+  await page.goto("/datetime/editor?feature=timestamp");
+  await expect(page.locator("pre")).toContainText("2026-10-22T22:00:00.000Z");
+
+  await seedWorkspace(page, "timestamp", "gregory", "UTC", { timestamp: "-1" });
+  await page.goto("/datetime/editor?feature=timestamp");
+  await expect(page.locator("pre")).toContainText("1969-12-31T23:59:59.000Z");
+
+  await seedWorkspace(page, "json", "persian", "Pacific/Kiritimati", { dateA: "2026-10-23" });
   await page.goto("/datetime/editor?feature=json");
   await expect(page.getByRole("combobox", { name: "Calendar system" })).toHaveValue("persian");
   await expect(page.locator("pre")).toContainText('"isoDate": "2026-10-23"');
-  await expect(page.locator("pre")).toContainText('"instantAtNoon": "2026-10-23T08:00:00.000Z"');
+  await expect(page.locator("pre")).toContainText('"instantAtNoon": "2026-10-22T22:00:00.000Z"');
 
   await seedWorkspace(page, "ics-generator", "persian", "Asia/Baku", {
     dateA: "2026-10-23",
