@@ -119,6 +119,7 @@ The audio workbench uses browser audio decoding, an audio buffer/waveform, and W
 - Preserve the unified Photo-style shell without copying image-only controls such as canvas zoom/history where they do not apply.
 - Loaded state presents waveform/player, filename and relevant metadata; file actions and export accurately describe supported formats.
 - Audio controls remain usable on narrow and short viewports; feature controls must not obscure the waveform/player or create competing scroll regions.
+- Within an active feature panel, parameter groups, supporting guidance, and action buttons use a consistent vertical rhythm with a visible separation between inputs and primary/reset actions; paired controls retain their internal grid gap and labels remain closely associated with their fields.
 - Unsupported codecs, export paths, and metadata operations must be disclosed instead of presented as successful.
 
 ### Verification status
