@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CalendarDateInput, ClockTimeInput } from "@/components/date-time-fields";
-import { addDays, addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, findCalendarMonth, formatCalendarDate, formatCalendarDay, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
+import { addDays, addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, calendarYearLength, findCalendarMonth, formatCalendarDate, formatCalendarDay, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
 
 afterEach(() => cleanup());
 
@@ -200,5 +200,25 @@ describe("calendar-native day formatting", () => {
       .toEqual(Array.from({ length: month.dates.length }, (_, index) => index + 1));
     expect(month.dates.every(date => calendarParts(date, locale, calendar).key === parts.key)).toBe(true);
     expect(calendarParts(addDays(month.last, 1), locale, calendar).key).not.toBe(parts.key);
+  });
+});
+
+
+describe("calendar-year length and leap-year behavior", () => {
+  it.each([
+    [2024, "en-US", "gregory", 366],
+    [1403, "fa-IR", "persian", 366],
+  ])("resolves leap-year length for %s in %s / %s", (year, locale, calendar, expectedLength) => {
+    expect(calendarYearLength(year, locale, calendar)).toBe(expectedLength);
+  });
+
+  it.each([
+    [1448, "ar-SA", "islamic", [354, 355]],
+    [1448, "ar-SA", "islamic-umalqura", [354, 355]],
+    [5787, "en-US", "hebrew", [353, 354, 355, 383, 384, 385]],
+    [2569, "th-TH", "buddhist", [365, 366]],
+    [1948, "en-IN", "indian", [365, 366]],
+  ])("returns a valid native year length for %s in %s / %s", (year, locale, calendar, expectedLengths) => {
+    expect(expectedLengths).toContain(calendarYearLength(year, locale, calendar));
   });
 });

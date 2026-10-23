@@ -125,6 +125,29 @@ export const findCalendarMonth = (year: number, month: number, locale = "en-US",
   const months = calendarMonthsInYear(year, locale, calendar, numberingSystem);
   return months.find((item) => item.number === month)?.date ?? months[0]?.date ?? new Date(NaN);
 };
+
+const calendarYearLengthCache = new Map<string, number | null>();
+export const calendarYearLength = (year: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale"): number | null => {
+  const cacheKey = JSON.stringify([year, locale, calendar, numberingSystem]);
+  if (calendarYearLengthCache.has(cacheKey)) return calendarYearLengthCache.get(cacheKey) ?? null;
+  const first = calendarMonthsInYear(year, locale, calendar, numberingSystem)[0]?.date;
+  if (!first || Number.isNaN(first.getTime())) {
+    calendarYearLengthCache.set(cacheKey, null);
+    return null;
+  }
+  const era = calendarParts(first, locale, calendar, numberingSystem).era;
+  let cursor = first;
+  let length = 0;
+  while (length < 400) {
+    const parts = calendarParts(cursor, locale, calendar, numberingSystem);
+    if (parts.year !== year || parts.era !== era) break;
+    length += 1;
+    cursor = addDays(cursor, 1);
+  }
+  const result = length > 0 && length < 400 ? length : null;
+  calendarYearLengthCache.set(cacheKey, result);
+  return result;
+};
 export const addCalendarYears = (date: Date, amount: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
   if (!Number.isFinite(amount) || amount === 0) return new Date(date);
   const source = calendarParts(date, locale, calendar, numberingSystem);
