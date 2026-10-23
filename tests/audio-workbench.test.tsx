@@ -80,7 +80,7 @@ describe("AudioWorkbench template parity", () => {
     fireEvent.click(within(screen.getByTestId("audio-feature-menu")).getByRole("button", { name: "Trim & range" }));
     expect(panel.className).not.toContain("hidden");
     expect(within(panel).getByText("Choose a range and export trimmed audio.")).toBeTruthy();
-    expect(screen.getByLabelText("Start (seconds)").className).toContain("block");
+    expect(screen.getByText("Start (seconds)").className).toContain("block");
   });
 
   it("opens the same resizable feature sheet before an audio file is selected", () => {
