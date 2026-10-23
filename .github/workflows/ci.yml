@@ -6,12 +6,8 @@ on:
     branches:
       - stage
       - main
-  # Keep post-merge/direct-push validation on protected branches.
-  # Working branches are validated by their PR, or manually when needed.
-  push:
-    branches:
-      - stage
-      - main
+  # Pull requests are the only automatic full-suite trigger.
+  # Use manual dispatch for deliberate diagnosis outside a PR.
   workflow_dispatch:
 
 # Cancel superseded runs only within the same event stream and PR/branch.

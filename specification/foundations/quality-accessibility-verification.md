@@ -110,9 +110,9 @@ Never mark a check as passed if it was not run. If visual inspection or a browse
 
 ## 9. CI triggers, concurrency, and evidence ownership
 
-- The full required quality gate runs for pull requests targeting `stage` or `main`, and for pushes to those branches. This preserves pre-merge validation and post-merge/direct-push validation.
-- Working-branch pushes do not automatically start the full suite. Open a pull request to `stage` or `main` for required validation, or use manual workflow dispatch for deliberate diagnosis before opening a PR.
-- CI concurrency is scoped to a pull request or branch and event stream. Newer runs can supersede older runs for the same PR/event stream or protected-branch push stream, but unrelated PRs and branches remain independent. Manual runs use unique concurrency groups and cannot cancel required PR or push validation.
+- The full required quality gate runs automatically for pull requests targeting `stage` or `main`. There is no automatic `push` trigger, so merging a PR does not start a second full suite solely because the protected branch received the merge commit.
+- Working-branch and protected-branch pushes do not automatically start the full suite. Open a pull request to `stage` or `main` for required validation, or use manual workflow dispatch for deliberate diagnosis outside a PR.
+- CI concurrency is scoped to a pull request/event stream or a manual run. Newer runs can supersede older runs for the same PR, while unrelated PRs remain independent. Manual runs use unique concurrency groups and cannot cancel PR validation.
 - The main CI run owns required generated visual evidence: it builds the tested commit, captures the design-baseline route/viewport/theme/locale matrix, generates the evidence manifest, and uploads logs, test reports and screenshots in one artifact. The artifact name includes the commit SHA and run attempt; the manifest records the commit, run ID and attempt.
 - The separate Design baseline screenshots workflow is manual-only. Use it for intentional baseline recaptures without duplicating screenshot generation on every application push. Its artifact is supplementary and does not replace the required CI evidence artifact.
 - Keep generated screenshots and manifests as CI artifacts rather than committing changing current-state captures into application-wide specification files. Authored target SVG/PNG assets remain under `specification/assets/target/`.
