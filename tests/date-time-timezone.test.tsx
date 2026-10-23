@@ -39,9 +39,11 @@ describe("IANA time-zone wall-time conversion", () => {
       .toBe("2026-01-15T12:34:56.120Z");
   });
 
-  it("rejects fractional precision beyond the supported millisecond precision", () => {
-    expect(() => zonedLocalToUtc("2026-01-15", "12:34:56.1234", "UTC"))
-      .toThrow(/valid ISO date and 24-hour time/);
+  it("truncates fractional precision beyond milliseconds without changing the represented millisecond", () => {
+    expect(zonedLocalToUtc("2026-01-15", "12:34:56.1234", "UTC").toISOString())
+      .toBe("2026-01-15T12:34:56.123Z");
+    expect(zonedLocalToUtc("2026-01-15", "12:34:56.123456789", "UTC").toISOString())
+      .toBe("2026-01-15T12:34:56.123Z");
   });
 
   it("keeps fractional seconds through a daylight-saving overlap using the earlier instant", () => {
