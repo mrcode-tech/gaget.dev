@@ -76,13 +76,13 @@ export const addCalendarMonths = moveCalendarMonth;
 const yearOffsets: Record<string, number> = { persian: 621, islamic: 579, "islamic-umalqura": 579, hebrew: -3761, buddhist: -543, indian: 78, gregory: 0 };
 export const calendarMonthsInYear = (year: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
   const start = new Date(year + (yearOffsets[calendar] ?? 0) - 1, 0, 1, 12);
-  const months = new Map<string, { value: string; label: string; date: Date; number: number }>();
+  const months = new Map<string, { key: string; value: string; label: string; date: Date; number: number }>();
   for (let i = 0; i < 1100; i++) {
     const date = addDays(start, i);
     const parts = calendarParts(date, locale, calendar, numberingSystem);
     if (parts.year === year) {
       const month = calendarMonth(date, locale, calendar, numberingSystem);
-      months.set(parts.key, { value: parts.key, label: parts.monthName, date: month.first, number: parts.month });
+      months.set(parts.key, { key: parts.key, value: parts.key, label: parts.monthName, date: month.first, number: parts.month });
     }
   }
   return Array.from(months.values()).sort((a, b) => a.date.getTime() - b.date.getTime());

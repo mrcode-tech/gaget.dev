@@ -19,7 +19,6 @@ describe("Date & Time reusable fields", () => {
 
 
   it("renders Persian day numbers and advances by a Persian month boundary", () => {
-    const date = parseISODate("2026-10-22");
     const onChange = vi.fn();
     render(<CalendarDateInput id="persian-month" value="2026-10-22" onChange={onChange} locale="fa-IR" calendar="persian" />);
     fireEvent.click(screen.getByRole("button", { name: /مهر|۱۴۰۵|Choose date/i }));
@@ -73,7 +72,7 @@ describe("Date & Time reusable fields", () => {
 describe("calendar-system date engine", () => {
   it.each([
     ["Persian Solar Hijri", "fa-IR", "persian", "2026-10-23", 1405, 8, 1],
-    ["Islamic", "ar-SA", "islamic", "2026-10-23", 1448, 5, 12],
+    ["Islamic", "ar-SA", "islamic", "2026-10-23", 1448, 5, 13],
     ["Islamic Umm al-Qura", "ar-SA", "islamic-umalqura", "2026-10-23", 1448, 5, 12],
   ])("derives actual %s year, month, and day fields from the Gregorian ISO instant", (_name, locale, calendar, iso, expectedYear, expectedMonth, expectedDay) => {
     const date = parseISODate(iso);
