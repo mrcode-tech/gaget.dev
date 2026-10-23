@@ -1,15 +1,15 @@
-type WallTime = { year: number; month: number; day: number; hour: number; minute: number; second: number };
+type WallTime = { year: number; month: number; day: number; hour: number; minute: number; second: number; millisecond: number };
 
 function utcMillis(parts: WallTime): number {
   const date = new Date(0);
   date.setUTCFullYear(parts.year, parts.month - 1, parts.day);
-  date.setUTCHours(parts.hour, parts.minute, parts.second, 0);
+  date.setUTCHours(parts.hour, parts.minute, parts.second, parts.millisecond);
   return date.getTime();
 }
 
 function parseWallTime(date: string, time: string): WallTime {
   const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
-  const timeMatch = /^(\d{2}):([0-5]\d)(?::([0-5]\d))?$/.exec(time);
+  const timeMatch = /^(\d{2}):([0-5]\d)(?::([0-5]\d)(?:\.(\d+))?)?$/.exec(time);
   if (!dateMatch || !timeMatch) throw new Error("Enter a valid ISO date and 24-hour time.");
 
   const parts: WallTime = {
@@ -19,9 +19,10 @@ function parseWallTime(date: string, time: string): WallTime {
     hour: Number(timeMatch[1]),
     minute: Number(timeMatch[2]),
     second: Number(timeMatch[3] ?? 0),
+    millisecond: Number((timeMatch[4] ?? "").slice(0, 3).padEnd(3, "0") || 0),
   };
   if (parts.hour > 23) throw new Error("Enter a valid ISO date and 24-hour time.");
-  const check = new Date(utcMillis({ ...parts, hour: 0, minute: 0, second: 0 }));
+  const check = new Date(utcMillis({ ...parts, hour: 0, minute: 0, second: 0, millisecond: 0 }));
   if (check.getUTCFullYear() !== parts.year || check.getUTCMonth() + 1 !== parts.month || check.getUTCDate() !== parts.day) {
     throw new Error("Enter a valid calendar date.");
   }
@@ -55,6 +56,7 @@ function wallPartsAt(instant: number, formatter: Intl.DateTimeFormat): WallTime 
     hour: value("hour"),
     minute: value("minute"),
     second: value("second"),
+    millisecond: 0,
   };
 }
 
