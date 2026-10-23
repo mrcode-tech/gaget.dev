@@ -1,8 +1,18 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi, waitFor } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const originalCreateObjectURL = URL.createObjectURL;
+const originalRevokeObjectURL = URL.revokeObjectURL;
 import { AudioWorkbench } from "@/components/audio-workbench";
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  if (originalCreateObjectURL) Object.defineProperty(URL, "createObjectURL", { configurable: true, value: originalCreateObjectURL });
+  else Reflect.deleteProperty(URL, "createObjectURL");
+  if (originalRevokeObjectURL) Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: originalRevokeObjectURL });
+  else Reflect.deleteProperty(URL, "revokeObjectURL");
+});
 
 describe("AudioWorkbench template parity", () => {
   it("uses the shared empty-state scroll region and upload geometry", () => {
@@ -47,6 +57,8 @@ describe("AudioWorkbench template parity", () => {
     }
     vi.stubGlobal("AudioContext", MockAudioContext);
     vi.stubGlobal("requestAnimationFrame", vi.fn());
+    Object.defineProperty(URL, "createObjectURL", { configurable: true, value: vi.fn(() => "blob:sample.wav") });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
 
     const { container } = render(<AudioWorkbench slug="editor" />);
     const audioFile = new File(["audio"], "sample.wav", { type: "audio/wav" });
