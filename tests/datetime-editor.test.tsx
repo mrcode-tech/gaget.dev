@@ -18,6 +18,11 @@ describe("DateTimeEditor", () => {
     render(<DateTimeEditor />);
     expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
     const intro = screen.getByTestId("datetime-editor-intro");
+    expect(intro.querySelector("div")?.className).toContain("mb-5");
+    expect(intro.querySelector("div")?.className).toContain("text-sm");
+    expect(screen.getByRole("heading", { name: "Date & Time" }).className).toContain("sm:text-3xl");
+    expect(screen.getByTestId("datetime-editor-description").className).toContain("leading-6");
+    expect(screen.getByTestId("datetime-editor-description").className).toContain("sm:text-base");
     expect(intro.contains(screen.getByText(/One workspace for dates, calendars, clocks/))).toBe(true);
     const centerpiece = screen.getByRole("region", { name: "Date and time display" });
     expect(centerpiece).toBeTruthy();
@@ -34,6 +39,11 @@ describe("DateTimeEditor", () => {
     expect(screen.getByRole("combobox", { name: "Display language" })).toBeTruthy();
     expect(screen.getByRole("combobox", { name: "Calendar system" })).toBeTruthy();
     expect(screen.getByRole("combobox", { name: "Time zone" })).toBeTruthy();
+    for (const control of screen.getAllByRole("combobox")) {
+      expect(control.className).toContain("appearance-none");
+      expect(control.className).toContain("pe-9");
+      expect(control.parentElement?.querySelector("svg")).toBeTruthy();
+    }
   });
 
   it("keeps File and feature groups together on desktop while separating File and Features on compact screens", () => {
@@ -84,11 +94,22 @@ describe("DateTimeEditor", () => {
     expect(workspaceGrid.contains(panel)).toBe(true);
     expect(workspaceGrid.lastElementChild).toBe(panel);
     expect(screen.getByTestId("datetime-workspace").className).not.toContain("pt-2");
-    expect(workspaceGrid.firstElementChild?.className).toContain("pt-2");
+    expect(workspaceGrid.firstElementChild?.className).toContain("p-3");
+    expect(workspaceGrid.firstElementChild?.className).toContain("sm:p-6");
+    expect(workspaceGrid.firstElementChild?.className).toContain("lg:p-8");
     expect(screen.getByRole("region", { name: "Date and time display" }).className).toContain("mt-2");
     expect(panel.className).toContain("md:border-l");
     expect(panel.className).not.toContain("border-dashed");
     expect(screen.queryByTestId("datetime-date-menu")).toBeNull();
+  });
+
+  it("uses the same padded, direction-aware select treatment inside feature controls", () => {
+    render(<I18nProvider locale="fa"><DateTimeEditor initialFeature="world-clock" /></I18nProvider>);
+    for (const control of [screen.getByRole("combobox", { name: "From time zone" }), screen.getByRole("combobox", { name: "To time zone" })]) {
+      expect(control.className).toContain("appearance-none");
+      expect(control.className).toContain("pe-9");
+      expect(control.parentElement?.querySelector("svg")).toBeTruthy();
+    }
   });
 
   it("uses custom date and time pickers instead of native browser date/time inputs", () => {
