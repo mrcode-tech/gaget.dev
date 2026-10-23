@@ -22,7 +22,6 @@ describe("Date & Time reusable fields", () => {
     const onChange = vi.fn();
     render(<CalendarDateInput id="persian-month" value="2026-10-22" onChange={onChange} locale="fa-IR" calendar="persian" />);
     fireEvent.click(screen.getByRole("button", { name: /مهر|۱۴۰۵|Choose date/i }));
-    const grid = screen.getByRole("grid");
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));
     const nextGrid = screen.getByRole("grid");
     expect(nextGrid.getAttribute("aria-label")).toMatch(/آبان|Aban/i);

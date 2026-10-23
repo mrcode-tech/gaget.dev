@@ -1,5 +1,3 @@
-const pad2 = (value: number) => String(value).padStart(2, "0");
-
 type WallTime = { year: number; month: number; day: number; hour: number; minute: number; second: number };
 
 function utcMillis(parts: WallTime): number {
