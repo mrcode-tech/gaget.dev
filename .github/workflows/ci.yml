@@ -10,11 +10,10 @@ on:
   # Use manual dispatch for deliberate diagnosis outside a PR.
   workflow_dispatch:
 
-# Cancel superseded runs only within the same event stream and PR/branch.
-# PR runs are grouped by PR number; protected-branch pushes are grouped by ref.
-# Manual runs get unique groups so they cannot cancel required validation.
+# Only one GaGet.dev CI run should consume resources at a time.
+# A new run cancels any older run, regardless of branch, PR, or trigger.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event_name }}
+  group: ci-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:

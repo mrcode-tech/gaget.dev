@@ -81,6 +81,10 @@ describe("AudioWorkbench template parity", () => {
     expect(panel.className).not.toContain("hidden");
     expect(within(panel).getByText("Choose a range and export trimmed audio.")).toBeTruthy();
     expect(screen.getByText("Start (seconds)").className).toContain("block");
+    const controls = within(panel).getByTestId("audio-feature-controls");
+    expect(controls.className).toContain("space-y-4");
+    expect(controls.querySelector("#audio-start")).toBeTruthy();
+    expect(within(controls).getByRole("button", { name: /Export selected clip/ })).toBeTruthy();
   });
 
   it("opens the same resizable feature sheet before an audio file is selected", () => {

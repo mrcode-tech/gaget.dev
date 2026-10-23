@@ -429,6 +429,18 @@ for (const editor of editors) {
             buffer: makeWavFixture(),
           });
           await expect(page.getByText(/Decoded locally/i)).toBeVisible();
+          const audioControls = page.getByTestId("audio-feature-controls");
+          await expect(audioControls).toBeVisible();
+          const parameterGroup = audioControls.locator(":scope > div").first();
+          const actionGroup = audioControls.locator(":scope > div").last();
+          const parameterBox = await parameterGroup.boundingBox();
+          const actionBox = await actionGroup.boundingBox();
+          expect(parameterBox, "Audio parameter group bounding box").not.toBeNull();
+          expect(actionBox, "Audio action group bounding box").not.toBeNull();
+          expect(
+            actionBox!.y - (parameterBox!.y + parameterBox!.height),
+            "Audio action buttons should be separated from parameter inputs on mobile and desktop",
+          ).toBeGreaterThanOrEqual(15);
         }
 
         const panel = page.locator(editor.panel);
