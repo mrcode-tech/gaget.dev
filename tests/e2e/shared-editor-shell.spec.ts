@@ -448,7 +448,7 @@ for (const editor of editors) {
 
         if (viewport.width < 768 && (editor.id === "audio" || editor.id === "video")) {
           const backgroundColor = await panel.evaluate((element) => getComputedStyle(element).backgroundColor);
-          const colorChannels = backgroundColor.match(/rgba?\\((.*)\\)/)?.[1].split(",") ?? [];
+          const colorChannels = backgroundColor.match(/rgba?\((.*)\)/)?.[1].split(",") ?? [];
           const alpha = colorChannels.length === 4 ? Number(colorChannels[3]) : 1;
           expect(
             alpha,
