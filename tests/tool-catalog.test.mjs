@@ -67,7 +67,7 @@ test("Date & Time category routes directly to one unified editor", () => {
 
 test("tool identity, availability, and workspace ownership are explicit and valid", () => {
   assert.equal(new Set(tools.map((tool) => tool.id)).size, tools.length, "tool IDs must be unique and stable");
-  const categoryNames = new Set((awaitlessCategories()));
+  const categoryNames = new Set(categoryNamesForRegistry());
   for (const tool of tools) {
     assert.match(tool.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, `${tool.name} needs a stable kebab-case ID`);
     assert.ok(categoryNames.has(tool.category), `${tool.name} references an unknown category: ${tool.category}`);
@@ -97,6 +97,6 @@ test("JWT Decoder copy accurately limits its security claim", () => {
   assert.doesNotMatch(jwt.description, /verify signature|authenticity verified/i);
 });
 
-function awaitlessCategories() {
+function categoryNamesForRegistry() {
   return ["Images", "Audio", "Video", "Date & Time", "Generators", "JSON", "Encoding", "Text", "Security", "Web & API", "Data Formats", "SQL"];
 }
