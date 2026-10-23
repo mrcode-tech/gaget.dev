@@ -67,6 +67,13 @@ const safeFormat = (date: Date, locale: string, calendar: string, numberingSyste
   }
 };
 
+const DATETIME_PREFERENCES_KEY = "gaget.datetime.preferences.v1";
+const updateFeatureUrl = (slug: string) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("feature", slug);
+  window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+};
+
 export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) {
   const { locale: appLocale } = useI18n();
   const appDirection = localeDirections[appLocale] ?? "ltr";
@@ -76,6 +83,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const [timeZone, setTimeZone] = useState("Asia/Baku");
   const [hourCycle, setHourCycle] = useState<"h12" | "h23">("h23");
   const [showSeconds, setShowSeconds] = useState(true);
+  const [preferencesReady, setPreferencesReady] = useState(false);
   const [activeFeature, setActiveFeature] = useState<string | null>(initialFeature && features.some((f) => f.slug === initialFeature) ? initialFeature : null);
   const [zoneQuery, setZoneQuery] = useState("");
   const [availableZones, setAvailableZones] = useState<string[]>(zones);
@@ -89,6 +97,39 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const commandBarRef = useRef<HTMLElement | null>(null);
   const lastMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const featureSearch = useFeatureMenuSearch(menuOpen === "Features", features.length, "datetime", appLocale);
+
+  useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem(DATETIME_PREFERENCES_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as Record<string, unknown>;
+        if (typeof saved.calendar === "string" && calendars.some((item) => item.value === saved.calendar)) setCalendar(saved.calendar);
+        if (typeof saved.numberingSystem === "string" && ["locale", "latn", "arab", "arabext"].includes(saved.numberingSystem)) setNumberingSystem(saved.numberingSystem);
+        if (typeof saved.timeZone === "string") {
+          try {
+            new Intl.DateTimeFormat("en", { timeZone: saved.timeZone });
+            setTimeZone(saved.timeZone);
+          } catch {
+            // Ignore a time zone no longer supported by this runtime.
+          }
+        }
+        if (saved.hourCycle === "h12" || saved.hourCycle === "h23") setHourCycle(saved.hourCycle);
+        if (typeof saved.showSeconds === "boolean") setShowSeconds(saved.showSeconds);
+      }
+    } catch {
+      // Storage may be unavailable or contain an older/invalid value.
+    }
+    setPreferencesReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!preferencesReady) return;
+    try {
+      window.sessionStorage.setItem(DATETIME_PREFERENCES_KEY, JSON.stringify({ calendar, numberingSystem, timeZone, hourCycle, showSeconds }));
+    } catch {
+      // Keep the editor usable when session storage is unavailable.
+    }
+  }, [calendar, numberingSystem, timeZone, hourCycle, showSeconds, preferencesReady]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -112,7 +153,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
   useEffect(() => {
     if (initialFeature && features.some((feature) => feature.slug === initialFeature)) {
-      window.history.replaceState(window.history.state, "", "/datetime/editor?feature=" + encodeURIComponent(initialFeature));
+      updateFeatureUrl(initialFeature);
     }
   }, [initialFeature]);
 
@@ -162,7 +203,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
     lastMenuTriggerRef.current?.focus();
     setMenuOpen(null);
     setMessage("");
-    if (typeof window !== "undefined") window.history.replaceState(window.history.state, "", "/datetime/editor?feature=" + encodeURIComponent(slug));
+    if (typeof window !== "undefined") updateFeatureUrl(slug);
   }
   function resetReference() {
     const current = new Date();
