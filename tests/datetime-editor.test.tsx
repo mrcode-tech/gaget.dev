@@ -115,7 +115,7 @@ describe("DateTimeEditor", () => {
     expect(panel.className).toContain("fixed");
     expect(panel.className).toContain("md:w-[320px]");
     expect(panel.className).toContain("md:border-l");
-    expect(panel.className).toContain("sm:border-t-0");
+    expect(panel.className).toContain("md:border-t-0");
     expect(panel.className).toContain("max-h-[70dvh]");
     expect(within(panel).getByText("Feature parameters")).toBeTruthy();
     expect(within(panel).getByRole("heading", { name: "Date Difference Calculator" })).toBeTruthy();
