@@ -1,17 +1,9 @@
 name: Design baseline screenshots
 
 on:
+  # The required CI workflow captures and uploads build-matched visual evidence.
+  # Keep this separate workflow for deliberate baseline recaptures only.
   workflow_dispatch:
-  push:
-    branches:
-      - "**"
-    paths:
-      - "app/**"
-      - "components/**"
-      - "lib/i18n/**"
-      - "lib/tools/**"
-      - "scripts/capture-design-baseline.mjs"
-      - ".github/workflows/design-baseline-screenshots.yml"
 
 permissions:
   contents: read
