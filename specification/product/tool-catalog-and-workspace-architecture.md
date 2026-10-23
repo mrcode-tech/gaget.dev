@@ -1,6 +1,6 @@
 # Tool Catalog and Workspace Architecture
 
-**Status:** Proposed target architecture with an implemented registry-contract increment. The taxonomy and any new shared workspace remain proposals until route-level audit and browser verification are complete.
+**Status:** Implemented navigation and JSON workspace baseline. Other registry destinations retain explicit planned status until their routes and runtime behavior are verified.
 
 ## Purpose and vocabulary
 
@@ -26,8 +26,7 @@ The catalog must render available tools as launchable links and planned tools as
 | Audio Editor | `/audio/editor` | Workspace | Audio operations share file, waveform/playback and export concerns, with feature-specific capability limits. |
 | Video Editor | `/video/editor` | Workspace | Video operations share media playback, timeline/seek and browser capability constraints. |
 | Date & Time Editor | `/datetime/editor` | Workspace | Date/time utilities share locale, calendar, time-zone and date-value semantics. |
-| JSON Formatter | `/json/formatter` | Standalone for now | Format/minify/validate are coherent single-document operations. A comparison operation needs a genuinely useful two-document experience before consolidation. |
-| JSON Diff | `/json/diff` | Planned | Keep non-launchable until its implementation and route are verified. If implemented, evaluate as a JSON workspace operation without breaking the legacy URL. |
+| JSON Workspace | `/json/formatter` | Workspace | Format, minify, validate, and compare are operations inside one workspace; `/json/diff` remains a compatibility entry point into Compare mode. |
 | URL Encoder / Decoder | `/encoding/url` | Standalone for now | Component encoding has reserved-character and malformed-input semantics distinct from Base64. |
 | Base64 Encoder / Decoder | `/encoding/base64` | Standalone for now | Text encoding requires explicit UTF-8 and invalid-input behavior. Similar input/output UI alone is insufficient reason to merge. |
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
@@ -60,8 +59,7 @@ The current media and Date & Time destinations remain first-class global workspa
 
 ## Navigation and discovery contract
 
-- Keep global navigation compact: Home, the tool catalog, and the independent Photo/Image, Audio, Video and Date & Time workspaces, while preserving established search, favorites, theme and language controls.
-- Keep functional categories inside the catalog unless usage evidence justifies a permanent global entry.
+- Keep global navigation compact: Home, Popular tools, **Dev Tools** (the searchable catalog), Favorites, and independent Image, Audio, Video and Date & Time workspace links. Keep categories inside the catalog instead of listing every category globally.
 - Search matches tool name, description, category and keywords, case-insensitively.
 - Show available tools before planned tools. Planned cards are explicitly labelled and not launchable.
 - Category discovery must not duplicate a canonical tool entry merely because a tool has secondary search keywords.
@@ -70,6 +68,6 @@ The current media and Date & Time destinations remain first-class global workspa
 
 ## Verification contract
 
-Registry tests must cover stable unique IDs, unique canonical routes, valid category membership, valid explicit statuses, workspace IDs and canonical workspace routes, and absence of workspace IDs on standalone tools. Add route existence/alias tests when a destination is implemented. Catalog/browser tests must verify search, category discovery, empty results, planned-state non-launchability, direct canonical routes, legacy aliases, keyboard access, responsive behavior, and Persian/Arabic RTL.
+Registry and workspace tests cover stable unique IDs, unique canonical destinations, category membership, explicit status, workspace IDs, and canonical workspace routes. JSON tests cover structural comparison including object key-order independence, nested edits, additions/removals, arrays, and invalid input. Keep `/json/diff` as a tested compatibility route into Compare mode. Catalog/browser tests must verify search, category discovery, empty results, planned-state non-launchability, direct canonical routes, legacy aliases, keyboard access, responsive behavior, and Persian/Arabic RTL.
 
 A green CI run is evidence only for the exact tested revision. Inspect its required job results, generated manifest and artifact contents. A mockup is target-design evidence, not proof that the running application conforms. Keep authored target wireframes labelled **Proposal** until explicitly approved.
