@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CalendarDateInput, ClockTimeInput } from "@/components/date-time-fields";
-import { addDays, addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, calendarYearLength, findCalendarMonth, formatCalendarDate, formatCalendarDay, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
+import { addDays, addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, calendarWeekStart, calendarYearLength, findCalendarMonth, formatCalendarDate, formatCalendarDay, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
 
 afterEach(() => cleanup());
 
@@ -22,7 +22,6 @@ describe("Date & Time reusable fields", () => {
     const onChange = vi.fn();
     render(<CalendarDateInput id="persian-month" value="2026-10-22" onChange={onChange} locale="fa-IR" calendar="persian" />);
     fireEvent.click(screen.getByRole("button", { name: /مهر|۱۴۰۵|Choose date/i }));
-    const grid = screen.getByRole("grid");
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));
     const nextGrid = screen.getByRole("grid");
     expect(nextGrid.getAttribute("aria-label")).toMatch(/آبان|Aban/i);
@@ -220,5 +219,121 @@ describe("calendar-year length and leap-year behavior", () => {
     { year: 1948, locale: "en-IN", calendar: "indian", expectedLengths: [365, 366] },
   ])("returns a valid native year length for $year in $locale / $calendar", ({ year, locale, calendar, expectedLengths }) => {
     expect(expectedLengths).toContain(calendarYearLength(year, locale, calendar));
+  });
+});
+
+
+describe("locale and calendar independence regression matrix", () => {
+  it.each([
+    ["fa-IR", "gregory", 2026, 10, 23],
+    ["fa-IR", "persian", 1405, 8, 1],
+    ["it-IT", "persian", 1405, 8, 1],
+    ["ar-SA", "gregory", 2026, 10, 23],
+    ["ar-SA", "islamic", 1448, 5, 13],
+    ["ar-SA", "islamic-umalqura", 1448, 5, 12],
+    ["ka-GE", "gregory", 2026, 10, 23],
+    ["en-US", "hebrew", 5787, 2, 12],
+    ["en-US", "buddhist", 2569, 10, 23],
+    ["en-IN", "indian", 1948, 8, 1],
+  ])("keeps canonical date stable for locale %s and calendar %s", (locale, calendar, year, month, day) => {
+    const canonical = parseISODate("2026-10-23");
+    const parts = calendarParts(canonical, locale, calendar);
+    expect(toISODate(canonical)).toBe("2026-10-23");
+    expect(parts.year).toBe(year);
+    expect(parts.month).toBe(month);
+    expect(parts.day).toBe(day);
+    expect(formatCalendarDate(canonical, locale, calendar, "locale", { month: "long" })).toBe(
+      new Intl.DateTimeFormat(locale, { calendar, month: "long" }).format(canonical),
+    );
+  });
+
+  it("formats Gregorian months in the application locale rather than substituting a calendar-specific language", () => {
+    const date = parseISODate("2026-10-23");
+    expect(formatCalendarDate(date, "fa-IR", "gregory", "locale", { month: "long" })).toBe(
+      new Intl.DateTimeFormat("fa-IR", { calendar: "gregory", month: "long" }).format(date),
+    );
+    expect(formatCalendarDate(date, "it-IT", "persian", "latn", { month: "long" })).toBe(
+      new Intl.DateTimeFormat("it-IT", { calendar: "persian", month: "long" }).format(date),
+    );
+  });
+});
+
+
+describe("calendar year lookup without fixed Gregorian offsets", () => {
+  it.each([
+    ["persian", "fa-IR", 1400, 1, "2021-03-21"],
+    ["hebrew", "en-US", 5780, 1, "2019-09-30"],
+    ["buddhist", "th-TH", 2563, 1, "2020-01-01"],
+    ["indian", "en-IN", 1942, 1, "2020-03-21"],
+  ])("finds the real first day of %s year %s month %s", (calendar, locale, year, month, expectedISO) => {
+    const first = findCalendarMonth(year, month, locale, calendar);
+    expect(Number.isNaN(first.getTime())).toBe(false);
+    expect(toISODate(first)).toBe(expectedISO);
+    const parts = calendarParts(first, locale, calendar);
+    expect(parts.year).toBe(year);
+    expect(parts.month).toBe(month);
+    expect(parts.day).toBe(1);
+  });
+
+  it("round-trips four-digit canonical dates including years below 100", () => {
+    const date = parseISODate("0001-01-01");
+    expect(Number.isNaN(date.getTime())).toBe(false);
+    expect(date.getFullYear()).toBe(1);
+    expect(toISODate(date)).toBe("0001-01-01");
+    expect(toISODate(addDays(date, 1))).toBe("0001-01-02");
+  });
+});
+
+
+describe("full locale and calendar cross-product", () => {
+  const locales = ["en-US", "fa-IR", "ar-SA", "it-IT", "ka-GE"] as const;
+  const calendars = ["gregory", "persian", "islamic", "islamic-umalqura", "hebrew", "buddhist", "indian"] as const;
+
+  it.each(locales.flatMap(locale => calendars.map(calendar => ({ locale, calendar }))))(
+    "keeps locale $locale independent from calendar $calendar",
+    ({ locale, calendar }) => {
+      const canonical = parseISODate("2026-10-23");
+      const formatter = new Intl.DateTimeFormat(locale, {
+        calendar,
+        numberingSystem: "latn",
+        era: "short",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const parts = formatter.formatToParts(canonical);
+      const expected = (type: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === type)?.value ?? "";
+
+      expect(formatter.resolvedOptions().calendar).toBe(calendar);
+      expect(calendarParts(canonical, locale, calendar, "latn").year).toBe(Number(expected("year")));
+      expect(calendarParts(canonical, locale, calendar, "latn").day).toBe(Number(expected("day")));
+      expect(calendarParts(canonical, locale, calendar, "latn").monthName).toBe(expected("month"));
+      expect(formatCalendarDate(canonical, locale, calendar, "latn", { dateStyle: "full" })).toBe(
+        new Intl.DateTimeFormat(locale, { calendar, numberingSystem: "latn", dateStyle: "full" }).format(canonical),
+      );
+      expect(toISODate(canonical)).toBe("2026-10-23");
+      expect(toISODate(parseISODate(toISODate(canonical)))).toBe("2026-10-23");
+    },
+  );
+});
+
+describe("calendar arithmetic month-end and year-boundary semantics", () => {
+  it.each([
+    ["2024-01-31", "gregory", "2024-02-29"],
+    ["2023-01-31", "gregory", "2023-02-28"],
+    ["2026-10-23", "persian", "2026-11-22"],
+  ])("clamps or preserves day when adding one calendar month to %s in %s", (iso, calendar, expected) => {
+    const date = parseISODate(iso);
+    expect(toISODate(addCalendarMonths(date, 1, "en-US", calendar))).toBe(expected);
+  });
+
+  it.each([
+    ["en-US", 0],
+    ["fa-IR", 6],
+    ["ar-SA", 0],
+    ["it-IT", 1],
+    ["ka-GE", 1],
+  ])("uses the expected locale week start for %s", (locale, expected) => {
+    expect(calendarWeekStart(locale)).toBe(expected);
   });
 });
