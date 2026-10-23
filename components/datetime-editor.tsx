@@ -35,12 +35,6 @@ const features: Feature[] = [
   { slug: "json", title: "Date/time JSON", description: "Export ISO, UTC, and Unix representations.", group: "Utilities" },
   { slug: "cron", title: "Cron helper", description: "Inspect a common five-field cron expression.", group: "Utilities" },
 ];
-const locales = [
-  { value: "en-US", label: "English" },
-  { value: "fa-IR", label: "فارسی · Persian" },
-  { value: "ar-SA", label: "العربية · Arabic" },
-  { value: "ka-GE", label: "ქართული · Georgian" },
-];
 const calendars = [
   { value: "gregory", label: "Gregorian" },
   { value: "persian", label: "Persian Solar Hijri" },
@@ -77,7 +71,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
   const { locale: appLocale } = useI18n();
   const appDirection = localeDirections[appLocale] ?? "ltr";
   const [now, setNow] = useState<Date | null>(null);
-  const [locale, setLocale] = useState("en-US");
   const [calendar, setCalendar] = useState("gregory");
   const [numberingSystem, setNumberingSystem] = useState("locale");
   const [timeZone, setTimeZone] = useState("Asia/Baku");
@@ -141,8 +134,8 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
 
   const displayNow = frozen && frozenAt ? frozenAt : now;
   const filteredFeatures = useMemo(() => features.filter((feature) => matchesFeatureSearch(featureSearch.query, [feature.title, feature.description, feature.group], appLocale)), [featureSearch.query, appLocale]);
-  const formattedDate = displayNow ? safeFormat(displayNow, locale, calendar, numberingSystem, timeZone) : "Loading date…";
-  const formattedTime = displayNow ? new Intl.DateTimeFormat(locale, {
+  const formattedDate = displayNow ? safeFormat(displayNow, appLocale, calendar, numberingSystem, timeZone) : "Loading date…";
+  const formattedTime = displayNow ? new Intl.DateTimeFormat(appLocale, {
     timeZone, hour: "2-digit", minute: "2-digit", ...(showSeconds ? { second: "2-digit" as const } : {}),
     hourCycle, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem,
   }).format(displayNow) : "--:--";
@@ -249,7 +242,6 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               </div>
             </div>
             <div className="mt-6 grid gap-3 border-t border-border pt-5 sm:grid-cols-2 xl:grid-cols-3">
-              <label className="space-y-1.5 text-sm"><span className="font-medium">Display language</span><NativeSelect value={locale} onChange={(e) => setLocale(e.target.value)}>{locales.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</NativeSelect></label>
               <label className="space-y-1.5 text-sm"><span className="font-medium">Calendar system</span><NativeSelect value={calendar} onChange={(e) => setCalendar(e.target.value)}>{calendars.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</NativeSelect></label>
               <label className="space-y-1.5 text-sm"><span className="font-medium">Time zone</span><Input aria-label="Search time zones" placeholder="Filter IANA zones…" value={zoneQuery} onChange={(e) => setZoneQuery(e.target.value)} /><NativeSelect aria-label="Time zone" value={timeZone} onChange={(e) => setTimeZone(e.target.value)}>{Array.from(new Set([timeZone, ...availableZones.filter((zone) => zone.toLowerCase().includes(zoneQuery.toLowerCase()))])).map((zone) => <option key={zone} value={zone}>{zone}</option>)}</NativeSelect></label>
               <label className="space-y-1.5 text-sm"><span className="font-medium">Numeral system</span><NativeSelect value={numberingSystem} onChange={(e) => setNumberingSystem(e.target.value)}><option value="latn">Latin · 123</option><option value="arab">Arabic-Indic · ١٢٣</option><option value="arabext">Persian · ۱۲۳</option><option value="locale">Locale default</option></NativeSelect></label>
@@ -270,7 +262,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card sm:shadow-none">
             <div {...resizeHandleProps} className="mx-auto mt-1 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
             <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 id="datetime-feature-panel-title" className="text-sm font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2><p className="hidden text-[11px] text-muted-foreground md:block">Feature parameters</p></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
-            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 sm:p-4"><DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={locale} calendar={calendar} numberingSystem={numberingSystem} /></div>
+            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 sm:p-4"><DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={appLocale} calendar={calendar} numberingSystem={numberingSystem} /></div>
           </div>
         </aside>}
       </div>

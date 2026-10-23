@@ -222,3 +222,39 @@ describe("calendar-year length and leap-year behavior", () => {
     expect(expectedLengths).toContain(calendarYearLength(year, locale, calendar));
   });
 });
+
+
+describe("locale and calendar independence regression matrix", () => {
+  it.each([
+    ["fa-IR", "gregory", 2026, 10, 23],
+    ["fa-IR", "persian", 1405, 8, 1],
+    ["it-IT", "persian", 1405, 8, 1],
+    ["ar-SA", "gregory", 2026, 10, 23],
+    ["ar-SA", "islamic", 1448, 5, 13],
+    ["ar-SA", "islamic-umalqura", 1448, 5, 12],
+    ["ka-GE", "gregory", 2026, 10, 23],
+    ["en-US", "hebrew", 5787, 2, 12],
+    ["en-US", "buddhist", 2569, 10, 23],
+    ["en-IN", "indian", 1948, 8, 1],
+  ])("keeps canonical date stable for locale %s and calendar %s", (locale, calendar, year, month, day) => {
+    const canonical = parseISODate("2026-10-23");
+    const parts = calendarParts(canonical, locale, calendar);
+    expect(toISODate(canonical)).toBe("2026-10-23");
+    expect(parts.year).toBe(year);
+    expect(parts.month).toBe(month);
+    expect(parts.day).toBe(day);
+    expect(formatCalendarDate(canonical, locale, calendar, "locale", { month: "long" })).toBe(
+      new Intl.DateTimeFormat(locale, { calendar, month: "long" }).format(canonical),
+    );
+  });
+
+  it("formats Gregorian months in the application locale rather than substituting a calendar-specific language", () => {
+    const date = parseISODate("2026-10-23");
+    expect(formatCalendarDate(date, "fa-IR", "gregory", "locale", { month: "long" })).toBe(
+      new Intl.DateTimeFormat("fa-IR", { calendar: "gregory", month: "long" }).format(date),
+    );
+    expect(formatCalendarDate(date, "it-IT", "persian", "latn", { month: "long" })).toBe(
+      new Intl.DateTimeFormat("it-IT", { calendar: "persian", month: "long" }).format(date),
+    );
+  });
+});

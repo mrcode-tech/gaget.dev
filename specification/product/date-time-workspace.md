@@ -81,10 +81,10 @@ Keep the custom calendar and time input components rather than native date/time 
 - [ ] Mobile content start edge aligns with the compact command bar inset at XS/SM sizes.
 - [ ] Main workspace and feature-panel selects share one border/radius/height/focus treatment.
 - [ ] Select chevron has logical `end-3` positioning and sufficient `pe-9` text clearance in LTR and RTL.
-- [ ] Text fields continue using the shared Input primitive; no label-only border remains around Display language.
+- [ ] Text fields continue using the shared Input primitive; no duplicate in-tool display-language selector remains.
 - [ ] Date & Time-specific centerpiece and calendar/time semantics remain intact.
 - [ ] Persian, Islamic, Islamic Umm al-Qura, Gregorian, Hebrew, Buddhist, and Indian calendar selections format visible day numbers directly with the selected calendar and use calendar-specific month boundaries wherever the browser Intl implementation supports them.
-- [ ] Changing display language alone does not silently change the chosen calendar system; changing the calendar system updates day numbers, month/year labels, month navigation and calendar arithmetic consistently.
+- [ ] The global application locale controls interface language and month/weekday labels; no duplicate language selector exists. Changing the global locale preserves the chosen calendar and canonical date. Changing calendar system updates date parts/navigation/arithmetic while preserving locale and canonical date.
 - [ ] Gregorian-equivalent month references are explicitly labeled and cannot be mistaken for the selected calendar's visible day numbers.
 - [ ] Leap-year results use the selected calendar's year length, including lunar and lunisolar year lengths; time-zone, timestamp, JSON and holiday outputs honor selected-calendar display where applicable while preserving stable ISO/Unix data.
 - [ ] ISO week-number results explicitly identify their Gregorian ISO semantics.
