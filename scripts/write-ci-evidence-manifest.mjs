@@ -88,7 +88,7 @@ function inferScreenshotMetadata(filePath) {
   return { ...(route ? { route } : {}), locale, direction, ...(theme ? { theme } : {}) };
 }
 
-const commit = process.env.GITHUB_SHA ?? "unknown";
+const commit = process.env.CI_TESTED_COMMIT ?? process.env.GITHUB_SHA ?? "unknown";
 const repository = process.env.CI_REPOSITORY ?? process.env.GITHUB_REPOSITORY ?? "unknown";
 const runId = process.env.CI_RUN_ID ?? process.env.GITHUB_RUN_ID ?? "unknown";
 const baseline = await readBaselineManifest();
@@ -135,6 +135,7 @@ const testResults = {
   designBaselineCapture: process.env.CI_DESIGN_BASELINE
     ?? (baseline ? (baseline.failures?.length ? "failure" : "success") : "not-produced"),
   jobStatusAtManifestGeneration: process.env.CI_JOB_STATUS ?? "unknown",
+  checkoutIdentity: process.env.CI_CHECKOUT_IDENTITY ?? "unknown",
 };
 const viewportCoverage = [];
 for (const screenshot of screenshots) {
@@ -204,7 +205,7 @@ const manifest = {
   valid: validationErrors.length === 0,
   validationErrors,
   repository,
-  branch: process.env.GITHUB_REF_NAME ?? "unknown",
+  branch: process.env.CI_TESTED_BRANCH ?? process.env.GITHUB_REF_NAME ?? "unknown",
   commit,
   workflow: process.env.CI_WORKFLOW ?? process.env.GITHUB_WORKFLOW ?? "unknown",
   runId,

@@ -19,6 +19,9 @@ concurrency:
 jobs:
   verify:
     name: Unit tests, component tests, lint, typecheck, build, smoke, and accessibility tests
+    env:
+      CI_TESTED_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      CI_TESTED_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
     runs-on: ubuntu-latest
     # Pin the browser binaries and OS dependencies to the Playwright package version.
     container:
@@ -29,6 +32,22 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify checked-out commit identity
+        id: checkout-identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          expected="${CI_TESTED_COMMIT}"
+          if [ "$actual" != "$expected" ]; then
+            echo "Expected tested commit $expected, checked out $actual" >&2
+            exit 1
+          fi
+          echo "Tested exact commit: $actual"
+          echo "identity=success" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -159,7 +178,7 @@ jobs:
 
           if DESIGN_BASELINE_URL=http://127.0.0.1:3000 \
             DESIGN_BASELINE_OUTPUT=artifacts/design-baseline \
-            DESIGN_BASELINE_COMMIT="${GITHUB_SHA}" \
+            DESIGN_BASELINE_COMMIT="${CI_TESTED_COMMIT}" \
             node scripts/capture-design-baseline.mjs 2>&1 | tee artifacts/ci-logs/design-baseline.log; then
             baseline_status=passed
           else
@@ -196,13 +215,14 @@ jobs:
           CI_RUN_ATTEMPT: ${{ github.run_attempt }}
           CI_WORKFLOW: ${{ github.workflow }}
           CI_REPOSITORY: ${{ github.repository }}
+          CI_CHECKOUT_IDENTITY: ${{ steps.checkout-identity.outcome }}
         run: node scripts/write-ci-evidence-manifest.mjs
 
       - name: Upload test and visual evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ci-evidence-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          name: ci-evidence-${{ github.event.pull_request.head.sha || github.sha }}-attempt-${{ github.run_attempt }}
           path: |
             artifacts/design-baseline/
             artifacts/ci-logs/

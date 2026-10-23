@@ -293,7 +293,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               <span className="text-xs text-muted-foreground">Gregorian reference</span><code className="rounded bg-muted px-2 py-1 text-sm" dir="ltr">{gregorian}</code>
               <Button type="button" variant="outline" size="sm" onClick={() => void copyText(displayNow?.toISOString() ?? "")}><Copy className="mr-2 h-4 w-4" />Copy ISO 8601</Button>
               <Button type="button" variant="outline" size="sm" onClick={() => void copyText(displayNow ? String(Math.floor(displayNow.getTime() / 1000)) : "")}><Copy className="mr-2 h-4 w-4" />Copy Unix seconds</Button>
-              <Button type="button" variant="outline" size="sm" disabled={!activeFeature || !selectedDate} onClick={() => { if (selectedDate && selectedTime) setSeededReference({ date: selectedDate, time: selectedTime }); setReferenceRevision((revision) => revision + 1); setMessage("Displayed date and time applied to the selected feature."); }}>Use this date/time</Button>
+              <Button type="button" variant="outline" size="sm" disabled={!activeFeature || !selectedDate} onClick={() => { if (activeFeature) { try { window.sessionStorage.removeItem("gaget.datetime.workbench.v1." + activeFeature); } catch { /* Storage may be unavailable. */ } } if (selectedDate && selectedTime) setSeededReference({ date: selectedDate, time: selectedTime }); setReferenceRevision((revision) => revision + 1); setMessage("Displayed date and time applied to the selected feature."); }}>Use this date/time</Button>
             </div>
             {message && <p role="status" className="mt-3 text-sm text-muted-foreground">{message}</p>}
           </section>
