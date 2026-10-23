@@ -10,6 +10,10 @@
 - Reuse shell and UI primitives without forcing media-specific controls into unrelated tools.
 - Make capability limits visible at the point of action. Do not describe a preview, menu item, sidecar, or unsupported export as completed processing.
 
+## Tool catalog architecture
+
+See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry now records a stable tool ID, explicit availability status, and explicit standalone/workspace kind; workspace entries declare their canonical workspace ID. These metadata contracts do not prove route existence or full capability. JSON Diff, Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter remain planned until their route and runtime behavior are verified.
+
 ## Global routes and shell
 
 | Route / area | Current implementation | Notes |
