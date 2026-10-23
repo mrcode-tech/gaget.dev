@@ -34,3 +34,5 @@ The reusable behavior contract lives in [Shared Editor Shell Contract](./shared-
 Before adding a shared variant or extracting a new primitive, inspect all consumers and tests. Document anatomy, variants, state behavior, responsive constraints, accessibility semantics, and token dependencies in a dedicated component specification under this directory only when the contract is reused or non-trivial. Feature pages should link to shared contracts rather than duplicate them.
 
 A component's existence does not imply that all its states or consumers have been visually verified. Update this inventory when responsibilities or ownership change.
+
+| Date & Time select field | `components/ui/native-select.tsx` | Consistent native select trigger surface and logical chevron inset | Shared by workspace settings and feature controls; verify LTR/RTL, themes, focus and long values. |

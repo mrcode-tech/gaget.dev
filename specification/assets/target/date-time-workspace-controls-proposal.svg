@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1050" viewBox="0 0 1440 1050" role="img" aria-labelledby="title desc">
+<title id="title">Date &amp; Time workspace and controls — proposal</title>
+<desc id="desc">Editable schematic showing desktop and mobile workspace gutters, breadcrumb, title, description, live clock centerpiece, consistently bordered select controls and a logical-direction chevron. Proposal only, not pixel-perfect.</desc>
+<defs><style>
+.board{fill:#f3f5f8}.frame{fill:#fff;stroke:#94a3b8;stroke-width:2}.nav{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5}.control{fill:#fff;stroke:#94a3b8;stroke-width:1.5}.clock{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5}.ink{fill:#111827;font-family:Arial,sans-serif}.muted{fill:#64748b;font-family:Arial,sans-serif}.h{font-size:25px;font-weight:700}.sub{font-size:17px;font-weight:700}.txt{font-size:14px}.sm{font-size:12px}.arrow{fill:none;stroke:#64748b;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+</style></defs>
+<rect class="board" width="1440" height="1050"/>
+<text class="ink h" x="40" y="42">Date &amp; Time — Workspace &amp; Controls</text><text class="muted txt" x="40" y="70">Editable target proposal · geometry and control anatomy only · not pixel-perfect or approved</text>
+<text class="ink sub" x="40" y="116">Desktop · 1440 × 900</text><rect class="frame" x="40" y="132" width="900" height="650" rx="8"/>
+<rect class="nav" x="40" y="132" width="900" height="58" rx="8"/><text class="ink txt" x="64" y="166">GaGet.dev global header</text>
+<rect class="nav" x="40" y="190" width="900" height="54"/><text class="ink txt" x="64" y="223">☰   File</text><text class="ink txt" x="835" y="223">Features</text>
+<text class="muted sm" x="72" y="278">Home  ›  Date &amp; Time</text><text class="ink h" x="72" y="318">Date &amp; Time</text>
+<text class="muted txt" x="72" y="348">One workspace for dates, calendars, clocks, and calculations.</text><text class="muted sm" x="72" y="370">Choose a feature from the command bar to open its controls.</text>
+<rect class="clock" x="72" y="392" width="836" height="178" rx="14"/><text class="muted txt" x="96" y="426">Current date and time</text><text class="ink h" x="96" y="480">15:31:42</text><text class="ink txt" x="96" y="514">Friday, October 23, 2026</text><text class="muted sm" x="96" y="540">Asia/Baku · UTC+4</text>
+<text class="ink sub" x="72" y="612">Display settings</text><text class="muted sm" x="72" y="638">Display language</text><rect class="control" x="72" y="648" width="250" height="42" rx="6"/><text class="ink txt" x="88" y="674">English</text><path class="arrow" d="M294 665 l6 6 l6 -6"/>
+<text class="muted sm" x="344" y="638">Calendar system</text><rect class="control" x="344" y="648" width="250" height="42" rx="6"/><text class="ink txt" x="360" y="674">Gregorian</text><path class="arrow" d="M566 665 l6 6 l6 -6"/>
+<text class="muted sm" x="616" y="638">Time zone</text><rect class="control" x="616" y="648" width="292" height="42" rx="6"/><text class="ink txt" x="632" y="674">Europe/Amsterdam</text><path class="arrow" d="M880 665 l6 6 l6 -6"/>
+<text class="muted sm" x="72" y="722">Controls share height, border, radius and focus treatment; chevron uses logical end spacing.</text>
+<text class="ink sub" x="1000" y="116">Mobile · 390 × 844</text><rect class="frame" x="1000" y="132" width="390" height="650" rx="8"/>
+<rect class="nav" x="1000" y="132" width="390" height="54" rx="8"/><text class="ink txt" x="1016" y="165">☰  File</text><text class="ink txt" x="1305" y="165">Features</text>
+<text class="muted sm" x="1016" y="214">Home  ›  Date &amp; Time</text><text class="ink sub" x="1016" y="250">Date &amp; Time</text>
+<text class="muted sm" x="1016" y="276">One workspace for dates, calendars,</text><text class="muted sm" x="1016" y="294">clocks, and calculations.</text>
+<rect class="clock" x="1016" y="316" width="358" height="156" rx="12"/><text class="muted sm" x="1032" y="342">Current date and time</text><text class="ink h" x="1032" y="388">15:31:42</text><text class="ink sm" x="1032" y="416">Friday, October 23, 2026</text><text class="muted sm" x="1032" y="442">Asia/Baku · UTC+4</text>
+<text class="muted sm" x="1016" y="506">Display language</text><rect class="control" x="1016" y="516" width="358" height="42" rx="6"/><text class="ink txt" x="1032" y="542">English</text><path class="arrow" d="M1344 533 l6 6 l6 -6"/>
+<text class="muted sm" x="1016" y="586">Calendar system</text><rect class="control" x="1016" y="596" width="358" height="42" rx="6"/><text class="ink txt" x="1032" y="622">Gregorian</text><path class="arrow" d="M1344 613 l6 6 l6 -6"/>
+<text class="muted sm" x="1016" y="666">Time zone</text><rect class="control" x="1016" y="676" width="358" height="42" rx="6"/><text class="ink txt" x="1032" y="702">Europe/Amsterdam</text><path class="arrow" d="M1344 693 l6 6 l6 -6"/>
+<text class="muted sm" x="1000" y="824">In RTL, the same logical inset moves the chevron to the visual left.</text><text class="muted sm" x="40" y="1012">All text, measurements and shapes are schematic. Verify implementation at matching viewports; target remains Proposal.</text>
+</svg>
