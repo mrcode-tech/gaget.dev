@@ -168,7 +168,7 @@ Actual file validation, browser APIs, processing, and export errors are feature-
 - [ ] Product/design approval is recorded separately before marking this target Approved.
 
 
-## 6. Workspace introduction and form-control consistency
+## 9. Workspace introduction and form-control consistency
 
 **Status:** Proposed reusable visual contract; it does not approve a pixel-perfect target for any editor.
 
