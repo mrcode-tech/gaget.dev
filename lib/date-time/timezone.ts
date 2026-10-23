@@ -10,8 +10,8 @@ function utcMillis(parts: WallTime): number {
 }
 
 function parseWallTime(date: string, time: string): WallTime {
-  const dateMatch = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(date);
-  const timeMatch = /^(\\d{2}):([0-5]\\d)$/.exec(time);
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const timeMatch = /^(\d{2}):([0-5]\d)$/.exec(time);
   if (!dateMatch || !timeMatch) throw new Error("Enter a valid ISO date and 24-hour time.");
 
   const parts: WallTime = {

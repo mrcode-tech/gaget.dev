@@ -5,7 +5,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {NativeSelect} from "@/components/ui/native-select";
 import {CalendarDateInput,ClockTimeInput} from "@/components/date-time-fields";
-import {addCalendarMonths,addCalendarYears,calendarAge,calendarMonth,calendarMonthsInYear,calendarYearLength,calendarParts,calendarWeekStart,formatCalendarDay,formatCalendarDate,formatCalendarNumber,findCalendarMonth,parseISODate,toISODate} from "@/lib/date-time/calendar";
+import {addCalendarMonths,addCalendarYears,calendarAge,calendarMonth,calendarMonthsInYear,calendarYearLength,calendarParts,calendarWeekStart,formatCalendarDay,formatCalendarDate,findCalendarMonth,parseISODate,toISODate} from "@/lib/date-time/calendar";
 import { zonedLocalToUtc } from "@/lib/date-time/timezone";
 
 const titles:Record<string,string>={"world-clock":"World Clock & Time Zone Converter",calendar:"Calendar","date-calculator":"Date Calculator",timestamp:"Date Formatter & Timestamp Converter",countdown:"Countdown & Event Timer","date-converter":"Date Converter","date-difference":"Date Difference Calculator","business-days":"Business Days Calculator","week-number":"Week Number Calculator","leap-year":"Leap Year Checker",age:"Age Calculator",duration:"Time Duration Calculator","meeting-planner":"Time Zone Meeting Planner","date-format":"Date Format Playground","calendar-generator":"Calendar Generator","ics-viewer":"ICS Calendar Viewer","ics-generator":"ICS Event Generator",holidays:"Holiday Calendar",json:"Date/Time JSON Converter",cron:"Cron Schedule Helper"};
@@ -44,12 +44,12 @@ export function DateTimeWorkbench({slug,referenceDate,timeZone,locale:sharedLoca
   } catch {
    // Ignore malformed or unavailable session state and retain safe defaults.
   }
- },[]);
+ },[slug]);
  useEffect(()=>{
   const save=()=>{try{window.sessionStorage.setItem(WORKBENCH_SESSION_KEY+"."+slug,JSON.stringify({dateA,dateB,number,unit,time,fromZone,toZone,timestamp,title,eventTime,icsText,status,cron,weekend,year,month}))}catch{/* Storage may be unavailable. */}};
   window.addEventListener("pagehide",save);
   return()=>window.removeEventListener("pagehide",save);
- },[dateA,dateB,number,unit,time,fromZone,toZone,timestamp,title,eventTime,icsText,status,cron,weekend,year,month]);
+ },[slug,dateA,dateB,number,unit,time,fromZone,toZone,timestamp,title,eventTime,icsText,status,cron,weekend,year,month]);
 
  const a=useMemo(()=>parseDate(dateA),[dateA]),b=useMemo(()=>parseDate(dateB),[dateB]),validA=!Number.isNaN(a.getTime()),validB=!Number.isNaN(b.getTime()),days=validA&&validB?diffDays(a,b):0;
  const result=useMemo(()=>{if(!dateA)return "";const d=parseDate(dateA);if(Number.isNaN(d.getTime()))return "Enter a valid date.";const n=Number(number)||0;switch(slug){
