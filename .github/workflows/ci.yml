@@ -40,6 +40,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           actual="$(git rev-parse HEAD)"
           expected="${CI_TESTED_COMMIT}"
           if [ "$actual" != "$expected" ]; then
