@@ -21,6 +21,10 @@ jobs:
   verify:
     name: Unit tests, component tests, lint, typecheck, build, smoke, and accessibility tests
     runs-on: ubuntu-latest
+    # Pin the browser binaries and OS dependencies to the Playwright package version.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+      options: --ipc=host
     # Includes the expanded route/theme/viewport/RTL screenshot matrix.
     timeout-minutes: 30
     steps:
@@ -35,43 +39,26 @@ jobs:
 
       - name: Install dependencies
         id: install-dependencies
-        # npm install is used because the current lockfile is stale and omits dependencies.
-        # Once package-lock.json is regenerated and committed, switch this to npm ci.
+        # Bootstrap the stale lockfile once; commit the generated lockfile, then use npm ci.
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
           set -o pipefail
           npm install --no-audit --no-fund 2>&1 | tee artifacts/ci-logs/dependency-install.log
 
-      # Cache browser binaries between runs. The key changes when the lockfile
-      # changes, so a Playwright version update cannot reuse an incompatible browser.
-      - name: Cache Playwright browsers
-        id: playwright-browser-cache
-        if: always() && steps.install-dependencies.outcome == 'success'
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package.json', 'package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: Install Chromium system dependencies
-        id: install-chromium-deps
+      - name: Verify preinstalled Playwright browser and capture refreshed lockfile
+        id: verify-playwright
         if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p artifacts/ci-logs
-          set -o pipefail
-          npx playwright install-deps chromium 2>&1 | tee artifacts/ci-logs/browser-dependencies.log
-
-      - name: Install Chromium browser
-        id: install-chromium
-        if: always() && steps.install-dependencies.outcome == 'success' && steps.playwright-browser-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          mkdir -p artifacts/ci-logs
-          set -o pipefail
-          npx playwright install chromium 2>&1 | tee artifacts/ci-logs/browser-install.log
+          node -e 'const version = require("@playwright/test/package.json").version; if (version !== "1.64.0") { console.error("Expected @playwright/test 1.64.0, found " + version); process.exit(1); } console.log("@playwright/test " + version);'
+          npx playwright --version
+          browser_path="$(node -e 'process.stdout.write(require("@playwright/test").chromium.executablePath())')"
+          test -x "$browser_path"
+          printf 'Preinstalled Chromium executable: %s\n' "$browser_path" | tee artifacts/ci-logs/browser-environment.log
+          cp package-lock.json artifacts/ci-logs/package-lock.generated.json
 
       - name: Run unit tests
         id: unit-tests
@@ -194,9 +181,7 @@ jobs:
         if: always()
         env:
           CI_DEPENDENCY_INSTALL: ${{ steps.install-dependencies.outcome }}
-          CI_BROWSER_INSTALL: ${{ steps.install-chromium.outcome }}
-          CI_BROWSER_DEPENDENCIES: ${{ steps.install-chromium-deps.outcome }}
-          CI_BROWSER_CACHE_HIT: ${{ steps.playwright-browser-cache.outputs.cache-hit }}
+          CI_BROWSER_INSTALL: ${{ steps.verify-playwright.outcome }}
           CI_UNIT_TESTS: ${{ steps.unit-tests.outcome }}
           CI_FOCUSED_REGRESSIONS: ${{ steps.focused-regressions.outcome }}
           CI_COMPONENT_TESTS: ${{ steps.component-tests.outcome }}
