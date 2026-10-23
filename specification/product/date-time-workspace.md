@@ -1,0 +1,90 @@
+# Date & Time Workspace and Controls
+
+**Status:** Proposal — durable expected behavior, not an approved pixel-perfect design.
+**Canonical route:** `/datetime/editor` (legacy tool routes may select a feature through a query parameter).
+**Related contracts:** [Shared Editor Shell](../components/shared-editor-shell.md), [Design System & Token Contract](../foundations/design-system-token-contract.md), [Quality, Accessibility & Verification](../foundations/quality-accessibility-verification.md), [Feature Contract Reconciliation](./feature-contract-reconciliation.md).
+**Target design:** [Date & Time workspace and controls proposal](../assets/target/date-time-workspace-controls-proposal.svg). This editable schematic is a proposal and must not be treated as an approved pixel-perfect reference.
+**Sources/tests:** `components/datetime-editor.tsx`, `components/datetime-workbench.tsx`, `components/date-time-fields.tsx`, `components/ui/input.tsx`, `components/ui/native-select.tsx`, `components/ui/select.tsx`, `tests/datetime-editor.test.tsx`, `tests/date-time-fields.test.tsx`, `tests/e2e/shared-editor-shell.spec.ts`.
+
+## 1. User intent and scope
+
+Provide a single responsive workspace for exploring the current date/time, configuring locale/calendar/numbering/time-zone presentation, and selecting one of the date/time utilities. The workspace should feel like part of the same GaGet.dev editor family while preserving Date & Time's distinct live-clock centerpiece and non-file-based workflow.
+
+This contract covers workspace introduction spacing and typography, main workspace controls, feature-panel controls, select affordance alignment, and responsive/directional behavior. It does not redefine calendar arithmetic, time-zone conversion, individual feature capability, or the shared editor command-bar behavior.
+
+## 2. Current implementation audit
+
+| Area | Source-derived observation | User impact | Expected change |
+|---|---|---|---|
+| Introduction spacing | Workspace section used `px-3 pt-2 sm:px-6`; breadcrumb used `mb-2 text-xs`; title used only `text-2xl font-semibold`; description used `mt-1 leading-relaxed`. | Vertical rhythm and heading hierarchy differed from Photo, Audio and Video. | Use shared content gutters, breadcrumb rhythm, heading scale and description rhythm. |
+| Mobile alignment | Compact command bar uses `px-3 sm:px-6`, while the workspace intro had a smaller top inset and no LG content inset. | The introduction looked less aligned and more compressed below the navbar. | Align logical content edges at mobile/tablet sizes and use a consistent top gutter. |
+| Main-page selects | Five native selects had inconsistent border/radius/padding; Display language also placed a bottom border on its label. | Controls looked inconsistent even though they served the same role. | Standardize the closed select trigger and remove the decorative label border. |
+| Feature selects | Four native selects in the Date & Time feature workbench repeated ad hoc styles and browser-default chevron placement. | Arrow inset and control shape could differ between the main workspace and feature panel. | Reuse the same styled native select wrapper for all Date & Time select triggers. |
+| Text fields | Existing `Input` primitive supplies a shared bordered text-input style. | Selects did not visually align with those fields. | Retain the shared `Input`; align selects to the same semantic border, surface, radius and focus language. |
+
+These observations are source inspections. They do not claim browser screenshot verification or target-design approval.
+
+## 3. Workspace hierarchy and geometry
+
+### Default workspace
+
+1. A single editor command bar remains the mobile navigation row. The workspace content begins below it and must not introduce a second navbar.
+2. The breadcrumb, title and supporting description form one compact introduction group. Their logical start edge is shared with the centerpiece and other workspace content.
+3. Use responsive content padding: `p-3` below 640px, `p-6` from 640px, and `p-8` from 1024px when the content region has sufficient room.
+4. Breadcrumb: muted `text-sm`, `mb-5` below the title.
+5. Heading: `text-2xl font-bold tracking-tight`, scaling to `sm:text-3xl`.
+6. Description: `mt-2 max-w-2xl text-sm leading-6`, scaling to `sm:text-base`.
+7. The live date/time centerpiece follows the introduction with a deliberate short gap, remains bounded, and keeps the locale, calendar, time-zone and numeral settings grouped below it.
+8. Keep the Gregorian reference and copy/apply actions separate from the labeled settings grid; preserve wrap behavior on narrow screens.
+
+### Active feature
+
+- Keep the command bar and workspace's primary date/time context in place while feature controls are open.
+- Hide only the introductory description when needed by the existing active-feature layout; do not move the breadcrumb/title to a different inset.
+- Desktop uses a bounded side panel when space permits. Compact widths use the existing viewport-bounded, resizable sheet and safe-area inset behavior.
+- Panel controls use the same field and select family as the main workspace. Do not create a second select style just for the feature panel.
+- Preserve single-owner scrolling and ensure focused controls are not hidden behind the on-screen keyboard or sheet edge.
+
+## 4. Control anatomy and visual rules
+
+### Text input
+
+Use the shared `Input` primitive for searchable text and other plain text/numeric entry where suitable. Keep a visible semantic border, background, readable placeholder, consistent radius, and focus-visible ring. Labels are external and must remain programmatically associated.
+
+### Select trigger
+
+Use `components/ui/native-select.tsx` for Date & Time select controls. It deliberately retains the native `<select>` for browser-supported keyboard and option behavior while standardizing the closed trigger:
+
+- 40px height, full available width, `rounded-md`, one `border-input` border and `bg-background` surface.
+- Logical inline padding: `ps-3 pe-9`; the selected value must not run underneath the chevron.
+- A decorative, non-interactive `ChevronDown` positioned at `end-3`, vertically centered, with `pointer-events-none` and muted foreground.
+- Semantic text color and `focus-visible:ring-2 focus-visible:ring-ring` behavior; disabled state remains discernible.
+- The logical inset must place the arrow on the visual right in LTR and visual left in RTL, with equivalent breathing room from the edge.
+- Avoid per-field overrides for border, radius, height or horizontal padding. Do not add a border to the label row.
+
+### Calendar/date/time inputs
+
+Keep the existing custom calendar and time input components rather than native date/time inputs. Their calendar popover must remain viewport-bounded, keyboard-operable and direction-aware; selected and unsupported-calendar states need readable non-color-only feedback.
+
+## 5. Responsive and accessibility requirements
+
+- Verify widths 390px, 640px, 768px, 1024px and 1440px, plus a short-height mobile viewport.
+- No horizontal page overflow, clipped labels, overlapping select text/chevron, or inconsistent main/feature-panel gutters.
+- Support English LTR and Persian/Arabic RTL. Use logical CSS properties; do not reverse technical values such as ISO dates, Unix timestamps or IANA time-zone identifiers unnecessarily.
+- Preserve visible focus, associated labels, native select keyboard navigation, 40px select height and the existing custom date/time keyboard behavior.
+- Verify light and dark themes, long translated labels, reduced motion, zoom, and narrow/landscape viewport behavior where supported by the test harness.
+- Calendar/locale availability is browser-dependent; report unsupported combinations honestly.
+
+## 6. Acceptance criteria
+
+- [ ] Breadcrumb, title and description follow the shared editor introduction spacing/typography contract.
+- [ ] Mobile content start edge aligns with the compact command bar inset at XS/SM sizes.
+- [ ] Main workspace and feature-panel selects share one border/radius/height/focus treatment.
+- [ ] Select chevron has logical `end-3` positioning and sufficient `pe-9` text clearance in LTR and RTL.
+- [ ] Text fields continue using the shared Input primitive; no label-only border remains around Display language.
+- [ ] Date & Time-specific centerpiece and calendar/time semantics remain intact.
+- [ ] Focused component tests, lint, typecheck, build, E2E and matching CI visual evidence pass before the contract can be marked verified.
+
+## 7. Verification status
+
+**Implementation status is determined by the current source. Verification remains pending until the updated source passes the applicable CI suite and the exact-run artifact is inspected.** The target SVG remains a Proposal until explicitly approved; passing tests do not approve a design.

@@ -37,7 +37,7 @@ Additional registry entries may be planned or redirect to unified editors. Verif
 ## Current implementation-level design facts
 
 - Semantic theme CSS variables are defined in `app/globals.css` using HSL channels, with light and dark values.
-- Shared primitives exist under `components/ui/`; application styling also uses Tailwind utilities directly, so design tokenization is partial.
+- Shared primitives exist under `components/ui/`, including the Date & Time native select wrapper for consistent, direction-aware select triggers; application styling also uses Tailwind utilities directly, so design tokenization is partial.
 - Media and date/time editor routes use a full-viewport shell, specialized command bars and feature controls. Their internal panels and scroll ownership are not assumed to be identical.
 - The shared editor contract describes compact navigation, trigger-anchored File/Features menus, responsive panel bounds, theme/RTL behavior, and mobile-only Features search. The contract and authored SVGs remain proposals unless separately approved.
 - Browser-native media processing is constrained by codec availability, file size, memory and browser APIs. Documentation must distinguish actual export from preview, sidecar output and unavailable processing.

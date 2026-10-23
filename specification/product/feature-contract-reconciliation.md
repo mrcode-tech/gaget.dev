@@ -169,7 +169,7 @@ The workspace consolidates date/time utilities. Locale/calendar behavior depends
 
 ### Verification status
 
-Date/time component tests exist. Calendar coverage, typed localized digits, unsupported locale/calendar combinations, timezone edge cases, keyboard operation, RTL layout, and active feature-panel visuals need explicit acceptance tests and browser review. No target SVGs for the centerpiece or input family are currently approved.
+Date/time component tests exist. Calendar coverage, typed localized digits, unsupported locale/calendar combinations, timezone edge cases, keyboard operation, RTL layout, and active feature-panel visuals need explicit acceptance tests and browser review. The canonical [Date & Time Workspace and Controls](./date-time-workspace.md) contract and [`date-time-workspace-controls-proposal.svg`](../assets/target/date-time-workspace-controls-proposal.svg) now capture the missing introduction/control design baseline as a proposal; the target is not approved and browser conformance remains unverified.
 
 ## 10. Cross-route audit matrix
 

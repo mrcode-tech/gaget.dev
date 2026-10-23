@@ -64,6 +64,8 @@ The current browser-native path relies on video/canvas playback and MediaRecorde
 
 ## Date & Time workspace
 
+Canonical design contract: [Date & Time Workspace and Controls](./date-time-workspace.md). The workspace introduction follows the shared editor spacing/typography contract; Date & Time selects use the shared direction-aware `NativeSelect` trigger.
+
 Primary route: `/datetime/editor`, with related `/datetime/[tool]` routes. The unified editor declares these feature slugs:
 
 - Date: `calendar`, `date-calculator`, `date-converter`, `date-difference`, `age`, `business-days`, `week-number`, `leap-year`, `date-format`

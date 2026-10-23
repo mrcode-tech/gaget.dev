@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, ShieldCheck, SlidersHorizontal, Menu, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
 import { useResizableFeatureSheet } from "@/components/use-resizable-feature-sheet";
 import { useI18n } from "@/components/i18n-provider";
@@ -228,11 +229,11 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
         <div data-testid="datetime-workspace" className="flex min-h-max w-full flex-1 flex-col pb-8 md:h-full md:min-h-0">
           <div data-testid="datetime-workspace-grid" className={"grid min-h-max min-w-0 flex-1 items-stretch gap-0 md:h-full md:min-h-0 md:grid-rows-[minmax(0,1fr)] " + (activeFeature ? "md:grid-cols-[minmax(0,1fr)_320px]" : "")}>
-            <section className={"flex min-h-0 min-w-0 flex-1 flex-col px-3 pt-2 sm:px-6 " + (!activeFeature ? "mx-auto w-full max-w-[1600px]" : "")}>
+            <section className={"flex min-h-0 min-w-0 flex-1 flex-col p-3 sm:p-6 lg:p-8 " + (!activeFeature ? "mx-auto w-full max-w-[1600px]" : "")}>
               <header data-testid="datetime-editor-intro" className="shrink-0 pb-0">
-                <div className="mb-2 text-xs text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
-                <h1 className="text-2xl font-semibold tracking-tight">Date &amp; Time</h1>
-                {!activeFeature && <p data-testid="datetime-editor-description" className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>}
+                <div className="mb-5 text-sm text-muted-foreground"><span>Home</span><span aria-hidden="true"> › </span><span>Date &amp; Time</span></div>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Date &amp; Time</h1>
+                {!activeFeature && <p data-testid="datetime-editor-description" className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">One workspace for dates, calendars, clocks, and calculations. Choose a feature from the command bar to open its controls without leaving this page.</p>}
               </header>
           <section aria-label="Date and time display" className="mx-auto mt-2 mb-3 w-full max-w-5xl rounded-2xl bg-card p-4 shadow-sm sm:p-6 lg:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -248,11 +249,11 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               </div>
             </div>
             <div className="mt-6 grid gap-3 border-t border-border pt-5 sm:grid-cols-2 xl:grid-cols-3">
-              <label className="space-y-1.5 border-b border-border py-3 text-sm"><span className="font-medium">Display language</span><select className="h-10 w-full border border-input bg-background px-3 text-sm" value={locale} onChange={(e) => setLocale(e.target.value)}>{locales.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-              <label className="space-y-1.5 text-sm"><span className="font-medium">Calendar system</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={calendar} onChange={(e) => setCalendar(e.target.value)}>{calendars.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-              <label className="space-y-1.5 text-sm"><span className="font-medium">Time zone</span><Input aria-label="Search time zones" placeholder="Filter IANA zones…" value={zoneQuery} onChange={(e) => setZoneQuery(e.target.value)} /><select aria-label="Time zone" className="h-10 w-full rounded-md border border-input bg-background px-3" value={timeZone} onChange={(e) => setTimeZone(e.target.value)}>{Array.from(new Set([timeZone, ...availableZones.filter((zone) => zone.toLowerCase().includes(zoneQuery.toLowerCase()))])).map((zone) => <option key={zone} value={zone}>{zone}</option>)}</select></label>
-              <label className="space-y-1.5 text-sm"><span className="font-medium">Numeral system</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={numberingSystem} onChange={(e) => setNumberingSystem(e.target.value)}><option value="latn">Latin · 123</option><option value="arab">Arabic-Indic · ١٢٣</option><option value="arabext">Persian · ۱۲۳</option><option value="locale">Locale default</option></select></label>
-              <label className="space-y-1.5 text-sm"><span className="font-medium">Clock format</span><select className="h-10 w-full rounded-md border border-input bg-background px-3" value={hourCycle} onChange={(e) => setHourCycle(e.target.value as "h12" | "h23")}><option value="h23">24-hour</option><option value="h12">12-hour</option></select></label>
+              <label className="space-y-1.5 text-sm"><span className="font-medium">Display language</span><NativeSelect value={locale} onChange={(e) => setLocale(e.target.value)}>{locales.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</NativeSelect></label>
+              <label className="space-y-1.5 text-sm"><span className="font-medium">Calendar system</span><NativeSelect value={calendar} onChange={(e) => setCalendar(e.target.value)}>{calendars.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</NativeSelect></label>
+              <label className="space-y-1.5 text-sm"><span className="font-medium">Time zone</span><Input aria-label="Search time zones" placeholder="Filter IANA zones…" value={zoneQuery} onChange={(e) => setZoneQuery(e.target.value)} /><NativeSelect aria-label="Time zone" value={timeZone} onChange={(e) => setTimeZone(e.target.value)}>{Array.from(new Set([timeZone, ...availableZones.filter((zone) => zone.toLowerCase().includes(zoneQuery.toLowerCase()))])).map((zone) => <option key={zone} value={zone}>{zone}</option>)}</NativeSelect></label>
+              <label className="space-y-1.5 text-sm"><span className="font-medium">Numeral system</span><NativeSelect value={numberingSystem} onChange={(e) => setNumberingSystem(e.target.value)}><option value="latn">Latin · 123</option><option value="arab">Arabic-Indic · ١٢٣</option><option value="arabext">Persian · ۱۲۳</option><option value="locale">Locale default</option></NativeSelect></label>
+              <label className="space-y-1.5 text-sm"><span className="font-medium">Clock format</span><NativeSelect value={hourCycle} onChange={(e) => setHourCycle(e.target.value as "h12" | "h23")}><option value="h23">24-hour</option><option value="h12">12-hour</option></NativeSelect></label>
               <label className="flex items-center gap-2 pt-6 text-sm"><input type="checkbox" checked={showSeconds} onChange={(e) => setShowSeconds(e.target.checked)} className="h-4 w-4 accent-primary" />Show seconds</label>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">

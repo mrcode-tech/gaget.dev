@@ -10,3 +10,6 @@ For every design asset:
 - Do not copy generated browser screenshots into this directory and call them target designs.
 
 See [asset conventions](../README.md) and [AI instructions](../../AI_INSTRUCTIONS.md).
+
+
+- [`date-time-workspace-controls-proposal.svg`](./date-time-workspace-controls-proposal.svg) — Date & Time introduction, centerpiece, and standardized select controls at desktop/mobile sizes. Proposal only; not pixel-perfect or approved.

@@ -580,3 +580,43 @@ for (const route of ["/fa/images/editor", "/fa/audio/editor", "/fa/video/editor"
     await saveStateScreenshot(page, testInfo, `${route.replaceAll("/", "-").replace(/^-/, "")}-rtl-dark-features-menu.png`);
   });
 }
+
+
+test("Date & Time introduction and select controls follow shared responsive geometry", async ({ page }) => {
+  for (const scenario of [
+    { route: "/datetime/editor", direction: "ltr" },
+    { route: "/fa/datetime/editor", direction: "rtl" },
+  ]) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(scenario.route);
+    const commandBar = page.locator('nav[aria-label="Date and time editor commands"]');
+    const intro = page.locator('[data-testid="datetime-editor-intro"]');
+    const breadcrumb = intro.locator("div").first();
+    const heading = intro.getByRole("heading", { name: "Date & Time" });
+    const description = page.locator('[data-testid="datetime-editor-description"]');
+    await expect(commandBar).toBeVisible();
+    await expect(breadcrumb).toHaveClass(/mb-5/);
+    await expect(breadcrumb).toHaveClass(/text-sm/);
+    await expect(heading).toHaveClass(/sm:text-3xl/);
+    await expect(description).toHaveClass(/leading-6/);
+    const navBox = await commandBar.boundingBox();
+    const crumbBox = await breadcrumb.boundingBox();
+    expect(navBox).not.toBeNull();
+    expect(crumbBox).not.toBeNull();
+    if (navBox && crumbBox) {
+      const alignedInset = scenario.direction === "rtl"
+        ? Math.abs((navBox.x + navBox.width - 12) - (crumbBox.x + crumbBox.width))
+        : Math.abs((navBox.x + 12) - crumbBox.x);
+      expect(alignedInset).toBeLessThanOrEqual(1);
+      expect(crumbBox.y).toBeGreaterThanOrEqual(navBox.y + navBox.height + 10);
+    }
+    const select = page.getByRole("combobox", { name: "Display language" });
+    const chevron = select.locator("xpath=..").locator("svg");
+    await expect(select).toHaveClass(/appearance-none/);
+    await expect(select).toHaveClass(/pe-9/);
+    await expect(chevron).toBeVisible();
+    expect(await chevron.evaluate((node) => getComputedStyle(node).insetInlineEnd)).toBe("12px");
+    expect(await select.evaluate((node) => getComputedStyle(node).paddingInlineEnd)).toBe("36px");
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+});
