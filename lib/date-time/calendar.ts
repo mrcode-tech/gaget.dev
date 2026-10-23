@@ -103,3 +103,24 @@ export const addCalendarYears = (date: Date, amount: number, locale = "en-US", c
   const target = calendarMonth(targetMonth.date, locale, calendar, numberingSystem);
   return addDays(target.first, Math.min(source.day, target.dates.length) - 1);
 };
+
+export const calendarAge = (from: Date, to: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to.getTime() < from.getTime()) return null;
+  const fromParts = calendarParts(from, locale, calendar, numberingSystem);
+  const toParts = calendarParts(to, locale, calendar, numberingSystem);
+  let years = Math.max(0, toParts.year - fromParts.year);
+  let cursor = addCalendarYears(from, years, locale, calendar, numberingSystem);
+  while (years > 0 && cursor.getTime() > to.getTime()) {
+    years -= 1;
+    cursor = addCalendarYears(from, years, locale, calendar, numberingSystem);
+  }
+  let months = 0;
+  while (months < 13) {
+    const next = addCalendarMonths(cursor, 1, locale, calendar, numberingSystem);
+    if (Number.isNaN(next.getTime()) || next.getTime() <= cursor.getTime() || next.getTime() > to.getTime()) break;
+    cursor = next;
+    months += 1;
+  }
+  const days = Math.round((Date.UTC(to.getFullYear(), to.getMonth(), to.getDate()) - Date.UTC(cursor.getFullYear(), cursor.getMonth(), cursor.getDate())) / 86400000);
+  return { years, months, days };
+};

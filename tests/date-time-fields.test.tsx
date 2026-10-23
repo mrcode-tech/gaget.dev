@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CalendarDateInput, ClockTimeInput } from "@/components/date-time-fields";
-import { addCalendarMonths, addCalendarYears, calendarMonth, calendarParts, findCalendarMonth, formatCalendarDate, parseISODate, toISODate } from "@/lib/date-time/calendar";
+import { addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, findCalendarMonth, formatCalendarDate, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
 
 afterEach(() => cleanup());
 
@@ -109,6 +109,24 @@ describe("calendar-system date engine", () => {
     expect(calendarParts(start, "fa-IR", "persian").month).toBe(8);
     expect(calendarParts(start, "fa-IR", "persian").day).toBe(1);
     expect(month.dates[0].getTime()).toBe(start.getTime());
+  });
+
+
+  it.each(["gregory", "persian", "islamic", "islamic-umalqura", "hebrew", "buddhist", "indian"])("keeps every date in the actual %s calendar month", (calendar) => {
+    const sample = parseISODate("2026-10-23");
+    const parts = calendarParts(sample, "en-US", calendar);
+    const month = calendarMonth(sample, "en-US", calendar);
+    expect(calendarParts(month.first, "en-US", calendar).day).toBe(1);
+    expect(month.dates.every(date => calendarParts(date, "en-US", calendar).key === parts.key)).toBe(true);
+    expect(calendarParts(new Date(month.last.getFullYear(), month.last.getMonth(), month.last.getDate() + 1, 12), "en-US", calendar).key).not.toBe(parts.key);
+    expect(calendarMonthsInYear(parts.year, "en-US", calendar).some(item => item.number === parts.month)).toBe(true);
+  });
+
+  it("calculates age in the selected calendar while elapsed date difference stays Gregorian", () => {
+    const from = parseISODate("2025-10-23");
+    const to = parseISODate("2026-10-23");
+    expect(calendarAge(from, to, "fa-IR", "persian")).toEqual({ years: 1, months: 0, days: 0 });
+    expect(calendarAge(to, from, "fa-IR", "persian")).toBeNull();
   });
 
   it("formats the day and month using the selected calendar and keeps Gregorian formatting available", () => {
