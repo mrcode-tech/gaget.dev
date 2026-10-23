@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi, waitFor } from "vitest";
 import { AudioWorkbench } from "@/components/audio-workbench";
 
-afterEach(() => cleanup());
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("AudioWorkbench template parity", () => {
   it("uses the shared empty-state scroll region and upload geometry", () => {
@@ -32,6 +32,39 @@ describe("AudioWorkbench template parity", () => {
     expect(document.getElementById(descriptionId!)?.textContent).toContain("Choose a range");
   });
   
+  it("keeps the mobile feature panel closed after a file decodes without feature selection", async () => {
+    class MockAudioContext {
+      async decodeAudioData() {
+        return {
+          duration: 1,
+          sampleRate: 8000,
+          numberOfChannels: 1,
+          length: 8000,
+          getChannelData: () => new Float32Array(8000),
+        } as unknown as AudioBuffer;
+      }
+      async close() {}
+    }
+    vi.stubGlobal("AudioContext", MockAudioContext);
+    vi.stubGlobal("requestAnimationFrame", vi.fn());
+
+    const { container } = render(<AudioWorkbench slug="editor" />);
+    const audioFile = new File(["audio"], "sample.wav", { type: "audio/wav" });
+    Object.defineProperty(audioFile, "arrayBuffer", {
+      configurable: true,
+      value: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    });
+    const input = container.querySelector<HTMLInputElement>("#audio-input");
+    expect(input).toBeTruthy();
+    fireEvent.change(input!, { target: { files: [audioFile] } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).toContain("Decoded locally");
+    });
+    const panel = screen.getByTestId("audio-feature-panel");
+    expect(panel.className).toContain("hidden");
+  });
+
   it("opens the same resizable feature sheet before an audio file is selected", () => {
     render(<AudioWorkbench slug="editor" />);
     fireEvent.click(screen.getByRole("button", { name: "Open audio editor features" }));
