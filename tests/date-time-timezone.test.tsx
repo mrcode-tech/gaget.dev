@@ -27,6 +27,28 @@ describe("IANA time-zone wall-time conversion", () => {
       .toBe("2026-03-08T07:30:00.000Z");
   });
 
+  it("preserves fractional seconds to millisecond precision in the selected zone", () => {
+    expect(zonedLocalToUtc("2026-01-15", "12:34:56.123", "America/New_York").toISOString())
+      .toBe("2026-01-15T17:34:56.123Z");
+  });
+
+  it("normalizes one- and two-digit fractional seconds to milliseconds", () => {
+    expect(zonedLocalToUtc("2026-01-15", "12:34:56.1", "UTC").toISOString())
+      .toBe("2026-01-15T12:34:56.100Z");
+    expect(zonedLocalToUtc("2026-01-15", "12:34:56.12", "UTC").toISOString())
+      .toBe("2026-01-15T12:34:56.120Z");
+  });
+
+  it("rejects fractional precision beyond the supported millisecond precision", () => {
+    expect(() => zonedLocalToUtc("2026-01-15", "12:34:56.1234", "UTC"))
+      .toThrow(/valid ISO date and 24-hour time/);
+  });
+
+  it("keeps fractional seconds through a daylight-saving overlap using the earlier instant", () => {
+    expect(zonedLocalToUtc("2026-11-01", "01:30:00.456", "America/New_York").toISOString())
+      .toBe("2026-11-01T05:30:00.456Z");
+  });
+
   it("rejects invalid calendar dates and unknown time zones explicitly", () => {
     expect(() => zonedLocalToUtc("2026-02-30", "12:00", "UTC")).toThrow(/valid calendar date/);
     expect(() => zonedLocalToUtc("2026-10-23", "12:00", "Not/A_Zone")).toThrow(/Unsupported time zone/);
