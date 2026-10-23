@@ -17,7 +17,7 @@
 - `/` is the home/discovery experience.
 - `/tools` is the tool catalog.
 - `/categories/[slug]` is a category landing page.
-- Tool registry metadata drives search, categories, featured/favorite experiences and tool links. A registry entry is not proof that a destination exists or that a capability works.
+- Tool registry metadata drives search, categories, featured/favorite experiences and tool links. Tool entries now declare stable IDs, explicit availability status, and standalone/workspace kind; workspace entries also declare their canonical workspace ID. A registry entry is not proof that a destination exists or that a capability works. See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the target category/workspace model and remaining verification contract.
 
 ### Main workspaces
 - `/images/editor`: unified image/photo workspace. Legacy image slugs redirect to the editor. Source includes canvas-based image adjustments, crop/resize, transforms, text layers, and format/quality export controls; verify each active path before making broader capability claims.
