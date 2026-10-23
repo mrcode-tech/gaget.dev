@@ -7,6 +7,11 @@ describe("IANA time-zone wall-time conversion", () => {
       .toBe("2026-01-15T17:00:00.000Z");
   });
 
+  it("preserves seconds in the selected zone", () => {
+    expect(zonedLocalToUtc("2026-01-15", "12:34:56", "America/New_York").toISOString())
+      .toBe("2026-01-15T17:34:56.000Z");
+  });
+
   it("rejects a local time skipped by a forward daylight-saving transition", () => {
     expect(() => zonedLocalToUtc("2026-03-08", "02:30", "America/New_York"))
       .toThrow(/does not exist/);

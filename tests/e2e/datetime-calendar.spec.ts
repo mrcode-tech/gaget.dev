@@ -144,6 +144,10 @@ test("date-only values, timestamps, JSON, and ICS exports keep canonical dates a
   await page.goto("/datetime/editor?feature=timestamp");
   await expect(page.locator("pre")).toContainText("2026-10-22T22:00:00.000Z");
 
+  await seedWorkspace(page, "timestamp", "gregory", "Asia/Baku", { timestamp: "2026-10-23T12:00:30" });
+  await page.goto("/datetime/editor?feature=timestamp");
+  await expect(page.locator("pre")).toContainText("2026-10-23T08:00:30.000Z");
+
   await seedWorkspace(page, "timestamp", "gregory", "UTC", { timestamp: "-1" });
   await page.goto("/datetime/editor?feature=timestamp");
   await expect(page.locator("pre")).toContainText("1969-12-31T23:59:59.000Z");
