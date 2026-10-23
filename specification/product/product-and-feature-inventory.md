@@ -91,3 +91,8 @@ The implementation includes locale-aware formatting through `Intl.DateTimeFormat
 - Media/date editors use a full-viewport editor shell, compact command bar, File/Features controls, one active feature panel, and a resizable mobile feature sheet where implemented.
 - Empty-file and loaded-file states are separate experiences. Loading a file must not unexpectedly change unrelated layout, lose user edits, or leave stale object URLs.
 - Use the current implementation and tests to resolve conflicts with old proposals. Record unresolved differences as audit findings rather than silently assuming desired behavior already exists.
+
+
+## Date & Time calendar correctness contract
+
+The Date & Time workspace exposes Gregorian, Persian Solar Hijri, Islamic, Islamic Umm al-Qura, Hebrew, Buddhist, and Indian calendar options through the browser's Intl implementation. Calendar display and calendar arithmetic are distinct from storage: selected-calendar year/month/day values drive calendar views and month/year arithmetic, while ISO/Gregorian dates remain the stable internal values for timestamps, time zones, date differences, and calendar exports. Islamic calendar dates follow the browser's locale data and can differ between conventions. Automated regression coverage lives in `tests/date-time-fields.test.tsx` and `tests/datetime-editor.test.tsx`; unsupported Intl combinations must be reported rather than silently presented as correct.
