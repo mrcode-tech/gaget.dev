@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { imageToolSlugs, imageToolMeta } from "../lib/tools/image-tools.ts";
-import { tools } from "../lib/tools/registry.ts";
+import { categories, tools } from "../lib/tools/registry.ts";
 
 test("image tool slugs are unique and every slug has metadata", () => {
   assert.equal(new Set(imageToolSlugs).size, imageToolSlugs.length, "image slugs must be unique");
@@ -24,6 +24,20 @@ test("tool registry has unique names and routes", () => {
   }
 });
 
+test("category registry has unique names and slugs, and every tool belongs to a registered category", () => {
+  assert.ok(categories.length > 0, "category registry should not be empty");
+  assert.equal(new Set(categories.map((category) => category.name)).size, categories.length, "category names must be unique");
+  assert.equal(new Set(categories.map((category) => category.slug)).size, categories.length, "category slugs must be unique");
+
+  const categoryNames = new Set(categories.map((category) => category.name));
+  for (const category of categories) {
+    assert.ok(category.slug.trim(), `${category.name} needs a slug`);
+    assert.ok(category.href.startsWith("/"), `${category.name} needs an internal absolute route`);
+  }
+  for (const tool of tools) {
+    assert.ok(categoryNames.has(tool.category), `${tool.name} references an unknown category: ${tool.category}`);
+  }
+});
 
 test("the Images category promotes the unified Photo Editor instead of duplicate image apps", () => {
   const imageTools = tools.filter((tool) => tool.category === "Images");
@@ -31,7 +45,6 @@ test("the Images category promotes the unified Photo Editor instead of duplicate
   assert.equal(imageTools[0].name, "Photo Editor");
   assert.equal(imageTools[0].href, "/images/editor");
 });
-
 
 test("Audio category exposes one unified editor with searchable capability keywords", () => {
   const audioTools = tools.filter((tool) => tool.category === "Audio");
@@ -42,7 +55,6 @@ test("Audio category exposes one unified editor with searchable capability keywo
     assert.ok(audioTools[0].keywords.includes(keyword), `Audio Editor search keywords should include ${keyword}`);
   }
 });
-
 
 test("Video category exposes one unified editor with searchable video capabilities", () => {
   const videoTools = tools.filter((tool) => tool.category === "Video");
@@ -64,13 +76,10 @@ test("Date & Time category routes directly to one unified editor", () => {
   }
 });
 
-
 test("tool identity, availability, and workspace ownership are explicit and valid", () => {
   assert.equal(new Set(tools.map((tool) => tool.id)).size, tools.length, "tool IDs must be unique and stable");
-  const categoryNames = new Set(categoryNamesForRegistry());
   for (const tool of tools) {
     assert.match(tool.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, `${tool.name} needs a stable kebab-case ID`);
-    assert.ok(categoryNames.has(tool.category), `${tool.name} references an unknown category: ${tool.category}`);
     assert.ok(["available", "planned"].includes(tool.status), `${tool.name} needs an explicit availability status`);
     assert.ok(["workspace", "standalone"].includes(tool.kind), `${tool.name} needs an explicit tool kind`);
     if (tool.kind === "workspace") {
@@ -96,7 +105,3 @@ test("JWT Decoder copy accurately limits its security claim", () => {
   assert.match(jwt.description, /inspect|decode/i);
   assert.doesNotMatch(jwt.description, /verify signature|authenticity verified/i);
 });
-
-function categoryNamesForRegistry() {
-  return ["Images", "Audio", "Video", "Date & Time", "Generators", "JSON", "Encoding", "Text", "Security", "Web & API", "Data Formats", "SQL"];
-}
