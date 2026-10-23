@@ -63,3 +63,40 @@ test("Date & Time category routes directly to one unified editor", () => {
     assert.ok(dateTimeTools[0].keywords.includes(keyword), `Date & Time Editor search keywords should include ${keyword}`);
   }
 });
+
+
+test("tool identity, availability, and workspace ownership are explicit and valid", () => {
+  assert.equal(new Set(tools.map((tool) => tool.id)).size, tools.length, "tool IDs must be unique and stable");
+  const categoryNames = new Set((awaitlessCategories()));
+  for (const tool of tools) {
+    assert.match(tool.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, `${tool.name} needs a stable kebab-case ID`);
+    assert.ok(categoryNames.has(tool.category), `${tool.name} references an unknown category: ${tool.category}`);
+    assert.ok(["available", "planned"].includes(tool.status), `${tool.name} needs an explicit availability status`);
+    assert.ok(["workspace", "standalone"].includes(tool.kind), `${tool.name} needs an explicit tool kind`);
+    if (tool.kind === "workspace") {
+      assert.ok(tool.workspaceId, `${tool.name} must identify its workspace`);
+      assert.equal(tool.href, ({ image: "/images/editor", audio: "/audio/editor", video: "/video/editor", "date-time": "/datetime/editor" })[tool.workspaceId], `${tool.name} must point to its canonical workspace route`);
+    } else {
+      assert.equal(tool.workspaceId, undefined, `${tool.name} must not claim a shared workspace`);
+    }
+  }
+});
+
+test("JSON Diff and Hash Generator remain planned until implementation is verified", () => {
+  for (const id of ["json-diff", "hash-generator"]) {
+    const tool = tools.find((candidate) => candidate.id === id);
+    assert.ok(tool, `missing catalog entry: ${id}`);
+    assert.equal(tool.status, "planned");
+  }
+});
+
+test("JWT Decoder copy accurately limits its security claim", () => {
+  const jwt = tools.find((tool) => tool.id === "jwt-decoder");
+  assert.ok(jwt);
+  assert.match(jwt.description, /inspect|decode/i);
+  assert.doesNotMatch(jwt.description, /verify signature|authenticity verified/i);
+});
+
+function awaitlessCategories() {
+  return ["Images", "Audio", "Video", "Date & Time", "Generators", "JSON", "Encoding", "Text", "Security", "Web & API", "Data Formats", "SQL"];
+}
