@@ -10,7 +10,7 @@
 
 Provide a single responsive workspace for exploring the current date/time, configuring locale/calendar/numbering/time-zone presentation, and selecting one of the date/time utilities. The workspace should feel like part of the same GaGet.dev editor family while preserving Date & Time's distinct live-clock centerpiece and non-file-based workflow.
 
-This contract covers workspace introduction spacing and typography, main workspace controls, feature-panel controls, select affordance alignment, and responsive/directional behavior. It does not redefine calendar arithmetic, time-zone conversion, individual feature capability, or the shared editor command-bar behavior.
+This contract covers workspace introduction spacing and typography, main workspace controls, feature-panel controls, select affordance alignment, responsive/directional behavior, and calendar-system correctness. ISO/Gregorian dates remain the stable internal representation; selected calendar systems must determine visible month boundaries, day/year/month labels, month navigation, calendar-generator grids, and month/year arithmetic.
 
 ## 2. Current implementation audit
 
@@ -64,7 +64,7 @@ Use `components/ui/native-select.tsx` for Date & Time select controls. It delibe
 
 ### Calendar/date/time inputs
 
-Keep the existing custom calendar and time input components rather than native date/time inputs. Their calendar popover must remain viewport-bounded, keyboard-operable and direction-aware; selected and unsupported-calendar states need readable non-color-only feedback.
+Keep the custom calendar and time input components rather than native date/time inputs. A shared calendar engine must derive year, month, day, month boundaries, month length and month navigation from `Intl.DateTimeFormat.formatToParts` using the selected calendar and locale. Every visible day cell must be formatted directly by `Intl.DateTimeFormat` with the selected calendar, not by `Date.getDate()` or Gregorian day extraction. The locale controls language and default numerals; the calendar-system control independently controls calendar arithmetic and month/day/year identity. If a Gregorian reference is shown alongside a selected-calendar month, label it explicitly as the Gregorian equivalent. Clicking a cell emits its corresponding stable Gregorian ISO date. Month navigation must cross actual calendar-month boundaries and clamp the selected day when the destination month is shorter. Calendar-generator year/month inputs and grids use the selected calendar. Date calculator month/year units, age year/month/day components, and leap-year detection use selected-calendar arithmetic. Day/week and elapsed-day operations remain elapsed days; the week-number utility is explicitly Gregorian ISO week numbering. Time-zone conversion, timestamp and JSON results include the selected-calendar display while preserving ISO/Unix values as stable technical representations. Fixed-date sample holidays are displayed in the selected calendar. Calendars whose Intl implementation exposes named rather than numeric months (such as Hebrew) must still receive stable month ordinals for month selection and year arithmetic. Islamic calendar variants follow the browser Intl data and may differ by convention; unsupported calendar/locale combinations must be surfaced honestly.
 
 ## 5. Responsive and accessibility requirements
 
@@ -83,6 +83,13 @@ Keep the existing custom calendar and time input components rather than native d
 - [ ] Select chevron has logical `end-3` positioning and sufficient `pe-9` text clearance in LTR and RTL.
 - [ ] Text fields continue using the shared Input primitive; no label-only border remains around Display language.
 - [ ] Date & Time-specific centerpiece and calendar/time semantics remain intact.
+- [ ] Persian, Islamic, Islamic Umm al-Qura, Gregorian, Hebrew, Buddhist, and Indian calendar selections format visible day numbers directly with the selected calendar and use calendar-specific month boundaries wherever the browser Intl implementation supports them.
+- [ ] Changing display language alone does not silently change the chosen calendar system; changing the calendar system updates day numbers, month/year labels, month navigation and calendar arithmetic consistently.
+- [ ] Gregorian-equivalent month references are explicitly labeled and cannot be mistaken for the selected calendar's visible day numbers.
+- [ ] Leap-year results use the selected calendar's year length, including lunar and lunisolar year lengths; time-zone, timestamp, JSON and holiday outputs honor selected-calendar display where applicable while preserving stable ISO/Unix data.
+- [ ] ISO week-number results explicitly identify their Gregorian ISO semantics.
+- [ ] Date picker and printable calendar grid show the selected calendar’s year/month/day values, while selections and timestamps retain canonical Gregorian ISO values.
+- [ ] Month navigation, month/year date calculations, age calculations, leap/month-length boundaries, RTL locale, and numbering-system combinations have focused regression coverage.
 - [ ] Focused component tests, lint, typecheck, build, E2E and matching CI visual evidence pass before the contract can be marked verified.
 
 ## 7. Verification status
