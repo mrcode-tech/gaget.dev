@@ -30,7 +30,7 @@ const makeFormatter = (locale: string, calendar: string, numberingSystem = "loca
   }
   return cached;
 };
-export const calendarParts = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale"): CalendarParts => {
+const rawCalendarParts = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale"): CalendarParts => {
   const parts = makeFormatter(locale, calendar, numberingSystem, { era: "short", year: "numeric", month: "numeric", day: "numeric" }).formatToParts(date);
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
   const year = numericPart(get("year"));
@@ -38,7 +38,16 @@ export const calendarParts = (date: Date, locale = "en-US", calendar = "gregory"
   const day = numericPart(get("day"));
   const era = get("era");
   const monthName = makeFormatter(locale, calendar, numberingSystem, { month: "long" }).format(date);
-  return { year, month, day, era, monthName, key: [era, year, month, monthName].join("|") };
+  const monthIdentity = Number.isFinite(month) ? month : monthName;
+  return { year, month, day, era, monthName, key: [era, year, monthIdentity, monthName].join("|") };
+};
+export const calendarParts = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale"): CalendarParts => {
+  const parts = rawCalendarParts(date, locale, calendar, numberingSystem);
+  if (Number.isFinite(parts.month)) return parts;
+  // Some Intl calendars (notably Hebrew) expose month names instead of a
+  // numeric month part. Resolve an ordinal from the cached calendar-year list.
+  const month = calendarMonthsInYear(parts.year, locale, calendar, numberingSystem).find((item) => item.key === parts.key)?.number ?? 1;
+  return { ...parts, month };
 };
 export const formatCalendarDate = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale", options: Intl.DateTimeFormatOptions = { dateStyle: "full" }) =>
   makeFormatter(locale, calendar, numberingSystem, options).format(date);
@@ -83,19 +92,30 @@ export const moveCalendarMonth = (date: Date, amount: number, locale = "en-US", 
 };
 export const addCalendarMonths = moveCalendarMonth;
 const yearOffsets: Record<string, number> = { persian: 621, islamic: 579, "islamic-umalqura": 579, hebrew: -3761, buddhist: -543, indian: 78, gregory: 0 };
+const calendarYearMonthCache = new Map<string, Array<{ key: string; value: string; label: string; date: Date; number: number }>>();
 export const calendarMonthsInYear = (year: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
+  const cacheKey = JSON.stringify([year, locale, calendar, numberingSystem]);
+  const cached = calendarYearMonthCache.get(cacheKey);
+  if (cached) return cached;
   const start = new Date(year + (yearOffsets[calendar] ?? 0) - 1, 0, 1, 12);
   const months = new Map<string, { key: string; value: string; label: string; date: Date; number: number }>();
   for (let i = 0; i < 1100; i++) {
     const date = addDays(start, i);
-    const parts = calendarParts(date, locale, calendar, numberingSystem);
+    const parts = rawCalendarParts(date, locale, calendar, numberingSystem);
     if (parts.year === year && !months.has(parts.key)) {
       // The scan moves forward one Gregorian day at a time, so the first
       // occurrence of a calendar month is its real first day.
       months.set(parts.key, { key: parts.key, value: parts.key, label: parts.monthName, date, number: parts.month });
     }
   }
-  return Array.from(months.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
+  const result = Array.from(months.values()).sort((a, b) => a.date.getTime() - b.date.getTime()).map((item, index) => ({
+    ...item,
+    // Numeric calendars keep their native month number. Calendars that only
+    // expose named months use their chronological ordinal within this year.
+    number: Number.isFinite(item.number) ? item.number : index + 1,
+  }));
+  calendarYearMonthCache.set(cacheKey, result);
+  return result;
 };
 export const findCalendarMonth = (year: number, month: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
   const months = calendarMonthsInYear(year, locale, calendar, numberingSystem);

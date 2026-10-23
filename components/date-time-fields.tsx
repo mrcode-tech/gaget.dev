@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 import { addDays, calendarMonth, calendarParts, calendarWeekStart, formatCalendarDate, formatCalendarNumber, localizeCalendarDigits, normalizeCalendarDigits, parseISODate, toISODate } from "@/lib/date-time/calendar";
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
 type DateFieldProps = {
   id: string;
   value: string;

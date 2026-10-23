@@ -23,11 +23,12 @@ describe("Date & Time reusable fields", () => {
     render(<CalendarDateInput id="persian-month" value="2026-10-22" onChange={onChange} locale="fa-IR" calendar="persian" />);
     fireEvent.click(screen.getByRole("button", { name: /مهر|۱۴۰۵|Choose date/i }));
     const grid = screen.getByRole("grid");
-    const firstAban = parseISODate("2026-10-23");
-    const firstAbanButton = within(grid).getByRole("button", { name: formatCalendarDate(firstAban, "fa-IR", "persian", "locale", { dateStyle: "full" }) });
-    expect(firstAbanButton.textContent).toBe(formatCalendarNumber(1, "fa-IR"));
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));
-    expect(screen.getByRole("grid").getAttribute("aria-label")).toMatch(/آبان|Aban/i);
+    const nextGrid = screen.getByRole("grid");
+    expect(nextGrid.getAttribute("aria-label")).toMatch(/آبان|Aban/i);
+    const firstAban = parseISODate("2026-10-23");
+    const firstAbanButton = within(nextGrid).getByRole("button", { name: formatCalendarDate(firstAban, "fa-IR", "persian", "locale", { dateStyle: "full" }) });
+    expect(firstAbanButton.textContent).toBe(formatCalendarNumber(1, "fa-IR"));
   });
 
   it("dismisses the date picker with Escape and restores focus to its trigger", () => {
