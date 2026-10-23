@@ -144,6 +144,21 @@ describe("calendar-system date engine", () => {
 });
 
 
+describe("calendar picker integration", () => {
+  it("renders Persian day cells using Persian day numbers while retaining stable ISO values", () => {
+    const onChange = vi.fn();
+    const firstAban = parseISODate("2026-10-23");
+    const selectedCalendarDate = formatCalendarDate(firstAban, "fa-IR", "persian", "locale", { dateStyle: "full" });
+    render(<CalendarDateInput id="persian-date" value="2026-10-23" onChange={onChange} locale="fa-IR" calendar="persian" />);
+    fireEvent.click(screen.getByRole("button", { name: /۱۴۰۵|2026|Choose date/i }));
+    const firstDay = screen.getByRole("button", { name: selectedCalendarDate });
+    expect(firstDay.textContent).toBe(formatCalendarDay(firstAban, "fa-IR", "persian"));
+    expect(firstDay.textContent).toBe(formatCalendarNumber(1, "fa-IR"));
+    fireEvent.click(firstDay);
+    expect(onChange).toHaveBeenCalledWith("2026-10-23");
+  });
+});
+
 describe("calendar-native day formatting", () => {
   it.each([
     ["Gregorian", "en-US", "gregory", "locale"],
