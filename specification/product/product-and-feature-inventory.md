@@ -1,7 +1,5 @@
 # Product and Feature Inventory
-
-**Audit date:** 2026-10-21  
-**Evidence:** Current branch routes, `lib/tools/registry.ts`, `lib/tools/image-tools.ts`, workbench components, and test filenames.  
+**Evidence:** App Router source routes, `lib/tools/registry.ts`, `lib/tools/image-tools.ts`, workbench components, and test filenames.
 **Important:** This is a code-oriented inventory, not a promise that every listed menu action has complete processing support.
 
 ## Product intent and experience principles

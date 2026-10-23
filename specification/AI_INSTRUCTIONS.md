@@ -8,16 +8,16 @@ Treat design documentation as a maintained contract, not a one-time deliverable.
 
 ## 1. Resolve the task and baseline
 
-1. Confirm the current branch and baseline commit. Do not create or switch branches unless the user asks.
+1. Inspect the active task context and exact source revision before making changes. Record transient branch/commit details in the task handoff or CI evidence, not in application-wide specification pages. Do not create or switch branches unless the user asks.
 2. Read `specification/README.md`, this file, and `specification/foundations/design-engineering-ai-workflow.md`.
 3. Read `specification/foundations/design-system-token-contract.md` for visual/component changes and `specification/foundations/quality-accessibility-verification.md` for quality expectations.
 4. Read `specification/product/current-state.md`, `specification/product/product-and-feature-inventory.md`, and the relevant feature page(s) under `specification/product/`. When working on the shared shell or any Photo, Audio, Video, or Date & Time workspace, also read `specification/product/feature-contract-reconciliation.md` so requirements retained from legacy proposals and known verification gaps are not lost. Read `specification/components/component-inventory.md` and component specifications when shared UI is involved.
 5. Inspect actual source code, route definitions, registry data, tests, and relevant Git history on the active branch. Search for existing patterns before creating new ones.
-6. Inspect current-state screenshots and their manifest when available. Verify their branch/commit and route/state/viewport metadata. Never assume a screenshot is current merely because it exists.
+6. Inspect current-state screenshots and their manifest when available. Verify their build identifier and route/state/viewport metadata. Never assume a screenshot is current merely because it exists.
 7. Find the approved target-state specification and its SVG/PNG design assets. If none exists, determine whether the task is a small local fix or introduces a new lasting product/design contract.
 
 **Evidence hierarchy**
-- Current behavior: running app, source code and tests on the task's baseline branch/commit.
+- Current behavior: running app, source code and tests on the exact build being evaluated; use its matching CI artifacts for build-specific evidence.
 - Approved expected behavior: accepted target-state feature specification and explicitly approved design assets.
 - Shared rules: foundation documents.
 - Generated screenshots and test reports: evidence of a particular build, not design authority.
@@ -46,7 +46,7 @@ Do not create a separate Markdown file for every tiny change. Extend a canonical
 - Do **not** create or maintain a root-level `current_working.md` or another rolling project-wide task diary. Such files become stale when branches and tasks change.
 - Track in-progress scope, checklists, review discussion and follow-up items in the relevant GitHub issue or pull request; use commits and CI runs as implementation and verification history.
 - Keep durable product behavior and approved expectations in canonical files under `specification/`. Update `specification/product/current-state.md` only when verified current-state facts change; it is not a task log.
-- Keep exact test outcomes linked to the commit/CI run in the pull request or the relevant canonical feature specification when they are important long-term verification evidence.
+- Keep exact test outcomes and CI links in the pull request or CI artifacts, not in application-wide canonical specification pages.
 - When removing a legacy working log, search the active branch for references and replace references that prescribe using it. Preserve durable decisions or still-relevant findings in the correct canonical document before deleting the log. Do not copy stale task checklists into the current-state baseline.
 
 ## 3. Specify the expected experience
@@ -84,7 +84,7 @@ A screenshot alone is not a specification. Pair visuals with written behavior an
 5. Compare implementation with the approved target design and acceptance criteria, not with a stale current-state screenshot.
 6. If a command or visual check could not run, report it as **not verified**. Never claim tests or visual QA passed without evidence.
 
-Current-state screenshots should be generated from the exact build/commit being evaluated. The capture workflow stores screenshots as a commit-associated CI artifact; it must not silently overwrite target design assets.
+Current-state screenshots should be generated from the exact build being evaluated. The capture workflow stores screenshots as a build-associated CI artifact; it must not silently overwrite target design assets.
 
 ## 6. Close the documentation loop after implementation
 
@@ -94,7 +94,7 @@ Before declaring the task complete:
 - [ ] Update foundation/component contracts if a reusable rule, token, component API, breakpoint, or shared interaction pattern changed.
 - [ ] Update the product/current-state inventory for routes, navigation, tool availability, capabilities or limitations.
 - [ ] Add or revise approved target SVG/PNG assets if the intended design changed.
-- [ ] Regenerate current-state screenshots for affected routes when appropriate; identify the exact branch/commit and state.
+- [ ] Regenerate current-state screenshots for affected routes when appropriate; identify the exact evaluated build and state.
 - [ ] Update tests and the verification record to reflect the final implementation.
 - [ ] Remove obsolete/contradictory docs and assets, update all links, and search for stale paths.
 - [ ] Report modified docs/assets alongside code changes; mention every test result and remaining limitation.
@@ -113,8 +113,58 @@ The user may simply say “implement X” and link this file. The agent should t
 
 ## 8. Required handoff format
 
-- **Baseline:** branch and commit inspected.
+- **Baseline:** source revision inspected.
 - **Design contract:** current-state and target specification links.
 - **Changes:** code, docs, SVG/PNG assets, and inventory changes.
 - **Verification:** exact commands, results, browser/viewport/theme coverage, screenshot artifact link if available.
 - **Remaining gaps:** failures, unsupported scenarios and anything not verified.
+
+## 9. General implementation, CI, and evidence verification requirements
+
+### CI environment and runtime maintenance
+
+- Measure completed workflow step durations and inspect the logs before changing runners, containers, caching, or job structure. Separate a true bottleneck from one-off network or runner variance.
+- Prefer a maintained, version-pinned prebuilt Playwright container when browser tests run on compatible Linux runners and the matching image measurably avoids repeated browser/system-dependency setup. Align the container tag exactly with the pinned Playwright package version; never use `latest`.
+- Pin browser-test dependencies in both `package.json` and the committed lockfile. Use deterministic clean installation (`npm ci`) once the lockfile matches the manifests. Do not leave CI dependent on a runtime-generated lockfile.
+- If a container is unsuitable, cache package dependencies and browser binaries with keys that include OS, architecture, lockfile and exact Playwright version as applicable. Restore caches before setup, but validate browser executable availability and install only missing/incompatible browser binaries. Do not repeatedly install system dependencies without evidence that it is needed.
+- Preserve every required test, lint, typecheck, build, smoke, accessibility, screenshot, manifest and artifact-upload gate. Do not optimize by weakening assertions or hiding failures.
+- Compare completed before/after runs, record cache state and step timings, verify the exact tested SHA and every required job conclusion, and inspect the manifest and downloaded artifact contents for matching commit/run metadata and usable evidence before claiming an optimization succeeded.
+
+
+These requirements apply to every implementation task, not only UI work.
+
+### Before implementation
+- Inspect the actual source revision, branch and working-tree state, recent relevant commits, pull request status, CI configuration, and latest relevant workflow results before editing. Preserve unrelated work.
+- Read the applicable canonical specifications, source, tests, and approved design evidence. Define observable acceptance criteria and the checks that will prove the change works.
+- Reproduce the issue when practical. Distinguish verified root causes from hypotheses.
+
+### During implementation
+- Make the smallest maintainable change that satisfies the approved contract. Add regression tests for the reported failure and adjacent state transitions likely to regress.
+- Do not weaken tests, suppress errors, skip quality gates, or alter product contracts merely to make the implementation pass.
+- Update canonical specifications only when behavior, acceptance criteria, reusable rules, or documented implementation status genuinely changes. Keep application-wide specifications free of temporary branch names, commit hashes, PR numbers, and CI run IDs.
+
+### Local verification
+- Run focused tests first, then all applicable repository-required checks, including unit/component tests, lint, type checking, production build, smoke tests, end-to-end tests, and accessibility/visual checks where configured.
+- Inspect real browser behavior for affected routes and relevant viewports, states, themes, locales and RTL behavior when applicable. Use the existing design-baseline/evidence workflow for visual changes.
+- Rerun affected checks after each material fix. Record exact commands and outcomes. Mark unavailable checks as **not verified**, not passed.
+
+### GitHub Actions verification
+- Determine the intended workflow trigger from the checked-in workflow. Do not assume a push starts CI when the workflow does not include a push trigger. Use an authorized pull request or manual dispatch mechanism when appropriate.
+- Confirm that a workflow run exists for the intended change and verify its exact head commit SHA, branch/event, attempt, status and conclusion.
+- Wait for completion and inspect every required job and relevant step. Review failure logs, cancellations, skipped steps and missing jobs; a green summary alone is insufficient when required work did not run.
+- Inspect the required artifact list and open/download available evidence when possible. Check the manifest and verify that test reports, screenshots and other outputs belong to the same tested SHA/run attempt and cover the required states/viewports.
+- An artifact's existence does not prove its contents are complete or correct. A prior green run cannot verify later code changes. If the run tests an earlier SHA, rerun validation for the final intended revision.
+- For failures, diagnose the cause, make an in-scope fix, rerun local checks and obtain a new completed CI result for the new SHA. Repeat until all required gates pass or a real blocker prevents completion.
+- Never claim CI passed merely because it was requested, queued, running, or because a different commit passed. If permissions, quotas, tooling or infrastructure prevent verification, state the exact limitation and outstanding checks.
+
+### Completion report
+Report separately:
+1. Changes actually implemented.
+2. Local commands executed and their outcomes.
+3. Browser/visual checks actually performed and their coverage.
+4. The exact CI run URL, tested commit SHA, job conclusions and inspected artifact status, when available.
+5. Failed, skipped, pending, unavailable or unverified checks.
+6. Remaining risks and blockers.
+
+Do not invent results or run identifiers. A task is verified only when its required checks have actually completed successfully and relevant evidence has been inspected, or when any blocker is clearly disclosed without claiming completion.
+

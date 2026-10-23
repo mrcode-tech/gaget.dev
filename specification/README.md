@@ -14,7 +14,7 @@
 - [Quality, Accessibility & Verification](./foundations/quality-accessibility-verification.md)
 - [Reusable Design Specification Template](./templates/design-specification-template.md)
 
-### Level 2 — Gadget.dev product design
+### Level 2 — GaGet.dev product design
 - [Current-State Product Baseline](./product/current-state.md)
 - [Product and Feature Inventory](./product/product-and-feature-inventory.md)
 - [Feature Contract Reconciliation](./product/feature-contract-reconciliation.md) — preserves durable requirements from legacy proposals and records route-level verification gaps; requirements remain proposals until approved.
@@ -26,11 +26,11 @@
 - Approved editable target wireframes belong under `assets/target/` as SVG, with PNG renderings for review where useful.
 
 ### Generated implementation evidence
-Current-state browser screenshots are generated from the branch/build being evaluated and uploaded as a GitHub Actions artifact. Each capture must identify its commit, route, viewport and theme. They are evidence of that snapshot, not target design authority. See [AI Instructions](./AI_INSTRUCTIONS.md) and [Quality & Verification](./foundations/quality-accessibility-verification.md).
+Current-state browser screenshots are generated from the build being evaluated and uploaded as a GitHub Actions artifact. Each capture must identify its build, route, viewport and theme. They are evidence of that snapshot, not target design authority. See [AI Instructions](./AI_INSTRUCTIONS.md) and [Quality & Verification](./foundations/quality-accessibility-verification.md).
 
 ## Source-of-truth rules
 
-- **Current behavior:** the active branch's source code, running application and tests, tied to an exact commit.
+- **Current behavior:** source code, running application and tests for the build being evaluated.
 - **Expected behavior:** approved target-state specification and its explicitly approved assets.
 - **Shared rules:** Level 1 foundation documents and component contracts.
 - **Evidence:** screenshots and test reports demonstrate one build; they do not independently define design intent.
@@ -51,5 +51,5 @@ GaGet.dev is a Next.js App Router application using React, TypeScript, Tailwind 
 
 - Authored target wireframes: editable SVG source, plus PNG previews when useful.
 - Current-state screenshots: generated from the running application; never manually alter them or mistake them for target designs.
-- Keep assets grouped by product/feature and state. Include a short manifest with route, commit, viewport, theme, state and generation date.
+- Keep authored target assets grouped by product/feature and state. Generated screenshot manifests should record build identifier, route, viewport, theme, state and generation date.
 - Do not commit generated screenshot churn by default. Use the baseline workflow artifacts for review unless a deliberate, reviewed decision makes a stable screenshot fixture valuable.

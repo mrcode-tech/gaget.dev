@@ -37,6 +37,10 @@ async function readBaselineManifest() {
 
 function inferViewport(filePath) {
   const file = path.basename(filePath).toLowerCase();
+  // Prefer explicit dimensions embedded in E2E screenshot names so every
+  // viewport in the responsive panel matrix is represented in the manifest.
+  const dimensions = file.match(/(?:^|[^0-9])(\d{3,4})x(\d{3,4})(?:[^0-9]|$)/);
+  if (dimensions) return { width: Number(dimensions[1]), height: Number(dimensions[2]) };
   if (file.includes("tablet") || file.includes("768x1024")) return { width: 768, height: 1024 };
   if (file.includes("desktop") && filePath.startsWith("test-results/")) return { width: 1440, height: 900 };
   if (file.includes("mobile-390x844")) return { width: 390, height: 844 };
@@ -54,7 +58,11 @@ function inferState(filePath) {
   if (file.includes("threshold-8")) return "threshold-8-no-search";
   if (file.includes("threshold-9") && file.includes("tablet")) return "threshold-9-tablet-no-search";
   if (file.includes("threshold-9")) return "threshold-9-search-visible";
+  if (file.includes("file-menu")) return "file-menu";
+  if (file.includes("desktop-features-menu")) return "desktop-features-menu";
   if (file.includes("features-menu")) return "features-menu-default";
+  if (file.includes("panel-resized-reopened")) return "panel-resized-reopened";
+  if (file.includes("-panel")) return "feature-panel";
   return null;
 }
 
@@ -113,16 +121,19 @@ const screenshots = files
     };
   });
 const testResults = {
+  dependencyInstall: process.env.CI_DEPENDENCY_INSTALL ?? "unknown",
+  browserInstall: process.env.CI_BROWSER_INSTALL ?? "unknown",
   unitTests: process.env.CI_UNIT_TESTS ?? "unknown",
   focusedPhotoAndSidebarRegressions: process.env.CI_FOCUSED_REGRESSIONS ?? "unknown",
   componentTests: process.env.CI_COMPONENT_TESTS ?? "unknown",
   lint: process.env.CI_LINT ?? "unknown",
   typecheck: process.env.CI_TYPECHECK ?? "unknown",
   productionBuild: process.env.CI_BUILD ?? "unknown",
+  smokeTests: process.env.CI_SMOKE_TESTS ?? "unknown",
+  e2eTests: process.env.CI_E2E_TESTS ?? "unknown",
   smokeE2EAndBaselineStep: process.env.CI_BROWSER_VALIDATION ?? "unknown",
-  designBaselineCapture: baseline
-    ? (baseline.failures?.length ? "failure" : "success")
-    : "not-produced",
+  designBaselineCapture: process.env.CI_DESIGN_BASELINE
+    ?? (baseline ? (baseline.failures?.length ? "failure" : "success") : "not-produced"),
   jobStatusAtManifestGeneration: process.env.CI_JOB_STATUS ?? "unknown",
 };
 const viewportCoverage = [];
@@ -133,9 +144,65 @@ for (const screenshot of screenshots) {
     viewportCoverage.push(screenshot.viewport);
   }
 }
+const validationErrors = [];
+if (!/^[a-f0-9]{40}$/i.test(commit)) {
+  validationErrors.push(`Expected a full 40-character tested commit SHA, received "${commit}".`);
+}
+if (baseline && baseline.commit !== commit) {
+  validationErrors.push(`Baseline commit ${baseline.commit ?? "missing"} does not match tested commit ${commit}.`);
+}
+if (baseline?.failures?.length) {
+  validationErrors.push(`Design baseline reported ${baseline.failures.length} failed capture(s).`);
+}
+
+const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+for (const screenshot of screenshots) {
+  try {
+    const image = await readFile(screenshot.path);
+    if (image.length < 24 || !image.subarray(0, 8).equals(pngSignature)) {
+      validationErrors.push(`Screenshot is not a readable PNG: ${screenshot.path}`);
+      continue;
+    }
+    if (image.readUInt32BE(16) < 1 || image.readUInt32BE(20) < 1) {
+      validationErrors.push(`Screenshot has invalid PNG dimensions: ${screenshot.path}`);
+    }
+  } catch (error) {
+    validationErrors.push(`Screenshot could not be read: ${screenshot.path}: ${String(error)}`);
+  }
+  if (screenshot.commit !== commit) {
+    validationErrors.push(`Screenshot commit mismatch: ${screenshot.path}`);
+  }
+  if (["feature-panel", "panel-resized-reopened"].includes(screenshot.state) && !screenshot.viewport) {
+    validationErrors.push(`Panel screenshot has no viewport metadata: ${screenshot.path}`);
+  }
+}
+
+const requiredViewportKeys = [
+  "320x844", "360x844", "390x844", "430x844",
+  "390x640", "768x1024", "1440x900",
+];
+for (const key of requiredViewportKeys) {
+  if (!viewportCoverage.some((viewport) => `${viewport.width}x${viewport.height}` === key)) {
+    validationErrors.push(`Required viewport evidence is missing: ${key}`);
+  }
+}
+for (const route of ["/images/editor", "/audio/editor", "/video/editor", "/datetime/editor"]) {
+  const hasShortMobilePanel = screenshots.some((screenshot) =>
+    screenshot.route === route
+    && screenshot.state === "panel-resized-reopened"
+    && screenshot.viewport?.width === 390
+    && screenshot.viewport?.height === 640
+  );
+  if (!hasShortMobilePanel) {
+    validationErrors.push(`Missing short-mobile resized/reopened panel screenshot for ${route}.`);
+  }
+}
+
 const manifest = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
+  valid: validationErrors.length === 0,
+  validationErrors,
   repository,
   branch: process.env.GITHUB_REF_NAME ?? "unknown",
   commit,
@@ -155,4 +222,8 @@ const manifest = {
 };
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, JSON.stringify(manifest, null, 2) + "\n");
-process.stdout.write(`Wrote ${outputPath} for commit ${commit}; ${screenshots.length} screenshots indexed.\n`);
+process.stdout.write(`Wrote ${outputPath} for commit ${commit}; ${screenshots.length} screenshots indexed; validation ${manifest.valid ? "passed" : "failed"}.\n`);
+if (validationErrors.length) {
+  for (const error of validationErrors) process.stderr.write(`Evidence validation error: ${error}\n`);
+  process.exitCode = 1;
+}

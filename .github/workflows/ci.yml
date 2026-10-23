@@ -1,27 +1,29 @@
 name: GaGet.dev CI
 
 on:
-  # Run the complete quality gate on every branch and commit.
-  push:
-    branches:
-      - "**"
-  # Validate all proposed changes before they can be merged.
+  # Validate proposed changes to the protected integration branches.
   pull_request:
     branches:
-      - "**"
+      - stage
+      - main
+  # Pull requests are the only automatic full-suite trigger.
+  # Use manual dispatch for deliberate diagnosis outside a PR.
   workflow_dispatch:
 
-# One active CI run per branch, shared across push, pull_request, and workflow_dispatch.
-# For pull requests use the source branch name; for pushes/manual runs use ref_name.
-# When a newer run starts for the same branch, GitHub cancels the older in-progress run.
+# Only one GaGet.dev CI run should consume resources at a time.
+# A new run cancels any older run, regardless of branch, PR, or trigger.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  group: ci-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
   verify:
     name: Unit tests, component tests, lint, typecheck, build, smoke, and accessibility tests
     runs-on: ubuntu-latest
+    # Pin the browser binaries and OS dependencies to the Playwright package version.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+      options: --ipc=host
     # Includes the expanded route/theme/viewport/RTL screenshot matrix.
     timeout-minutes: 30
     steps:
@@ -35,23 +37,49 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # npm install is used because the current lockfile is stale and omits dependencies.
-        # Once package-lock.json is regenerated and committed, switch this to npm ci.
-        run: npm install --no-audit --no-fund
+        id: install-dependencies
+        # Bootstrap the stale lockfile once; commit the generated lockfile, then use npm ci.
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm install --no-audit --no-fund 2>&1 | tee artifacts/ci-logs/dependency-install.log
 
-      - name: Install Chromium for responsive and accessibility tests
-        run: npx playwright install --with-deps chromium
+      - name: Verify preinstalled Playwright browser and capture refreshed lockfile
+        id: verify-playwright
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/ci-logs
+          node -e 'const version = require("@playwright/test/package.json").version; if (version !== "1.64.0") { console.error("Expected @playwright/test 1.64.0, found " + version); process.exit(1); } console.log("@playwright/test " + version);'
+          npx playwright --version
+          browser_path="$(node -e 'process.stdout.write(require("@playwright/test").chromium.executablePath())')"
+          test -x "$browser_path"
+          printf 'Preinstalled Chromium executable: %s\n' "$browser_path" | tee artifacts/ci-logs/browser-environment.log
+          cp package-lock.json artifacts/ci-logs/package-lock.generated.json
 
       - name: Run unit tests
         id: unit-tests
-        run: npm run test:unit
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run test:unit 2>&1 | tee artifacts/ci-logs/unit-tests.log
 
       - name: Run focused Photo Editor and sidebar regression tests
         id: focused-regressions
-        run: npx vitest run tests/photo-editor.test.tsx tests/app-sidebar.test.tsx
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npx vitest run tests/photo-editor.test.tsx tests/app-sidebar.test.tsx 2>&1 | tee artifacts/ci-logs/focused-regressions.log
 
       - name: Run component tests
         id: component-tests
+        if: always() && steps.install-dependencies.outcome == 'success'
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
@@ -60,20 +88,38 @@ jobs:
 
       - name: Run ESLint
         id: lint
-        run: npm run lint
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run lint 2>&1 | tee artifacts/ci-logs/lint.log
 
       - name: Check TypeScript
         id: typecheck
-        run: npm run typecheck
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run typecheck 2>&1 | tee artifacts/ci-logs/typecheck.log
 
       - name: Build production app
         id: build
-        run: npm run build
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run build 2>&1 | tee artifacts/ci-logs/build.log
 
       - name: Start production server, smoke-test routes, and run responsive accessibility tests
         id: browser-validation
+        if: always() && steps.install-dependencies.outcome == 'success' && steps.build.outcome == 'success'
         shell: bash
         run: |
+          set -o pipefail
+          mkdir -p artifacts/ci-logs
           node node_modules/next/dist/bin/next start --hostname 127.0.0.1 > /tmp/gaget-next.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
@@ -88,17 +134,41 @@ jobs:
           done
 
           if [ "$ready" != true ]; then
+            cp /tmp/gaget-next.log artifacts/ci-logs/next-startup.log
             cat /tmp/gaget-next.log
+            echo "browser-validation=server-start-failed" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
-          SMOKE_BASE_URL=http://127.0.0.1:3000 node --test tests/smoke.test.mjs
-          npm run test:e2e
+          validation_status=0
+          if SMOKE_BASE_URL=http://127.0.0.1:3000 node --test tests/smoke.test.mjs 2>&1 | tee artifacts/ci-logs/smoke-tests.log; then
+            smoke_status=passed
+          else
+            smoke_status=failed
+            validation_status=1
+          fi
+          echo "smoke-tests=$smoke_status" >> "$GITHUB_OUTPUT"
 
-          DESIGN_BASELINE_URL=http://127.0.0.1:3000 \
-          DESIGN_BASELINE_OUTPUT=artifacts/design-baseline \
-          DESIGN_BASELINE_COMMIT="${GITHUB_SHA}" \
-          node scripts/capture-design-baseline.mjs
+          if npm run test:e2e 2>&1 | tee artifacts/ci-logs/e2e-tests.log; then
+            e2e_status=passed
+          else
+            e2e_status=failed
+            validation_status=1
+          fi
+          echo "e2e-tests=$e2e_status" >> "$GITHUB_OUTPUT"
+
+          if DESIGN_BASELINE_URL=http://127.0.0.1:3000 \
+            DESIGN_BASELINE_OUTPUT=artifacts/design-baseline \
+            DESIGN_BASELINE_COMMIT="${GITHUB_SHA}" \
+            node scripts/capture-design-baseline.mjs 2>&1 | tee artifacts/ci-logs/design-baseline.log; then
+            baseline_status=passed
+          else
+            baseline_status=failed
+            validation_status=1
+          fi
+          echo "design-baseline=$baseline_status" >> "$GITHUB_OUTPUT"
+          echo "browser-validation=$([ "$validation_status" -eq 0 ] && echo passed || echo failed)" >> "$GITHUB_OUTPUT"
+          exit "$validation_status"
 
       - name: Collect production server log
         if: always()
@@ -109,6 +179,8 @@ jobs:
       - name: Generate CI evidence manifest
         if: always()
         env:
+          CI_DEPENDENCY_INSTALL: ${{ steps.install-dependencies.outcome }}
+          CI_BROWSER_INSTALL: ${{ steps.verify-playwright.outcome }}
           CI_UNIT_TESTS: ${{ steps.unit-tests.outcome }}
           CI_FOCUSED_REGRESSIONS: ${{ steps.focused-regressions.outcome }}
           CI_COMPONENT_TESTS: ${{ steps.component-tests.outcome }}
@@ -116,6 +188,9 @@ jobs:
           CI_TYPECHECK: ${{ steps.typecheck.outcome }}
           CI_BUILD: ${{ steps.build.outcome }}
           CI_BROWSER_VALIDATION: ${{ steps.browser-validation.outcome }}
+          CI_SMOKE_TESTS: ${{ steps.browser-validation.outputs.smoke-tests }}
+          CI_E2E_TESTS: ${{ steps.browser-validation.outputs.e2e-tests }}
+          CI_DESIGN_BASELINE: ${{ steps.browser-validation.outputs.design-baseline }}
           CI_JOB_STATUS: ${{ job.status }}
           CI_RUN_ID: ${{ github.run_id }}
           CI_RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -127,7 +202,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ci-evidence-${{ github.sha }}
+          name: ci-evidence-${{ github.sha }}-attempt-${{ github.run_attempt }}
           path: |
             artifacts/design-baseline/
             artifacts/ci-logs/

@@ -342,9 +342,39 @@ for (const viewport of [{ name: "mobile", width: 390, height: 844 }, { name: "ta
   });
 }
 
+test("Date & Time mobile content keeps the browser-only disclaimer after all controls", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/datetime/editor");
+
+  const content = page.locator("main > div").first();
+  const showSeconds = page.getByText("Show seconds", { exact: true });
+  const disclaimer = page.getByText(/Runs locally in your browser/);
+  await expect(showSeconds).toBeVisible();
+  await expect(disclaimer).toBeVisible();
+
+  const controlsBox = await showSeconds.boundingBox();
+  const disclaimerBox = await disclaimer.boundingBox();
+  expect(controlsBox, "last Date & Time control should have a measurable position").not.toBeNull();
+  expect(disclaimerBox, "browser-only disclaimer should have a measurable position").not.toBeNull();
+  if (controlsBox && disclaimerBox) {
+    expect(disclaimerBox.y, "disclaimer must follow the controls instead of overlapping them")
+      .toBeGreaterThanOrEqual(controlsBox.y + controlsBox.height);
+  }
+
+  await content.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await saveStateScreenshot(page, testInfo, "datetime-mobile-content-flow.png");
+});
+
 const panelViewports = [
-  { name: "mobile-short", width: 390, height: 640 },
-  { name: "tablet", width: 768, height: 1024 },
+  { name: "mobile-320x844", width: 320, height: 844 },
+  { name: "mobile-360x844", width: 360, height: 844 },
+  { name: "mobile-390x844", width: 390, height: 844 },
+  { name: "mobile-430x844", width: 430, height: 844 },
+  { name: "mobile-640x844", width: 640, height: 844 },
+  { name: "mobile-767x844", width: 767, height: 844 },
+  { name: "mobile-short-390x640", width: 390, height: 640 },
+  { name: "tablet-768x1024", width: 768, height: 1024 },
+  { name: "desktop-1440x900", width: 1440, height: 900 },
 ] as const;
 
 for (const editor of editors) {
@@ -364,15 +394,31 @@ for (const editor of editors) {
           await expect(page.locator("canvas[role='img']")).toBeVisible();
         }
 
+        const isDesktop = viewport.width >= 1024;
+        if (editor.id === "video" && isDesktop) {
+          const videoFixture = await makeWebmFixture(page);
+          test.skip(!videoFixture, "This Chromium runtime cannot create a supported WebM fixture with MediaRecorder.");
+          await page.locator('input[type="file"]').first().setInputFiles({
+            name: "shell-fixture.webm",
+            mimeType: "video/webm",
+            buffer: videoFixture!,
+          });
+          await expect(page.locator("video")).toBeVisible();
+        }
+
         const menubar = page.locator(editor.menubar);
-        const featureTrigger = menubar.getByRole("button", { name: editor.featureButton });
+        const featureTrigger = menubar.getByRole("button", {
+          name: isDesktop ? editor.desktopFeatureTrigger : editor.featureButton,
+        });
         await featureTrigger.click();
-        const featureMenu = page.locator(editor.featureMenu);
+        const featureMenu = page.locator(isDesktop ? editor.desktopFeatureMenu : editor.featureMenu);
         await expect(featureMenu).toBeVisible();
 
-        const featureButton = editor.id === "datetime"
-          ? featureMenu.locator("section button").first()
-          : featureMenu.getByRole("button", { name: editor.featureName });
+        const featureButton = isDesktop
+          ? featureMenu.getByRole("button", { name: editor.desktopFeatureName })
+          : editor.id === "datetime"
+            ? featureMenu.locator("section button").first()
+            : featureMenu.getByRole("button", { name: editor.featureName });
         await expect(featureButton).toBeVisible();
         await featureButton.click();
 
@@ -383,13 +429,55 @@ for (const editor of editors) {
             buffer: makeWavFixture(),
           });
           await expect(page.getByText(/Decoded locally/i)).toBeVisible();
+          const audioControls = page.getByTestId("audio-feature-controls");
+          await expect(audioControls).toBeVisible();
+          const parameterGroup = audioControls.locator(":scope > div").first();
+          const actionGroup = audioControls.locator(":scope > div").last();
+          const parameterBox = await parameterGroup.boundingBox();
+          const actionBox = await actionGroup.boundingBox();
+          expect(parameterBox, "Audio parameter group bounding box").not.toBeNull();
+          expect(actionBox, "Audio action group bounding box").not.toBeNull();
+          expect(
+            actionBox!.y - (parameterBox!.y + parameterBox!.height),
+            "Audio action buttons should be separated from parameter inputs on mobile and desktop",
+          ).toBeGreaterThanOrEqual(15);
         }
 
         const panel = page.locator(editor.panel);
         await expect(panel).toBeVisible();
         await assertWithinViewport(page, editor.panel, `${editor.title} feature panel`);
+        const panelBox = await panel.boundingBox();
+        expect(panelBox, `${editor.title} feature panel bounding box`).not.toBeNull();
+        if (panelBox && viewport.width < 768) {
+          expect(panelBox.x, `${editor.title} panel left edge at ${viewport.width}px`).toBeCloseTo(0, 0);
+          expect(panelBox.width, `${editor.title} panel width at ${viewport.width}px`).toBeCloseTo(viewport.width, 0);
+          expect(panelBox.x + panelBox.width, `${editor.title} panel right edge at ${viewport.width}px`).toBeCloseTo(viewport.width, 0);
+
+          const resizeHandle = panel.getByRole("slider", { name: "Resize editing panel" });
+          await expect(resizeHandle).toBeVisible();
+          await resizeHandle.focus();
+          await resizeHandle.press("ArrowUp");
+          const resizedPanelBox = await panel.boundingBox();
+          expect(resizedPanelBox?.height, `${editor.title} keyboard resize should increase panel height`).toBeGreaterThan(panelBox.height);
+
+          await expect(panel.getByRole("button", { name: /close/i })).toBeVisible();
+          await panel.getByRole("button", { name: /close/i }).click();
+          await expect(panel).toBeHidden();
+
+          await featureTrigger.click();
+          await expect(featureMenu).toBeVisible();
+          await featureButton.click();
+          await expect(panel).toBeVisible();
+        } else if (panelBox && viewport.width >= 768 && viewport.width < 1024 && ["audio", "video"].includes(editor.id)) {
+          expect(panelBox.x, `${editor.title} tablet panel left inset`).toBeCloseTo(8, 0);
+          expect(panelBox.width, `${editor.title} tablet panel width`).toBeCloseTo(viewport.width - 16, 0);
+        } else if (panelBox && viewport.width >= 1024) {
+          const expectedInspectorWidth = editor.id === "video" ? 300 : 320;
+          expect(panelBox.width, `${editor.title} desktop inspector width`).toBeCloseTo(expectedInspectorWidth, 0);
+        }
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-        await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-panel.png`);
+        const panelScenario = viewport.width < 768 ? "panel-resized-reopened" : "panel";
+        await saveStateScreenshot(page, testInfo, `${editor.id}-${viewport.name}-${theme}-${panelScenario}.png`);
       });
     }
   }

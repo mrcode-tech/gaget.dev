@@ -222,10 +222,10 @@ for (const viewport of viewports) {
     await expect(page.getByRole("button", { name: "Close feature panel" })).toBeVisible();
     await expect.poll(() => panel.evaluate((element) => getComputedStyle(element).transitionProperty)).toBe("none");
 
-    if (viewport.width < 640) {
+    if (viewport.width < 768) {
       await expect(page.getByRole("slider", { name: "Resize editing panel" })).toBeVisible();
     } else {
-      await expect(panel).toHaveClass(/sm:w-\[320px\]/);
+      await expect(panel).toHaveClass(/md:w-\[320px\]/);
     }
 
     const workspace = page.getByTestId("canvas-scroll-area");
@@ -233,9 +233,10 @@ for (const viewport of viewports) {
     const panelBox = await panel.boundingBox();
     expect(canvasBox, "canvas workspace should have a measurable viewport").not.toBeNull();
     expect(panelBox, "editing panel should have a measurable viewport").not.toBeNull();
-    if (canvasBox && panelBox && viewport.width < 640) {
+    if (canvasBox && panelBox && viewport.width < 768) {
+      // The compact layout keeps the feature panel as a bottom sheet through the SM range.
       expect(panelBox.y).toBeGreaterThanOrEqual(canvasBox.y + canvasBox.height - 2);
-      // Every mobile feature starts at the same useful default height.
+      // Every compact-width feature starts at the same useful default height.
       // Verify rendered geometry rather than coupling the test to Tailwind classes.
       const defaultPanelHeight = Math.min(viewport.height * 0.45, 380);
       expect(panelBox.height).toBeGreaterThanOrEqual(defaultPanelHeight - 2);

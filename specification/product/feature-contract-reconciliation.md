@@ -1,8 +1,7 @@
 # Feature Contract Reconciliation
 
-**Status:** Audit baseline / proposed expected behavior; not approved target design.  
-**Audit branch:** `feature/design-system-token-handoff`  
-**Audit date:** 2026-10-21  
+**Status:** Audit baseline / proposed expected behavior; not approved target design.
+**Audit branch:** the evaluated source
 **Purpose:** Preserve durable requirements from legacy feature specifications while separating them from verified implementation facts. This document does not imply pixel-level conformance or approval of a new visual design.
 
 ## 1. Evidence and status rules
@@ -14,7 +13,7 @@
 
 ## 2. Legacy document disposition
 
-The branch replaces the former broad specification set with foundations, inventories, and a template. The following documents were present on `stage` but are absent from this branch; their durable requirements must not be considered implicitly obsolete:
+The branch replaces the former broad specification set with foundations, inventories, and a template. The following legacy documents are not retained as active files; their durable requirements must not be considered implicitly obsolete:
 
 | Legacy document | Durable requirements retained here | Migration status |
 |---|---|---|
@@ -32,7 +31,7 @@ The branch replaces the former broad specification set with foundations, invento
 
 ## 3. Shared application shell and responsive behavior
 
-**Source inventory:** `components/app-shell.tsx`, `components/app-header.tsx`, `components/app-sidebar.tsx`, `components/tool-layout.tsx`, `components/use-resizable-feature-sheet.ts`, `app/globals.css`.  
+**Source inventory:** `components/app-shell.tsx`, `components/app-header.tsx`, `components/app-sidebar.tsx`, `components/tool-layout.tsx`, `components/use-resizable-feature-sheet.ts`, `app/globals.css`.
 **Tests:** `tests/app-shell.test.tsx`, `tests/app-sidebar.test.tsx`, `tests/editor-command-bar.test.tsx`.
 
 ### Proposed shared contract
@@ -52,7 +51,7 @@ The code has shared shell and menu components plus component tests. The shell ap
 
 ## 4. Shared editor command bar, panels, and scroll ownership
 
-**Source inventory:** `components/photo-editor.tsx`, `components/audio-workbench.tsx`, `components/video-workbench.tsx`, `components/datetime-editor.tsx`, `components/use-resizable-feature-sheet.ts`.  
+**Source inventory:** `components/photo-editor.tsx`, `components/audio-workbench.tsx`, `components/video-workbench.tsx`, `components/datetime-editor.tsx`, `components/use-resizable-feature-sheet.ts`.
 **Tests:** `tests/editor-command-bar.test.tsx`, `tests/photo-editor.test.tsx`, `tests/audio-workbench.test.tsx`, `tests/video-workbench.test.tsx`, `tests/datetime-editor.test.tsx`.
 
 ### Proposed shared contract
@@ -70,8 +69,8 @@ The current baseline screenshots do not capture empty-vs-loaded transitions, dra
 
 ## 5. Image / Photo workspace
 
-**Canonical route:** `/images/editor`.  
-**Source inventory:** `components/photo-editor.tsx`, `components/image-workbench.tsx`, `lib/tools/image-tools.ts`.  
+**Canonical route:** `/images/editor`.
+**Source inventory:** `components/photo-editor.tsx`, `components/image-workbench.tsx`, `lib/tools/image-tools.ts`.
 **Test:** `tests/photo-editor.test.tsx`.
 
 ### Current implementation facts
@@ -93,7 +92,7 @@ Component tests exist, but no feature-by-feature browser acceptance matrix or ap
 
 ## 6. Shared file-entry states for Photo and Audio
 
-**Source inventory:** Photo and Audio workbenches.  
+**Source inventory:** Photo and Audio workbenches.
 **Tests:** `tests/photo-editor.test.tsx`, `tests/audio-workbench.test.tsx`.
 
 ### Proposed state model
@@ -107,8 +106,8 @@ Keyboard file selection and drag/drop must both be supported where implemented. 
 
 ## 7. Audio workspace
 
-**Canonical route:** `/audio/editor`.  
-**Source inventory:** `components/audio-workbench.tsx`.  
+**Canonical route:** `/audio/editor`.
+**Source inventory:** `components/audio-workbench.tsx`.
 **Test:** `tests/audio-workbench.test.tsx`.
 
 ### Current implementation facts
@@ -120,6 +119,7 @@ The audio workbench uses browser audio decoding, an audio buffer/waveform, and W
 - Preserve the unified Photo-style shell without copying image-only controls such as canvas zoom/history where they do not apply.
 - Loaded state presents waveform/player, filename and relevant metadata; file actions and export accurately describe supported formats.
 - Audio controls remain usable on narrow and short viewports; feature controls must not obscure the waveform/player or create competing scroll regions.
+- Within an active feature panel, parameter groups, supporting guidance, and action buttons use a consistent vertical rhythm with a visible separation between inputs and primary/reset actions; paired controls retain their internal grid gap and labels remain closely associated with their fields.
 - Unsupported codecs, export paths, and metadata operations must be disclosed instead of presented as successful.
 
 ### Verification status
@@ -128,8 +128,8 @@ The component test exists. The CI baseline does not yet capture loaded audio, pl
 
 ## 8. Video workspace
 
-**Canonical route:** `/video/editor`.  
-**Source inventory:** `components/video-workbench.tsx`, `app/video/[tool]/page.tsx`, `lib/tools/registry.ts`.  
+**Canonical route:** `/video/editor`.
+**Source inventory:** `components/video-workbench.tsx`, `app/video/[tool]/page.tsx`, `lib/tools/registry.ts`.
 **Test:** `tests/video-workbench.test.tsx`.
 
 ### Current implementation facts
@@ -150,8 +150,8 @@ The component test and a production-route smoke check exist. Browser-specific co
 
 ## 9. Date & Time workspace and reusable inputs
 
-**Canonical route:** `/datetime/editor`.  
-**Source inventory:** `components/datetime-editor.tsx`, `components/datetime-workbench.tsx`, `components/date-time-fields.tsx`.  
+**Canonical route:** `/datetime/editor`.
+**Source inventory:** `components/datetime-editor.tsx`, `components/datetime-workbench.tsx`, `components/date-time-fields.tsx`.
 **Tests:** `tests/datetime-editor.test.tsx`, `tests/date-time-fields.test.tsx`.
 
 ### Current implementation facts
@@ -191,50 +191,34 @@ Date/time component tests exist. Calendar coverage, typed localized digits, unsu
 4. Expand date/time locale/calendar/numeral/time-zone tests and inspect the actual rendered input behavior.
 5. Re-run CI and update the current-state baseline only with evidence from the exact evaluated commit. Do not mark the project conformant until each route has an approved target contract and matching verification evidence.
 
+## 10. Shared shell contract status
 
-## 10. Shared shell contract handoff and verification (2026-10-21)
+The reusable proposed contract is documented in [Shared Editor Shell Contract](../components/shared-editor-shell.md). It defines ownership boundaries, responsive behavior, command menus, panel sizing, scroll ownership, state boundaries, themes, RTL/LTR, accessibility, acceptance criteria and known evidence gaps.
 
-The reusable proposed contract is documented in [Shared Editor Shell Contract](../components/shared-editor-shell.md). It defines shared-shell versus feature-workspace ownership, width and short-height behavior, command menus, panel sizing, scroll ownership, state boundaries, themes, RTL/LTR, accessibility, acceptance criteria and known evidence gaps.
+The shared shell and mobile Features-menu search designs remain proposals. CI test results and screenshots must be checked in the latest run for the build under review. Automated test success alone does not establish manual visual inspection or approval of the wireframe.
 
-The verified checkpoint commit was `c5b6203c2789c9c7ed56b5c28cd22586857fd818`. Its [GaGet.dev CI run](https://github.com/mrcode-tech/gaget.dev/actions/runs/39670723789) completed successfully, including unit/component tests, lint, typecheck, production build, smoke and responsive/accessibility checks. This evidence applies to that exact commit; it does not establish manual inspection of open menus/panels or approval of the wireframe.
+## 11. Required next increments
 
-The capture script defines 390×844, 390×640, 768×1024 and 1440×1000, with light/dark and selected RTL route captures. A separate screenshot workflow on commit `dd0983eebdd60896b9b50c45594dc06c7fd931e1` succeeded, but that is not the same commit as the latest head; do not treat it as current-head visual proof. Current CI success uploads visual evidence artifacts, but screenshot capture completion and manual visual inspection must be checked from the exact run before claiming they passed.
+1. Author and review editable target SVG wireframes for the shared shell/command bar, Photo/Audio file states, and Date & Time centerpiece/input family. Keep all designs labeled **Proposal** until approved.
+2. Extend screenshot capture or add Playwright scenarios for short-height mobile, open menus, active feature panels, empty/loaded/error states, RTL, and both themes.
+3. Build a feature-by-feature capability matrix for Audio and Video tied to source code and tests; disable or label unavailable operations rather than relying on registry prose.
+4. Expand date/time locale/calendar/numeral/time-zone tests and inspect the actual rendered input behavior.
+5. Run applicable checks and update the current-state baseline only when durable facts change and evidence supports the update. Do not mark the project conformant until each route has an approved target contract and matching verification evidence.
 
-**Still open:** target wireframe remains Proposal; selected feature panel/open menu/loaded/error state screenshot inspection is not evidenced here; full keyboard and touch browser coverage and cross-consumer parity require follow-up. Do not declare the shared shell fully verified or approved solely from CI passing.
+## 12. Enhanced mobile Features-menu search
 
-## 10. Enhanced mobile Features-menu search
+**Status:** Proposed behavior contract; not an approved pixel-perfect target design.
 
-**Status:** Proposed contract; not approved pixel-perfect target design.
-**Source files inspected on the task baseline:** components/photo-editor.tsx, components/audio-workbench.tsx, components/video-workbench.tsx, components/datetime-editor.tsx, tests/datetime-editor.test.tsx, and tests/e2e/shared-editor-shell.spec.ts.
+### Feature inventory
 
-### Source-derived baseline before this task's implementation
-
-| Editor | Feature entries in source | Current mobile/compact search behavior |
-|---|---:|---|
-| Photo/Image | 13 | No search input; grouped Edit/Image/Create list in mobile Features menu |
-| Audio | 18 | No search input; grouped feature menus, each currently opens one group at a time |
-| Video | 23 | No search input; grouped feature menus, each currently opens one group at a time |
-| Date & Time | 20 | Search input exists in the Features menu; it matches title, description and group using lowercase substring matching, but is currently shown throughout the compact menu breakpoint and its query persists when the menu closes |
-
-These counts and behaviors are source inspections, not a claim that browser tests have run. Audio and Video use group-triggered menus on desktop, but their compact Features menus expose all feature groups in one list. Search applies to that compact all-features list. Preserve desktop group menus and do not alter them as part of this task. The product contract requires searching the current editor's available features, not another editor or global navigation.
+The source declares 13 Photo/Image, 18 Audio, 23 Video and 20 Date & Time feature entries. Re-check these counts against the current source whenever the menu data changes.
 
 ### Target rule
 
-Follow the Shared Editor Shell Contract — Mobile Features-menu search. In short: below 768 px only, show the search field when the current Features menu has more than 8 selectable feature entries; at 8 or fewer, omit it. Do not add the search field at tablet widths (768–1023 px) or desktop widths (1024 px and above). Keep the current groups/order/labels/descriptions/icons and feature activation semantics.
-
-**Architecture note:** Mobile Audio and Video already expose their groups together in the compact Features menu, so filtering can operate across their existing group data without changing the navigation structure. Desktop group menus remain unchanged.
+Follow the Shared Editor Shell Contract — Mobile Features-menu search. Below 768 CSS px, show the search field only when the current Features menu has more than 8 selectable feature entries; at 8 or fewer, omit it. Do not add the search field at tablet widths (768–1023 px) or desktop widths (1024 px and above). Keep existing groups, order, labels, descriptions, icons and feature activation semantics.
 
 ### Search lifecycle and verification
 
 The query starts empty for every menu opening and clears on menu close, Escape, outside click, feature selection, and editor identity change. Match trimmed, case-insensitive substrings across title, description and group label; preserve source ordering and suppress empty groups. Show a localized no-results state for a non-empty query with no matches. Use existing i18n fallback and logical-direction styles for Persian/Arabic.
 
-The baseline Playwright suite originally covered 390×640 mobile-short, 768×1024 tablet and 1440×900 desktop menu geometry and Escape focus restoration. The enhanced mobile search contract is now covered by focused component tests and a passing browser run; see the implementation reconciliation below for the exact commit and artifact.
-
-### Implementation and verification reconciliation
-
-The shared search logic/UI is consumed by all four editor menus. The verified implementation uses the existing 768px mobile/tablet boundary and shows search only when the current editor has more than eight selectable features. Date & Time no longer has a separate bespoke search implementation. Mobile Audio/Video menus retain their grouped list; desktop group menus are unchanged.
-
-CI run [39786715494](https://github.com/mrcode-tech/gaget.dev/actions/runs/39786715494) passed on commit 38dccd3faa19bf7cea1278ad0df98c96e97f3fb8. It passed unit tests (29), component tests (75), ESLint, TypeScript, production build, smoke tests, and 104 Playwright tests. Browser tests captured the 8-feature no-search and 9-feature search states, match/no-match/empty-query states, query reset after close/reopen, Persian RTL across the editors, Arabic RTL on Date & Time, and tablet/desktop regressions. The artifact ci-evidence-38dccd3faa19bf7cea1278ad0df98c96e97f3fb8 contains artifacts/ci-logs/verification-manifest.json, which indexes 246 screenshots with commit, route, viewport, locale/direction and state metadata where available.
-
-This evidence is bound to the named commit only. Follow-up commits must be validated using their own CI run and evidence manifest; do not treat a prior artifact as evidence for a different head SHA. The SVG under assets/target remains explicitly a proposal, not an approved design or browser screenshot.
-
+For runtime claims, inspect the latest CI artifact for the exact build under review. It should provide test outcomes and a verification manifest for the 8/9 threshold, filtering, empty state, RTL and tablet/desktop regressions. The SVG remains a proposal, not an approved design or browser screenshot.

@@ -161,8 +161,8 @@ describe("PhotoEditor workspace UX acceptance", () => {
     openFeature("Color & filters");
     const panel = screen.getByTestId("feature-panel");
     expect(within(panel).getByText("Color & filters")).toBeTruthy();
-    expect(panel.className).toContain("sm:w-[320px]");
-    expect(panel.className).toContain("sm:border-l");
+    expect(panel.className).toContain("md:w-[320px]");
+    expect(panel.className).toContain("md:border-l");
 
     fireEvent.click(screen.getByTestId("canvas-scroll-area"));
     expect(screen.getByTestId("feature-panel")).toBe(panel);
