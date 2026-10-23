@@ -445,6 +445,17 @@ for (const editor of editors) {
 
         const panel = page.locator(editor.panel);
         await expect(panel).toBeVisible();
+
+        if (viewport.width < 768 && (editor.id === "audio" || editor.id === "video")) {
+          const backgroundColor = await panel.evaluate((element) => getComputedStyle(element).backgroundColor);
+          const colorChannels = backgroundColor.match(/rgba?\((.*)\)/)?.[1].split(",") ?? [];
+          const alpha = colorChannels.length === 4 ? Number(colorChannels[3]) : 1;
+          expect(
+            alpha,
+            `${editor.title} mobile feature panel must fully obscure the workspace behind it`,
+          ).toBe(1);
+        }
+
         await assertWithinViewport(page, editor.panel, `${editor.title} feature panel`);
         const panelBox = await panel.boundingBox();
         expect(panelBox, `${editor.title} feature panel bounding box`).not.toBeNull();

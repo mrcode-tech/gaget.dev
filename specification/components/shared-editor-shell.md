@@ -114,6 +114,7 @@ Runtime acceptance must be checked against the latest CI run for the exact build
 - At most one contextual feature panel is active per workspace unless a feature contract explicitly says otherwise.
 - Desktop inspector placement is consumer-owned but must align with editor content bounds and must not cover command-bar controls or make the main work area unusable.
 - On compact screens, a sheet must be bounded by the visual viewport, expose an obvious close affordance, and scroll its content independently.
+- Compact Audio and Video feature sheets must use an opaque theme-aware surface so the underlying workspace form/content does not show through the open panel. Do not use translucent panel backgrounds or backdrop effects that reveal interactive content beneath the sheet.
 - Where resize is supported, the handle must have a visible affordance, keyboard support, an accessible name/role and truthful min/max/current values. Pointer cancellation and viewport changes must leave the panel in a valid size.
 - The shell must not introduce nested competing scroll regions. Empty-state heading, description and upload target scroll together where the consumer uses the empty-workspace pattern. A loaded canvas/timeline/player retains its own intended interaction and scroll behavior.
 - Avoid unexplained large gaps, clipped separators, overlapping dividers, page-level horizontal overflow, or a panel positioned far from the command bar when the interaction implies a relationship.
