@@ -611,7 +611,7 @@ test("Date & Time introduction and select controls follow shared responsive geom
       expect(crumbBox.y).toBeGreaterThanOrEqual(navBox.y + navBox.height + 10);
     }
     const select = page.getByRole("combobox", { name: "Display language" });
-    const chevron = select.locator("xpath=following-sibling::svg");
+    const chevron = select.locator("xpath=..").locator("svg");
     await expect(select).toHaveClass(/appearance-none/);
     await expect(select).toHaveClass(/pe-9/);
     await expect(chevron).toBeVisible();
