@@ -70,6 +70,7 @@ The agent must inspect the actual current status, diffs, tests, CI, and document
 ## Required rules for every command
 
 - Follow `specification/AI_INSTRUCTIONS.md` and the relevant foundation documents.
+- For implementation tasks, follow the canonical local-verification and GitHub Actions evidence requirements in `specification/AI_INSTRUCTIONS.md`; inspect the exact tested commit, required job conclusions and artifact contents before claiming completion.
 - Inspect the active branch, baseline commit, actual code, and existing tests before editing.
 - Keep current behavior, approved expected behavior, and generated verification evidence distinct.
 - For substantial UI or feature changes, specify the target behavior before implementation. Create or update editable target wireframes when layout or interaction needs visual communication.
