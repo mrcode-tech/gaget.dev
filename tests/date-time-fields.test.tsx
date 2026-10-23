@@ -151,7 +151,7 @@ describe("calendar picker integration", () => {
     const selectedCalendarDate = formatCalendarDate(firstAban, "fa-IR", "persian", "locale", { dateStyle: "full" });
     render(<CalendarDateInput id="persian-date" value="2026-10-23" onChange={onChange} locale="fa-IR" calendar="persian" />);
     fireEvent.click(screen.getByRole("button", { name: /۱۴۰۵|2026|Choose date/i }));
-    const firstDay = screen.getByRole("button", { name: selectedCalendarDate });
+    const firstDay = within(screen.getByRole("grid")).getByRole("button", { name: selectedCalendarDate });
     expect(firstDay.textContent).toBe(formatCalendarDay(firstAban, "fa-IR", "persian"));
     expect(firstDay.textContent).toBe(formatCalendarNumber(1, "fa-IR"));
     fireEvent.click(firstDay);
@@ -206,19 +206,19 @@ describe("calendar-native day formatting", () => {
 
 describe("calendar-year length and leap-year behavior", () => {
   it.each([
-    [2024, "en-US", "gregory", 366],
-    [1403, "fa-IR", "persian", 366],
-  ])("resolves leap-year length for %s in %s / %s", (year, locale, calendar, expectedLength) => {
+    { year: 2024, locale: "en-US", calendar: "gregory", expectedLength: 366 },
+    { year: 1403, locale: "fa-IR", calendar: "persian", expectedLength: 366 },
+  ])("resolves leap-year length for $year in $locale / $calendar", ({ year, locale, calendar, expectedLength }) => {
     expect(calendarYearLength(year, locale, calendar)).toBe(expectedLength);
   });
 
   it.each([
-    [1448, "ar-SA", "islamic", [354, 355]],
-    [1448, "ar-SA", "islamic-umalqura", [354, 355]],
-    [5787, "en-US", "hebrew", [353, 354, 355, 383, 384, 385]],
-    [2569, "th-TH", "buddhist", [365, 366]],
-    [1948, "en-IN", "indian", [365, 366]],
-  ])("returns a valid native year length for %s in %s / %s", (year, locale, calendar, expectedLengths) => {
+    { year: 1448, locale: "ar-SA", calendar: "islamic", expectedLengths: [354, 355] },
+    { year: 1448, locale: "ar-SA", calendar: "islamic-umalqura", expectedLengths: [354, 355] },
+    { year: 5787, locale: "en-US", calendar: "hebrew", expectedLengths: [353, 354, 355, 383, 384, 385] },
+    { year: 2569, locale: "th-TH", calendar: "buddhist", expectedLengths: [365, 366] },
+    { year: 1948, locale: "en-IN", calendar: "indian", expectedLengths: [365, 366] },
+  ])("returns a valid native year length for $year in $locale / $calendar", ({ year, locale, calendar, expectedLengths }) => {
     expect(expectedLengths).toContain(calendarYearLength(year, locale, calendar));
   });
 });
