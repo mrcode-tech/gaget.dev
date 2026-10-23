@@ -342,6 +342,29 @@ for (const viewport of [{ name: "mobile", width: 390, height: 844 }, { name: "ta
   });
 }
 
+test("Date & Time mobile content keeps the browser-only disclaimer after all controls", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/datetime/editor");
+
+  const content = page.locator("main > div").first();
+  const showSeconds = page.getByText("Show seconds", { exact: true });
+  const disclaimer = page.getByText(/Runs locally in your browser/);
+  await expect(showSeconds).toBeVisible();
+  await expect(disclaimer).toBeVisible();
+
+  const controlsBox = await showSeconds.boundingBox();
+  const disclaimerBox = await disclaimer.boundingBox();
+  expect(controlsBox, "last Date & Time control should have a measurable position").not.toBeNull();
+  expect(disclaimerBox, "browser-only disclaimer should have a measurable position").not.toBeNull();
+  if (controlsBox && disclaimerBox) {
+    expect(disclaimerBox.y, "disclaimer must follow the controls instead of overlapping them")
+      .toBeGreaterThanOrEqual(controlsBox.y + controlsBox.height);
+  }
+
+  await content.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await saveStateScreenshot(page, testInfo, "datetime-mobile-content-flow.png");
+});
+
 const panelViewports = [
   { name: "mobile-320x844", width: 320, height: 844 },
   { name: "mobile-360x844", width: 360, height: 844 },
