@@ -77,7 +77,7 @@ const yearOffsets: Record<string, number> = { persian: 621, islamic: 579, "islam
 export const calendarMonthsInYear = (year: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
   const start = new Date(year + (yearOffsets[calendar] ?? 0) - 1, 0, 1, 12);
   const months = new Map<string, { value: string; label: string; date: Date; number: number }>();
-  for (let i = 0; i < 740; i++) {
+  for (let i = 0; i < 1100; i++) {
     const date = addDays(start, i);
     const parts = calendarParts(date, locale, calendar, numberingSystem);
     if (parts.year === year) {

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CalendarDateInput, ClockTimeInput } from "@/components/date-time-fields";
 import { addCalendarMonths, addCalendarYears, calendarMonth, calendarParts, findCalendarMonth, formatCalendarDate, parseISODate, toISODate } from "@/lib/date-time/calendar";
@@ -15,6 +15,20 @@ describe("Date & Time reusable fields", () => {
     fireEvent.click(screen.getByRole("button", { name: "Today" }));
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.calls[0][0]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+
+  it("renders Persian day numbers and advances by a Persian month boundary", () => {
+    const date = parseISODate("2026-10-22");
+    const onChange = vi.fn();
+    render(<CalendarDateInput id="persian-month" value="2026-10-22" onChange={onChange} locale="fa-IR" calendar="persian" />);
+    fireEvent.click(screen.getByRole("button", { name: /مهر|۱۴۰۵|Choose date/i }));
+    const grid = screen.getByRole("grid");
+    const firstAban = parseISODate("2026-10-23");
+    const firstAbanButton = within(grid).getByRole("button", { name: formatCalendarDate(firstAban, "fa-IR", "persian", "locale", { dateStyle: "full" }) });
+    expect(firstAbanButton.textContent).toBe(formatCalendarNumber(1, "fa-IR"));
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    expect(screen.getByRole("grid").getAttribute("aria-label")).toMatch(/آبان|Aban/i);
   });
 
   it("dismisses the date picker with Escape and restores focus to its trigger", () => {
