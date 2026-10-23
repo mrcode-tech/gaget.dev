@@ -121,6 +121,16 @@ The user may simply say “implement X” and link this file. The agent should t
 
 ## 9. General implementation, CI, and evidence verification requirements
 
+### CI environment and runtime maintenance
+
+- Measure completed workflow step durations and inspect the logs before changing runners, containers, caching, or job structure. Separate a true bottleneck from one-off network or runner variance.
+- Prefer a maintained, version-pinned prebuilt Playwright container when browser tests run on compatible Linux runners and the matching image measurably avoids repeated browser/system-dependency setup. Align the container tag exactly with the pinned Playwright package version; never use `latest`.
+- Pin browser-test dependencies in both `package.json` and the committed lockfile. Use deterministic clean installation (`npm ci`) once the lockfile matches the manifests. Do not leave CI dependent on a runtime-generated lockfile.
+- If a container is unsuitable, cache package dependencies and browser binaries with keys that include OS, architecture, lockfile and exact Playwright version as applicable. Restore caches before setup, but validate browser executable availability and install only missing/incompatible browser binaries. Do not repeatedly install system dependencies without evidence that it is needed.
+- Preserve every required test, lint, typecheck, build, smoke, accessibility, screenshot, manifest and artifact-upload gate. Do not optimize by weakening assertions or hiding failures.
+- Compare completed before/after runs, record cache state and step timings, verify the exact tested SHA and every required job conclusion, and inspect the manifest and downloaded artifact contents for matching commit/run metadata and usable evidence before claiming an optimization succeeded.
+
+
 These requirements apply to every implementation task, not only UI work.
 
 ### Before implementation
