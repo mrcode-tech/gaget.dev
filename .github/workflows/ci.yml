@@ -1,21 +1,24 @@
 name: GaGet.dev CI
 
 on:
-  # Run the complete quality gate on every branch and commit.
-  push:
-    branches:
-      - "**"
-  # Validate all proposed changes before they can be merged.
+  # Validate proposed changes to the protected integration branches.
   pull_request:
     branches:
-      - "**"
+      - stage
+      - main
+  # Keep post-merge/direct-push validation on protected branches.
+  # Working branches are validated by their PR, or manually when needed.
+  push:
+    branches:
+      - stage
+      - main
   workflow_dispatch:
 
-# Allow only one active run of this workflow across the entire repository.
-# A newly queued run cancels the previous in-progress run, regardless of branch
-# or trigger (push, pull_request, or workflow_dispatch).
+# Cancel superseded runs only within the same event stream and PR/branch.
+# PR runs are grouped by PR number; protected-branch pushes are grouped by ref.
+# Manual runs get unique groups so they cannot cancel required validation.
 concurrency:
-  group: ci-${{ github.workflow }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event_name }}
   cancel-in-progress: true
 
 jobs:
