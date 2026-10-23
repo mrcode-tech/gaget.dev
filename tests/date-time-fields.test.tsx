@@ -1,7 +1,7 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CalendarDateInput, ClockTimeInput } from "@/components/date-time-fields";
-import { addCalendarMonths, addCalendarYears, calendarMonth, calendarParts, findCalendarMonth, formatCalendarDate, parseISODate, toISODate } from "@/lib/date-time/calendar";
+import { addCalendarMonths, addCalendarYears, calendarAge, calendarMonth, calendarMonthsInYear, calendarParts, findCalendarMonth, formatCalendarDate, formatCalendarNumber, parseISODate, toISODate } from "@/lib/date-time/calendar";
 
 afterEach(() => cleanup());
 
@@ -15,6 +15,19 @@ describe("Date & Time reusable fields", () => {
     fireEvent.click(screen.getByRole("button", { name: "Today" }));
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.calls[0][0]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+
+  it("renders Persian day numbers and advances by a Persian month boundary", () => {
+    const onChange = vi.fn();
+    render(<CalendarDateInput id="persian-month" value="2026-10-22" onChange={onChange} locale="fa-IR" calendar="persian" />);
+    fireEvent.click(screen.getByRole("button", { name: /مهر|۱۴۰۵|Choose date/i }));
+    const grid = screen.getByRole("grid");
+    const firstAban = parseISODate("2026-10-23");
+    const firstAbanButton = within(grid).getByRole("button", { name: formatCalendarDate(firstAban, "fa-IR", "persian", "locale", { dateStyle: "full" }) });
+    expect(firstAbanButton.textContent).toBe(formatCalendarNumber(1, "fa-IR"));
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    expect(screen.getByRole("grid").getAttribute("aria-label")).toMatch(/آبان|Aban/i);
   });
 
   it("dismisses the date picker with Escape and restores focus to its trigger", () => {
@@ -59,7 +72,7 @@ describe("Date & Time reusable fields", () => {
 describe("calendar-system date engine", () => {
   it.each([
     ["Persian Solar Hijri", "fa-IR", "persian", "2026-10-23", 1405, 8, 1],
-    ["Islamic", "ar-SA", "islamic", "2026-10-23", 1448, 5, 12],
+    ["Islamic", "ar-SA", "islamic", "2026-10-23", 1448, 5, 13],
     ["Islamic Umm al-Qura", "ar-SA", "islamic-umalqura", "2026-10-23", 1448, 5, 12],
   ])("derives actual %s year, month, and day fields from the Gregorian ISO instant", (_name, locale, calendar, iso, expectedYear, expectedMonth, expectedDay) => {
     const date = parseISODate(iso);
@@ -96,6 +109,24 @@ describe("calendar-system date engine", () => {
     expect(calendarParts(start, "fa-IR", "persian").month).toBe(8);
     expect(calendarParts(start, "fa-IR", "persian").day).toBe(1);
     expect(month.dates[0].getTime()).toBe(start.getTime());
+  });
+
+
+  it.each(["gregory", "persian", "islamic", "islamic-umalqura", "hebrew", "buddhist", "indian"])("keeps every date in the actual %s calendar month", (calendar) => {
+    const sample = parseISODate("2026-10-23");
+    const parts = calendarParts(sample, "en-US", calendar);
+    const month = calendarMonth(sample, "en-US", calendar);
+    expect(calendarParts(month.first, "en-US", calendar).day).toBe(1);
+    expect(month.dates.every(date => calendarParts(date, "en-US", calendar).key === parts.key)).toBe(true);
+    expect(calendarParts(new Date(month.last.getFullYear(), month.last.getMonth(), month.last.getDate() + 1, 12), "en-US", calendar).key).not.toBe(parts.key);
+    expect(calendarMonthsInYear(parts.year, "en-US", calendar).some(item => item.number === parts.month)).toBe(true);
+  });
+
+  it("calculates age in the selected calendar while elapsed date difference stays Gregorian", () => {
+    const from = parseISODate("2025-10-23");
+    const to = parseISODate("2026-10-23");
+    expect(calendarAge(from, to, "fa-IR", "persian")).toEqual({ years: 1, months: 0, days: 0 });
+    expect(calendarAge(to, from, "fa-IR", "persian")).toBeNull();
   });
 
   it("formats the day and month using the selected calendar and keeps Gregorian formatting available", () => {
