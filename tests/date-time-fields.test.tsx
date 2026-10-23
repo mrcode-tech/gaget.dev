@@ -284,3 +284,57 @@ describe("calendar year lookup without fixed Gregorian offsets", () => {
     expect(toISODate(addDays(date, 1))).toBe("0001-01-02");
   });
 });
+
+
+describe("full locale and calendar cross-product", () => {
+  const locales = ["en-US", "fa-IR", "ar-SA", "it-IT", "ka-GE"] as const;
+  const calendars = ["gregory", "persian", "islamic", "islamic-umalqura", "hebrew", "buddhist", "indian"] as const;
+
+  it.each(locales.flatMap(locale => calendars.map(calendar => ({ locale, calendar }))))(
+    "keeps locale $locale independent from calendar $calendar",
+    ({ locale, calendar }) => {
+      const canonical = parseISODate("2026-10-23");
+      const formatter = new Intl.DateTimeFormat(locale, {
+        calendar,
+        numberingSystem: "latn",
+        era: "short",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const parts = formatter.formatToParts(canonical);
+      const expected = (type: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === type)?.value ?? "";
+
+      expect(formatter.resolvedOptions().calendar).toBe(calendar);
+      expect(calendarParts(canonical, locale, calendar, "latn").year).toBe(Number(expected("year")));
+      expect(calendarParts(canonical, locale, calendar, "latn").day).toBe(Number(expected("day")));
+      expect(calendarParts(canonical, locale, calendar, "latn").monthName).toBe(expected("month"));
+      expect(formatCalendarDate(canonical, locale, calendar, "latn", { dateStyle: "full" })).toBe(
+        new Intl.DateTimeFormat(locale, { calendar, numberingSystem: "latn", dateStyle: "full" }).format(canonical),
+      );
+      expect(toISODate(canonical)).toBe("2026-10-23");
+      expect(toISODate(parseISODate(toISODate(canonical)))).toBe("2026-10-23");
+    },
+  );
+});
+
+describe("calendar arithmetic month-end and year-boundary semantics", () => {
+  it.each([
+    ["2024-01-31", "gregory", "2024-02-29"],
+    ["2023-01-31", "gregory", "2023-02-28"],
+    ["2026-10-23", "persian", "2026-11-22"],
+  ])("clamps or preserves day when adding one calendar month to %s in %s", (iso, calendar, expected) => {
+    const date = parseISODate(iso);
+    expect(toISODate(addCalendarMonths(date, 1, "en-US", calendar))).toBe(expected);
+  });
+
+  it.each([
+    ["en-US", 0],
+    ["fa-IR", 6],
+    ["ar-SA", 0],
+    ["it-IT", 1],
+    ["ka-GE", 1],
+  ])("uses the expected locale week start for %s", (locale, expected) => {
+    expect(calendarWeekStart(locale)).toBe(expected);
+  });
+});
