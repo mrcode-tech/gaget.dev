@@ -27,10 +27,19 @@ describe("IANA time-zone wall-time conversion", () => {
     expect(() => zonedLocalToUtc("2026-10-23", "12:00", "Not/A_Zone")).toThrow(/Unsupported time zone/);
   });
 
-  it("does not change the canonical Gregorian date when a different calendar is selected", () => {
+  it("keeps the canonical instant while the selected calendar changes its displayed date parts", () => {
     const instant = zonedLocalToUtc("2026-10-23", "12:00", "Asia/Baku");
-    expect(new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Baku", calendar: "persian", day: "numeric" }).format(instant))
-      .toBe(new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Baku", calendar: "persian", day: "numeric" }).format(instant));
+    const gregorian = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Baku", calendar: "gregory", numberingSystem: "latn",
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(instant);
+    const persian = new Intl.DateTimeFormat("fa-IR", {
+      timeZone: "Asia/Baku", calendar: "persian", numberingSystem: "latn",
+      year: "numeric", month: "numeric", day: "numeric",
+    }).formatToParts(instant);
+    const values = (parts: Intl.DateTimeFormatPart[], type: string) => parts.find(part => part.type === type)?.value;
+    expect([values(gregorian, "year"), values(gregorian, "month"), values(gregorian, "day")]).toEqual(["2026", "10", "23"]);
+    expect([values(persian, "year"), values(persian, "month"), values(persian, "day")]).toEqual(["1405", "8", "1"]);
     expect(instant.toISOString()).toBe("2026-10-23T08:00:00.000Z");
   });
 });
