@@ -258,3 +258,29 @@ describe("locale and calendar independence regression matrix", () => {
     );
   });
 });
+
+
+describe("calendar year lookup without fixed Gregorian offsets", () => {
+  it.each([
+    ["persian", "fa-IR", 1400, 1, "2021-03-21"],
+    ["hebrew", "en-US", 5780, 1, "2019-09-30"],
+    ["buddhist", "th-TH", 2563, 1, "2020-01-01"],
+    ["indian", "en-IN", 1942, 1, "2020-03-21"],
+  ])("finds the real first day of %s year %s month %s", (calendar, locale, year, month, expectedISO) => {
+    const first = findCalendarMonth(year, month, locale, calendar);
+    expect(Number.isNaN(first.getTime())).toBe(false);
+    expect(toISODate(first)).toBe(expectedISO);
+    const parts = calendarParts(first, locale, calendar);
+    expect(parts.year).toBe(year);
+    expect(parts.month).toBe(month);
+    expect(parts.day).toBe(1);
+  });
+
+  it("round-trips four-digit canonical dates including years below 100", () => {
+    const date = parseISODate("0001-01-01");
+    expect(Number.isNaN(date.getTime())).toBe(false);
+    expect(date.getFullYear()).toBe(1);
+    expect(toISODate(date)).toBe("0001-01-01");
+    expect(toISODate(addDays(date, 1))).toBe("0001-01-02");
+  });
+});

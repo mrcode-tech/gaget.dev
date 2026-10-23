@@ -3,12 +3,15 @@ const pad = (value: number) => String(value).padStart(2, "0");
 export const parseISODate = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return new Date(NaN);
-  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  const date = new Date(0);
+  date.setFullYear(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  date.setHours(12, 0, 0, 0);
   return date.getFullYear() === Number(match[1]) && date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[3]) ? date : new Date(NaN);
 };
-export const toISODate = (date: Date) => date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
+export const toISODate = (date: Date) => String(date.getFullYear()).padStart(4, "0") + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
 export const addDays = (date: Date, amount: number) => {
-  const result = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+  const result = new Date(date.getTime());
+  result.setHours(12, 0, 0, 0);
   result.setDate(result.getDate() + amount);
   return result;
 };
@@ -36,18 +39,23 @@ const rawCalendarParts = (date: Date, locale = "en-US", calendar = "gregory", nu
   const year = numericPart(get("year"));
   const month = numericPart(get("month"));
   const day = numericPart(get("day"));
-  const era = get("era");
+  const canonicalEraParts = makeFormatter("en-US", calendar, "latn", { era: "short", year: "numeric", month: "numeric", day: "numeric" }).formatToParts(date);
+  const era = canonicalEraParts.find((part) => part.type === "era")?.value ?? "";
   const monthName = makeFormatter(locale, calendar, numberingSystem, { month: "long" }).format(date);
-  const monthIdentity = Number.isFinite(month) ? month : monthName;
-  return { year, month, day, era, monthName, key: [era, year, monthIdentity, monthName].join("|") };
+  const monthIdentity = Number.isFinite(month) ? month : "named";
+  return { year, month, day, era, monthName, key: [era, year, monthIdentity].join("|") };
 };
 export const calendarParts = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale"): CalendarParts => {
   const parts = rawCalendarParts(date, locale, calendar, numberingSystem);
-  if (Number.isFinite(parts.month)) return parts;
-  // Some Intl calendars (notably Hebrew) expose month names instead of a
-  // numeric month part. Resolve an ordinal from the cached calendar-year list.
-  const month = calendarMonthsInYear(parts.year, locale, calendar, numberingSystem).find((item) => item.key === parts.key)?.number ?? 1;
-  return { ...parts, month };
+  if (Number.isFinite(parts.month)) {
+    return { ...parts, key: [parts.era, parts.year, parts.month].join("|") };
+  }
+  // Named-month calendars (notably Hebrew) get a chronological month ordinal.
+  // Localized month names are labels only and never become internal IDs.
+  const months = calendarMonthsInYear(parts.year, locale, calendar, numberingSystem);
+  const current = date.getTime();
+  const month = [...months].reverse().find((item) => item.date.getTime() <= current)?.number ?? 1;
+  return { ...parts, month, key: [parts.era, parts.year, month].join("|") };
 };
 export const formatCalendarDate = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale", options: Intl.DateTimeFormatOptions = { dateStyle: "full" }) =>
   makeFormatter(locale, calendar, numberingSystem, options).format(date);
@@ -62,7 +70,8 @@ export const localizeCalendarDigits = (value: string, locale = "en-US", numberin
 export const calendarWeekStart = (locale: string) => locale.startsWith("fa") ? 6 : (locale.startsWith("en-US") || locale.startsWith("ar")) ? 0 : 1;
 export type CalendarMonth = { first: Date; last: Date; dates: Date[]; year: number; month: number; monthName: string; key: string; offset: number; weekStartDay: number };
 export const calendarMonth = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale"): CalendarMonth => {
-  const selected = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+  const selected = new Date(date.getTime());
+  selected.setHours(12, 0, 0, 0);
   const selectedParts = calendarParts(selected, locale, calendar, numberingSystem);
   let first = selected;
   for (let i = 0; i < 35; i++) {
@@ -95,32 +104,86 @@ export const moveCalendarMonth = (date: Date, amount: number, locale = "en-US", 
   return cursor;
 };
 export const addCalendarMonths = moveCalendarMonth;
-const yearOffsets: Record<string, number> = { persian: 621, islamic: 579, "islamic-umalqura": 579, hebrew: -3761, buddhist: -543, indian: 78, gregory: 0 };
 const calendarYearMonthCache = new Map<string, Array<{ key: string; value: string; label: string; date: Date; number: number }>>();
+const MAX_SUPPORTED_CALENDAR_YEAR_DAYS = 400;
+
+/** Resolve year boundaries by correcting from a real date using measured calendar-year lengths. */
+const findCalendarYearStart = (year: number, locale: string, calendar: string, numberingSystem: string): Date | null => {
+  if (!Number.isInteger(year) || year < 1 || year > 9999) return null;
+  let cursor = new Date();
+  cursor.setHours(12, 0, 0, 0);
+
+  for (let attempt = 0; attempt < 32; attempt += 1) {
+    const current = rawCalendarParts(cursor, locale, calendar, numberingSystem);
+    if (current.year === year) {
+      let first = cursor;
+      let walkedBack = 0;
+      while (walkedBack < MAX_SUPPORTED_CALENDAR_YEAR_DAYS) {
+        const previous = addDays(first, -1);
+        const parts = rawCalendarParts(previous, locale, calendar, numberingSystem);
+        if (parts.year !== current.year || parts.era !== current.era) break;
+        first = previous;
+        walkedBack += 1;
+      }
+      const firstParts = rawCalendarParts(first, locale, calendar, numberingSystem);
+      return firstParts.year === year && firstParts.era === current.era ? first : null;
+    }
+
+    let firstOfCurrentYear = cursor;
+    let walkedBack = 0;
+    while (walkedBack < MAX_SUPPORTED_CALENDAR_YEAR_DAYS) {
+      const previous = addDays(firstOfCurrentYear, -1);
+      const parts = rawCalendarParts(previous, locale, calendar, numberingSystem);
+      if (parts.year !== current.year || parts.era !== current.era) break;
+      firstOfCurrentYear = previous;
+      walkedBack += 1;
+    }
+
+    let currentYearLength = 0;
+    let probe = firstOfCurrentYear;
+    while (currentYearLength < MAX_SUPPORTED_CALENDAR_YEAR_DAYS) {
+      const parts = rawCalendarParts(probe, locale, calendar, numberingSystem);
+      if (parts.year !== current.year || parts.era !== current.era) break;
+      currentYearLength += 1;
+      probe = addDays(probe, 1);
+    }
+    if (currentYearLength === 0 || currentYearLength >= MAX_SUPPORTED_CALENDAR_YEAR_DAYS) return null;
+
+    const yearDelta = year - current.year;
+    cursor = addDays(cursor, Math.sign(yearDelta) * Math.max(1, Math.round(Math.abs(yearDelta) * currentYearLength)));
+    if (Number.isNaN(cursor.getTime())) return null;
+  }
+  return null;
+};
+
 export const calendarMonthsInYear = (year: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
   const cacheKey = JSON.stringify([year, locale, calendar, numberingSystem]);
   const cached = calendarYearMonthCache.get(cacheKey);
   if (cached) return cached;
-  const start = new Date(year + (yearOffsets[calendar] ?? 0) - 1, 0, 1, 12);
-  const months = new Map<string, { key: string; value: string; label: string; date: Date; number: number }>();
-  for (let i = 0; i < 1100; i++) {
-    const date = addDays(start, i);
-    const parts = rawCalendarParts(date, locale, calendar, numberingSystem);
-    if (parts.year === year && !months.has(parts.key)) {
-      // The scan moves forward one Gregorian day at a time, so the first
-      // occurrence of a calendar month is its real first day.
-      months.set(parts.key, { key: parts.key, value: parts.key, label: parts.monthName, date, number: parts.month });
-    }
+
+  const first = findCalendarYearStart(year, locale, calendar, numberingSystem);
+  if (!first) {
+    calendarYearMonthCache.set(cacheKey, []);
+    return [];
   }
-  const result = Array.from(months.values()).sort((a, b) => a.date.getTime() - b.date.getTime()).map((item, index) => ({
-    ...item,
-    // Numeric calendars keep their native month number. Calendars that only
-    // expose named months use their chronological ordinal within this year.
-    number: Number.isFinite(item.number) ? item.number : index + 1,
-  }));
-  calendarYearMonthCache.set(cacheKey, result);
-  return result;
+
+  const yearParts = rawCalendarParts(first, locale, calendar, numberingSystem);
+  const months: Array<{ key: string; value: string; label: string; date: Date; number: number }> = [];
+  let cursor = first;
+  for (let elapsed = 0; elapsed < MAX_SUPPORTED_CALENDAR_YEAR_DAYS; elapsed += 1) {
+    const parts = rawCalendarParts(cursor, locale, calendar, numberingSystem);
+    if (parts.year !== year || parts.era !== yearParts.era) break;
+    if (parts.day === 1) {
+      const number = Number.isFinite(parts.month) ? parts.month : months.length + 1;
+      const key = [parts.era, parts.year, number].join("|");
+      months.push({ key, value: key, label: parts.monthName, date: cursor, number });
+    }
+    cursor = addDays(cursor, 1);
+  }
+  calendarYearMonthCache.set(cacheKey, months);
+  return months;
 };
+
 export const findCalendarMonth = (year: number, month: number, locale = "en-US", calendar = "gregory", numberingSystem = "locale") => {
   const months = calendarMonthsInYear(year, locale, calendar, numberingSystem);
   return months.find((item) => item.number === month)?.date ?? months[0]?.date ?? new Date(NaN);
@@ -154,7 +217,7 @@ export const addCalendarYears = (date: Date, amount: number, locale = "en-US", c
   const targetYear = source.year + Math.trunc(amount);
   const months = calendarMonthsInYear(targetYear, locale, calendar, numberingSystem);
   const sourceMonths = calendarMonthsInYear(source.year, locale, calendar, numberingSystem);
-  const sourceIndex = sourceMonths.findIndex((item) => item.number === source.month && item.label === source.monthName);
+  const sourceIndex = sourceMonths.findIndex((item) => item.number === source.month);
   const targetMonth = months[Math.min(Math.max(sourceIndex, 0), months.length - 1)];
   if (!targetMonth) return new Date(NaN);
   const target = calendarMonth(targetMonth.date, locale, calendar, numberingSystem);
