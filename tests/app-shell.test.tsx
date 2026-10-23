@@ -26,7 +26,7 @@ describe("AppShell", () => {
 
     expect(screen.getByRole("navigation", { name: "Main navigation" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Dev Tools" })).toBeTruthy();
     const headerHamburger = document.querySelector('header button[aria-label="Open navigation"]');
     expect(headerHamburger).toBeTruthy();
     expect(headerHamburger?.className).toContain("lg:hidden");
