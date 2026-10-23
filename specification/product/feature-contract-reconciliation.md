@@ -1,7 +1,7 @@
 # Feature Contract Reconciliation
 
 **Status:** Audit baseline / proposed expected behavior; not approved target design.
-**Audit branch:** the evaluated source
+**Evidence scope:** application-wide contract; implementation is checked against the evaluated source revision
 **Purpose:** Preserve durable requirements from legacy feature specifications while separating them from verified implementation facts. This document does not imply pixel-level conformance or approval of a new visual design.
 
 ## 1. Evidence and status rules
