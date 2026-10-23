@@ -19,8 +19,17 @@ export const normalizeCalendarDigits = (value: string) => value.replace(/[۰-۹�
   return arabic >= 0 ? String(arabic) : digit;
 });
 const numericPart = (value: string | undefined) => Number(normalizeCalendarDigits(value ?? ""));
-const makeFormatter = (locale: string, calendar: string, numberingSystem = "locale", options: Intl.DateTimeFormatOptions = {}) =>
-  new Intl.DateTimeFormat(locale, { calendar, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem, ...options });
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
+const makeFormatter = (locale: string, calendar: string, numberingSystem = "locale", options: Intl.DateTimeFormatOptions = {}) => {
+  const resolvedOptions = { calendar, numberingSystem: numberingSystem === "locale" ? undefined : numberingSystem, ...options };
+  const key = JSON.stringify([locale, resolvedOptions]);
+  let cached = formatterCache.get(key);
+  if (!cached) {
+    cached = new Intl.DateTimeFormat(locale, resolvedOptions);
+    formatterCache.set(key, cached);
+  }
+  return cached;
+};
 export const calendarParts = (date: Date, locale = "en-US", calendar = "gregory", numberingSystem = "locale"): CalendarParts => {
   const parts = makeFormatter(locale, calendar, numberingSystem, { era: "short", year: "numeric", month: "numeric", day: "numeric" }).formatToParts(date);
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
@@ -80,9 +89,10 @@ export const calendarMonthsInYear = (year: number, locale = "en-US", calendar = 
   for (let i = 0; i < 1100; i++) {
     const date = addDays(start, i);
     const parts = calendarParts(date, locale, calendar, numberingSystem);
-    if (parts.year === year) {
-      const month = calendarMonth(date, locale, calendar, numberingSystem);
-      months.set(parts.key, { key: parts.key, value: parts.key, label: parts.monthName, date: month.first, number: parts.month });
+    if (parts.year === year && !months.has(parts.key)) {
+      // The scan moves forward one Gregorian day at a time, so the first
+      // occurrence of a calendar month is its real first day.
+      months.set(parts.key, { key: parts.key, value: parts.key, label: parts.monthName, date, number: parts.month });
     }
   }
   return Array.from(months.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
