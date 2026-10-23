@@ -64,7 +64,7 @@ Use `components/ui/native-select.tsx` for Date & Time select controls. It delibe
 
 ### Calendar/date/time inputs
 
-Keep the custom calendar and time input components rather than native date/time inputs. A shared calendar engine must derive year, month, day, month boundaries, month length and month navigation from `Intl.DateTimeFormat.formatToParts` using the selected calendar and locale. Every visible day cell must be the day number in that calendar, not its Gregorian day number. Clicking a cell emits its corresponding stable Gregorian ISO date. Month navigation must cross actual calendar-month boundaries and clamp the selected day when the destination month is shorter. Calendar-generator year/month inputs and grids use the selected calendar. Date calculator month/year units use selected-calendar arithmetic; day/week and elapsed-day operations remain elapsed Gregorian days. Islamic calendar variants follow the browser Intl data and may differ by convention; unsupported calendar/locale combinations must be surfaced honestly.
+Keep the custom calendar and time input components rather than native date/time inputs. A shared calendar engine must derive year, month, day, month boundaries, month length and month navigation from `Intl.DateTimeFormat.formatToParts` using the selected calendar and locale. Every visible day cell must be the day number in that calendar, not its Gregorian day number. Clicking a cell emits its corresponding stable Gregorian ISO date. Month navigation must cross actual calendar-month boundaries and clamp the selected day when the destination month is shorter. Calendar-generator year/month inputs and grids use the selected calendar. Date calculator month/year units and age year/month/day components use selected-calendar arithmetic; day/week and elapsed-day operations remain elapsed Gregorian days. Calendars whose Intl implementation exposes named rather than numeric months (such as Hebrew) must still receive stable month ordinals for month selection and year arithmetic. Islamic calendar variants follow the browser Intl data and may differ by convention; unsupported calendar/locale combinations must be surfaced honestly.
 
 ## 5. Responsive and accessibility requirements
 
@@ -85,7 +85,7 @@ Keep the custom calendar and time input components rather than native date/time 
 - [ ] Date & Time-specific centerpiece and calendar/time semantics remain intact.
 - [ ] Persian, Islamic, Islamic Umm al-Qura, Gregorian, Hebrew, Buddhist, and Indian calendar selections use calendar-specific day values and month boundaries wherever the browser Intl implementation supports them.
 - [ ] Date picker and printable calendar grid show the selected calendar’s year/month/day values, while selections and timestamps retain canonical Gregorian ISO values.
-- [ ] Month navigation, month/year date calculations, leap/month-length boundaries, RTL locale, and numbering-system combinations have focused regression coverage.
+- [ ] Month navigation, month/year date calculations, age calculations, leap/month-length boundaries, RTL locale, and numbering-system combinations have focused regression coverage.
 - [ ] Focused component tests, lint, typecheck, build, E2E and matching CI visual evidence pass before the contract can be marked verified.
 
 ## 7. Verification status
