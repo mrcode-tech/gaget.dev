@@ -113,7 +113,7 @@ test("Persian date difference uses canonical elapsed days", async ({ page }) => 
 });
 
 test("Persian and Islamic calendar arithmetic respects month and year boundaries", async ({ page }) => {
-  const cases = [
+  const cases: { calendar: string; unit: string; date: string; amount?: string; expectedMonth?: string; expectedYear: string }[] = [
     { calendar: "persian", unit: "months", date: "2026-10-23", expectedMonth: "Azar", expectedYear: "1405" },
     { calendar: "persian", unit: "months", date: "2026-10-23", amount: "-1", expectedMonth: "Mehr", expectedYear: "1405" },
     { calendar: "persian", unit: "years", date: "2026-10-23", expectedMonth: "Aban", expectedYear: "1406" },
