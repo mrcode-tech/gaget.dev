@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function JsonFormatterPage() {
-  return <ToolLayout category="JSON" title="JSON Formatter & Validator" description="Format, minify, and validate JSON. Paste a document to make it readable or check its syntax."><JsonWorkbench /></ToolLayout>;
+  return <ToolLayout category="JSON" title="JSON Formatter & Validator" description="Format, minify, and validate JSON. Paste a document to make it readable or check its syntax." workspace><JsonWorkbench /></ToolLayout>;
 }

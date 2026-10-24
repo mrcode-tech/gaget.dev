@@ -13,9 +13,11 @@ for (const route of routes) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(route);
 
-    if (route.startsWith("/datetime/")) {
+    if (route.startsWith("/datetime/") || route.startsWith("/json/")) {
       const header = page.locator("header").first();
-      const commandBar = page.getByRole("navigation", { name: "Date and time editor commands" });
+      const commandBar = route.startsWith("/datetime/")
+        ? page.getByRole("navigation", { name: "Date and time editor commands" })
+        : page.getByTestId("json-editor-menubar");
       const hamburger = commandBar.getByRole("button", { name: "Open navigation" });
       await expect(header).toBeHidden();
       await expect(commandBar).toBeVisible();
