@@ -53,6 +53,7 @@ function LineNumberEditor({
   invalid?: boolean;
   onKeyDown?: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
 }) {
+  const { t } = useI18n();
   const gutterRef = useRef<HTMLPreElement>(null);
   const lineCount = Math.max(1, value.split("\n").length);
   return <div className="grid min-h-[300px] min-w-0 grid-cols-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border bg-background focus-within:ring-2 focus-within:ring-ring/40">
@@ -154,7 +155,8 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
   const [hasTree, setHasTree] = useState(false);
   const [findQuery, setFindQuery] = useState("");
   const [findMatches, setFindMatches] = useState<FindMatch[]>([]);
-  const [menuOpen, setMenuOpen] = useState<"File" | "Features" | null>(null);\n  const menuBarRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState<"File" | "Features" | null>(null);
+  const menuBarRef = useRef<HTMLDivElement>(null);
   const fileTriggerRef = useRef<HTMLButtonElement>(null);
   const featuresTriggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -162,8 +164,28 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const undoStack = useRef<Snapshot[]>([]);
   const redoStack = useRef<Snapshot[]>([]);
-  const current = () => snapshot(input, compareInput);\n\n  useEffect(() => {\n    if (!menuOpen) return;
-    menuBarRef.current?.querySelector<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')?.focus();\n    const closeOnOutsidePointer = (event: PointerEvent) => {\n      if (!menuBarRef.current?.contains(event.target as Node)) setMenuOpen(null);\n    };\n    const closeOnEscape = (event: Event) => {\n      if ("key" in event && event.key === "Escape") { setMenuOpen(null); if (menuOpen === "File") fileTriggerRef.current?.focus(); else featuresTriggerRef.current?.focus(); }\n    };\n    document.addEventListener("pointerdown", closeOnOutsidePointer);\n    document.addEventListener("keydown", closeOnEscape);\n    return () => {\n      document.removeEventListener("pointerdown", closeOnOutsidePointer);\n      document.removeEventListener("keydown", closeOnEscape);\n    };\n  }, [menuOpen]);
+  const current = () => snapshot(input, compareInput);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    menuBarRef.current?.querySelector<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')?.focus();
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!menuBarRef.current?.contains(event.target as Node)) setMenuOpen(null);
+    };
+    const closeOnEscape = (event: Event) => {
+      if ("key" in event && event.key === "Escape") {
+        setMenuOpen(null);
+        if (menuOpen === "File") fileTriggerRef.current?.focus();
+        else featuresTriggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
 
   function handleMenuKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
