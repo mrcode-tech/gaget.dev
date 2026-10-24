@@ -6,10 +6,10 @@
 |---|---|---|---|
 | Application shell | `components/app-shell.tsx` | Coordinates sidebar, header and page/editor shell sizing | Route-aware behavior; different scroll and header handling for editors. |
 | Header | `components/app-header.tsx` | Brand/search, theme, locale and navigation controls | Search suggestions and editor-specific visibility require browser verification. |
-| Sidebar | `components/app-sidebar.tsx` | Main navigation, category links, collapse state and mobile drawer | Widths currently 248px expanded and 64px collapsed; RTL-aware placement. |
+| Sidebar | `components/app-sidebar.tsx` | Main navigation, workspace order, Dev Tools entry, collapse state and mobile drawer | Widths currently 248px expanded and 64px collapsed; RTL-aware placement. Photo, Audio, Video and Date & Time are followed immediately by Dev Tools. |
 | Tool layout | `components/tool-layout.tsx` | Shared breadcrumb, title, description and privacy disclosure | Verify spacing and content width on standalone tools. |
 | Tool card | `components/tool-card.tsx` | Reusable tool discovery card | Inventory current variants before adding more. |
-| Catalog | `components/tool-catalog.tsx` | Registry-backed searchable tool list | Planned vs available state must reflect route/capability evidence. |
+| Catalog | `components/tool-catalog.tsx` | Registry-backed, category-grouped Dev Tools catalog and search | Uses `developerTools` and non-empty `developerToolCategories`; excludes Photo, Audio, Video and Date & Time workspaces. Planned vs available state must reflect route/capability evidence. |
 | Button | `components/ui/button.tsx` | Shared action control variants | Use existing variants before adding one-off styles. |
 | Card | `components/ui/card.tsx` | Shared surface/content primitives | Avoid redundant nested card surfaces. |
 | Input | `components/ui/input.tsx` | Shared text input | Check labels, focus, invalid and disabled states. |
