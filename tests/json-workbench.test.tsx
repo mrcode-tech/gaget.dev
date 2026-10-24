@@ -94,7 +94,9 @@ describe("JSON workspace operations", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "JSON B input" }), { target: { value: '{"bad": }' } });
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
     expect(screen.getByRole("alert").textContent).toContain("Expected a JSON value");
-    const diagnostic = screen.getByRole("button", { name: /Go to line 1, column 9/ });\n    fireEvent.click(diagnostic);\n    expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "JSON B input" }));
+    const diagnostic = screen.getByRole("button", { name: /Go to line 1, column 9/ });
+    fireEvent.click(diagnostic);
+    expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "JSON B input" }));
   });
 
   it("sorts object keys recursively and preserves array order", () => {
@@ -130,10 +132,6 @@ describe("JSON workspace operations", () => {
     expect((screen.getByRole("textbox", { name: "Input JSON" }) as HTMLTextAreaElement).value).toBe("");
     fireEvent.click(screen.getByRole("button", { name: "File" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Load sample JSON" }));
-    expect((screen.getByRole("textbox", { name: "Input JSON" }) as HTMLTextAreaElement).value).toContain("GaGet.dev");
-    fireEvent.change(screen.getByRole("textbox", { name: "Input JSON" }), { target: { value: '{"changed":true}' } });
-    fireEvent.click(screen.getByRole("button", { name: "File" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Undo" }));
     expect((screen.getByRole("textbox", { name: "Input JSON" }) as HTMLTextAreaElement).value).toContain("GaGet.dev");
     fireEvent.change(screen.getByRole("textbox", { name: "Input JSON" }), { target: { value: '{"changed":true}' } });
     fireEvent.click(screen.getByRole("button", { name: "File" }));

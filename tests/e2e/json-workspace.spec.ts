@@ -30,7 +30,9 @@ test.describe("JSON workspace responsive editor and diagnostics", () => {
       expect(menuBox).not.toBeNull();
       if (menuBox) {
         expect(menuBox.x).toBeGreaterThanOrEqual(-1);
-        expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(viewport.width + 1);\n        expect(menuBox.y).toBeGreaterThanOrEqual(-1);\n        expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(viewport.height + 1);
+        expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(viewport.width + 1);
+        expect(menuBox.y).toBeGreaterThanOrEqual(-1);
+        expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(viewport.height + 1);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
     });
