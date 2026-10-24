@@ -52,11 +52,68 @@ test.describe("JSON workspace responsive editor and diagnostics", () => {
     await page.goto("/json/diff");
     await expect(page.getByRole("textbox", { name: "JSON A input" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "JSON B input" })).toBeVisible();
-    await page.getByRole("textbox", { name: "JSON A input" }).fill('{"a":1}');
-    await page.getByRole("textbox", { name: "JSON B input" }).fill('{"a":2}');
+    await page.getByRole("textbox", { name: "JSON A input" }).fill('{"a":1,"b":1}');
+    await page.getByRole("textbox", { name: "JSON B input" }).fill('{"a":2,"b":2}');
     await page.getByRole("button", { name: "Run operation" }).click();
     await expect(page.getByText("$.a")).toBeVisible();
+    await expect(page.getByText("Difference 1 of 2")).toBeVisible();
+    await page.getByRole("button", { name: "Next difference" }).click();
+    await expect(page.getByText("Difference 2 of 2")).toBeVisible();
+    await page.getByRole("button", { name: "Previous difference" }).click();
+    await expect(page.getByText("Difference 1 of 2")).toBeVisible();
   });
+});
+
+test("preserves diagnostics and an open menu across the desktop breakpoint", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/json/formatter");
+  const editor = page.getByRole("textbox", { name: "Input JSON" });
+  await editor.fill('{"boundary": }');
+  await page.getByRole("button", { name: "Features" }).click();
+  await page.getByRole("menuitemradio", { name: /^Validate/i }).click();
+  await page.getByRole("button", { name: "Run operation" }).click();
+  const diagnostic = page.getByRole("button", { name: /Go to line/ });
+  await expect(diagnostic).toBeVisible();
+
+  await page.setViewportSize({ width: 1023, height: 800 });
+  await expect(editor).toHaveValue('{"boundary": }');
+  await expect(diagnostic).toBeVisible();
+  await expect(page.locator("header").first()).toBeHidden();
+  await expect(page.getByRole("button", { name: "Open navigation" })).toBeVisible();
+  await page.getByRole("button", { name: "Features" }).click();
+  const menu = page.getByTestId("json-features-menu");
+  await expect(menu).toBeVisible();
+
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await expect(page.locator("header").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open navigation" })).toBeHidden();
+  await expect(menu).toBeVisible();
+  const menuBox = await menu.boundingBox();
+  expect(menuBox).not.toBeNull();
+  if (menuBox) {
+    expect(menuBox.x).toBeGreaterThanOrEqual(-1);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(1025);
+    expect(menuBox.y).toBeGreaterThanOrEqual(-1);
+    expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(801);
+  }
+  await page.getByRole("button", { name: "Features" }).click();
+  await page.setViewportSize({ width: 1025, height: 800 });
+  await expect(editor).toHaveValue('{"boundary": }');
+  await expect(diagnostic).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
+});
+
+test("finds keys and values and navigates through matches", async ({ page }) => {
+  await page.goto("/json/formatter");
+  await page.getByRole("button", { name: "Features" }).click();
+  await page.getByRole("menuitemradio", { name: /^Find keys and values/i }).click();
+  await page.getByRole("textbox", { name: "Search text" }).fill("a");
+  await page.getByRole("button", { name: "Run operation" }).click();
+  await expect(page.getByText(/^Match 1 of \d+$/)).toBeVisible();
+  await page.getByRole("button", { name: "Next match" }).click();
+  await expect(page.getByText(/^Match 2 of \d+$/)).toBeVisible();
+  await page.getByRole("button", { name: "Previous match" }).click();
+  await expect(page.getByText(/^Match 1 of \d+$/)).toBeVisible();
 });
 
 test("imports and downloads JSON locally through the File menu", async ({ page }) => {
@@ -74,6 +131,16 @@ test("imports and downloads JSON locally through the File menu", async ({ page }
   await page.getByRole("menuitem", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("document.json");
+
+  await page.getByRole("button", { name: "Features" }).click();
+  await page.getByRole("menuitemradio", { name: /^Escape string contents/i }).click();
+  await editor.fill('raw "text"\n');
+  await page.getByRole("button", { name: "Run operation" }).click();
+  await page.getByRole("button", { name: "File" }).click();
+  const textDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("menuitem", { name: "Download text result" }).click();
+  const textDownload = await textDownloadPromise;
+  expect(textDownload.suggestedFilename()).toBe("string-content.txt");
 });
 
 for (const localePrefix of ["/fa", "/ar"]) {

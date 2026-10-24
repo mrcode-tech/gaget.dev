@@ -27,10 +27,10 @@ The JSON workspace combines formatting, minification, strict syntax validation, 
 | Format | Strictly parse and pretty-print with two-space indentation. |
 | Minify | Strictly parse and serialize without optional whitespace. |
 | Validate | Report valid syntax or a structured source diagnostic. |
-| Compare | Compare parsed values, ignore object key order, preserve array order, and report added/removed/changed values. Missing properties differ from properties set to `null`. |
+| Compare | Compare parsed values, ignore object key order, preserve array order, and report added/removed/changed values. Previous/next controls navigate the difference cards. Missing properties differ from properties set to `null`; semantic differences do not claim exact source offsets. |
 | Sort keys | Recursively sort object keys and preserve array order/scalar values. |
 | Tree viewer | Expand/collapse nested objects and arrays and show scalar types. |
-| Find keys/values | Case-insensitive substring search of object keys and scalar values; results capped at 1,000. |
+| Find keys/values | Case-insensitive substring search of object keys and scalar values; previous/next controls navigate result rows, and results are capped at 1,000. Exact source offsets are deferred because duplicate values require reliable token spans. |
 | Escape string contents | Escape raw text for use inside a JSON string without adding surrounding quotes. |
 | Unescape string contents | Decode escaped JSON string contents; invalid input is not silently changed. |
 
@@ -48,20 +48,20 @@ Comparison paths use `$` as root, dot notation for identifier-like keys (for exa
 ## File and history behavior
 
 - Import accepts JSON files up to 10 MiB. Failed reads and oversized files preserve the current document.
-- Download creates a local `application/json` file named `document.json`; copy reports clipboard API failures.
+- JSON output downloads as a local `application/json` file named `document.json`. Escape/Unescape string-content results download as `text/plain` in `string-content.txt`, including an empty valid result. Copy reports clipboard API failures.
 - Undo/redo stores up to 50 source snapshots for both editor inputs. Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z and Ctrl/Cmd+Y are supported.
 - Clear is undoable. Sample JSON is local and deterministic.
 
 ## Responsive, accessibility and localization
 
-Use the existing Tailwind breakpoints, not a JSON-specific breakpoint system. Verify wide desktop, tablet portrait, mobile portrait, mobile landscape/short height, and resizing while content or diagnostics are present. Menus expose expanded state and support Escape. Diagnostic navigation is a named keyboard-operable button; error/success states do not rely on color alone. Code remains LTR in RTL interfaces. User-facing strings use the existing localization dictionary; English, Persian and Arabic workspace labels/actions/diagnostics are translated, while other locales fall back to English until reviewed translations are added.
+Use the existing Tailwind breakpoints, not a JSON-specific breakpoint system. Verify wide desktop, tablet portrait, mobile portrait, mobile landscape/short height, and resizing while content or diagnostics are present. Exercise widths 1023, 1024 and 1025px around the existing `lg` boundary while a diagnostic and menu are open. Menus expose expanded state and support Escape. Diagnostic navigation is a named keyboard-operable button; error/success states do not rely on color alone. Code remains LTR in RTL interfaces. User-facing strings use the existing localization dictionary; English, Persian and Arabic workspace labels/actions/diagnostics are translated, while other locales fall back to English until reviewed translations are added.
 
 ## Limits and deferred capabilities
 
 - Import limit: 10 MiB; parser nesting limit: 512; search-result limit: 1,000.
 - Tree rendering is limited to 2,000 visited nodes and depth 60; additional content is represented by localized truncation markers.
 - Parsing is synchronous and local; worker execution/cancellation is not claimed.
-- Planned, not implemented: JSONPath (choose a dialect first); flatten/unflatten (define escaped delimiters and round-trip behavior); JSON Schema validation/schema generation (select version and prohibit implicit remote fetches); JSON repair (preserve original source and show proposed changes separately); YAML/CSV/XML/TypeScript conversions (define lossy mappings); deep merge and advanced diff policies (define array/primitive/null conflicts); report export and editor preferences; exact source mapping for tree/search results.
+- Planned, not implemented: JSONPath (choose a dialect first); flatten/unflatten (define escaped delimiters and round-trip behavior); JSON Schema validation/schema generation (select version and prohibit implicit remote fetches); JSON repair (preserve original source and show proposed changes separately); YAML/CSV/XML/TypeScript conversions (define lossy mappings); deep merge and advanced diff policies (define array/primitive/null conflicts); report export and editor preferences; exact source mapping for tree/search results; source-offset navigation from semantic comparison results.
 - Do not expose planned capabilities as working menu entries.
 
 ## Acceptance criteria

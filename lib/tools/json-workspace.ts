@@ -202,7 +202,7 @@ export function sortJsonKeys(value: unknown): unknown {
   if (value !== null && typeof value === "object") {
     const record = value as Record<string, unknown>;
     return Object.fromEntries(
-      Object.keys(record).sort((a, b) => a.localeCompare(b)).map((key) => [key, sortJsonKeys(record[key])]),
+      Object.keys(record).sort().map((key) => [key, sortJsonKeys(record[key])]),
     );
   }
   return value;

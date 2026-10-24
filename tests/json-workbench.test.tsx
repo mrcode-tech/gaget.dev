@@ -50,6 +50,16 @@ describe("JSON workspace operations", () => {
     expect(screen.getByLabelText("Output").textContent).toContain('line\n"quoted" \\ text');
   });
 
+  it("keeps an empty unescaped string result copyable and downloadable", () => {
+    render(<JsonWorkbench />);
+    chooseFeature("Unescape string contents");
+    fireEvent.change(screen.getByRole("textbox", { name: "Input JSON" }), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
+    expect(screen.getByRole("status").textContent).toContain("Unescaped");
+    expect((screen.getByRole("button", { name: "Copy result" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Download text result" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it("validates JSON with exact one-based source positions and navigable diagnostics", () => {
     render(<JsonWorkbench />);
     const editor = screen.getByRole("textbox", { name: "Input JSON" }) as HTMLTextAreaElement;
@@ -100,9 +110,10 @@ describe("JSON workspace operations", () => {
     expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "JSON B input" }));
   });
 
-  it("sorts object keys recursively and preserves array order", () => {
+  it("sorts object keys recursively and preserves array order deterministically", () => {
     expect(JSON.stringify(sortJsonKeys({ z: 1, a: { y: 2, b: 3 }, list: [{ z: 1, a: 2 }, 0] })))
       .toBe('{"a":{"b":3,"y":2},"list":[{"a":2,"z":1},0],"z":1}');
+    expect(JSON.stringify(sortJsonKeys({ "ä": 1, z: 2, a: 3 }))).toBe('{"a":3,"z":2,"ä":1}');
   });
 
   it("escapes and unescapes JSON string contents without double-quoting", () => {
@@ -110,6 +121,44 @@ describe("JSON workspace operations", () => {
     const escaped = escapeJsonStringContents(raw);
     expect(unescapeJsonStringContents(escaped)).toBe(raw);
     expect(() => unescapeJsonStringContents("\\q")).toThrow();
+  });
+
+  it("navigates between key/value search results without guessing source offsets", () => {
+    render(<JsonWorkbench />);
+    chooseFeature("Find keys and values");
+    fireEvent.change(screen.getByRole("textbox", { name: "Search text" }), { target: { value: "a" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
+    expect(screen.getByText(/^Match 1 of \d+$/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next match" }));
+    expect(screen.getByText(/^Match 2 of \d+$/)).toBeTruthy();
+    expect(screen.getByTestId("json-find-match-1").getAttribute("data-active")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "Previous match" }));
+    expect(screen.getByText(/^Match 1 of \d+$/)).toBeTruthy();
+  });
+
+  it("navigates between structural comparison differences", () => {
+    render(<JsonWorkbench initialMode="compare" />);
+    fireEvent.change(screen.getByRole("textbox", { name: "JSON A input" }), { target: { value: '{"a":1,"b":1}' } });
+    fireEvent.change(screen.getByRole("textbox", { name: "JSON B input" }), { target: { value: '{"a":2,"b":2}' } });
+    fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
+    expect(screen.getByText("Difference 1 of 2")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next difference" }));
+    expect(screen.getByText("Difference 2 of 2")).toBeTruthy();
+    expect(screen.getByTestId("json-difference-1").getAttribute("data-active")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "Previous difference" }));
+    expect(screen.getByText("Difference 1 of 2")).toBeTruthy();
+  });
+
+  it("caps search results for a large JSON document and announces truncation", () => {
+    render(<JsonWorkbench />);
+    const source = JSON.stringify(Array.from({ length: 1100 }, (_, index) => ({ label: "needle-" + index })));
+    fireEvent.change(screen.getByRole("textbox", { name: "Input JSON" }), { target: { value: source } });
+    chooseFeature("Find keys and values");
+    fireEvent.change(screen.getByRole("textbox", { name: "Search text" }), { target: { value: "needle" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
+    expect(screen.getByText("Find results (1000)")).toBeTruthy();
+    expect(screen.getByText("Showing up to 1,000 matches.")).toBeTruthy();
+    expect(screen.getAllByTestId(/^json-find-match-/)).toHaveLength(1000);
   });
 
   it("finds nested keys and scalar values and renders a collapsible tree", () => {
@@ -192,6 +241,18 @@ describe("JSON parser and transforms", () => {
     const result = diagnoseJson('{"مرحبا":"😀","values":[null,true,false,-1.2e+3]}');
     expect(result.ok).toBe(true);
     if (result.ok) expect((result.value as { values: unknown[] }).values).toHaveLength(4);
+  });
+
+  it("handles large documents and rejects nesting beyond the documented limit", () => {
+    const largeSource = JSON.stringify(Array.from({ length: 2000 }, (_, index) => ({ id: index, value: "entry-" + index })));
+    const largeResult = diagnoseJson(largeSource);
+    expect(largeResult.ok).toBe(true);
+    if (largeResult.ok) expect((largeResult.value as unknown[]).length).toBe(2000);
+
+    const deeplyNested = "[".repeat(513) + "0" + "]".repeat(513);
+    const nestedResult = diagnoseJson(deeplyNested);
+    expect(nestedResult.ok).toBe(false);
+    if (!nestedResult.ok) expect(nestedResult.diagnostics[0].message).toContain("nesting depth");
   });
 
   it("counts UTF-16 code units consistently for emoji source navigation", () => {
