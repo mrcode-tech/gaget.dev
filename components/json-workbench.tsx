@@ -20,6 +20,18 @@ import {
 const sampleJson = '{\n  "name": "GaGet.dev",\n  "version": "1.0.0",\n  "features": ["format", "validate", "compare"],\n  "privacyFirst": true\n}';
 const sampleCompareJson = '{\n  "name": "GaGet.dev",\n  "version": "1.1.0",\n  "features": ["format", "validate", "compare"],\n  "privacyFirst": true\n}';
 export type JsonOperation = "format" | "minify" | "validate" | "compare" | "sort" | "tree" | "find" | "escape" | "unescape";
+type JsonResultPresentation = "output" | "diagnostics" | "comparison" | "tree" | "search";
+const resultPresentationByOperation: Record<JsonOperation, JsonResultPresentation> = {
+  format: "output",
+  minify: "output",
+  validate: "diagnostics",
+  compare: "comparison",
+  sort: "output",
+  tree: "tree",
+  find: "search",
+  escape: "output",
+  unescape: "output",
+};
 type Snapshot = { input: string; compareInput: string };
 type LocatedDiagnostic = JsonDiagnostic & { source: "input" | "compare" };
 type FindMatch = { path: string; kind: "key" | "value"; value: string };
@@ -143,6 +155,8 @@ function findJsonMatches(value: unknown, query: string): FindMatch[] {
 export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOperation } = {}) {
   const { t, locale } = useI18n();
   const [operation, setOperation] = useState<JsonOperation>(initialMode);
+  const resultPresentation = resultPresentationByOperation[operation];
+  const hasSecondaryWorkspacePanel = resultPresentation === "output" || resultPresentation === "tree" || resultPresentation === "comparison";
   const [input, setInput] = useState(sampleJson);
   const [compareInput, setCompareInput] = useState(sampleCompareJson);
   const [output, setOutput] = useState("");
@@ -449,7 +463,6 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
             <button role="menuitem" disabled={!redoStack.current.length} className="min-h-10 w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent disabled:opacity-40" onClick={() => { redo(); setMenuOpen(null); }}>{t("json.redo")}</button>
             <button role="menuitem" className="min-h-10 w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={loadSample}>{t("json.loadSample")}</button>
             <button role="menuitem" className="min-h-10 w-full rounded-md px-3 py-2 text-start text-sm text-destructive hover:bg-accent" onClick={clearDocument}>{t("json.clear")}</button>
-            <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">{t("json.localPrivacy")}</p>
           </div>}
         </div>
       </div>
@@ -471,22 +484,22 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
       <p className="text-sm text-muted-foreground">{t("json.workspaceDescription")}</p>
     </div>
 
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <div className="min-w-0"><h2 className="text-base font-semibold">{operationEntries.find((entry) => entry.id === operation)?.label}</h2><p className="text-sm text-muted-foreground">{operationEntries.find((entry) => entry.id === operation)?.description}</p></div>
-      <div className="flex shrink-0 items-center gap-2"><Button onClick={run}><WandSparkles className="h-4 w-4" />{t("json.runOperation")}</Button></div>
+    <div data-testid="json-operation-header" className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="min-w-0"><h2 className="text-base font-semibold">{operationEntries.find((entry) => entry.id === operation)?.label}</h2><p data-testid="json-operation-description" className="text-sm text-muted-foreground">{operationEntries.find((entry) => entry.id === operation)?.description}</p></div>
+      <div className="w-full shrink-0 md:w-auto"><Button data-testid="json-run-operation" className="w-full md:w-auto" onClick={run}><WandSparkles className="h-4 w-4" />{t("json.runOperation")}</Button></div>
     </div>
 
     {operation === "find" && <div className="max-w-lg"><label htmlFor="json-find-query" className="mb-1 block text-sm font-medium">{t("json.findLabel")}</label><input id="json-find-query" value={findQuery} onChange={(event) => { setFindQuery(event.target.value); setFindMatches([]); setActiveFindIndex(0); setValid(false); setStatus(""); }} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder={t("json.findPlaceholder")} /></div>}
 
-    <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+    <div className={`grid min-w-0 gap-4 ${hasSecondaryWorkspacePanel ? "xl:grid-cols-2" : ""}`}>
       <Card className="min-w-0 overflow-hidden">
         <CardHeader className="flex-row items-center justify-between space-y-0 gap-2"><CardTitle className="text-sm">{operation === "compare" ? t("json.documentA") : t("json.input")}</CardTitle><span className="shrink-0 text-xs text-muted-foreground">{input.length.toLocaleString()} {t("json.characters")}</span></CardHeader>
         <CardContent className="min-w-0"><LineNumberEditor label={operation === "compare" ? t("json.documentAInput") : t("json.inputJson")} value={input} onChange={changeInput} textareaRef={inputRef} invalid={diagnostics.some((item) => item.source === "input")} onKeyDown={onEditorKeyDown} /></CardContent>
       </Card>
       {operation === "compare" ? <Card className="min-w-0 overflow-hidden"><CardHeader className="flex-row items-center justify-between space-y-0 gap-2"><CardTitle className="text-sm">{t("json.documentB")}</CardTitle><span className="shrink-0 text-xs text-muted-foreground">{compareInput.length.toLocaleString()} {t("json.characters")}</span></CardHeader><CardContent className="min-w-0"><LineNumberEditor label={t("json.documentBInput")} value={compareInput} onChange={changeCompareInput} textareaRef={compareRef} invalid={diagnostics.some((item) => item.source === "compare")} onKeyDown={onEditorKeyDown} /></CardContent></Card>
-        : <Card className="min-w-0 overflow-hidden"><CardHeader className="flex-row items-center justify-between gap-2"><CardTitle className="text-sm">{operation === "tree" ? t("json.tree") : t("json.output")}</CardTitle><div className="flex gap-1"><Button variant="ghost" size="icon" aria-label={t("json.copyResult")} disabled={!(output.length > 0 || (valid && (operation === "escape" || operation === "unescape")))} onClick={() => void copyResult()}><Copy className="h-4 w-4" /></Button><Button variant="ghost" size="icon" aria-label={operation === "escape" || operation === "unescape" ? t("json.downloadText") : t("json.downloadJson")} disabled={!(output.length > 0 || (valid && (operation === "escape" || operation === "unescape")))} onClick={downloadResult}><Download className="h-4 w-4" /></Button></div></CardHeader><CardContent className="min-w-0">
+        : resultPresentation !== "diagnostics" && resultPresentation !== "search" ? <Card className="min-w-0 overflow-hidden"><CardHeader className="flex-row items-center justify-between gap-2"><CardTitle className="text-sm">{operation === "tree" ? t("json.tree") : t("json.output")}</CardTitle><div className="flex gap-1"><Button variant="ghost" size="icon" aria-label={t("json.copyResult")} disabled={!(output.length > 0 || (valid && (operation === "escape" || operation === "unescape")))} onClick={() => void copyResult()}><Copy className="h-4 w-4" /></Button><Button variant="ghost" size="icon" aria-label={operation === "escape" || operation === "unescape" ? t("json.downloadText") : t("json.downloadJson")} disabled={!(output.length > 0 || (valid && (operation === "escape" || operation === "unescape")))} onClick={downloadResult}><Download className="h-4 w-4" /></Button></div></CardHeader><CardContent className="min-w-0">
           {operation === "tree" && hasTree ? <div data-testid="json-tree-view" className="max-h-[420px] min-h-[300px] overflow-auto rounded-lg border border-border bg-background p-3"><TreeNode name="$" value={treeValue} path="$" /></div> : <pre aria-label={t("json.output")} className="min-h-[300px] max-h-[520px] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/40 p-3 font-mono text-[13px] leading-6">{output || <span className="text-muted-foreground">{t("json.outputPlaceholder")}</span>}</pre>}
-        </CardContent></Card>}
+        </CardContent></Card> : null}
     </div>
 
     {operation === "compare" && valid && <Card>
@@ -530,6 +543,5 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     {(diagnostics.length > 0 || error) && <section aria-label={t("json.diagnostics")} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3"><div className="flex items-start gap-2 text-sm text-destructive"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><p role="alert">{error}</p></div>{diagnostics.length > 0 && <ul className="mt-2 space-y-1">{diagnostics.map((diagnostic, index) => <li key={`${diagnostic.source}-${diagnostic.offset}-${index}`}><button type="button" className="rounded px-1 py-1 text-start text-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("json.goToDiagnostic").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))} onClick={() => navigateDiagnostic(diagnostic)}><span className="font-medium">{diagnostic.source === "compare" ? t("json.documentB") : operation === "compare" ? t("json.documentA") : t("json.input")}</span> · {t("json.lineColumn").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))}: {diagnostic.message}</button></li>)}</ul>}</section>}
 
     {status && !error && diagnostics.length === 0 && <p role="status" className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm"><Check className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />{status}</p>}
-    <p className="text-xs leading-5 text-muted-foreground">{t("json.localPrivacy")}</p>
   </section>;
 }
