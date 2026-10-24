@@ -449,7 +449,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
 
   return <section aria-label={t("json.workspace")} dir={direction} className="min-w-0 space-y-4">
     <input ref={fileInputRef} type="file" accept=".json,application/json,text/json" className="hidden" aria-label={t("json.openFile")} onChange={(event) => void importFile(event)} />
-    <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="sticky top-0 z-[70] flex min-h-12 min-w-0 items-center justify-between gap-2 border-b border-border bg-card px-2 py-1.5 shadow-sm sm:px-3 lg:top-[68px]">
+    <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="relative sticky top-0 z-[70] flex h-[68px] min-w-0 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 text-sm lg:top-[68px] sm:px-6">
       <div className="flex min-w-0 items-center gap-1.5">
         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 lg:hidden" aria-label={t("json.openNavigation")} onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}><Menu className="h-4 w-4" /></Button>
         <div className="relative shrink-0">
@@ -479,7 +479,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
       </div>
     </div>
 
-    <div className="space-y-1">
+    <div data-testid="json-workspace-content" className="mx-auto w-full max-w-[1440px] space-y-4 px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
       <h1 className="text-xl font-bold tracking-tight">{t("json.workspace")}</h1>
       <p className="text-sm text-muted-foreground">{t("json.workspaceDescription")}</p>
     </div>
@@ -543,5 +543,6 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     {(diagnostics.length > 0 || error) && <section aria-label={t("json.diagnostics")} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3"><div className="flex items-start gap-2 text-sm text-destructive"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><p role="alert">{error}</p></div>{diagnostics.length > 0 && <ul className="mt-2 space-y-1">{diagnostics.map((diagnostic, index) => <li key={`${diagnostic.source}-${diagnostic.offset}-${index}`}><button type="button" className="rounded px-1 py-1 text-start text-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("json.goToDiagnostic").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))} onClick={() => navigateDiagnostic(diagnostic)}><span className="font-medium">{diagnostic.source === "compare" ? t("json.documentB") : operation === "compare" ? t("json.documentA") : t("json.input")}</span> · {t("json.lineColumn").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))}: {diagnostic.message}</button></li>)}</ul>}</section>}
 
     {status && !error && diagnostics.length === 0 && <p role="status" className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm"><Check className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />{status}</p>}
+    </div>
   </section>;
 }
