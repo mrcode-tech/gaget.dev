@@ -20,9 +20,12 @@ export type JsonParseResult =
   | { ok: false; diagnostics: [JsonDiagnostic] };
 
 class JsonSyntaxFailure extends Error {
-  constructor(message: string, readonly offset: number) {
+  readonly offset: number;
+
+  constructor(message: string, offset: number) {
     super(message);
     this.name = "JsonSyntaxFailure";
+    this.offset = offset;
   }
 }
 
@@ -97,7 +100,7 @@ export function diagnoseJson(source: string): JsonParseResult {
       }
       index++;
     }
-    fail("Unterminated JSON string.", source.length);
+    return fail("Unterminated JSON string.", source.length);
   };
   const parseNumber = () => {
     if (source[index] === "-") index++;
