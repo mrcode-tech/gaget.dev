@@ -61,7 +61,7 @@ Use the existing Tailwind breakpoints, not a JSON-specific breakpoint system. Ve
 - Import limit: 10 MiB; parser nesting limit: 512; search-result limit: 1,000.
 - Tree rendering is limited to 2,000 visited nodes and depth 60; additional content is represented by localized truncation markers.
 - Parsing is synchronous and local; worker execution/cancellation is not claimed.
-- Planned, not implemented: JSONPath (choose a dialect first); flatten/unflatten (define escaped delimiters and round-trip behavior); JSON Schema validation/schema generation (select version and prohibit implicit remote fetches); JSON repair (preserve original source and show proposed changes separately); YAML/CSV/XML/TypeScript conversions (define lossy mappings); deep merge and advanced diff policies (define array/primitive/null conflicts); report export and editor preferences; exact source mapping for tree/search results; source-offset navigation from semantic comparison results.
+- Planned, not implemented: JSONPath (choose a dialect first); flatten/unflatten (define escaped delimiters and round-trip behavior); JSON Schema validation/schema generation (select version and prohibit implicit remote fetches); JSON repair (preserve original source and show proposed changes separately); YAML/CSV/XML/TypeScript conversions (define lossy mappings); table view for arrays of objects (define column typing and handling of nested or heterogeneous rows); deep merge and advanced diff policies (define array/primitive/null conflicts); report export and editor preferences; exact source mapping for tree/search results; source-offset navigation from semantic comparison results.
 - Do not expose planned capabilities as working menu entries.
 
 ## Acceptance criteria
