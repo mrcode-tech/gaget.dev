@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { imageToolSlugs, imageToolMeta } from "../lib/tools/image-tools.ts";
-import { categories, tools } from "../lib/tools/registry.ts";
+import { categories, developerToolCategories, developerTools, tools } from "../lib/tools/registry.ts";
 
 test("image tool slugs are unique and every slug has metadata", () => {
   assert.equal(new Set(imageToolSlugs).size, imageToolSlugs.length, "image slugs must be unique");
@@ -36,6 +36,25 @@ test("category registry has unique names and slugs, and every tool belongs to a 
   }
   for (const tool of tools) {
     assert.ok(categoryNames.has(tool.category), `${tool.name} references an unknown category: ${tool.category}`);
+  }
+});
+
+test("Dev Tools registry excludes independent media and date/time workspaces", () => {
+  assert.ok(developerTools.length > 0);
+  assert.ok(developerTools.some((tool) => tool.id === "json-workspace"));
+  for (const tool of developerTools) {
+    assert.ok(tool.kind === "standalone" || tool.workspaceId === "json", `${tool.name} must be a developer utility`);
+    assert.ok(!["image", "audio", "video", "date-time"].includes(tool.workspaceId), `${tool.name} must not leak into Dev Tools`);
+  }
+  for (const excludedCategory of ["Images", "Audio", "Video", "Date & Time"]) {
+    assert.ok(!developerToolCategories.some((category) => category.name === excludedCategory), `${excludedCategory} must not be a Dev Tools category`);
+  }
+  for (const expected of ["JSON", "Security", "Encoding", "Generators"]) {
+    assert.ok(developerToolCategories.some((category) => category.name === expected), `missing ${expected} developer category`);
+  }
+  assert.equal(new Set(developerTools.map((tool) => tool.id)).size, developerTools.length);
+  for (const category of developerToolCategories) {
+    assert.ok(developerTools.some((tool) => tool.category === category.name), `${category.name} must not be empty`);
   }
 });
 

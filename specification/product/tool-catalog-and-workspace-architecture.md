@@ -18,6 +18,8 @@ A category must not imply that its tools share an editor. A registry entry or vi
 
 The catalog must render available tools as launchable links and planned tools as clearly marked, non-launchable entries. Planned status must not be inferred from a route string or name. Keep canonical routes stable. Any future alias or redirect must be explicit, unique, and tested.
 
+`developerTools` is derived from the authoritative `tools` registry and contains standalone utilities plus the JSON workspace only. `developerToolCategories` derives from the same registry and includes only categories with developer-tool entries. The Dev Tools catalog searches and groups this developer-only set; it must not consume the entire application registry directly or render Photo, Audio, Video, or Date & Time workspaces.
+
 ## Current workspace boundaries
 
 | Registry entry | Canonical route | Decision | Rationale |
@@ -59,9 +61,11 @@ The current media and Date & Time destinations remain first-class global workspa
 
 ## Navigation and discovery contract
 
-- Keep global navigation compact: Home, Popular tools, **Dev Tools** (the searchable catalog), Favorites, and independent Image, Audio, Video and Date & Time workspace links. Keep categories inside the catalog instead of listing every category globally.
-- Search matches tool name, description, category and keywords, case-insensitively.
-- Show available tools before planned tools. Planned cards are explicitly labelled and not launchable.
+- The main sidebar orders workspace destinations as **Photo, Audio, Video, Date & Time, Dev Tools**, with Dev Tools immediately after Date & Time. Home, Popular tools and Favorites remain application-level shortcuts.
+- Clicking Dev Tools opens `/tools`, a dedicated developer-only catalog. Its category sections are derived from `developerToolCategories`; search is restricted to `developerTools`. Photo, Audio, Video and Date & Time remain independent workspaces and must never appear as catalog categories or cards.
+- Keep functional categories inside the Dev Tools catalog instead of listing every category globally.
+- Search matches developer-tool name, description, category and keywords, case-insensitively; media/date-time workspace metadata is excluded before searching.
+- Render tools in category sections, omit categories with no matching tools, and preserve one primary category per tool. Show planned tools only as explicitly labelled, non-launchable cards.
 - Category discovery must not duplicate a canonical tool entry merely because a tool has secondary search keywords.
 - Use existing localized strings and design-system components. Persian and Arabic require verified RTL alignment and logical icon/control placement; translations alone are not RTL verification.
 - Keep privacy claims specific to the actual processing path. Do not imply server-free processing for an operation until its implementation supports that claim.

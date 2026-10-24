@@ -54,7 +54,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           <div className="space-y-1">
             <NavLink href="/" label={t("nav.home")} active={isActive("/")} icon={<Home className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
             <NavLink href="/#popular-tools" label={t("nav.popular")} active={false} icon={<Sparkles className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
-            <NavLink href="/tools" label={devToolsLabel} active={devToolsActive} icon={<Wrench className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
             <NavLink href="/#favorites" label={t("nav.favorites")} active={false} icon={<Heart className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
           </div>
           <div>
@@ -64,6 +63,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               const label = workspace.label === "Images" ? t("category.Images") : workspace.label === "Audio" ? t("category.Audio") : workspace.label === "Video" ? t("category.video") : t("category.Date & Time");
               return <NavLink key={workspace.href} href={workspace.href} label={label} active={isActive(workspace.href)} icon={<Icon className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />;
             })}</div>
+            <NavLink href="/tools" label={devToolsLabel} active={devToolsActive} icon={<Wrench className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
           </div>
         </nav>
         {mobile && <section aria-label="Preferences" className="mt-3 space-y-1 border-t border-border px-1 pt-2">

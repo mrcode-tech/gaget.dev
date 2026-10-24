@@ -6,7 +6,7 @@
 
 - Provide practical, easy-to-find browser tools with a consistent navigation and workspace model.
 - Prefer local processing for user-selected content where the implementation supports it; state exceptions and browser permissions clearly.
-- Keep tool discovery simple: Home, Dev Tools catalog/search, Favorites, and independent media/date-time workspace links; categories stay within catalog discovery.
+- Keep tool discovery simple: Home, Popular tools, Favorites, the independent Photo, Audio, Video, and Date & Time workspaces, followed by Dev Tools. The Dev Tools catalog contains developer utilities grouped by category only; media/date-time workspaces never appear in its results.
 - Reuse shell and UI primitives without forcing media-specific controls into unrelated tools.
 - Make capability limits visible at the point of action. Do not describe a preview, menu item, sidecar, or unsupported export as completed processing.
 
@@ -19,7 +19,7 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 | Route / area | Current implementation | Notes |
 |---|---|---|
 | `/` | Home discovery page | Search, featured/popular tools, favorites, all-tools section, benefit messaging. |
-| `/tools` | Dev Tools catalog | Searchable list split into available and planned registry entries; functional categories remain within the catalog. |
+| `/tools` | Dev Tools catalog | Search filters only developer utilities; registry categories render as sections and empty categories are omitted. Planned tools remain visibly planned and non-launchable. |
 | `/categories/[slug]` | Category landing | Filters the central registry by category. Empty categories are possible. |
 | Shared shell | App header + sidebar | Collapsible desktop sidebar, mobile/tablet navigation drawer, search suggestions, theme and language controls. |
 | Locale handling | Locale provider and locale links | Locale metadata includes English, Persian, Arabic, Spanish, Chinese variants, Portuguese (Brazil), French, German, Japanese, Hindi, Russian, Indonesian, Korean and Italian. Translation completeness varies; English is the only approved indexable locale. Persian and Arabic use RTL direction. |
