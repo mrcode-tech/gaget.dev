@@ -15,9 +15,9 @@
 
 ### Home and discovery
 - `/` is the home/discovery experience.
-- `/tools` is the tool catalog.
+- `/tools` is the Dev Tools catalog.
 - `/categories/[slug]` is a category landing page.
-- Tool registry metadata drives search, categories, featured/favorite experiences and tool links. A registry entry is not proof that a destination exists or that a capability works.
+- Tool registry metadata drives search, catalog categories, featured/favorite experiences and tool links. The sidebar orders Photo, Audio, Video, and Date & Time workspaces followed immediately by Dev Tools. The `/tools` catalog includes only standalone developer utilities and the JSON workspace, grouped into non-empty functional categories; it excludes media and date/time workspaces. Tool entries declare stable IDs, explicit availability status, and standalone/workspace kind; workspace entries declare their canonical workspace ID. A registry entry is not proof that a destination exists or that a capability works. See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace model and verification contract.
 
 ### Main workspaces
 - `/images/editor`: unified image/photo workspace. Legacy image slugs redirect to the editor. Source includes canvas-based image adjustments, crop/resize, transforms, text layers, and format/quality export controls; verify each active path before making broader capability claims.
@@ -26,7 +26,8 @@
 - `/datetime/editor`: unified date/time workspace with date, time, calendar and utility features. Locale/calendar behavior depends partly on browser internationalization data.
 
 ### Standalone tools
-- `/json/formatter`
+- `/json/formatter` — JSON Workspace with Format, Minify, Validate and Compare operations.
+- `/json/diff` — compatibility route opening Compare mode in the JSON Workspace.
 - `/encoding/url`
 - `/encoding/base64`
 - `/security/jwt-decoder` — decodes JWT contents but does not verify signatures.

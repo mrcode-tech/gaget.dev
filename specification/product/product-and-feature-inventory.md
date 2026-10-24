@@ -6,16 +6,20 @@
 
 - Provide practical, easy-to-find browser tools with a consistent navigation and workspace model.
 - Prefer local processing for user-selected content where the implementation supports it; state exceptions and browser permissions clearly.
-- Keep tool discovery simple: home, all tools, search, favorites, categories, and direct routes.
+- Keep tool discovery simple: Home, Popular tools, Favorites, the independent Photo, Audio, Video, and Date & Time workspaces, followed by Dev Tools. The Dev Tools catalog contains developer utilities grouped by category only; media/date-time workspaces never appear in its results.
 - Reuse shell and UI primitives without forcing media-specific controls into unrelated tools.
 - Make capability limits visible at the point of action. Do not describe a preview, menu item, sidecar, or unsupported export as completed processing.
+
+## Tool catalog architecture
+
+See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry records stable IDs, explicit availability status, and standalone/workspace kind. The JSON Workspace consolidates format, minify, validate and structural compare; `/json/diff` opens Compare mode for compatibility. Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter remain planned until their route and runtime behavior are verified.
 
 ## Global routes and shell
 
 | Route / area | Current implementation | Notes |
 |---|---|---|
 | `/` | Home discovery page | Search, featured/popular tools, favorites, all-tools section, benefit messaging. |
-| `/tools` | Tool catalog | Searchable list split into available and planned registry entries. |
+| `/tools` | Dev Tools catalog | Search filters only developer utilities; registry categories render as sections and empty categories are omitted. Planned tools remain visibly planned and non-launchable. |
 | `/categories/[slug]` | Category landing | Filters the central registry by category. Empty categories are possible. |
 | Shared shell | App header + sidebar | Collapsible desktop sidebar, mobile/tablet navigation drawer, search suggestions, theme and language controls. |
 | Locale handling | Locale provider and locale links | Locale metadata includes English, Persian, Arabic, Spanish, Chinese variants, Portuguese (Brazil), French, German, Japanese, Hindi, Russian, Indonesian, Korean and Italian. Translation completeness varies; English is the only approved indexable locale. Persian and Arabic use RTL direction. |
@@ -26,7 +30,8 @@
 
 | Route | Capability | Important boundaries |
 |---|---|---|
-| `/json/formatter` | JSON format, minify, validate; input/output, copy/download | Invalid JSON must produce a useful error; output state is local. |
+| `/json/formatter` | JSON workspace: format, minify, validate and compare two documents structurally; input/output, copy/download for transformed output | Comparison ignores object key order, reports JSON paths for additions/removals/changes, and surfaces invalid input. Processing is local. |
+| `/json/diff` | Compatibility route into JSON Workspace Compare mode | Canonical metadata points to `/json/formatter`; no duplicate catalog entry. |
 | `/encoding/url` | Encode/decode URL components | Decode errors are surfaced. This is component encoding, not full URL validation. |
 | `/encoding/base64` | UTF-8 text Base64 encode/decode | Distinguish text Base64 from media Base64 tools. |
 | `/security/jwt-decoder` | Decode JWT header and claims; inspect expiration | **Does not verify signatures.** This must remain explicit. |
@@ -81,7 +86,7 @@ The implementation includes locale-aware formatting through `Intl.DateTimeFormat
 - Header search matches name, description, and keywords; Enter opens the first result.
 - Home and catalog search filter the registry.
 - Favorites are client-side via `lib/tools/use-favorites.ts`; do not imply cross-device sync or account persistence unless implementation changes.
-- Sidebar category links route media categories to their canonical editors and other categories to category landing pages.
+- Sidebar exposes a Dev Tools catalog entry plus separate Image, Audio, Video and Date & Time workspace links. Functional categories remain discoverable inside the catalog.
 - Test keyboard access, route localization, mobile drawer dismissal, collapsed sidebar labels, and search result focus/escape behavior.
 
 ## Shared interaction patterns

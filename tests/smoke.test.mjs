@@ -6,6 +6,7 @@ const routes = [
   "/",
   "/tools",
   "/json/formatter",
+  "/json/diff",
   "/encoding/url",
   "/encoding/base64",
   "/security/jwt-decoder",

@@ -34,21 +34,31 @@ describe("AppSidebar", () => {
   it("shows navigation labels when expanded and hides them when collapsed", () => {
     render(<SidebarHarness />);
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Dev Tools" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Video" }).getAttribute("href")).toBe("/video/editor");
-    expect(screen.getByRole("link", { name: "Images" }).getAttribute("href")).toBe("/images/editor");
+    expect(screen.getByRole("link", { name: "Photo" }).getAttribute("href")).toBe("/images/editor");
     expect(screen.getByRole("link", { name: "Audio" }).getAttribute("href")).toBe("/audio/editor");
+    expect(screen.getByRole("link", { name: "Date & Time" }).getAttribute("href")).toBe("/datetime/editor");
     expect(screen.getByRole("link", { name: "Favorites" }).getAttribute("href")).toBe("/#favorites");
     expect(screen.queryByRole("link", { name: "category.video" })).toBeNull();
-    expect(screen.getByText("Categories")).toBeTruthy();
+    expect(screen.getByText("Workspaces")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Home" }).getAttribute("title")).toBe("Home");
-    expect(screen.queryByText("Categories")).toBeNull();
-    expect(screen.queryByText("All tools")).toBeNull();
+    expect(screen.queryByText("Workspaces")).toBeNull();
+    expect(screen.queryByText("Dev Tools")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }));
-    expect(screen.getByRole("link", { name: "All tools" })).toBeTruthy();
-    expect(screen.getByText("Categories")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Dev Tools" })).toBeTruthy();
+    expect(screen.getByText("Workspaces")).toBeTruthy();
+  });
+
+  it("places Dev Tools immediately after the Date & Time workspace", () => {
+    render(<SidebarHarness />);
+    const navigation = within(screen.getByRole("navigation", { name: "Main navigation" }));
+    const hrefs = navigation.getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(hrefs.slice(hrefs.indexOf("/images/editor"), hrefs.indexOf("/tools") + 1)).toEqual([
+      "/images/editor", "/audio/editor", "/video/editor", "/datetime/editor", "/tools",
+    ]);
   });
 
   it("shows language and appearance as separately captioned rows in the mobile drawer", () => {
@@ -81,7 +91,7 @@ describe("AppSidebar", () => {
   it("marks the current route as active", () => {
     navigation.pathname = "/tools";
     render(<SidebarHarness />);
-    expect(screen.getByRole("link", { name: "All tools" }).className).toContain("bg-accent");
+    expect(screen.getByRole("link", { name: "Dev Tools" }).className).toContain("bg-accent");
   });
 
   it("keeps the drawer close button in the header instead of floating over the GaGet logo", () => {
