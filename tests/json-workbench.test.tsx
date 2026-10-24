@@ -32,7 +32,50 @@ describe("JSON workspace operations", () => {
     chooseFeature("Validate");
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
     expect(screen.getByRole("status").textContent).toContain("JSON is valid");
+    expect(screen.queryByLabelText("Output")).toBeNull();
     expect((screen.getByRole("button", { name: "Copy result" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("does not render an output panel for invalid validation results", () => {
+    render(<JsonWorkbench />);
+    fireEvent.change(screen.getByRole("textbox", { name: "Input JSON" }), { target: { value: '{"ready": }' } });
+    chooseFeature("Validate");
+    fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
+    expect(screen.getByRole("alert").textContent).toContain("Expected a JSON value");
+    expect(screen.queryByLabelText("Output")).toBeNull();
+  });
+
+  it("shows matching and empty Find results without an output panel", () => {
+    render(<JsonWorkbench />);
+    chooseFeature("Find keys and values");
+    const search = screen.getByRole("textbox", { name: "Search text" });
+    fireEvent.change(search, { target: { value: "GaGet" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
+    expect(screen.getByText("$.name")).toBeTruthy();
+    expect(screen.queryByLabelText("Output")).toBeNull();
+    fireEvent.change(search, { target: { value: "no-such-key" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
+    expect(screen.getByRole("status").textContent).toContain("No matching keys or values.");
+    expect(screen.queryByLabelText("Output")).toBeNull();
+  });
+
+  it("uses a stacked mobile operation action layout and a wider-screen row layout", () => {
+    render(<JsonWorkbench />);
+    const header = screen.getByTestId("json-operation-header");
+    const description = screen.getByTestId("json-operation-description");
+    const runButton = screen.getByTestId("json-run-operation");
+    expect(header.className).toContain("flex-col");
+    expect(header.className).toContain("md:flex-row");
+    expect(runButton.className).toContain("w-full");
+    expect(runButton.className).toContain("md:w-auto");
+    expect(description.textContent).toBeTruthy();
+  });
+
+  it("does not repeat the JSON-specific privacy message in the workspace or File menu", () => {
+    render(<JsonWorkbench />);
+    expect(screen.queryByText(/JSON is processed locally in your browser/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    expect(screen.queryByText(/JSON is processed locally in your browser/i)).toBeNull();
   });
 
   it("runs Escape and Unescape as distinct string-content operations", () => {
