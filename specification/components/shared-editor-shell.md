@@ -22,6 +22,18 @@
 
 Shared shell changes must not imply media or date/time behavior parity where it is not implemented and tested. A consumer may diverge only with a documented reason and tests for the exception.
 
+## 1.1 Compact utility workspace variant: JSON
+
+The JSON Formatter and Compare routes are compact workspace consumers of the shared application shell. They use the same mobile navigation contract and File/Features command-bar conventions, but they are not full-screen media editors.
+
+- Desktop keeps the global app header and sidebar; the JSON command bar sits above the workspace content.
+- Below the desktop breakpoint, hide the global app header and its spacer. The JSON command bar becomes the single mobile navigation row: hamburger/sidebar access, File on the left, and Features on the right. Search, language and theme controls must not appear in that row.
+- Keep the regular document-flow container for JSON instead of applying the media editor's `h-dvh overflow-hidden` canvas rules; JSON source, output, comparison and diagnostics can exceed a short viewport and must remain reachable by page scrolling.
+- Stack the source and result areas at narrow widths. A media-style resizable bottom sheet is not required for this JSON variant because output and comparison are document regions rather than a persistent media control panel. If a future JSON interaction needs a persistent resizable panel, reuse the established shared primitive instead of inventing a JSON-only resizing system.
+- File and Features menus must remain within the viewport, internally scroll at short heights, restore focus on Escape, and support keyboard menu navigation. JSON source and line-number gutter remain LTR even when surrounding chrome is RTL.
+
+The authoritative JSON-specific operation, diagnostic and responsive contract is [JSON Workspace Contract](../product/json-workspace.md).
+
 ## 2. Responsive layout contract (proposed)
 
 Use the repository's existing Tailwind ranges; do not add competing breakpoints.

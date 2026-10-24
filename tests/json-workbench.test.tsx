@@ -58,6 +58,7 @@ describe("JSON workspace operations", () => {
     chooseFeature("Validate");
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
     const diagnostic = screen.getByRole("button", { name: "Go to line 3, column 12" });
+    expect(diagnostic.textContent).toContain("Input JSON · Line 3, column 12");
     expect(diagnostic.textContent).toContain("Expected a JSON value");
     fireEvent.click(diagnostic);
     expect(document.activeElement).toBe(editor);

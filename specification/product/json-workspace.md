@@ -17,7 +17,7 @@ The JSON workspace combines formatting, minification, strict syntax validation, 
 - File menu: import JSON, copy/download, undo/redo, load sample and clear.
 - Features menu groups Core JSON, Inspect and Navigate, and Transform. Every listed operation must work; do not show placeholder actions.
 - The editor uses a one-based line-number gutter beside one no-wrap textarea. The gutter follows vertical scroll; the editor owns horizontal scrolling. No second editor is used to draw line numbers.
-- At wide screens, editor and result can sit side by side; at narrower widths they stack. Menus are viewport-bounded and internally scrollable.
+- At wide screens, editor and result can sit side by side; at narrower widths they stack. Menus remain below the command bar and cap at 180px with internal scrolling when viewport height is 700px or less; otherwise they use the shared viewport-bounded maximum height.
 - JSON source is always LTR even when surrounding labels are Persian or Arabic RTL.
 
 ## Supported operations
