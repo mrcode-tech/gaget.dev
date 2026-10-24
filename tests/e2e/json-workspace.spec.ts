@@ -180,7 +180,7 @@ test("Validate and Find Key do not render an irrelevant JSON output panel", asyn
 
   await input.fill('{"ready": }');
   await run.click();
-  await expect(page.getByRole("alert")).toContainText("Expected a JSON value");
+  await expect(page.locator('section[aria-label="Validation diagnostics"] p[role="alert"]')).toContainText("Expected a JSON value");
   await expect(page.getByRole("button", { name: /Go to line/ })).toBeVisible();
   await expect(page.getByLabel("Output")).toHaveCount(0);
 
