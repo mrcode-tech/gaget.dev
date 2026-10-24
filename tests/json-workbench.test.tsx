@@ -13,7 +13,7 @@ afterEach(cleanup);
 
 function chooseFeature(label: string) {
   fireEvent.click(screen.getByRole("button", { name: "Features" }));
-  fireEvent.click(screen.getByRole("menuitemradio", { name: new RegExp(label, "i") }));
+  fireEvent.click(screen.getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
 }
 
 describe("JSON workspace operations", () => {
@@ -32,7 +32,7 @@ describe("JSON workspace operations", () => {
     chooseFeature("Validate");
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
     expect(screen.getByRole("status").textContent).toContain("JSON is valid");
-    expect(screen.getByRole("button", { name: "Copy result" })).toBeDisabled();
+    expect((screen.getByRole("button", { name: "Copy result" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("runs Escape and Unescape as distinct string-content operations", () => {

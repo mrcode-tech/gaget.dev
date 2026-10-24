@@ -18,6 +18,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const isDateTimeEditor = /(?:^|\/)datetime\/(?:editor|[^/]+)\/?$/.test(pathname);
   const isMediaEditor = isPhotoEditor || isAudioEditor || isVideoEditor;
   const isEditor = isMediaEditor || isDateTimeEditor;
+  const isJsonWorkspace = /(?:^|\/)json\/(?:formatter|diff)\/?$/.test(pathname);
+  const isCompactWorkspace = isEditor || isJsonWorkspace;
 
   return (
     <>
@@ -42,10 +44,10 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
               : "min-h-screen transition-[padding] duration-200 lg:pr-[248px]"
         }
       >
-        <div className={isEditor ? "hidden lg:block" : ""}>
+        <div className={isCompactWorkspace ? "hidden lg:block" : ""}>
           <AppHeader sidebarCollapsed={sidebarCollapsed} />
         </div>
-        <div aria-hidden="true" className={isEditor ? "hidden h-[68px] lg:block" : "h-[68px]"} />
+        <div aria-hidden="true" className={isCompactWorkspace ? "hidden h-[68px] lg:block" : "h-[68px]"} />
         {children}
       </div>
     </>

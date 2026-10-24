@@ -8,5 +8,5 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 export default function JsonDiffPage() {
-  return <ToolLayout category="JSON" title="JSON Formatter & Validator" description="Compare two JSON documents by structural path, or switch to formatting, minifying, and validation in the same workspace."><JsonWorkbench initialMode="compare" /></ToolLayout>;
+  return <ToolLayout category="JSON" title="JSON Formatter & Validator" description="Compare two JSON documents by structural path, or switch to formatting, minifying, and validation in the same workspace." workspace><JsonWorkbench initialMode="compare" /></ToolLayout>;
 }

@@ -5,7 +5,7 @@
 
 ## Purpose and routes
 
-The JSON workspace combines formatting, minification, strict syntax validation, structural comparison, key sorting, tree viewing, key/value search and JSON string-content escaping. It is a standalone utility within the regular GaGet.dev tool layout and adopts the established editor command-bar conventions for trigger-anchored File and Features menus, bounded menu scrolling, semantic focus states and direction-aware placement.
+The JSON workspace combines formatting, minification, strict syntax validation, structural comparison, key sorting, tree viewing, key/value search and JSON string-content escaping. It uses compact workspace mode in the regular GaGet.dev app shell: the mobile app header is replaced by the hamburger/File/Features command bar, while desktop retains the global app header. It adopts the established editor command-bar conventions for trigger-anchored File and Features menus, bounded menu scrolling, semantic focus states and direction-aware placement.
 
 - Canonical route: `/json/formatter`.
 - Compatibility route: `/json/diff`, opening the same workspace in Compare mode.

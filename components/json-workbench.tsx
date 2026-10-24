@@ -56,7 +56,7 @@ function LineNumberEditor({
   const { t } = useI18n();
   const gutterRef = useRef<HTMLPreElement>(null);
   const lineCount = Math.max(1, value.split("\n").length);
-  return <div className="grid min-h-[300px] min-w-0 grid-cols-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border bg-background focus-within:ring-2 focus-within:ring-ring/40">
+  return <div dir="ltr" className="grid min-h-[300px] min-w-0 grid-cols-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border bg-background focus-within:ring-2 focus-within:ring-ring/40">
     <pre data-testid="json-line-numbers" aria-hidden="true" ref={gutterRef} className="min-h-[300px] select-none overflow-hidden border-e border-border bg-muted/40 px-2 py-3 text-right font-mono text-[13px] leading-6 text-muted-foreground sm:px-3">{Array.from({ length: lineCount }, (_, index) => String(index + 1)).join("\n")}</pre>
     <Textarea
       ref={textareaRef}
@@ -435,6 +435,11 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
           </div>)}
         </div>}
       </div>
+    </div>
+
+    <div className="space-y-1">
+      <h1 className="text-xl font-bold tracking-tight">{t("json.workspace")}</h1>
+      <p className="text-sm text-muted-foreground">{t("json.workspaceDescription")}</p>
     </div>
 
     <div className="flex flex-wrap items-center justify-between gap-2">

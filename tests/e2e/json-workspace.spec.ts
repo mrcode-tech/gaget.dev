@@ -12,6 +12,10 @@ test.describe("JSON workspace responsive editor and diagnostics", () => {
       await page.goto("/json/formatter");
       const editor = page.getByRole("textbox", { name: "Input JSON" });
       await expect(editor).toBeVisible();
+      if (viewport.width < 1024) {
+        await expect(page.getByRole("button", { name: "Open navigation" })).toBeVisible();
+        await expect(page.getByRole("textbox", { name: "Search tools" })).toBeHidden();
+      }
       await editor.fill('{"first": 1,\n  "second": }');
       await page.getByRole("button", { name: "Features" }).click();
       await page.getByRole("menuitemradio", { name: /Validate/ }).click();
@@ -79,6 +83,11 @@ for (const localePrefix of ["/fa", "/ar"]) {
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     const editor = page.locator("textarea").first();
     await expect(editor).toHaveAttribute("dir", "ltr");
+    const gutterBox = await page.getByTestId("json-line-numbers").boundingBox();
+    const editorBox = await editor.boundingBox();
+    expect(gutterBox).not.toBeNull();
+    expect(editorBox).not.toBeNull();
+    if (gutterBox && editorBox) expect(gutterBox.x + gutterBox.width).toBeLessThanOrEqual(editorBox.x + 1);
     await editor.fill('{"rtl":"متن","count":2}');
     await page.getByTestId("json-editor-menubar").getByRole("button").last().click();
     await expect(page.getByTestId("json-features-menu")).toBeVisible();

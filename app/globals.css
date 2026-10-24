@@ -57,11 +57,8 @@
   .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground; }
 }
 
-@media (max-height: 480px) {
+@media (max-height: 700px) {
   .json-workspace-menu {
-    top: auto !important;
-    bottom: calc(100% + 0.25rem);
-    margin-top: 0 !important;
     max-height: 180px !important;
   }
 }
