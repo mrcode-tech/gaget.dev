@@ -308,4 +308,12 @@ describe("JSON parser and transforms", () => {
       expect(result.diagnostics[0].column).toBe(source.indexOf("}") + 1);
     }
   });
+
+  it("keeps the compact command bar sticky and below the global header on desktop", () => {
+    render(<JsonWorkbench />);
+    const commandBar = screen.getByTestId("json-editor-menubar");
+    expect(commandBar.className).toContain("sticky");
+    expect(commandBar.className).toContain("top-0");
+    expect(commandBar.className).toContain("lg:top-[68px]");
+  });
 });
