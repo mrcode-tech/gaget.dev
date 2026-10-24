@@ -33,7 +33,8 @@ describe("JSON workspace operations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
     expect(screen.getByRole("status").textContent).toContain("JSON is valid");
     expect(screen.queryByLabelText("Output")).toBeNull();
-    expect((screen.getByRole("button", { name: "Copy result" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "File" }));
+    expect((within(screen.getByTestId("json-file-menu")).getByRole("menuitem", { name: "Copy result" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("does not render an output panel for invalid validation results", () => {
