@@ -73,8 +73,8 @@ Use the existing Tailwind breakpoints, not a JSON-specific breakpoint system. Ve
 ## Acceptance criteria
 
 - [x] Format/minify/validate/compare work for valid and invalid inputs.
-- [ ] Validate and Find keys/values show their operation-specific status/results without an irrelevant output panel; transformed output, Tree Viewer and Compare presentations remain available as appropriate.
-- [ ] The Run action stacks below its description below 768px and aligns responsively at wider widths; no repeated JSON-specific privacy disclosure appears in the workspace or File menu.
+- [x] Validate and Find keys/values show their operation-specific status/results without an irrelevant output panel; transformed output, Tree Viewer and Compare presentations remain available as appropriate.
+- [x] The Run action stacks below its description below 768px and aligns responsively at wider widths; no repeated JSON-specific privacy disclosure appears in the workspace or File menu.
 - [x] Diagnostics have dependable source offsets and navigate to the correct editor; stale diagnostics clear after edits.
 - [x] LF/CRLF, strings/escapes, numbers/literals, nesting and edit/fix cycles have regression tests.
 - [x] Compare distinguishes missing/null and uses unambiguous paths.
