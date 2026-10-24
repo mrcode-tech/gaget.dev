@@ -161,3 +161,75 @@ for (const localePrefix of ["/fa", "/ar"]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
   });
 }
+
+
+test("Validate and Find Key do not render an irrelevant JSON output panel", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/json/formatter");
+  const run = page.getByRole("button", { name: "Run operation" });
+  const input = page.getByRole("textbox", { name: "Input JSON" });
+  const choose = async (label: string) => {
+    await page.getByRole("button", { name: "Features" }).click();
+    await page.getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }).click();
+  };
+
+  await choose("Validate");
+  await run.click();
+  await expect(page.getByRole("status")).toContainText("JSON is valid");
+  await expect(page.getByLabel("Output")).toHaveCount(0);
+
+  await input.fill('{"ready": }');
+  await run.click();
+  await expect(page.getByRole("alert")).toContainText("Expected a JSON value");
+  await expect(page.getByRole("button", { name: /Go to line/ })).toBeVisible();
+  await expect(page.getByLabel("Output")).toHaveCount(0);
+
+  await input.fill('{"person":{"name":"Ada"},"ready":true}');
+  await choose("Find keys and values");
+  await page.getByRole("textbox", { name: "Search text" }).fill("Ada");
+  await run.click();
+  await expect(page.getByText("$.person.name")).toBeVisible();
+  await expect(page.getByLabel("Output")).toHaveCount(0);
+
+  await page.getByRole("textbox", { name: "Search text" }).fill("not-present");
+  await run.click();
+  await expect(page.getByText("No matching keys or values.")).toBeVisible();
+  await expect(page.getByLabel("Output")).toHaveCount(0);
+
+  await choose("Minify");
+  await run.click();
+  await expect(page.getByLabel("Output")).toContainText('{"person":{"name":"Ada"},"ready":true}');
+
+  await choose("Compare");
+  await run.click();
+  await expect(page.getByRole("heading", { name: /Comparison result/ })).toBeVisible();
+});
+
+test("Run action stacks on mobile and returns to a horizontal header on desktop", async ({ page }) => {
+  await page.goto("/json/formatter");
+  const header = page.getByTestId("json-operation-header");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(header).toHaveCSS("flex-direction", "column");
+  const description = await page.getByTestId("json-operation-description").boundingBox();
+  const button = await page.getByTestId("json-run-operation").boundingBox();
+  const headerBox = await header.boundingBox();
+  expect(description).not.toBeNull();
+  expect(button).not.toBeNull();
+  expect(headerBox).not.toBeNull();
+  if (description && button && headerBox) {
+    expect(button.y).toBeGreaterThanOrEqual(description.y + description.height - 1);
+    expect(button.width).toBeGreaterThanOrEqual(headerBox.width - 8);
+  }
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(header).toHaveCSS("flex-direction", "row");
+});
+
+test("removes the repeated JSON-specific privacy message from the workspace and File menu", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/json/formatter");
+  await expect(page.getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
+  await page.getByRole("button", { name: "File" }).click();
+  await expect(page.getByTestId("json-file-menu").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
+});
