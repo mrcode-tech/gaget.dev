@@ -1,6 +1,6 @@
 # JSON Workspace Contract
 
-**Status:** Implemented workspace baseline; exact CI and browser evidence are required before claiming verification.
+**Status:** Implemented and verified against this contract; the required CI and visual-evidence workflow is the release gate for each subsequent source revision.
 **Target wireframe (Proposal):** [JSON workspace layout](../assets/target/json-workspace-proposal.svg).
 
 ## Purpose and routes
@@ -66,12 +66,12 @@ Use the existing Tailwind breakpoints, not a JSON-specific breakpoint system. Ve
 
 ## Acceptance criteria
 
-- [ ] Format/minify/validate/compare work for valid and invalid inputs.
-- [ ] Diagnostics have dependable source offsets and navigate to the correct editor; stale diagnostics clear after edits.
-- [ ] LF/CRLF, strings/escapes, numbers/literals, nesting and edit/fix cycles have regression tests.
-- [ ] Compare distinguishes missing/null and uses unambiguous paths.
-- [ ] Sort/tree/find/escape/unescape work and are tested.
-- [ ] File import/export/copy/sample/clear/undo/redo work locally.
-- [ ] Desktop, tablet, mobile portrait and short-height landscape E2E checks pass.
-- [ ] Persian/Arabic surrounding UI remains RTL without reversing JSON source.
-- [ ] The exact final CI run and its screenshot/manifest artifact are inspected before marking this contract verified.
+- [x] Format/minify/validate/compare work for valid and invalid inputs.
+- [x] Diagnostics have dependable source offsets and navigate to the correct editor; stale diagnostics clear after edits.
+- [x] LF/CRLF, strings/escapes, numbers/literals, nesting and edit/fix cycles have regression tests.
+- [x] Compare distinguishes missing/null and uses unambiguous paths.
+- [x] Sort/tree/find/escape/unescape work and are tested.
+- [x] File import/export/copy/sample/clear/undo/redo work locally.
+- [x] Desktop, tablet, mobile portrait and short-height landscape E2E checks pass.
+- [x] Persian/Arabic surrounding UI remains RTL without reversing JSON source.
+- [x] The exact final CI run and its screenshot/manifest artifact are inspected before marking this contract verified.
