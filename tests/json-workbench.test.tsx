@@ -55,7 +55,7 @@ describe("JSON workspace operations", () => {
     chooseFeature("Unescape string contents");
     fireEvent.change(screen.getByRole("textbox", { name: "Input JSON" }), { target: { value: "" } });
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
-    expect(screen.getByRole("status").textContent).toContain("Unescaped");
+    expect(screen.getByRole("status").textContent).toContain("unescaped");
     expect((screen.getByRole("button", { name: "Copy result" }) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole("button", { name: "Download text result" }) as HTMLButtonElement).disabled).toBe(false);
   });
@@ -156,7 +156,7 @@ describe("JSON workspace operations", () => {
     chooseFeature("Find keys and values");
     fireEvent.change(screen.getByRole("textbox", { name: "Search text" }), { target: { value: "needle" } });
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
-    expect(screen.getByText("Find results (1000)")).toBeTruthy();
+    expect(screen.getByText("Search results (1000)")).toBeTruthy();
     expect(screen.getByText("Showing up to 1,000 matches.")).toBeTruthy();
     expect(screen.getAllByTestId(/^json-find-match-/)).toHaveLength(1000);
   });

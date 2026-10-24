@@ -382,7 +382,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     anchor.download = isStringContent ? "string-content.txt" : "document.json";
     anchor.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setStatus(t("json.downloaded"));
+    setStatus(isStringContent ? t("json.textDownloaded") : t("json.downloaded"));
   }
   function clearDocument() {
     recordHistory();
