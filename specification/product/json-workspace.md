@@ -17,7 +17,7 @@ The JSON workspace combines formatting, minification, strict syntax validation, 
 - File menu: import JSON, copy/download, undo/redo, load sample and clear.
 - Features menu groups Core JSON, Inspect and Navigate, and Transform. Every listed operation must work; do not show placeholder actions.
 - The editor uses a one-based line-number gutter beside one no-wrap textarea. The gutter follows vertical scroll; the editor owns horizontal scrolling. No second editor is used to draw line numbers.
-- At wide screens, editor and result can sit side by side; at narrower widths they stack. Menus remain below the command bar and cap at 180px with internal scrolling when viewport height is 700px or less; otherwise they use the shared viewport-bounded maximum height.
+- At wide screens, the source editor and a relevant secondary workspace panel can sit side by side; at narrower widths they stack. Validate and Find keys/values are single-column, result-only operations and do not reserve an output panel. Format, Minify, Sort Keys, Escape and Unescape show a transformed-text output panel; Tree Viewer shows its tree panel; Compare uses two source editors and its own difference results. Menus remain below the command bar and cap at 180px with internal scrolling when viewport height is 700px or less; otherwise they use the shared viewport-bounded maximum height.
 - JSON source is always LTR even when surrounding labels are Persian or Arabic RTL.
 
 ## Supported operations
@@ -35,6 +35,12 @@ The JSON workspace combines formatting, minification, strict syntax validation, 
 | Unescape string contents | Decode escaped JSON string contents; invalid input is not silently changed. |
 
 Comparison paths use `$` as root, dot notation for identifier-like keys (for example `$.profile.name`), bracket-quoted JSON strings for unusual keys (for example `$["a.b"]`), and zero-based array indices (for example `$.items[0]`).
+
+## Result presentation and operation actions
+
+- Result presentation is explicitly operation-specific: output-producing transforms show the output panel; Validate presents status/diagnostics only; Find keys/values presents match results only; Tree Viewer presents the tree; Compare presents its two inputs and difference list. Do not render an empty output panel or retain an empty grid column for Validate or Find.
+- The operation title and description precede the primary Run action. Below the existing `md` breakpoint (768px), stack the action beneath the description and make it full width; at tablet/desktop widths, align it beside the description when space permits. Use existing button primitives and support long translated text and RTL direction without clipping or horizontal overflow.
+- Do not repeat the JSON-specific local-processing disclosure inside the workspace or its File menu. Preserve the independent shared tool privacy disclosure and the actual local-only processing behavior.
 
 ## Diagnostics
 
@@ -67,6 +73,8 @@ Use the existing Tailwind breakpoints, not a JSON-specific breakpoint system. Ve
 ## Acceptance criteria
 
 - [x] Format/minify/validate/compare work for valid and invalid inputs.
+- [x] Validate and Find keys/values show their operation-specific status/results without an irrelevant output panel; transformed output, Tree Viewer and Compare presentations remain available as appropriate.
+- [x] The Run action stacks below its description below 768px and aligns responsively at wider widths; no repeated JSON-specific privacy disclosure appears in the workspace or File menu.
 - [x] Diagnostics have dependable source offsets and navigate to the correct editor; stale diagnostics clear after edits.
 - [x] LF/CRLF, strings/escapes, numbers/literals, nesting and edit/fix cycles have regression tests.
 - [x] Compare distinguishes missing/null and uses unambiguous paths.
