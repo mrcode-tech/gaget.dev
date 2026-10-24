@@ -47,13 +47,6 @@ export function ToolLayout({
       </header>}
 
       {children}
-
-      <details className="mt-6 rounded-lg border border-border/70 px-4 py-3 text-sm">
-        <summary className="cursor-pointer font-medium text-muted-foreground transition-colors hover:text-foreground">
-          {t("tool.privacyHeading")}
-        </summary>
-        <p className="mt-2 max-w-3xl leading-6 text-muted-foreground">{t("tool.privacy")}</p>
-      </details>
     </main>
   );
 }

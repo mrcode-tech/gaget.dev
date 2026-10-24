@@ -449,7 +449,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
 
   return <section aria-label={t("json.workspace")} dir={direction} className="min-w-0 space-y-4">
     <input ref={fileInputRef} type="file" accept=".json,application/json,text/json" className="hidden" aria-label={t("json.openFile")} onChange={(event) => void importFile(event)} />
-    <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="relative z-20 flex min-h-12 min-w-0 items-center justify-between gap-2 border-b border-border bg-card px-2 py-1.5 sm:px-3">
+    <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="sticky top-0 z-[70] flex min-h-12 min-w-0 items-center justify-between gap-2 border-b border-border bg-card px-2 py-1.5 shadow-sm sm:px-3 lg:top-[68px]">
       <div className="flex min-w-0 items-center gap-1.5">
         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 lg:hidden" aria-label={t("json.openNavigation")} onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}><Menu className="h-4 w-4" /></Button>
         <div className="relative shrink-0">

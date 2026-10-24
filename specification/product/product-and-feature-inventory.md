@@ -91,7 +91,7 @@ The implementation includes locale-aware formatting through `Intl.DateTimeFormat
 
 ## Shared interaction patterns
 
-- `ToolLayout` provides breadcrumb, category, title/description, and a privacy disclosure.
+- `ToolLayout` provides breadcrumb, category, title/description. Do not render the repeated generic “Privacy & data” disclosure in tool interfaces; preserve independent privacy-policy/documentation pages and tool-specific safety guidance.
 - Shared primitives are under `components/ui/`; current CSS variables live in `app/globals.css`.
 - Media/date editors use a full-viewport editor shell, compact command bar, File/Features controls, one active feature panel, and a resizable mobile feature sheet where implemented.
 - Empty-file and loaded-file states are separate experiences. Loading a file must not unexpectedly change unrelated layout, lose user edits, or leave stale object URLs.
