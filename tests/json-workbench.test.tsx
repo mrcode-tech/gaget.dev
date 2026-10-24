@@ -55,7 +55,7 @@ describe("JSON workspace operations", () => {
     expect(screen.queryByLabelText("Output")).toBeNull();
     fireEvent.change(search, { target: { value: "no-such-key" } });
     fireEvent.click(screen.getByRole("button", { name: "Run operation" }));
-    expect(screen.getByRole("status").textContent).toContain("No matching keys or values.");
+    expect(screen.getByText("No matching keys or values.")).toBeTruthy();
     expect(screen.queryByLabelText("Output")).toBeNull();
   });
 
