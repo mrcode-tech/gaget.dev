@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { compareJsonDocuments } from "@/lib/tools/json-workspace";
-import { Check, Copy, Download, RotateCcw, WandSparkles, AlertCircle, ArrowLeftRight, Trash2, KeyRound, Fingerprint } from "lucide-react";
+import { Check, Copy, Download, WandSparkles, AlertCircle, ArrowLeftRight, Trash2, KeyRound, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -17,40 +16,7 @@ function saveText(filename: string, value: string) {
   const a = document.createElement("a"); a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
-const sampleJson = '{\n  "name": "GaGet.dev",\n  "version": "1.0.0",\n  "features": ["format", "validate", "compare"],\n  "privacyFirst": true\n}';
-type JsonOperation = "format" | "minify" | "validate" | "compare";
-export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOperation } = {}) {
-  const [operation,setOperation]=useState<JsonOperation>(initialMode);
-  const [input,setInput]=useState(sampleJson);
-  const [compareInput,setCompareInput]=useState('{\n  "name": "GaGet.dev",\n  "version": "1.1.0",\n  "features": ["format", "validate", "compare"],\n  "privacyFirst": true\n}');
-  const [output,setOutput]=useState(""),[error,setError]=useState(""),[valid,setValid]=useState(false);
-  const [differences,setDifferences]=useState<import("@/lib/tools/json-workspace").JsonDifference[]>([]);
-  function selectOperation(next:JsonOperation){setOperation(next);setOutput("");setError("");setValid(false);setDifferences([]);}
-  function run(){
-    try {
-      if(operation==="compare"){const result=compareJsonDocuments(input,compareInput);setDifferences(result);setOutput("");setError("");setValid(true);return;}
-      const parsed=JSON.parse(input);
-      if(operation==="format")setOutput(JSON.stringify(parsed,null,2));else if(operation==="minify")setOutput(JSON.stringify(parsed));else setOutput("Valid JSON ✓");
-      setError("");setValid(true);setDifferences([]);
-    } catch(e){setOutput("");setDifferences([]);setError(e instanceof Error?e.message:"Invalid JSON");setValid(false);}
-  }
-  const operations=[{id:"format",label:"Format"},{id:"minify",label:"Minify"},{id:"validate",label:"Validate"},{id:"compare",label:"Compare"}] as const;
-  return <div className="space-y-4">
-    <div className="flex flex-wrap gap-2" role="group" aria-label="JSON operation">
-      {operations.map(({id,label})=><Button key={id} variant={operation===id?"default":"outline"} aria-pressed={operation===id} onClick={()=>selectOperation(id)}>{label}</Button>)}
-      <Button onClick={run}><WandSparkles className="h-4 w-4"/> Run {operation==="compare"?"comparison":operation}</Button>
-      <Button variant="ghost" onClick={()=>{setInput("");setCompareInput("");setOutput("");setError("");setValid(false);setDifferences([]);}}><RotateCcw className="h-4 w-4"/> Clear</Button>
-      <Button variant="ghost" onClick={()=>{setInput(sampleJson);setCompareInput('{\n  "name": "GaGet.dev",\n  "version": "1.1.0",\n  "features": ["format", "validate", "compare"],\n  "privacyFirst": true\n}');setOutput("");setError("");setValid(false);setDifferences([]);}}>Load example</Button>
-    </div>
-    <div className="grid gap-4 xl:grid-cols-2">
-      <Card><CardHeader className="flex-row items-center justify-between space-y-0"><CardTitle className="text-sm">{operation==="compare"?"JSON A":"Input JSON"}</CardTitle><span className="text-xs text-muted-foreground">{input.length.toLocaleString()} characters</span></CardHeader><CardContent><Textarea aria-label={operation==="compare"?"JSON A input":"Input JSON"} value={input} onChange={e=>setInput(e.target.value)} spellCheck={false} className="min-h-[300px] resize-y font-mono text-[13px] leading-6" placeholder="Paste JSON here…"/></CardContent></Card>
-      {operation==="compare"?<Card><CardHeader className="flex-row items-center justify-between space-y-0"><CardTitle className="text-sm">JSON B</CardTitle><span className="text-xs text-muted-foreground">{compareInput.length.toLocaleString()} characters</span></CardHeader><CardContent><Textarea aria-label="JSON B input" value={compareInput} onChange={e=>setCompareInput(e.target.value)} spellCheck={false} className="min-h-[300px] resize-y font-mono text-[13px] leading-6" placeholder="Paste the second JSON document…"/></CardContent></Card>:<Card><CardHeader className="flex-row items-center justify-between space-y-0"><CardTitle className="text-sm">Output</CardTitle><div className="flex gap-1"><Button variant="ghost" size="icon" aria-label="Copy output" disabled={!output||output==="Valid JSON ✓"} onClick={()=>copyText(output)}><Copy className="h-4 w-4"/></Button><Button variant="ghost" size="icon" aria-label="Download output" disabled={!output||output==="Valid JSON ✓"} onClick={()=>saveText("formatted.json",output)}><Download className="h-4 w-4"/></Button></div></CardHeader><CardContent><pre aria-label="JSON output" className="min-h-[300px] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/50 p-4 font-mono text-[13px] leading-6">{output||<span className="text-muted-foreground">Your result will appear here.</span>}</pre></CardContent></Card>}
-    </div>
-    {operation==="compare"&&valid&&<Card><CardHeader><CardTitle className="text-sm">Comparison result ({differences.length} {differences.length===1?"difference":"differences"})</CardTitle></CardHeader><CardContent>{differences.length===0?<p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">The JSON documents are equivalent.</p>:<div className="space-y-3">{differences.map(d=><div key={d.path} className="rounded-lg border border-border p-3 text-sm"><div className="flex flex-wrap items-center gap-2"><code className="font-mono">{d.path}</code><span className={`rounded px-2 py-0.5 text-xs ${d.kind==="added"?"bg-emerald-500/10 text-emerald-700 dark:text-emerald-300":d.kind==="removed"?"bg-destructive/10 text-destructive":"bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{d.kind}</span></div><div className="mt-2 grid gap-2 sm:grid-cols-2">{d.kind!=="added"&&<pre className="overflow-auto whitespace-pre-wrap break-words rounded bg-muted/50 p-2 font-mono text-xs">{JSON.stringify(d.before,null,2)}</pre>}{d.kind!=="removed"&&<pre className="overflow-auto whitespace-pre-wrap break-words rounded bg-muted/50 p-2 font-mono text-xs">{JSON.stringify(d.after,null,2)}</pre>}</div></div>)}</div>}</CardContent></Card>}
-    {(error||valid&&operation!=="compare")&&<div role={error?"alert":"status"} className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${error?"border-destructive/30 bg-destructive/5 text-destructive":"border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300"}`}>{error?<AlertCircle className="mt-0.5 h-4 w-4 shrink-0"/>:<Check className="mt-0.5 h-4 w-4 shrink-0"/>}{error||"JSON is valid."}</div>}
-    <p className="text-xs text-muted-foreground">JSON is parsed and processed locally in your browser. Comparison reports structural differences by JSON path; object key order is ignored.</p>
-  </div>;
-}
+export { JsonWorkbench } from "@/components/json-workbench";
 
 export function UrlWorkbench() {
   const [input, setInput] = useState("https://gaget.dev/search?q=hello world&category=dev tools");

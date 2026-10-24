@@ -26,6 +26,7 @@ const rtlRouteNames = new Set([
   "audio-editor",
   "video-editor",
   "date-time-editor",
+  "json-formatter",
 ]);
 const viewports = [
   { name: "mobile-390x844", width: 390, height: 844 },
@@ -140,6 +141,71 @@ try {
             await page.close();
           }
         }
+      }
+    }
+  }
+
+  // Capture JSON-specific states explicitly for the exact evaluated build.
+  const jsonStates = [
+    { name: "empty", route: "/json/formatter", run: async (page) => {
+      await page.getByRole("textbox", { name: "Input JSON" }).fill("");
+    } },
+    { name: "valid", route: "/json/formatter", run: async (page) => {
+      await page.getByRole("textbox", { name: "Input JSON" }).fill('{"state":"valid","items":[1,2]}');
+      await page.getByRole("button", { name: "Run operation" }).click();
+      await page.getByLabel("Output").waitFor({ state: "visible" });
+    } },
+    { name: "invalid-diagnostics", route: "/json/formatter", run: async (page) => {
+      await page.getByRole("textbox", { name: "Input JSON" }).fill('{\n  "broken": }');
+      await page.getByRole("button", { name: "Features" }).click();
+      await page.getByRole("menuitemradio", { name: /Validate/ }).click();
+      await page.getByRole("button", { name: "Run operation" }).click();
+      await page.getByRole("button", { name: /Go to line 2/ }).waitFor({ state: "visible" });
+    } },
+    { name: "comparison", route: "/json/diff", run: async (page) => {
+      await page.getByRole("textbox", { name: "JSON A input" }).fill('{"version":1}');
+      await page.getByRole("textbox", { name: "JSON B input" }).fill('{"version":2,"ready":true}');
+      await page.getByRole("button", { name: "Run operation" }).click();
+      await page.getByText("$.version").waitFor({ state: "visible" });
+    } },
+    { name: "file-menu", route: "/json/formatter", run: async (page) => {
+      await page.getByRole("button", { name: "File" }).click();
+      await page.getByTestId("json-file-menu").waitFor({ state: "visible" });
+    } },
+    { name: "features-menu", route: "/json/formatter", run: async (page) => {
+      await page.getByRole("button", { name: "Features" }).click();
+      await page.getByTestId("json-features-menu").waitFor({ state: "visible" });
+    } },
+  ];
+  for (const viewport of viewports) {
+    for (const state of jsonStates) {
+      const page = await browser.newPage({ viewport, colorScheme: "light", locale: "en-US" });
+      await page.addInitScript(() => localStorage.setItem("theme", "light"));
+      const url = new URL(state.route, baseURL).toString();
+      const relative = path.join(commitSlug, "json-states", viewport.name, state.name + ".png");
+      const destination = path.join(outputRoot, relative);
+      try {
+        const response = await page.goto(url, { waitUntil: "networkidle", timeout: 45000 });
+        if (!response || !response.ok()) throw new Error("HTTP " + (response?.status() ?? "no response") + " for " + url);
+        await state.run(page);
+        await mkdir(path.dirname(destination), { recursive: true });
+        await page.screenshot({ path: destination, fullPage: true, animations: "disabled" });
+        manifest.captures.push({
+          route: state.route,
+          locale: "en",
+          direction: "ltr",
+          viewport: { name: viewport.name, width: viewport.width, height: viewport.height },
+          theme: "light",
+          state: state.name,
+          screenshot: relative,
+          status: response.status(),
+        });
+        process.stdout.write("Captured " + state.route + " | " + viewport.name + " | light | en | " + state.name + "\n");
+      } catch (error) {
+        manifest.failures.push({ route: state.route, locale: "en", viewport: viewport.name, theme: "light", state: state.name, error: String(error) });
+        process.stderr.write("Capture failed " + state.route + " | " + viewport.name + " | light | en | " + state.name + ": " + String(error) + "\n");
+      } finally {
+        await page.close();
       }
     }
   }

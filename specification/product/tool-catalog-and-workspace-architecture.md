@@ -28,7 +28,7 @@ The catalog must render available tools as launchable links and planned tools as
 | Audio Editor | `/audio/editor` | Workspace | Audio operations share file, waveform/playback and export concerns, with feature-specific capability limits. |
 | Video Editor | `/video/editor` | Workspace | Video operations share media playback, timeline/seek and browser capability constraints. |
 | Date & Time Editor | `/datetime/editor` | Workspace | Date/time utilities share locale, calendar, time-zone and date-value semantics. |
-| JSON Workspace | `/json/formatter` | Workspace | Format, minify, validate, and compare are operations inside one workspace; `/json/diff` remains a compatibility entry point into Compare mode. |
+| JSON Workspace | `/json/formatter` | Workspace | Format, minify, validate, compare, sort keys, tree, find, and escape/unescape are operations inside one workspace; `/json/diff` remains a compatibility entry point into Compare mode. See [JSON Workspace Contract](./json-workspace.md). |
 | URL Encoder / Decoder | `/encoding/url` | Standalone for now | Component encoding has reserved-character and malformed-input semantics distinct from Base64. |
 | Base64 Encoder / Decoder | `/encoding/base64` | Standalone for now | Text encoding requires explicit UTF-8 and invalid-input behavior. Similar input/output UI alone is insufficient reason to merge. |
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
