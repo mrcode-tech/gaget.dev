@@ -241,9 +241,15 @@ test("removes the repeated JSON privacy disclosure from responsive File-action m
   await expect(page.getByTestId("json-file-menu").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
 });
 
-test("tablet and desktop JSON File menu exposes every supported action", async ({ page }) => {
-  for (const width of [768, 1024, 1440, 1920]) {
-    await page.setViewportSize({ width, height: 900 });
+test("tablet and desktop JSON File menu exposes every supported action, including short-height scrolling", async ({ page }) => {
+  for (const viewport of [
+    { width: 768, height: 900 },
+    { width: 1024, height: 900 },
+    { width: 1440, height: 900 },
+    { width: 1920, height: 900 },
+    { width: 1440, height: 640 },
+  ]) {
+    await page.setViewportSize(viewport);
     await page.goto("/json/formatter");
     const fileTrigger = page.getByRole("button", { name: "File", exact: true });
     await expect(fileTrigger).toBeVisible();
@@ -252,8 +258,11 @@ test("tablet and desktop JSON File menu exposes every supported action", async (
     await expect(fileMenu).toBeVisible();
     await expect(fileMenu.getByRole("menuitem")).toHaveCount(7);
     for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample JSON", "Clear document"]) {
-      await expect(fileMenu.getByRole("menuitem", { name: label })).toBeVisible();
+      await expect(fileMenu.getByRole("menuitem", { name: label })).toBeAttached();
     }
+    const finalAction = fileMenu.getByRole("menuitem", { name: "Clear document" });
+    await finalAction.scrollIntoViewIfNeeded();
+    await expect(finalAction).toBeVisible();
     await fileTrigger.click();
     await page.getByRole("button", { name: "Features" }).click();
     await expect(page.getByTestId("json-mobile-file-actions")).toBeHidden();
