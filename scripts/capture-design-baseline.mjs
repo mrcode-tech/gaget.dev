@@ -172,7 +172,7 @@ try {
     } },
     { name: "invalid-diagnostics", route: "/json/formatter", run: async (page) => {
       await page.getByRole("textbox", { name: "Input JSON" }).fill('{\n  "broken": }');
-      await page.getByRole("button", { name: "Features" }).click();
+      await page.getByRole("button", { name: "Feature" }).click();
       await page.getByRole("menuitemradio", { name: /Validate/ }).click();
       await page.getByRole("button", { name: "Run operation" }).click();
       await page.getByRole("button", { name: /Go to line 2/ }).waitFor({ state: "visible" });
@@ -185,7 +185,7 @@ try {
     } },
     { name: "file-menu", route: "/json/formatter", run: async (page) => {
       if ((page.viewportSize()?.width ?? 1024) < 768) {
-        await page.getByRole("button", { name: "Features" }).click();
+        await page.getByRole("button", { name: "Feature" }).click();
         await page.getByTestId("json-mobile-file-actions").waitFor({ state: "visible" });
       } else {
         await page.getByRole("button", { name: "File" }).click();
@@ -193,7 +193,7 @@ try {
       }
     } },
     { name: "features-menu", route: "/json/formatter", run: async (page) => {
-      await page.getByRole("button", { name: "Features" }).click();
+      await page.getByRole("button", { name: "Feature" }).click();
       await page.getByTestId("json-features-menu").waitFor({ state: "visible" });
     } },
   ];
