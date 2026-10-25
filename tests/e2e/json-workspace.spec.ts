@@ -98,7 +98,7 @@ test("preserves diagnostics and an open menu across the desktop breakpoint", asy
     expect(menuBox.y).toBeGreaterThanOrEqual(-1);
     expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(801);
   }
-  await page.getByRole("button", { name: "Features" }).click();
+  await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
   await page.setViewportSize({ width: 1025, height: 800 });
   await expect(editor).toHaveValue('{"boundary": }');
   await expect(diagnostic).toBeVisible();
