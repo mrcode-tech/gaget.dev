@@ -504,7 +504,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
       </div>
     </div>
 
-    <div data-testid="json-workspace-content" className="mx-auto w-full max-w-[1440px] space-y-4 px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
+    <div data-testid="json-workspace-content" className="w-full min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
       <h1 className="text-xl font-bold tracking-tight">{t("json.workspace")}</h1>
       <p className="text-sm text-muted-foreground">{t("json.workspaceDescription")}</p>
 
