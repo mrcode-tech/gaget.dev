@@ -226,10 +226,17 @@ test("Run action stacks on mobile and returns to a horizontal header on desktop"
   await expect(header).toHaveCSS("flex-direction", "row");
 });
 
-test("removes the repeated JSON-specific privacy message from the workspace and File menu", async ({ page }) => {
+test("removes the repeated JSON privacy disclosure from responsive File-action menus", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/json/formatter");
   await expect(page.getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
-  await page.getByRole("button", { name: "File" }).click();
+  await page.getByRole("button", { name: "Features", exact: true }).click();
+  await expect(page.getByTestId("json-mobile-file-actions").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
+  await expect(page.getByTestId("json-features-menu").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/json/formatter");
+  await expect(page.getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
+  await page.getByRole("button", { name: "File", exact: true }).click();
   await expect(page.getByTestId("json-file-menu").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
 });
