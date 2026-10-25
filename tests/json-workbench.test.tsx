@@ -60,6 +60,22 @@ describe("JSON workspace operations", () => {
     expect(screen.queryByLabelText("Output")).toBeNull();
   });
 
+  it("shares File actions with the mobile Features menu while retaining a tablet/desktop File trigger", () => {
+    render(<JsonWorkbench />);
+    const fileTrigger = screen.getByRole("button", { name: "File" });
+    expect(fileTrigger.parentElement?.className).toContain("hidden");
+    expect(fileTrigger.parentElement?.className).toContain("md:block");
+
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    const featuresMenu = screen.getByTestId("json-features-menu");
+    const mobileFileActions = within(featuresMenu).getByTestId("json-mobile-file-actions");
+    expect(mobileFileActions.className).toContain("md:hidden");
+    for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample", "Clear"]) {
+      expect(within(mobileFileActions).getByRole("menuitem", { name: label })).toBeTruthy();
+    }
+    expect(within(featuresMenu).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
+  });
+
   it("uses a stacked mobile operation action layout and a wider-screen row layout", () => {
     render(<JsonWorkbench />);
     const header = screen.getByTestId("json-operation-header");
