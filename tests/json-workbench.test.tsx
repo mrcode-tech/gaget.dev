@@ -70,7 +70,7 @@ describe("JSON workspace operations", () => {
     const featuresMenu = screen.getByTestId("json-features-menu");
     const mobileFileActions = within(featuresMenu).getByTestId("json-mobile-file-actions");
     expect(mobileFileActions.className).toContain("md:hidden");
-    for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample", "Clear"]) {
+    for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample JSON", "Clear document"]) {
       expect(within(mobileFileActions).getByRole("menuitem", { name: label })).toBeTruthy();
     }
     expect(within(featuresMenu).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
