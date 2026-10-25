@@ -618,7 +618,7 @@ test("Date & Time desktop parameter panel fits content and has only the required
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/datetime/editor");
   await page.getByRole("button", { name: /^Date$/ }).click();
-  await page.getByRole("button", { name: /^Date calculator/i }).click();
+  await page.getByRole("button", { name: /^Week number/i }).click();
 
   const panel = page.getByTestId("datetime-feature-panel");
   const header = page.getByTestId("datetime-feature-panel-header");
@@ -636,7 +636,7 @@ test("Date & Time desktop parameter panel fits content and has only the required
       workbenchBorderBottom: getComputedStyle(workbenchElement).borderBottomWidth,
     };
   });
-  expect(geometry.height, "short parameter forms should not stretch to fill the desktop viewport").toBeLessThan(700);
+  expect(geometry.height, "short parameter forms should not stretch to fill the desktop viewport").toBeLessThan(600);
   expect(geometry.panelBorderBottom, "the outer panel should not add a bottom separator").toBe("0px");
   expect(geometry.headerBorderBottom, "the panel title should have its required bottom separator").toBe("1px");
   expect(geometry.workbenchBorderTop, "the workbench should not duplicate the header separator").toBe("0px");
