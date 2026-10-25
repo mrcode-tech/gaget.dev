@@ -18,7 +18,7 @@ test.describe("JSON workspace responsive editor and diagnostics", () => {
         await expect(page.getByRole("textbox", { name: "Search tools" })).toBeHidden();
       }
       await editor.fill('{"first": 1,\n  "second": }');
-      const featureTrigger = page.getByRole("button", { name: viewport.width < 768 ? "Feature" : "Utilities (Core Tools)", exact: true });
+      const featureTrigger = page.getByRole("button", { name: viewport.width < 768 ? "Feature" : "Utilities", exact: true });
       await featureTrigger.click();
       await page.getByRole("menuitemradio", { name: /Validate/ }).click();
       await page.getByRole("button", { name: "Run operation" }).click();
@@ -71,7 +71,7 @@ test("preserves diagnostics and an open menu across the desktop breakpoint", asy
   await page.goto("/json/formatter");
   const editor = page.getByRole("textbox", { name: "Input JSON" });
   await editor.fill('{"boundary": }');
-  await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
+  await page.getByRole("button", { name: "Utilities", exact: true }).click();
   await page.getByRole("menuitemradio", { name: /^Validate/i }).click();
   await page.getByRole("button", { name: "Run operation" }).click();
   const diagnostic = page.getByRole("button", { name: /Go to line/ });
@@ -82,7 +82,7 @@ test("preserves diagnostics and an open menu across the desktop breakpoint", asy
   await expect(diagnostic).toBeVisible();
   await expect(page.locator("header").first()).toBeHidden();
   await expect(page.getByRole("button", { name: "Open navigation" })).toBeVisible();
-  await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
+  await page.getByRole("button", { name: "Utilities", exact: true }).click();
   const menu = page.getByTestId("json-group-menu");
   await expect(menu).toBeVisible();
 
@@ -98,7 +98,7 @@ test("preserves diagnostics and an open menu across the desktop breakpoint", asy
     expect(menuBox.y).toBeGreaterThanOrEqual(-1);
     expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(801);
   }
-  await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
+  await page.getByRole("button", { name: "Utilities", exact: true }).click();
   await page.setViewportSize({ width: 1025, height: 800 });
   await expect(editor).toHaveValue('{"boundary": }');
   await expect(diagnostic).toBeVisible();
@@ -182,7 +182,7 @@ test("Validate and Find Key do not render an irrelevant JSON output panel", asyn
       ? "View"
       : /^(Escape string contents|Unescape string contents)/i.test(label)
         ? "Convert"
-        : "Utilities (Core Tools)";
+        : "Utilities";
     await page.getByRole("button", { name: group, exact: true }).click();
     await page.getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }).click();
   };
@@ -279,7 +279,7 @@ test("tablet and desktop JSON File menu exposes every supported action, includin
     await finalAction.scrollIntoViewIfNeeded();
     await expect(finalAction).toBeVisible();
     await fileTrigger.click();
-    await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
+    await page.getByRole("button", { name: "Utilities", exact: true }).click();
     await expect(page.getByTestId("json-group-menu")).toBeVisible();
   }
 });
@@ -289,7 +289,7 @@ test("shows File, Utilities, View, and Convert as separate desktop menu triggers
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/json/formatter");
   const bar = page.getByTestId("json-editor-menubar");
-  const labels = ["File", "Utilities (Core Tools)", "View", "Convert"];
+  const labels = ["File", "Utilities", "View", "Convert"];
   for (const label of labels) await expect(bar.getByRole("button", { name: label, exact: true })).toBeVisible();
   await expect(bar.getByRole("button", { name: "Feature", exact: true })).toBeHidden();
   const boxes = await Promise.all(labels.map(label => bar.getByRole("button", { name: label, exact: true }).boundingBox()));
@@ -300,7 +300,7 @@ test("shows File, Utilities, View, and Convert as separate desktop menu triggers
   }
 
   for (const [label, expectedCount, firstOperation] of [
-    ["Utilities (Core Tools)", 5, /^Format/i],
+    ["Utilities", 5, /^Format/i],
     ["View", 2, /^Tree Viewer/i],
     ["Convert", 2, /^Escape string contents/i],
   ] as const) {
@@ -315,7 +315,7 @@ test("shows File, Utilities, View, and Convert as separate desktop menu triggers
   await page.reload();
   await expect(bar.getByRole("button", { name: "File", exact: true })).toBeVisible();
   await expect(bar.getByRole("button", { name: "Feature", exact: true })).toBeVisible();
-  for (const label of ["Utilities (Core Tools)", "View", "Convert"]) {
+  for (const label of ["Utilities", "View", "Convert"]) {
     await expect(bar.getByRole("button", { name: label, exact: true })).toBeHidden();
   }
   await bar.getByRole("button", { name: "Feature", exact: true }).click();
