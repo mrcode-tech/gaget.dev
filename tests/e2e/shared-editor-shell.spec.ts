@@ -342,27 +342,19 @@ for (const viewport of [{ name: "mobile", width: 390, height: 844 }, { name: "ta
   });
 }
 
-test("Date & Time mobile content keeps the browser-only disclaimer after all controls", async ({ page }, testInfo) => {
+test("Date & Time main page omits the redundant browser/calendar disclaimer", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/datetime/editor");
 
-  const content = page.locator("main > div").first();
-  const showSeconds = page.getByText("Show seconds", { exact: true });
-  const disclaimer = page.getByText(/Runs locally in your browser/);
-  await expect(showSeconds).toBeVisible();
-  await expect(disclaimer).toBeVisible();
+  const workspace = page.getByTestId("datetime-workspace");
+  await expect(page.getByText("Show seconds", { exact: true })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Calendar system" })).toBeVisible();
+  await expect(page.getByText(/Runs locally in your browser/i)).toHaveCount(0);
+  await expect(page.getByText(/Calendar availability depends on your browser/i)).toHaveCount(0);
 
-  const controlsBox = await showSeconds.boundingBox();
-  const disclaimerBox = await disclaimer.boundingBox();
-  expect(controlsBox, "last Date & Time control should have a measurable position").not.toBeNull();
-  expect(disclaimerBox, "browser-only disclaimer should have a measurable position").not.toBeNull();
-  if (controlsBox && disclaimerBox) {
-    expect(disclaimerBox.y, "disclaimer must follow the controls instead of overlapping them")
-      .toBeGreaterThanOrEqual(controlsBox.y + controlsBox.height);
-  }
-
-  await content.evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await saveStateScreenshot(page, testInfo, "datetime-mobile-content-flow.png");
+  await workspace.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(() => workspace.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThanOrEqual(1);
+  await saveStateScreenshot(page, testInfo, "datetime-mobile-content-without-redundant-disclaimer.png");
 });
 
 const panelViewports = [
@@ -620,4 +612,40 @@ test("Date & Time introduction and select controls follow shared responsive geom
     expect(await select.evaluate((node) => getComputedStyle(node).paddingInlineEnd)).toBe("36px");
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
+});
+
+test("Date & Time desktop parameter panel fits content and has only the required separators", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/datetime/editor");
+  await page.getByRole("button", { name: /^Date$/ }).click();
+  await page.getByRole("button", { name: /^Date calculator/i }).click();
+
+  const panel = page.getByTestId("datetime-feature-panel");
+  const header = page.getByTestId("datetime-feature-panel-header");
+  const workbench = page.getByTestId("datetime-workbench-content");
+  await expect(panel).toBeVisible();
+  const geometry = await panel.evaluate((element) => {
+    const headerElement = element.querySelector("[data-testid='datetime-feature-panel-header']")!;
+    const workbenchElement = element.querySelector("[data-testid='datetime-workbench-content']")!;
+    return {
+      height: element.getBoundingClientRect().height,
+      top: element.getBoundingClientRect().top,
+      panelBorderBottom: getComputedStyle(element).borderBottomWidth,
+      headerBorderBottom: getComputedStyle(headerElement).borderBottomWidth,
+      workbenchBorderTop: getComputedStyle(workbenchElement).borderTopWidth,
+      workbenchBorderBottom: getComputedStyle(workbenchElement).borderBottomWidth,
+    };
+  });
+  expect(geometry.height, "short parameter forms should not stretch to fill the desktop viewport").toBeLessThan(700);
+  expect(geometry.panelBorderBottom, "the outer panel should not add a bottom separator").toBe("0px");
+  expect(geometry.headerBorderBottom, "the panel title should have its required bottom separator").toBe("1px");
+  expect(geometry.workbenchBorderTop, "the workbench should not duplicate the header separator").toBe("0px");
+  expect(geometry.workbenchBorderBottom, "the workbench should not add an extra bottom separator").toBe("0px");
+  const commandBar = page.getByRole("navigation", { name: "Date and time editor commands" });
+  const commandBarBox = await commandBar.boundingBox();
+  expect(commandBarBox).not.toBeNull();
+  if (commandBarBox) expect(geometry.top).toBeGreaterThanOrEqual(commandBarBox.y + commandBarBox.height - 1);
+  await saveStateScreenshot(page, testInfo, "datetime-desktop-content-height-feature-panel.png");
+  await expect(header).toBeVisible();
+  await expect(workbench).toBeVisible();
 });
