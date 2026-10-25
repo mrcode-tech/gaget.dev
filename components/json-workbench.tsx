@@ -482,7 +482,6 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     <div data-testid="json-workspace-content" className="mx-auto w-full max-w-[1440px] space-y-4 px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
       <h1 className="text-xl font-bold tracking-tight">{t("json.workspace")}</h1>
       <p className="text-sm text-muted-foreground">{t("json.workspaceDescription")}</p>
-    </div>
 
     <div data-testid="json-operation-header" className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="min-w-0"><h2 className="text-base font-semibold">{operationEntries.find((entry) => entry.id === operation)?.label}</h2><p data-testid="json-operation-description" className="text-sm text-muted-foreground">{operationEntries.find((entry) => entry.id === operation)?.description}</p></div>
