@@ -191,8 +191,10 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     const activeMenu = menuBarRef.current?.querySelector<HTMLDivElement>(
       menuOpen === "File" ? '[data-testid="json-file-menu"]' : '[data-testid="json-features-menu"]',
     );
-    const firstItemSelector = menuOpen === "Features" && window.innerWidth >= 768
-      ? '[role="menuitemradio"]:not(:disabled)'
+    const firstItemSelector = menuOpen === "Features"
+      ? window.innerWidth >= 768
+        ? '[data-testid="json-desktop-feature-groups"] [role="menuitemradio"]:not(:disabled)'
+        : '[data-testid="json-mobile-file-actions"] [role^="menuitem"]:not(:disabled)'
       : '[role^="menuitem"]:not(:disabled)';
     activeMenu?.querySelector<HTMLButtonElement>(firstItemSelector)?.focus();
     const closeOnOutsidePointer = (event: PointerEvent) => {
