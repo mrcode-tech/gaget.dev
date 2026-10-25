@@ -268,3 +268,33 @@ test("tablet and desktop JSON File menu exposes every supported action, includin
     await expect(page.getByTestId("json-mobile-file-actions")).toBeHidden();
   }
 });
+
+
+test("keeps desktop JSON menus together on the left and exposes expandable feature categories", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/json/formatter");
+  const bar = page.getByTestId("json-editor-menubar");
+  const fileTrigger = bar.getByRole("button", { name: "File", exact: true });
+  const featuresTrigger = bar.getByRole("button", { name: "Features", exact: true });
+  await expect(fileTrigger).toBeVisible();
+  await expect(featuresTrigger).toBeVisible();
+  const barBox = await bar.boundingBox();
+  const fileBox = await fileTrigger.boundingBox();
+  const featuresBox = await featuresTrigger.boundingBox();
+  expect(barBox && fileBox && featuresBox).not.toBeNull();
+  if (barBox && fileBox && featuresBox) {
+    expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x);
+    expect(featuresBox.x + featuresBox.width).toBeLessThan(barBox.x + barBox.width * 0.5);
+    expect(Math.abs(featuresBox.y - fileBox.y)).toBeLessThanOrEqual(2);
+  }
+
+  await featuresTrigger.click();
+  const menu = page.getByTestId("json-features-menu");
+  await expect(menu).toBeVisible();
+  for (const category of ["Core JSON", "Inspect and Navigate", "Transform"]) {
+    await expect(menu.getByRole("button", { name: category })).toBeVisible();
+  }
+  await expect(menu.getByRole("menuitemradio", { name: /^Format/i })).toBeVisible();
+  await expect(menu.getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeAttached();
+  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeAttached();
+});
