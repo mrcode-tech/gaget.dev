@@ -13,7 +13,9 @@ afterEach(cleanup);
 
 function chooseFeature(label: string) {
   fireEvent.click(screen.getByRole("button", { name: "Features" }));
-  fireEvent.click(screen.getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
+  const menu = screen.getByTestId("json-features-menu");
+  const variant = within(menu).getByTestId(window.innerWidth < 768 ? "json-mobile-feature-list" : "json-desktop-feature-groups");
+  fireEvent.click(within(variant).getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
 }
 
 describe("JSON workspace operations", () => {
@@ -73,7 +75,40 @@ describe("JSON workspace operations", () => {
     for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample JSON", "Clear document"]) {
       expect(within(mobileFileActions).getByRole("menuitem", { name: label })).toBeTruthy();
     }
-    expect(within(featuresMenu).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
+    expect(within(within(featuresMenu).getByTestId("json-mobile-feature-list")).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
+  });
+
+  it("uses a flat mobile JSON feature list with search and no category disclosure controls", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
+    window.dispatchEvent(new Event("resize"));
+    render(<JsonWorkbench />);
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    const menu = screen.getByTestId("json-features-menu");
+    const mobileList = within(menu).getByTestId("json-mobile-feature-list");
+    const search = within(mobileList).getByRole("searchbox", { name: "Search features" });
+    expect(mobileList.querySelector("summary")).toBeNull();
+    expect(within(mobileList).getAllByRole("menuitemradio")).toHaveLength(9);
+    fireEvent.change(search, { target: { value: "  vIeW  " } });
+    expect(within(mobileList).getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeTruthy();
+    expect(within(mobileList).getByRole("menuitemradio", { name: /^Find keys and values/i })).toBeTruthy();
+    expect(within(mobileList).getAllByRole("menuitemradio")).toHaveLength(2);
+    fireEvent.change(search, { target: { value: "no-such-operation" } });
+    expect(within(mobileList).getByRole("status").textContent).toContain("No matching features");
+    fireEvent.change(search, { target: { value: "" } });
+    expect(within(mobileList).getAllByRole("menuitemradio")).toHaveLength(9);
+  });
+
+  it("uses meaningful expandable groups on desktop and no mobile-only search", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1024 });
+    window.dispatchEvent(new Event("resize"));
+    render(<JsonWorkbench />);
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    const menu = screen.getByTestId("json-features-menu");
+    const desktopGroups = within(menu).getByTestId("json-desktop-feature-groups");
+    expect(within(desktopGroups).getByRole("button", { name: "Utilities (Core Tools)" })).toBeTruthy();
+    expect(within(desktopGroups).getByRole("button", { name: "View" })).toBeTruthy();
+    expect(within(desktopGroups).getByRole("button", { name: "Convert" })).toBeTruthy();
+    expect(within(menu).queryByRole("searchbox", { name: "Search features" })).toBeNull();
   });
 
   it("uses a stacked mobile operation action layout and a wider-screen row layout", () => {
@@ -256,10 +291,12 @@ describe("JSON workspace operations", () => {
     const trigger = screen.getByRole("button", { name: "Features" });
     fireEvent.click(trigger);
     const menu = screen.getByTestId("json-features-menu");
-    const first = within(menu).getAllByRole("menuitemradio")[0] as HTMLButtonElement;
+    const desktopGroups = within(menu).getByTestId("json-desktop-feature-groups");
+    const items = within(desktopGroups).getAllByRole("menuitemradio");
+    const first = items[0] as HTMLButtonElement;
     expect(document.activeElement).toBe(first);
     fireEvent.keyDown(first, { key: "ArrowDown" });
-    expect(document.activeElement).toBe(within(menu).getAllByRole("menuitemradio")[1]);
+    expect(document.activeElement).toBe(items[1]);
     fireEvent.keyDown(document.activeElement!, { key: "Escape" });
     expect(screen.queryByTestId("json-features-menu")).toBeNull();
     expect(document.activeElement).toBe(trigger);
