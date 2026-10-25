@@ -784,7 +784,7 @@ export function PhotoEditor() {
             event.preventDefault(); setDragOver(false);
             const dropped = Array.from(event.dataTransfer.files).find((file) => file.type.startsWith("image/"));
             if (dropped) void chooseFile(dropped); else setError("Drop an image file such as PNG, JPEG, WebP, GIF, or AVIF.");
-          }} className={"relative flex min-h-0 min-w-0 flex-1 bg-muted/25 " + (!hasImage ? "flex-col items-stretch justify-start overflow-x-hidden overflow-y-auto p-3 sm:p-6 " : "overflow-auto p-3 sm:p-6 lg:p-8 " + (zoom > 100 ? "items-start justify-start " : "items-center justify-center ")) + "[@media(max-height:500px)]:items-start [@media(max-height:500px)]:justify-start " + (dragOver ? "ring-2 ring-inset ring-primary bg-primary/5" : "")}>
+          }} className={"relative flex min-h-0 min-w-0 flex-1 bg-muted/25 " + (!hasImage ? "flex-col items-stretch justify-start overflow-x-hidden overflow-y-auto p-3 sm:p-6 lg:p-8 " : "overflow-auto p-3 sm:p-6 lg:p-8 " + (zoom > 100 ? "items-start justify-start " : "items-center justify-center ")) + "[@media(max-height:500px)]:items-start [@media(max-height:500px)]:justify-start " + (dragOver ? "ring-2 ring-inset ring-primary bg-primary/5" : "")}>
             {!hasImage && <section data-testid="photo-empty-intro" className="w-full shrink-0 pb-4">
               <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-muted-foreground"><Link href="/" className="hover:text-foreground">Home</Link><span aria-hidden="true">›</span><span aria-current="page">Photo Editor</span></nav>
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Photo Editor</h1>

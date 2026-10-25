@@ -135,6 +135,17 @@ describe("DateTimeEditor", () => {
     const panel = screen.getByTestId("datetime-feature-panel");
     expect(panel.className).toContain("fixed");
     expect(panel.className).toContain("md:w-[320px]");
+    expect(panel.className).toContain("md:h-auto");
+    expect(panel.className).toContain("md:self-start");
+    expect(panel.className).not.toContain("md:h-full");
+    expect(panel.className).not.toContain("md:min-h-full");
+    expect(panel.className).not.toContain("md:max-h-full");
+    const panelHeader = within(panel).getByTestId("datetime-feature-panel-header");
+    expect(panelHeader.className).toContain("border-b");
+    expect(panel.className.split(/\s+/)).not.toContain("border-b");
+    const workbenchContent = within(panel).getByTestId("datetime-workbench-content");
+    expect(workbenchContent.className).toContain("divide-y");
+    expect(workbenchContent.className).not.toContain("border-y");
     expect(panel.className).toContain("md:border-l");
     expect(panel.className).toContain("md:border-t-0");
     expect(panel.className).toContain("max-h-[70dvh]");
@@ -178,4 +189,13 @@ describe("DateTimeEditor", () => {
     expect(within(zoneSelect).getByRole("option", { name: "Asia/Tehran" })).toBeTruthy();
     expect(within(zoneSelect).queryByRole("option", { name: "Europe/London" })).toBeNull();
   });
+it("does not render the redundant browser and calendar disclaimer", () => {
+  render(<DateTimeEditor />);
+  expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
+  expect(screen.getByRole("combobox", { name: "Calendar system" })).toBeTruthy();
+  expect(screen.getByText("Show seconds")).toBeTruthy();
+  expect(screen.getByTestId("datetime-workspace").className).not.toContain("pb-8");
+  expect(screen.queryByText(/Runs locally in your browser/i)).toBeNull();
+  expect(screen.queryByText(/Calendar availability depends on your browser/i)).toBeNull();
+});
 });

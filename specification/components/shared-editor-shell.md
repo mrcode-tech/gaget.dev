@@ -51,6 +51,8 @@ Use the repository's existing Tailwind ranges; do not add competing breakpoints.
 
 Height is a separate constraint. On short-height and landscape screens, controls must remain reachable; menus and panels scroll within their own bounds; do not assume a fixed viewport height. Use dynamic viewport sizing where available and respond to viewport resize/orientation changes.
 
+**Shared horizontal gutter contract:** standalone page containers (ToolLayout, Home, category landing, and the Dev Tools catalog) use a 1600px maximum content width with 12px horizontal gutters below 640px, 24px from 640px through 1023px, and 32px at 1024px and wider. Editor workspace content (Photo Editor, Video Editor, the Date & Time main column, and the JSON body) uses matching 12px/24px/32px internal gutters. Full-width editor command bars own their own padding; do not add ToolLayout outer gutters or a second centered max-width wrapper around them. Avoid applying horizontal gutters twice.
+
 ## 3. Command bar and menus
 
 - Keep the editor command bar visually and structurally distinct from global site navigation.

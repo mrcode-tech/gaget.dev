@@ -41,7 +41,7 @@ These observations are source inspections. They do not claim browser screenshot 
 
 - Keep the command bar and workspace's primary date/time context in place while feature controls are open.
 - Hide only the introductory description when needed by the existing active-feature layout; do not move the breadcrumb/title to a different inset.
-- Desktop uses a bounded side panel when space permits. Compact widths use the existing viewport-bounded, resizable sheet and safe-area inset behavior.
+- Desktop uses a content-height side panel aligned to the top of the workspace and bounded by the available viewport height. Short parameter forms must not stretch to fill the workspace; long forms scroll inside the panel. The panel title has one bottom separator and the outer desktop panel has no bottom border. Compact widths use the existing viewport-bounded, resizable sheet and safe-area inset behavior.
 - Panel controls use the same field and select family as the main workspace. Do not create a second select style just for the feature panel.
 - Preserve single-owner scrolling and ensure focused controls are not hidden behind the on-screen keyboard or sheet edge.
 
