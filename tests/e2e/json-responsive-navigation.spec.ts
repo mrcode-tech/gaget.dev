@@ -9,14 +9,14 @@ test("mobile Features menu exposes and executes JSON File actions", async ({ pag
   await page.getByRole("button", { name: "Features", exact: true }).click();
   const fileActions = page.getByTestId("json-mobile-file-actions");
   await expect(fileActions).toBeVisible();
-  for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample", "Clear"]) {
+  for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample JSON", "Clear document"]) {
     await expect(fileActions.getByRole("menuitem", { name: label })).toBeVisible();
   }
 
-  await fileActions.getByRole("menuitem", { name: "Load sample" }).click();
+  await fileActions.getByRole("menuitem", { name: "Load sample JSON" }).click();
   await expect(editor).toHaveValue(/GaGet\.dev/);
   await page.getByRole("button", { name: "Features", exact: true }).click();
-  await page.getByTestId("json-mobile-file-actions").getByRole("menuitem", { name: "Clear" }).click();
+  await page.getByTestId("json-mobile-file-actions").getByRole("menuitem", { name: "Clear document" }).click();
   await expect(editor).toHaveValue("");
 });
 
