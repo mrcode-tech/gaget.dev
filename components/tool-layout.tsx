@@ -26,7 +26,7 @@ export function ToolLayout({
     translatedDescription === `toolDescription.${title}` ? description : translatedDescription;
 
   return (
-    <main className={workspace ? "w-full min-w-0 px-0 py-0" : "mx-auto w-full max-w-[1440px] px-4 py-4 sm:px-6 sm:py-5 lg:px-10"}>
+    <main className={workspace ? "w-full min-w-0 px-0 py-0" : "mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5 lg:px-8"}>
       {!workspace && <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
         <LocaleLink href="/" className="inline-flex items-center gap-1 hover:text-foreground">
           <Home className="h-3.5 w-3.5" />
