@@ -30,7 +30,7 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 
 | Route | Capability | Important boundaries |
 |---|---|---|
-| `/json/formatter` | JSON workspace: format, minify, validate and compare two documents structurally; input/output, copy/download for transformed output | Comparison ignores object key order, reports JSON paths for additions/removals/changes, and surfaces invalid input. Processing is local. |
+| `/json/formatter` | JSON workspace: format, minify, validate, compare, sort keys, tree view, find keys/values, escape/unescape, line-numbered input, diagnostics, File/Features menus, local import/export/copy and undo/redo | Strict local syntax scanner provides source offsets and one-based line/column; comparison ignores object key order, preserves array order, distinguishes missing/null and uses escaped paths. Advanced JSONPath/schema/repair/conversion/merge capabilities remain planned. See [JSON Workspace Contract](./json-workspace.md). |
 | `/json/diff` | Compatibility route into JSON Workspace Compare mode | Canonical metadata points to `/json/formatter`; no duplicate catalog entry. |
 | `/encoding/url` | Encode/decode URL components | Decode errors are surfaced. This is component encoding, not full URL validation. |
 | `/encoding/base64` | UTF-8 text Base64 encode/decode | Distinguish text Base64 from media Base64 tools. |
@@ -91,7 +91,7 @@ The implementation includes locale-aware formatting through `Intl.DateTimeFormat
 
 ## Shared interaction patterns
 
-- `ToolLayout` provides breadcrumb, category, title/description, and a privacy disclosure.
+- `ToolLayout` provides breadcrumb, category, title/description. Do not render the repeated generic “Privacy & data” disclosure in tool interfaces; preserve independent privacy-policy/documentation pages and tool-specific safety guidance.
 - Shared primitives are under `components/ui/`; current CSS variables live in `app/globals.css`.
 - Media/date editors use a full-viewport editor shell, compact command bar, File/Features controls, one active feature panel, and a resizable mobile feature sheet where implemented.
 - Empty-file and loaded-file states are separate experiences. Loading a file must not unexpectedly change unrelated layout, lose user edits, or leave stale object URLs.
