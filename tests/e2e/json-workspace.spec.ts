@@ -5,6 +5,7 @@ test.describe("JSON workspace responsive editor and diagnostics", () => {
     { name: "wide desktop", width: 1440, height: 900 },
     { name: "tablet portrait", width: 768, height: 1024 },
     { name: "mobile portrait", width: 390, height: 640 },
+    { name: "narrow mobile portrait", width: 320, height: 568 },
     { name: "mobile landscape short height", width: 844, height: 390 },
   ]) {
     test(`supports ${viewport.name} (${viewport.width}x${viewport.height})`, async ({ page }) => {
@@ -157,7 +158,14 @@ for (const localePrefix of ["/fa", "/ar"]) {
     if (gutterBox && editorBox) expect(gutterBox.x + gutterBox.width).toBeLessThanOrEqual(editorBox.x + 1);
     await editor.fill('{"rtl":"متن","count":2}');
     await page.getByTestId("json-editor-menubar").getByRole("button").last().click();
-    await expect(page.getByTestId("json-features-menu")).toBeVisible();
+    const menu = page.getByTestId("json-features-menu");
+    await expect(menu).toBeVisible();
+    const menuBox = await menu.boundingBox();
+    expect(menuBox).not.toBeNull();
+    if (menuBox) {
+      expect(menuBox.x).toBeGreaterThanOrEqual(-1);
+      expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(391);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
   });
 }
