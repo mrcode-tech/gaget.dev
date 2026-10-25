@@ -240,3 +240,22 @@ test("removes the repeated JSON privacy disclosure from responsive File-action m
   await page.getByRole("button", { name: "File", exact: true }).click();
   await expect(page.getByTestId("json-file-menu").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
 });
+
+test("tablet and desktop JSON File menu exposes every supported action", async ({ page }) => {
+  for (const width of [768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/json/formatter");
+    const fileTrigger = page.getByRole("button", { name: "File", exact: true });
+    await expect(fileTrigger).toBeVisible();
+    await fileTrigger.click();
+    const fileMenu = page.getByTestId("json-file-menu");
+    await expect(fileMenu).toBeVisible();
+    await expect(fileMenu.getByRole("menuitem")).toHaveCount(7);
+    for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample JSON", "Clear document"]) {
+      await expect(fileMenu.getByRole("menuitem", { name: label })).toBeVisible();
+    }
+    await fileTrigger.click();
+    await page.getByRole("button", { name: "Features" }).click();
+    await expect(page.getByTestId("json-mobile-file-actions")).toBeHidden();
+  }
+});
