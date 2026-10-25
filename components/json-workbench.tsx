@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/i18n-provider";
 import { localeDirections } from "@/lib/i18n/messages";
+import { FeatureMenuNoResults, FeatureMenuSearch } from "@/components/feature-menu-search";
+import { useFeatureMenuSearch } from "@/lib/feature-menu-search";
 import {
   compareJsonDocuments,
   diagnoseJson,
@@ -460,6 +462,8 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     { id: "unescape", label: t("json.unescape"), description: t("json.unescapeDescription"), group: t("json.transform") },
   ];
   const groups = [...new Set(operationEntries.map((entry) => entry.group))];
+  const featureSearch = useFeatureMenuSearch(menuOpen === "Features", operationEntries.length, "json", locale);
+  const filteredOperationEntries = operationEntries.filter((entry) => featureSearch.matches([entry.label, entry.description, entry.group]));
   const direction = localeDirections[locale];
 
   function renderFileActions() {
@@ -493,16 +497,24 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
             {renderFileActions()}
             <div className="my-1 border-t border-border" />
           </div>
-          {groups.map((group) => <details key={group} open className="py-1">
-            <summary role="button" aria-label={group} data-testid={`json-feature-category-${operationEntries.find((entry) => entry.group === group)?.id}`} className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <span>{group}</span><span aria-hidden="true" className="text-muted-foreground">⌄</span>
-            </summary>
-            <div role="group" aria-label={group}>
-              {operationEntries.filter((entry) => entry.group === group).map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
-                <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
-              </button>)}
-            </div>
-          </details>)}
+          <div className="md:hidden">
+            {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
+            {featureSearch.canSearch && featureSearch.query.trim() && filteredOperationEntries.length === 0 ? <FeatureMenuNoResults /> : filteredOperationEntries.map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
+              <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
+            </button>)}
+          </div>
+          <div className="hidden md:block">
+            {groups.map((group) => <details key={group} open className="py-1">
+              <summary role="button" aria-label={group} data-testid={`json-feature-category-${operationEntries.find((entry) => entry.group === group)?.id}`} className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span>{group}</span><span aria-hidden="true" className="text-muted-foreground">⌄</span>
+              </summary>
+              <div role="group" aria-label={group}>
+                {operationEntries.filter((entry) => entry.group === group).map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
+                  <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
+                </button>)}
+              </div>
+            </details>)}
+          </div>
         </div>}
         </div>
       </div>
