@@ -291,7 +291,7 @@ test("keeps desktop JSON menus together on the left and exposes expandable featu
   await featuresTrigger.click();
   const menu = page.getByTestId("json-features-menu");
   await expect(menu).toBeVisible();
-  for (const category of ["Core JSON", "Inspect and Navigate", "Transform"]) {
+  for (const category of ["Core JSON", "Inspect and navigate", "Transform"]) {
     await expect(menu.getByRole("button", { name: category })).toBeVisible();
   }
   await expect(menu.getByRole("menuitemradio", { name: /^Format/i })).toBeVisible();
