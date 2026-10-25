@@ -67,7 +67,7 @@ Height is a separate constraint. On short-height and landscape screens, controls
 ## 3.1 Mobile Features-menu search contract
 
 **Status:** Proposed contract for review; not an approval of a pixel-perfect design.
-**Applies to:** Photo/Image, Audio, Video, and Date & Time Features menus.
+**Applies to:** Photo/Image, Audio, Video, Date & Time, and the JSON workspace Features menu. JSON uses the same shared search hook/input/no-results components, but its mobile operations list is flat rather than grouped.
 
 ### Purpose and visibility
 
@@ -82,7 +82,7 @@ The Features menu can become long on small screens. Search should reduce scannin
 
 ### Placement, anatomy, and responsive behavior
 
-- Keep the existing menu trigger, anchoring, heading, close affordance, groups, icons, titles, descriptions, and selected state.
+- Keep the existing menu trigger, anchoring, heading, close affordance, icons, titles, descriptions, and selected state. Photo, Audio, Video and Date & Time retain their existing group headings; JSON mobile deliberately presents a single flat list without category headings or disclosure arrows, while its desktop menu retains grouped commands.
 - When enabled, place the search input immediately after the Features-menu heading/close row and before the first feature group. It spans the available inner menu width and participates in the menu's existing vertical flow.
 - Reuse the shared shadcn-style Input, semantic theme tokens, and existing Lucide search icon. Use direction-aware start positioning/padding, not hard-coded left/right alignment.
 - Keep the existing viewport-bounded menu and its single vertical scroll owner. Search results reduce list content but must not create a second nested scrolling region or horizontal page overflow. The menu remains usable on short-height and landscape mobile screens.
