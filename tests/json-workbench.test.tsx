@@ -12,10 +12,20 @@ import {
 afterEach(cleanup);
 
 function chooseFeature(label: string) {
-  fireEvent.click(screen.getByRole("button", { name: "Features" }));
-  const menu = screen.getByTestId("json-features-menu");
-  const variant = within(menu).getByTestId(window.innerWidth < 768 ? "json-mobile-feature-list" : "json-desktop-feature-groups");
-  fireEvent.click(within(variant).getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
+  if (window.innerWidth < 768) {
+    fireEvent.click(screen.getByRole("button", { name: "Feature", exact: true }));
+    const menu = screen.getByTestId("json-features-menu");
+    fireEvent.click(within(within(menu).getByTestId("json-mobile-feature-list")).getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
+    return;
+  }
+  const group = /^(Tree viewer|Find keys and values)/i.test(label)
+    ? "View"
+    : /^(Escape string contents|Unescape string contents)/i.test(label)
+      ? "Convert"
+      : "Utilities (Core Tools)";
+  fireEvent.click(screen.getByRole("button", { name: group, exact: true }));
+  const menu = screen.getByTestId("json-group-menu");
+  fireEvent.click(within(menu).getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
 }
 
 describe("JSON workspace operations", () => {
@@ -62,19 +72,23 @@ describe("JSON workspace operations", () => {
     expect(screen.queryByLabelText("Output")).toBeNull();
   });
 
-  it("shares File actions with the mobile Features menu while retaining a tablet/desktop File trigger", () => {
+  it("shows separate File and Feature menus on mobile", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
+    window.dispatchEvent(new Event("resize"));
     render(<JsonWorkbench />);
-    const fileTrigger = screen.getByRole("button", { name: "File" });
-    expect(fileTrigger.parentElement?.className).toContain("hidden");
-    expect(fileTrigger.parentElement?.className).toContain("md:block");
-
-    fireEvent.click(screen.getByRole("button", { name: "Features" }));
-    const featuresMenu = screen.getByTestId("json-features-menu");
-    const mobileFileActions = within(featuresMenu).getByTestId("json-mobile-file-actions");
-    expect(mobileFileActions.className).toContain("md:hidden");
+    const fileTrigger = screen.getByRole("button", { name: "File", exact: true });
+    const featureTrigger = screen.getByRole("button", { name: "Feature", exact: true });
+    expect(fileTrigger).toBeTruthy();
+    expect(featureTrigger).toBeTruthy();
+    fireEvent.click(fileTrigger);
+    const fileMenu = screen.getByTestId("json-file-menu");
     for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample JSON", "Clear document"]) {
-      expect(within(mobileFileActions).getByRole("menuitem", { name: label })).toBeTruthy();
+      expect(within(fileMenu).getByRole("menuitem", { name: label })).toBeTruthy();
     }
+    fireEvent.click(fileTrigger);
+    fireEvent.click(featureTrigger);
+    const featuresMenu = screen.getByTestId("json-features-menu");
+    expect(within(featuresMenu).queryByTestId("json-mobile-file-actions")).toBeNull();
     expect(within(within(featuresMenu).getByTestId("json-mobile-feature-list")).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
   });
 
@@ -82,7 +96,7 @@ describe("JSON workspace operations", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
     window.dispatchEvent(new Event("resize"));
     render(<JsonWorkbench />);
-    fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    fireEvent.click(screen.getByRole("button", { name: "Feature", exact: true }));
     const menu = screen.getByTestId("json-features-menu");
     const mobileList = within(menu).getByTestId("json-mobile-feature-list");
     const search = within(mobileList).getByRole("searchbox", { name: "Search features" });
@@ -98,17 +112,21 @@ describe("JSON workspace operations", () => {
     expect(within(mobileList).getAllByRole("menuitemradio")).toHaveLength(9);
   });
 
-  it("uses meaningful expandable groups on desktop and no mobile-only search", () => {
+  it("shows four desktop menu triggers and scopes each feature menu to its category", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1024 });
     window.dispatchEvent(new Event("resize"));
     render(<JsonWorkbench />);
-    fireEvent.click(screen.getByRole("button", { name: "Features" }));
-    const menu = screen.getByTestId("json-features-menu");
-    const desktopGroups = within(menu).getByTestId("json-desktop-feature-groups");
-    expect(within(desktopGroups).getByRole("button", { name: "Utilities (Core Tools)" })).toBeTruthy();
-    expect(within(desktopGroups).getByRole("button", { name: "View" })).toBeTruthy();
-    expect(within(desktopGroups).getByRole("button", { name: "Convert" })).toBeTruthy();
-    expect(within(menu).queryByRole("searchbox", { name: "Search features" })).toBeNull();
+    const bar = screen.getByTestId("json-editor-menubar");
+    for (const label of ["File", "Utilities (Core Tools)", "View", "Convert"]) {
+      expect(within(bar).getByRole("button", { name: label, exact: true })).toBeTruthy();
+    }
+    fireEvent.click(within(bar).getByRole("button", { name: "Utilities (Core Tools)", exact: true }));
+    expect(within(screen.getByTestId("json-group-menu")).getAllByRole("menuitemradio")).toHaveLength(5);
+    fireEvent.click(within(bar).getByRole("button", { name: "View", exact: true }));
+    expect(within(screen.getByTestId("json-group-menu")).getAllByRole("menuitemradio")).toHaveLength(2);
+    fireEvent.click(within(bar).getByRole("button", { name: "Convert", exact: true }));
+    expect(within(screen.getByTestId("json-group-menu")).getAllByRole("menuitemradio")).toHaveLength(2);
+    expect(within(bar).queryByRole("button", { name: "Features", exact: true })).toBeNull();
   });
 
   it("uses a stacked mobile operation action layout and a wider-screen row layout", () => {
@@ -288,17 +306,16 @@ describe("JSON workspace operations", () => {
   });
   it("supports arrow-key menu navigation and Escape focus restoration", () => {
     render(<JsonWorkbench />);
-    const trigger = screen.getByRole("button", { name: "Features" });
+    const trigger = screen.getByRole("button", { name: "Utilities (Core Tools)", exact: true });
     fireEvent.click(trigger);
-    const menu = screen.getByTestId("json-features-menu");
-    const desktopGroups = within(menu).getByTestId("json-desktop-feature-groups");
-    const items = within(desktopGroups).getAllByRole("menuitemradio");
+    const menu = screen.getByTestId("json-group-menu");
+    const items = within(menu).getAllByRole("menuitemradio");
     const first = items[0] as HTMLButtonElement;
     expect(document.activeElement).toBe(first);
     fireEvent.keyDown(first, { key: "ArrowDown" });
     expect(document.activeElement).toBe(items[1]);
     fireEvent.keyDown(document.activeElement!, { key: "Escape" });
-    expect(screen.queryByTestId("json-features-menu")).toBeNull();
+    expect(screen.queryByTestId("json-group-menu")).toBeNull();
     expect(document.activeElement).toBe(trigger);
   });
 
