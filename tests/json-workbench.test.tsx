@@ -82,18 +82,18 @@ describe("JSON workspace operations", () => {
     render(<JsonWorkbench />);
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
     const menu = screen.getByTestId("json-features-menu");
-    const search = within(menu).getByRole("searchbox", { name: "Search features" });
-    expect(menu.querySelector("summary")).toBeNull();
-    expect(menu.querySelector("[data-testid^='json-feature-category-']")).toBeNull();
-    expect(within(menu).getAllByRole("menuitemradio")).toHaveLength(9);
+    const mobileList = within(menu).getByTestId("json-mobile-feature-list");
+    const search = within(mobileList).getByRole("searchbox", { name: "Search features" });
+    expect(mobileList.querySelector("summary")).toBeNull();
+    expect(within(mobileList).getAllByRole("menuitemradio")).toHaveLength(9);
     fireEvent.change(search, { target: { value: "  vIeW  " } });
-    expect(within(menu).getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeTruthy();
-    expect(within(menu).getByRole("menuitemradio", { name: /^Find keys and values/i })).toBeTruthy();
-    expect(within(menu).getAllByRole("menuitemradio")).toHaveLength(2);
+    expect(within(mobileList).getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeTruthy();
+    expect(within(mobileList).getByRole("menuitemradio", { name: /^Find keys and values/i })).toBeTruthy();
+    expect(within(mobileList).getAllByRole("menuitemradio")).toHaveLength(2);
     fireEvent.change(search, { target: { value: "no-such-operation" } });
-    expect(within(menu).getByRole("status").textContent).toContain("No matching features");
+    expect(within(mobileList).getByRole("status").textContent).toContain("No matching features");
     fireEvent.change(search, { target: { value: "" } });
-    expect(within(menu).getAllByRole("menuitemradio")).toHaveLength(9);
+    expect(within(mobileList).getAllByRole("menuitemradio")).toHaveLength(9);
   });
 
   it("uses meaningful expandable groups on desktop and no mobile-only search", () => {
@@ -102,9 +102,10 @@ describe("JSON workspace operations", () => {
     render(<JsonWorkbench />);
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
     const menu = screen.getByTestId("json-features-menu");
-    expect(within(menu).getByRole("button", { name: "Utilities (Core Tools)" })).toBeTruthy();
-    expect(within(menu).getByRole("button", { name: "View" })).toBeTruthy();
-    expect(within(menu).getByRole("button", { name: "Convert" })).toBeTruthy();
+    const desktopGroups = within(menu).getByTestId("json-desktop-feature-groups");
+    expect(within(desktopGroups).getByRole("button", { name: "Utilities (Core Tools)" })).toBeTruthy();
+    expect(within(desktopGroups).getByRole("button", { name: "View" })).toBeTruthy();
+    expect(within(desktopGroups).getByRole("button", { name: "Convert" })).toBeTruthy();
     expect(within(menu).queryByRole("searchbox", { name: "Search features" })).toBeNull();
   });
 
