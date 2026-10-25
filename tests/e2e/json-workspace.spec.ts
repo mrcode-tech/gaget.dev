@@ -18,7 +18,8 @@ test.describe("JSON workspace responsive editor and diagnostics", () => {
         await expect(page.getByRole("textbox", { name: "Search tools" })).toBeHidden();
       }
       await editor.fill('{"first": 1,\n  "second": }');
-      await page.getByRole("button", { name: "Features" }).click();
+      const featureTrigger = page.getByRole("button", { name: viewport.width < 768 ? "Feature" : "Utilities (Core Tools)", exact: true });
+      await featureTrigger.click();
       await page.getByRole("menuitemradio", { name: /Validate/ }).click();
       await page.getByRole("button", { name: "Run operation" }).click();
       const diagnostic = page.getByRole("button", { name: /Go to line 2, column 13/ });
@@ -28,8 +29,8 @@ test.describe("JSON workspace responsive editor and diagnostics", () => {
       await expect(editor).toHaveValue('{"first": 1,\n  "second": }');
       const numbers = page.getByTestId("json-line-numbers");
       await expect(numbers).toContainText("1\n2");
-      await page.getByRole("button", { name: "Features" }).click();
-      const menu = page.getByTestId("json-features-menu");
+      await featureTrigger.click();
+      const menu = page.getByTestId(viewport.width < 768 ? "json-features-menu" : "json-group-menu");
       await expect(menu).toBeVisible();
       const menuBox = await menu.boundingBox();
       expect(menuBox).not.toBeNull();
@@ -70,7 +71,7 @@ test("preserves diagnostics and an open menu across the desktop breakpoint", asy
   await page.goto("/json/formatter");
   const editor = page.getByRole("textbox", { name: "Input JSON" });
   await editor.fill('{"boundary": }');
-  await page.getByRole("button", { name: "Features" }).click();
+  await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
   await page.getByRole("menuitemradio", { name: /^Validate/i }).click();
   await page.getByRole("button", { name: "Run operation" }).click();
   const diagnostic = page.getByRole("button", { name: /Go to line/ });
@@ -81,8 +82,8 @@ test("preserves diagnostics and an open menu across the desktop breakpoint", asy
   await expect(diagnostic).toBeVisible();
   await expect(page.locator("header").first()).toBeHidden();
   await expect(page.getByRole("button", { name: "Open navigation" })).toBeVisible();
-  await page.getByRole("button", { name: "Features" }).click();
-  const menu = page.getByTestId("json-features-menu");
+  await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
+  const menu = page.getByTestId("json-group-menu");
   await expect(menu).toBeVisible();
 
   await page.setViewportSize({ width: 1024, height: 800 });
@@ -106,7 +107,7 @@ test("preserves diagnostics and an open menu across the desktop breakpoint", asy
 
 test("finds keys and values and navigates through matches", async ({ page }) => {
   await page.goto("/json/formatter");
-  await page.getByRole("button", { name: "Features" }).click();
+  await page.getByRole("button", { name: "View", exact: true }).click();
   await page.getByRole("menuitemradio", { name: /^Find keys and values/i }).click();
   await page.getByRole("textbox", { name: "Search text" }).fill("a");
   await page.getByRole("button", { name: "Run operation" }).click();
@@ -133,7 +134,7 @@ test("imports and downloads JSON locally through the File menu", async ({ page }
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("document.json");
 
-  await page.getByRole("button", { name: "Features" }).click();
+  await page.getByRole("button", { name: "Convert", exact: true }).click();
   await page.getByRole("menuitemradio", { name: /^Escape string contents/i }).click();
   await editor.fill('raw "text"\n');
   await page.getByRole("button", { name: "Run operation" }).click();
@@ -177,7 +178,12 @@ test("Validate and Find Key do not render an irrelevant JSON output panel", asyn
   const run = page.getByRole("button", { name: "Run operation" });
   const input = page.getByRole("textbox", { name: "Input JSON" });
   const choose = async (label: string) => {
-    await page.getByRole("button", { name: "Features" }).click();
+    const group = /^(Tree viewer|Find keys and values)/i.test(label)
+      ? "View"
+      : /^(Escape string contents|Unescape string contents)/i.test(label)
+        ? "Convert"
+        : "Utilities (Core Tools)";
+    await page.getByRole("button", { name: group, exact: true }).click();
     await page.getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }).click();
   };
 
@@ -238,9 +244,10 @@ test("removes the repeated JSON privacy disclosure from responsive File-action m
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/json/formatter");
   await expect(page.getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
-  await page.getByRole("button", { name: "Features", exact: true }).click();
-  await expect(page.getByTestId("json-mobile-file-actions").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
+  await page.getByRole("button", { name: "Feature", exact: true }).click();
   await expect(page.getByTestId("json-features-menu").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
+  await page.getByRole("button", { name: "File", exact: true }).click();
+  await expect(page.getByTestId("json-file-menu").getByText(/JSON is processed locally in your browser/i)).toHaveCount(0);
 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/json/formatter");
@@ -272,43 +279,46 @@ test("tablet and desktop JSON File menu exposes every supported action, includin
     await finalAction.scrollIntoViewIfNeeded();
     await expect(finalAction).toBeVisible();
     await fileTrigger.click();
-    await page.getByRole("button", { name: "Features" }).click();
-    await expect(page.getByTestId("json-mobile-file-actions")).toBeHidden();
+    await page.getByRole("button", { name: "Utilities (Core Tools)", exact: true }).click();
+    await expect(page.getByTestId("json-group-menu")).toBeVisible();
   }
 });
 
 
-test("keeps desktop JSON menus together on the left and exposes expandable feature categories", async ({ page }) => {
+test("shows File, Utilities, View, and Convert as separate desktop menu triggers", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/json/formatter");
   const bar = page.getByTestId("json-editor-menubar");
-  const fileTrigger = bar.getByRole("button", { name: "File", exact: true });
-  const featuresTrigger = bar.getByRole("button", { name: "Features", exact: true });
-  await expect(fileTrigger).toBeVisible();
-  await expect(featuresTrigger).toBeVisible();
-  const barBox = await bar.boundingBox();
-  const fileBox = await fileTrigger.boundingBox();
-  const featuresBox = await featuresTrigger.boundingBox();
-  expect(barBox && fileBox && featuresBox).not.toBeNull();
-  if (barBox && fileBox && featuresBox) {
-    expect(featuresBox.x).toBeGreaterThanOrEqual(fileBox.x);
-    expect(featuresBox.x + featuresBox.width).toBeLessThan(barBox.x + barBox.width * 0.5);
-    expect(Math.abs(featuresBox.y - fileBox.y)).toBeLessThanOrEqual(2);
+  const labels = ["File", "Utilities (Core Tools)", "View", "Convert"];
+  for (const label of labels) await expect(bar.getByRole("button", { name: label, exact: true })).toBeVisible();
+  await expect(bar.getByRole("button", { name: "Feature", exact: true })).toBeHidden();
+  const boxes = await Promise.all(labels.map(label => bar.getByRole("button", { name: label, exact: true }).boundingBox()));
+  expect(boxes.every(Boolean)).toBeTruthy();
+  for (let i = 1; i < boxes.length; i++) {
+    expect(boxes[i]!.x).toBeGreaterThanOrEqual(boxes[i - 1]!.x);
+    expect(Math.abs(boxes[i]!.y - boxes[0]!.y)).toBeLessThanOrEqual(2);
   }
 
-  await featuresTrigger.click();
-  const menu = page.getByTestId("json-features-menu");
-  await expect(menu).toBeVisible();
-  for (const category of ["Utilities (Core Tools)", "View", "Convert"]) {
-    await expect(menu.getByRole("button", { name: category })).toBeVisible();
+  for (const [label, expectedCount, firstOperation] of [
+    ["Utilities (Core Tools)", 5, /^Format/i],
+    ["View", 2, /^Tree Viewer/i],
+    ["Convert", 2, /^Escape string contents/i],
+  ] as const) {
+    await bar.getByRole("button", { name: label, exact: true }).click();
+    const menu = page.getByTestId("json-group-menu");
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole("menuitemradio")).toHaveCount(expectedCount);
+    await expect(menu.getByRole("menuitemradio", { name: firstOperation })).toBeVisible();
   }
-  await expect(menu.getByRole("menuitemradio", { name: /^Format/i })).toBeVisible();
-  await expect(menu.getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeVisible();
-  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeVisible();
 
-  const transformHeading = menu.getByRole("button", { name: "Convert" });
-  await transformHeading.click();
-  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeHidden();
-  await transformHeading.click();
-  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await expect(bar.getByRole("button", { name: "File", exact: true })).toBeVisible();
+  await expect(bar.getByRole("button", { name: "Feature", exact: true })).toBeVisible();
+  for (const label of ["Utilities (Core Tools)", "View", "Convert"]) {
+    await expect(bar.getByRole("button", { name: label, exact: true })).toBeHidden();
+  }
+  await bar.getByRole("button", { name: "Feature", exact: true }).click();
+  await expect(page.getByTestId("json-mobile-feature-list").getByRole("menuitemradio")).toHaveCount(9);
+  await expect(page.getByTestId("json-mobile-file-actions")).toHaveCount(0);
 });
