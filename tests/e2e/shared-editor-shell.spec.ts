@@ -649,3 +649,21 @@ test("Date & Time desktop parameter panel fits content and has only the required
   await expect(header).toBeVisible();
   await expect(workbench).toBeVisible();
 });
+
+test("Date & Time long desktop feature content scrolls inside its viewport-bounded panel", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 640 });
+  await page.goto("/datetime/editor");
+  await page.getByRole("button", { name: /^Time$/ }).click();
+  await page.getByRole("button", { name: /World Clock/i }).click();
+
+  const panel = page.getByTestId("datetime-feature-panel");
+  const content = page.getByTestId("datetime-feature-panel-content");
+  await expect(panel).toBeVisible();
+  await expect(content).toBeVisible();
+  await expect.poll(() => content.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
+  expect(await content.evaluate((element) => getComputedStyle(element).overflowY)).toBe("auto");
+  const panelBox = await panel.boundingBox();
+  expect(panelBox).not.toBeNull();
+  if (panelBox) expect(panelBox.height).toBeLessThanOrEqual(505);
+  await saveStateScreenshot(page, testInfo, "datetime-desktop-short-height-long-feature-scroll.png");
+});
