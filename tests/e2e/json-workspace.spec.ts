@@ -299,14 +299,14 @@ test("keeps desktop JSON menus together on the left and exposes expandable featu
   await featuresTrigger.click();
   const menu = page.getByTestId("json-features-menu");
   await expect(menu).toBeVisible();
-  for (const category of ["Core JSON", "Inspect and navigate", "Transform"]) {
+  for (const category of ["Utilities (Core Tools)", "View", "Convert"]) {
     await expect(menu.getByRole("button", { name: category })).toBeVisible();
   }
   await expect(menu.getByRole("menuitemradio", { name: /^Format/i })).toBeVisible();
   await expect(menu.getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeVisible();
   await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeVisible();
 
-  const transformHeading = menu.getByRole("button", { name: "Transform" });
+  const transformHeading = menu.getByRole("button", { name: "Convert" });
   await transformHeading.click();
   await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeHidden();
   await transformHeading.click();
