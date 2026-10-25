@@ -13,7 +13,7 @@ afterEach(cleanup);
 
 function chooseFeature(label: string) {
   if (window.innerWidth < 768) {
-    fireEvent.click(screen.getByRole("button", { name: "Feature", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Feature" }));
     const menu = screen.getByTestId("json-features-menu");
     fireEvent.click(within(within(menu).getByTestId("json-mobile-feature-list")).getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
     return;
@@ -22,8 +22,8 @@ function chooseFeature(label: string) {
     ? "View"
     : /^(Escape string contents|Unescape string contents)/i.test(label)
       ? "Convert"
-      : "Utilities (Core Tools)";
-  fireEvent.click(screen.getByRole("button", { name: group, exact: true }));
+      : "Utilities";
+  fireEvent.click(screen.getByRole("button", { name: group }));
   const menu = screen.getByTestId("json-group-menu");
   fireEvent.click(within(menu).getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
 }
@@ -76,8 +76,8 @@ describe("JSON workspace operations", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
     window.dispatchEvent(new Event("resize"));
     render(<JsonWorkbench />);
-    const fileTrigger = screen.getByRole("button", { name: "File", exact: true });
-    const featureTrigger = screen.getByRole("button", { name: "Feature", exact: true });
+    const fileTrigger = screen.getByRole("button", { name: "File" });
+    const featureTrigger = screen.getByRole("button", { name: "Feature" });
     expect(fileTrigger).toBeTruthy();
     expect(featureTrigger).toBeTruthy();
     fireEvent.click(fileTrigger);
@@ -96,7 +96,7 @@ describe("JSON workspace operations", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
     window.dispatchEvent(new Event("resize"));
     render(<JsonWorkbench />);
-    fireEvent.click(screen.getByRole("button", { name: "Feature", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Feature" }));
     const menu = screen.getByTestId("json-features-menu");
     const mobileList = within(menu).getByTestId("json-mobile-feature-list");
     const search = within(mobileList).getByRole("searchbox", { name: "Search features" });
@@ -117,16 +117,16 @@ describe("JSON workspace operations", () => {
     window.dispatchEvent(new Event("resize"));
     render(<JsonWorkbench />);
     const bar = screen.getByTestId("json-editor-menubar");
-    for (const label of ["File", "Utilities (Core Tools)", "View", "Convert"]) {
-      expect(within(bar).getByRole("button", { name: label, exact: true })).toBeTruthy();
+    for (const label of ["File", "Utilities", "View", "Convert"]) {
+      expect(within(bar).getByRole("button", { name: label })).toBeTruthy();
     }
-    fireEvent.click(within(bar).getByRole("button", { name: "Utilities (Core Tools)", exact: true }));
+    fireEvent.click(within(bar).getByRole("button", { name: "Utilities" }));
     expect(within(screen.getByTestId("json-group-menu")).getAllByRole("menuitemradio")).toHaveLength(5);
-    fireEvent.click(within(bar).getByRole("button", { name: "View", exact: true }));
+    fireEvent.click(within(bar).getByRole("button", { name: "View" }));
     expect(within(screen.getByTestId("json-group-menu")).getAllByRole("menuitemradio")).toHaveLength(2);
-    fireEvent.click(within(bar).getByRole("button", { name: "Convert", exact: true }));
+    fireEvent.click(within(bar).getByRole("button", { name: "Convert" }));
     expect(within(screen.getByTestId("json-group-menu")).getAllByRole("menuitemradio")).toHaveLength(2);
-    expect(within(bar).queryByRole("button", { name: "Features", exact: true })).toBeNull();
+    expect(within(bar).queryByRole("button", { name: "Features" })).toBeNull();
   });
 
   it("uses a stacked mobile operation action layout and a wider-screen row layout", () => {
@@ -306,7 +306,7 @@ describe("JSON workspace operations", () => {
   });
   it("supports arrow-key menu navigation and Escape focus restoration", () => {
     render(<JsonWorkbench />);
-    const trigger = screen.getByRole("button", { name: "Utilities (Core Tools)", exact: true });
+    const trigger = screen.getByRole("button", { name: "Utilities" });
     fireEvent.click(trigger);
     const menu = screen.getByTestId("json-group-menu");
     const items = within(menu).getAllByRole("menuitemradio");
