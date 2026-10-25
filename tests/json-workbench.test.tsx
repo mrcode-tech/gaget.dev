@@ -76,6 +76,38 @@ describe("JSON workspace operations", () => {
     expect(within(featuresMenu).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
   });
 
+  it("uses a flat mobile JSON feature list with search and no category disclosure controls", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
+    window.dispatchEvent(new Event("resize"));
+    render(<JsonWorkbench />);
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    const menu = screen.getByTestId("json-features-menu");
+    const search = within(menu).getByRole("searchbox", { name: "Search features" });
+    expect(menu.querySelector("summary")).toBeNull();
+    expect(menu.querySelector("[data-testid^='json-feature-category-']")).toBeNull();
+    expect(within(menu).getAllByRole("menuitemradio")).toHaveLength(9);
+    fireEvent.change(search, { target: { value: "  vIeW  " } });
+    expect(within(menu).getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeTruthy();
+    expect(within(menu).getByRole("menuitemradio", { name: /^Find keys and values/i })).toBeTruthy();
+    expect(within(menu).getAllByRole("menuitemradio")).toHaveLength(2);
+    fireEvent.change(search, { target: { value: "no-such-operation" } });
+    expect(within(menu).getByRole("status").textContent).toContain("No matching features");
+    fireEvent.change(search, { target: { value: "" } });
+    expect(within(menu).getAllByRole("menuitemradio")).toHaveLength(9);
+  });
+
+  it("uses meaningful expandable groups on desktop and no mobile-only search", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1024 });
+    window.dispatchEvent(new Event("resize"));
+    render(<JsonWorkbench />);
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    const menu = screen.getByTestId("json-features-menu");
+    expect(within(menu).getByRole("button", { name: "Utilities (Core Tools)" })).toBeTruthy();
+    expect(within(menu).getByRole("button", { name: "View" })).toBeTruthy();
+    expect(within(menu).getByRole("button", { name: "Convert" })).toBeTruthy();
+    expect(within(menu).queryByRole("searchbox", { name: "Search features" })).toBeNull();
+  });
+
   it("uses a stacked mobile operation action layout and a wider-screen row layout", () => {
     render(<JsonWorkbench />);
     const header = screen.getByTestId("json-operation-header");
