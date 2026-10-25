@@ -223,8 +223,8 @@ try {
         });
         process.stdout.write("Captured " + state.route + " | " + viewport.name + " | light | en | " + state.name + "\n");
       } catch (error) {
-        manifest.failures.push({ route: state.route, locale: "en", viewport: viewport.name, theme: "light", state: state.name, error: String(error) });
-        process.stderr.write("Capture failed " + state.route + " | " + viewport.name + " | light | en | " + state.name + ": " + String(error) + "\n");
+        manifest.failures.push({ route: state.route, locale: "en", viewport: viewport.name, theme: "light", state: evidenceState, error: String(error) });
+        process.stderr.write("Capture failed " + state.route + " | " + viewport.name + " | light | en | " + evidenceState + ": " + String(error) + "\n");
       } finally {
         await page.close();
       }
