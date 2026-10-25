@@ -486,10 +486,12 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
         <div className="relative shrink-0 md:hidden">
           <Button data-json-menu-trigger="Feature" ref={featuresTriggerRef} variant={menuOpen === "Feature" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Feature"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Feature" ? null : "Feature")}>{t("json.feature")}</Button>
           {menuOpen === "Feature" && <div role="menu" aria-label={t("json.feature")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ position: "fixed", top: (featuresTriggerRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: "1rem", right: "1rem", width: "auto", maxWidth: "none", marginTop: 0 }}>
-            {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
-            {featureSearch.canSearch && featureSearch.query.trim() && filteredOperationEntries.length === 0 ? <FeatureMenuNoResults /> : filteredOperationEntries.map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
-              <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
-            </button>)}
+            <div data-testid="json-mobile-feature-list">
+              {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
+              {featureSearch.canSearch && featureSearch.query.trim() && filteredOperationEntries.length === 0 ? <FeatureMenuNoResults /> : filteredOperationEntries.map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
+                <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
+              </button>)}
+            </div>
           </div>}
         </div>
         {groups.map((group) => {
