@@ -175,7 +175,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
   const [findMatches, setFindMatches] = useState<FindMatch[]>([]);
   const [activeFindIndex, setActiveFindIndex] = useState(0);
   const findRefs = useRef<Array<HTMLLIElement | null>>([]);
-  const [menuOpen, setMenuOpen] = useState<"File" | "Features" | null>(null);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const menuBarRef = useRef<HTMLDivElement>(null);
   const fileTriggerRef = useRef<HTMLButtonElement>(null);
   const featuresTriggerRef = useRef<HTMLButtonElement>(null);
@@ -188,23 +188,19 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
 
   useEffect(() => {
     if (!menuOpen) return;
-    const activeMenu = menuBarRef.current?.querySelector<HTMLDivElement>(
-      menuOpen === "File" ? '[data-testid="json-file-menu"]' : '[data-testid="json-features-menu"]',
-    );
-    const firstItemSelector = menuOpen === "Features"
-      ? window.innerWidth >= 768
-        ? '[data-testid="json-desktop-feature-groups"] [role="menuitemradio"]:not(:disabled)'
-        : '[data-testid="json-mobile-file-actions"] [role^="menuitem"]:not(:disabled)'
-      : '[role^="menuitem"]:not(:disabled)';
-    activeMenu?.querySelector<HTMLButtonElement>(firstItemSelector)?.focus();
+    const groupEntry = operationEntries.find((entry) => entry.group === menuOpen);
+    const activeMenuId = menuOpen === "File" ? "json-file-menu"
+      : menuOpen === "Feature" ? "json-features-menu"
+      : groupEntry ? `json-group-menu-${groupEntry.id}` : "";
+    const activeMenu = activeMenuId ? menuBarRef.current?.querySelector<HTMLDivElement>(`[data-testid="${activeMenuId}"]`) : null;
+    activeMenu?.querySelector<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')?.focus();
     const closeOnOutsidePointer = (event: PointerEvent) => {
       if (!menuBarRef.current?.contains(event.target as Node)) setMenuOpen(null);
     };
     const closeOnEscape = (event: Event) => {
       if ("key" in event && event.key === "Escape") {
         setMenuOpen(null);
-        if (menuOpen === "File") fileTriggerRef.current?.focus();
-        else featuresTriggerRef.current?.focus();
+        focusMenuTrigger(menuOpen);
       }
     };
     const closeFileMenuOnMobileResize = () => {
@@ -223,17 +219,22 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     };
   }, [menuOpen]);
 
+  function focusMenuTrigger(name: string | null) {
+    if (!name) return;
+    const trigger = Array.from(menuBarRef.current?.querySelectorAll<HTMLButtonElement>("[data-json-menu-trigger]") ?? [])
+      .find((item) => item.getAttribute("data-json-menu-trigger") === name);
+    trigger?.focus();
+  }
+
   function handleMenuKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
       event.preventDefault();
       setMenuOpen(null);
-      if (menuOpen === "File") fileTriggerRef.current?.focus();
-      else featuresTriggerRef.current?.focus();
+      focusMenuTrigger(menuOpen);
       return;
     }
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
-    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)'))
-      .filter((item) => !item.closest('[data-testid="json-mobile-file-actions"]') || window.innerWidth < 768);
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)'));
     if (!items.length) return;
     event.preventDefault();
     const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement);
@@ -487,38 +488,32 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="relative sticky top-0 z-[70] flex h-[68px] min-w-0 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 text-sm lg:top-[68px] sm:px-6">
       <div className="flex min-w-0 items-center gap-1.5">
         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 lg:hidden" aria-label={t("json.openNavigation")} onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}><Menu className="h-4 w-4" /></Button>
-        <div className="relative hidden shrink-0 md:block">
-          <Button ref={fileTriggerRef} variant={menuOpen === "File" ? "secondary" : "ghost"} aria-expanded={menuOpen === "File"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>{t("json.file")}</Button>
+        <div className="relative shrink-0">
+          <Button data-json-menu-trigger="File" ref={fileTriggerRef} variant={menuOpen === "File" ? "secondary" : "ghost"} aria-expanded={menuOpen === "File"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>{t("json.file")}</Button>
           {menuOpen === "File" && <div role="menu" aria-label={t("json.file")} data-testid="json-file-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),32rem)] w-64 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={window.innerWidth < 768 ? { position: "fixed", top: (fileTriggerRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: "1rem", right: "1rem", width: "auto", maxWidth: "none", marginTop: 0 } : { left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>{renderFileActions()}</div>}
         </div>
-        <div className="relative shrink-0">
-        <Button ref={featuresTriggerRef} variant={menuOpen === "Features" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Features"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}>{t("json.features")}</Button>
-        {menuOpen === "Features" && <div role="menu" aria-label={t("json.features")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={window.innerWidth < 768 ? { position: "fixed", top: (featuresTriggerRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: "1rem", right: "1rem", width: "auto", maxWidth: "none", marginTop: 0 } : { left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>
-          <div data-testid="json-mobile-file-actions" role="group" aria-label={t("json.file")} className="md:hidden">
-            <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("json.file")}</p>
-            {renderFileActions()}
-            <div className="my-1 border-t border-border" />
-          </div>
-          <div className="md:hidden" data-testid="json-mobile-feature-list">
+        <div className="relative shrink-0 md:hidden">
+          <Button data-json-menu-trigger="Feature" ref={featuresTriggerRef} variant={menuOpen === "Feature" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Feature"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Feature" ? null : "Feature")}>{t("json.feature")}</Button>
+          {menuOpen === "Feature" && <div role="menu" aria-label={t("json.feature")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ position: "fixed", top: (featuresTriggerRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: "1rem", right: "1rem", width: "auto", maxWidth: "none", marginTop: 0 }}>
             {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
             {featureSearch.canSearch && featureSearch.query.trim() && filteredOperationEntries.length === 0 ? <FeatureMenuNoResults /> : filteredOperationEntries.map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
               <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
             </button>)}
-          </div>
-          <div className="hidden md:block" data-testid="json-desktop-feature-groups">
-            {groups.map((group) => <details key={group} open className="py-1">
-              <summary role="button" aria-label={group} data-testid={`json-feature-category-${operationEntries.find((entry) => entry.group === group)?.id}`} className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <span>{group}</span><span aria-hidden="true" className="text-muted-foreground">⌄</span>
-              </summary>
-              <div role="group" aria-label={group}>
-                {operationEntries.filter((entry) => entry.group === group).map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
-                  <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
-                </button>)}
-              </div>
-            </details>)}
-          </div>
-        </div>}
+          </div>}
         </div>
+        {groups.map((group) => {
+          const firstEntry = operationEntries.find((entry) => entry.group === group);
+          if (!firstEntry) return null;
+          const isOpen = menuOpen === group;
+          return <div key={group} className="relative hidden shrink-0 md:block">
+            <Button data-json-menu-trigger={group} variant={isOpen ? "secondary" : "ghost"} aria-expanded={isOpen} aria-haspopup="menu" onClick={() => setMenuOpen(isOpen ? null : group)}>{group}</Button>
+            {isOpen && <div role="menu" aria-label={group} data-testid={`json-group-menu-${firstEntry.id}`} onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>
+              {operationEntries.filter((entry) => entry.group === group).map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); focusMenuTrigger(group); }}>
+                <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
+              </button>)}
+            </div>}
+          </div>;
+        })}
       </div>
     </div>
 
