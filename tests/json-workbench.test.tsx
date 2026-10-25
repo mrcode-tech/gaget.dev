@@ -13,7 +13,9 @@ afterEach(cleanup);
 
 function chooseFeature(label: string) {
   fireEvent.click(screen.getByRole("button", { name: "Features" }));
-  fireEvent.click(screen.getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
+  const menu = screen.getByTestId("json-features-menu");
+  const variant = within(menu).getByTestId(window.innerWidth < 768 ? "json-mobile-feature-list" : "json-desktop-feature-groups");
+  fireEvent.click(within(variant).getByRole("menuitemradio", { name: new RegExp("^" + label, "i") }));
 }
 
 describe("JSON workspace operations", () => {
@@ -73,7 +75,7 @@ describe("JSON workspace operations", () => {
     for (const label of ["Open JSON file…", "Copy result", "Download JSON", "Undo", "Redo", "Load sample JSON", "Clear document"]) {
       expect(within(mobileFileActions).getByRole("menuitem", { name: label })).toBeTruthy();
     }
-    expect(within(featuresMenu).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
+    expect(within(within(featuresMenu).getByTestId("json-mobile-feature-list")).getByRole("menuitemradio", { name: /^Format/ })).toBeTruthy();
   });
 
   it("uses a flat mobile JSON feature list with search and no category disclosure controls", () => {
@@ -289,10 +291,12 @@ describe("JSON workspace operations", () => {
     const trigger = screen.getByRole("button", { name: "Features" });
     fireEvent.click(trigger);
     const menu = screen.getByTestId("json-features-menu");
-    const first = within(menu).getAllByRole("menuitemradio")[0] as HTMLButtonElement;
+    const desktopGroups = within(menu).getByTestId("json-desktop-feature-groups");
+    const items = within(desktopGroups).getAllByRole("menuitemradio");
+    const first = items[0] as HTMLButtonElement;
     expect(document.activeElement).toBe(first);
     fireEvent.keyDown(first, { key: "ArrowDown" });
-    expect(document.activeElement).toBe(within(menu).getAllByRole("menuitemradio")[1]);
+    expect(document.activeElement).toBe(items[1]);
     fireEvent.keyDown(document.activeElement!, { key: "Escape" });
     expect(screen.queryByTestId("json-features-menu")).toBeNull();
     expect(document.activeElement).toBe(trigger);
