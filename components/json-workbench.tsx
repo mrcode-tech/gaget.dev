@@ -483,17 +483,17 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 lg:hidden" aria-label={t("json.openNavigation")} onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}><Menu className="h-4 w-4" /></Button>
         <div className="relative hidden shrink-0 md:block">
           <Button ref={fileTriggerRef} variant={menuOpen === "File" ? "secondary" : "ghost"} aria-expanded={menuOpen === "File"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>{t("json.file")}</Button>
-          {menuOpen === "File" && <div role="menu" aria-label={t("json.file")} data-testid="json-file-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),32rem)] w-64 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl">{renderFileActions()}</div>}
+          {menuOpen === "File" && <div role="menu" aria-label={t("json.file")} data-testid="json-file-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),32rem)] w-64 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>{renderFileActions()}</div>}
         </div>
         <div className="relative shrink-0">
         <Button ref={featuresTriggerRef} variant={menuOpen === "Features" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Features"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}>{t("json.features")}</Button>
-        {menuOpen === "Features" && <div role="menu" aria-label={t("json.features")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+        {menuOpen === "Features" && <div role="menu" aria-label={t("json.features")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>
           <div data-testid="json-mobile-file-actions" role="group" aria-label={t("json.file")} className="md:hidden">
             <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("json.file")}</p>
             {renderFileActions()}
             <div className="my-1 border-t border-border" />
           </div>
-          {groups.map((group) => <details key={group} open={operationEntries.some((entry) => entry.group === group && entry.id === operation)} className="py-1">
+          {groups.map((group) => <details key={group} open className="py-1">
             <summary role="button" aria-label={group} data-testid={`json-feature-category-${operationEntries.find((entry) => entry.group === group)?.id}`} className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <span>{group}</span><span aria-hidden="true" className="text-muted-foreground">⌄</span>
             </summary>
