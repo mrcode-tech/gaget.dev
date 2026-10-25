@@ -485,8 +485,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
           <Button ref={fileTriggerRef} variant={menuOpen === "File" ? "secondary" : "ghost"} aria-expanded={menuOpen === "File"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>{t("json.file")}</Button>
           {menuOpen === "File" && <div role="menu" aria-label={t("json.file")} data-testid="json-file-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),32rem)] w-64 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl">{renderFileActions()}</div>}
         </div>
-      </div>
-      <div className="relative hidden shrink-0 md:block">
+        <div className="relative shrink-0">
         <Button ref={featuresTriggerRef} variant={menuOpen === "Features" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Features"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}>{t("json.features")}</Button>
         {menuOpen === "Features" && <div role="menu" aria-label={t("json.features")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl">
           <div data-testid="json-mobile-file-actions" role="group" aria-label={t("json.file")} className="md:hidden">
@@ -505,6 +504,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
             </div>
           </details>)}
         </div>}
+        </div>
       </div>
     </div>
 
