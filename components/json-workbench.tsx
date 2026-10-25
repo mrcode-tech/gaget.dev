@@ -186,7 +186,13 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
 
   useEffect(() => {
     if (!menuOpen) return;
-    menuBarRef.current?.querySelector<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')?.focus();
+    const activeMenu = menuBarRef.current?.querySelector<HTMLDivElement>(
+      menuOpen === "File" ? '[data-testid="json-file-menu"]' : '[data-testid="json-features-menu"]',
+    );
+    const firstItemSelector = menuOpen === "Features" && window.innerWidth >= 768
+      ? '[role="menuitemradio"]:not(:disabled)'
+      : '[role^="menuitem"]:not(:disabled)';
+    activeMenu?.querySelector<HTMLButtonElement>(firstItemSelector)?.focus();
     const closeOnOutsidePointer = (event: PointerEvent) => {
       if (!menuBarRef.current?.contains(event.target as Node)) setMenuOpen(null);
     };
@@ -197,9 +203,17 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
         else featuresTriggerRef.current?.focus();
       }
     };
+    const closeFileMenuOnMobileResize = () => {
+      if (menuOpen === "File" && window.innerWidth < 768) {
+        setMenuOpen(null);
+        featuresTriggerRef.current?.focus();
+      }
+    };
+    window.addEventListener("resize", closeFileMenuOnMobileResize);
     document.addEventListener("pointerdown", closeOnOutsidePointer);
     document.addEventListener("keydown", closeOnEscape);
     return () => {
+      window.removeEventListener("resize", closeFileMenuOnMobileResize);
       document.removeEventListener("pointerdown", closeOnOutsidePointer);
       document.removeEventListener("keydown", closeOnEscape);
     };
@@ -214,7 +228,8 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
       return;
     }
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
-    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)'));
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)'))
+      .filter((item) => !item.closest('[data-testid="json-mobile-file-actions"]') || window.innerWidth < 768);
     if (!items.length) return;
     event.preventDefault();
     const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement);
@@ -447,14 +462,8 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
   const groups = [...new Set(operationEntries.map((entry) => entry.group))];
   const direction = localeDirections[locale];
 
-  return <section aria-label={t("json.workspace")} dir={direction} className="min-w-0">
-    <input ref={fileInputRef} type="file" accept=".json,application/json,text/json" className="hidden" aria-label={t("json.openFile")} onChange={(event) => void importFile(event)} />
-    <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="relative sticky top-0 z-[70] flex h-[68px] min-w-0 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 text-sm lg:top-[68px] sm:px-6">
-      <div className="flex min-w-0 items-center gap-1.5">
-        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 lg:hidden" aria-label={t("json.openNavigation")} onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}><Menu className="h-4 w-4" /></Button>
-        <div className="relative shrink-0">
-          <Button ref={fileTriggerRef} variant={menuOpen === "File" ? "secondary" : "ghost"} aria-expanded={menuOpen === "File"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>{t("json.file")}</Button>
-          {menuOpen === "File" && <div role="menu" aria-label={t("json.file")} data-testid="json-file-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),32rem)] w-64 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+  function renderFileActions() {
+    return <>
             <button role="menuitem" className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => { fileInputRef.current?.click(); setMenuOpen(null); }}><FileUp className="h-4 w-4 text-muted-foreground" />{t("json.openFile")}</button>
             <button role="menuitem" disabled={!(output.length > 0 || (valid && (operation === "escape" || operation === "unescape")))} className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 py-2 text-start text-sm hover:bg-accent disabled:opacity-40" onClick={() => { void copyResult(); setMenuOpen(null); }}><Copy className="h-4 w-4 text-muted-foreground" />{t("json.copyResult")}</button>
             <button role="menuitem" className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={() => { downloadResult(); setMenuOpen(null); }}><Download className="h-4 w-4 text-muted-foreground" />{operation === "escape" || operation === "unescape" ? t("json.downloadText") : t("json.downloadJson")}</button>
@@ -463,12 +472,28 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
             <button role="menuitem" disabled={!redoStack.current.length} className="min-h-10 w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent disabled:opacity-40" onClick={() => { redo(); setMenuOpen(null); }}>{t("json.redo")}</button>
             <button role="menuitem" className="min-h-10 w-full rounded-md px-3 py-2 text-start text-sm hover:bg-accent" onClick={loadSample}>{t("json.loadSample")}</button>
             <button role="menuitem" className="min-h-10 w-full rounded-md px-3 py-2 text-start text-sm text-destructive hover:bg-accent" onClick={clearDocument}>{t("json.clear")}</button>
-          </div>}
+          
+    </>;
+  }
+
+  return <section aria-label={t("json.workspace")} dir={direction} className="min-w-0">
+    <input ref={fileInputRef} type="file" accept=".json,application/json,text/json" className="hidden" aria-label={t("json.openFile")} onChange={(event) => void importFile(event)} />
+    <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="relative sticky top-0 z-[70] flex h-[68px] min-w-0 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 text-sm lg:top-[68px] sm:px-6">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 lg:hidden" aria-label={t("json.openNavigation")} onClick={() => window.dispatchEvent(new Event("gaget:open-navigation"))}><Menu className="h-4 w-4" /></Button>
+        <div className="relative hidden shrink-0 md:block">
+          <Button ref={fileTriggerRef} variant={menuOpen === "File" ? "secondary" : "ghost"} aria-expanded={menuOpen === "File"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>{t("json.file")}</Button>
+          {menuOpen === "File" && <div role="menu" aria-label={t("json.file")} data-testid="json-file-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),32rem)] w-64 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl">{renderFileActions()}</div>}
         </div>
       </div>
       <div className="relative shrink-0">
         <Button ref={featuresTriggerRef} variant={menuOpen === "Features" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Features"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Features" ? null : "Features")}>{t("json.features")}</Button>
         {menuOpen === "Features" && <div role="menu" aria-label={t("json.features")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute end-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl">
+          <div data-testid="json-mobile-file-actions" role="group" aria-label={t("json.file")} className="md:hidden">
+            <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("json.file")}</p>
+            {renderFileActions()}
+            <div className="my-1 border-t border-border" />
+          </div>
           {groups.map((group) => <div key={group} className="py-1">
             <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</p>
             {operationEntries.filter((entry) => entry.group === group).map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
@@ -479,7 +504,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
       </div>
     </div>
 
-    <div data-testid="json-workspace-content" className="mx-auto w-full max-w-[1440px] space-y-4 px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
+    <div data-testid="json-workspace-content" className="w-full min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-6">
       <h1 className="text-xl font-bold tracking-tight">{t("json.workspace")}</h1>
       <p className="text-sm text-muted-foreground">{t("json.workspaceDescription")}</p>
 

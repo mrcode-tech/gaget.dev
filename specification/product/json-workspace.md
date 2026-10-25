@@ -1,11 +1,11 @@
 # JSON Workspace Contract
 
-**Status:** Implemented and verified against this contract; the required CI and visual-evidence workflow is the release gate for each subsequent source revision.
+**Status:** Implementation contract; each source revision requires completed CI and matching visual evidence before conformance is claimed.
 **Target wireframe (Proposal):** [JSON workspace layout](../assets/target/json-workspace-proposal.svg).
 
 ## Purpose and routes
 
-The JSON workspace combines formatting, minification, strict syntax validation, structural comparison, key sorting, tree viewing, key/value search and JSON string-content escaping. It uses compact workspace mode in the regular GaGet.dev app shell: the mobile app header is replaced by the hamburger/File/Features command bar, while desktop retains the global app header. It adopts the established editor command-bar conventions for trigger-anchored File and Features menus, bounded menu scrolling, semantic focus states and direction-aware placement. The command bar stays sticky during document scrolling, using the viewport top on compact layouts and sitting below the 68px global header on desktop. JSON remains a regular document-flow workspace rather than a nested full-viewport media canvas. The generic “Privacy & data” disclosure is not rendered in tool interfaces.
+The JSON workspace combines formatting, minification, strict syntax validation, structural comparison, key sorting, tree viewing, key/value search and JSON string-content escaping. It uses compact workspace mode in the regular GaGet.dev app shell: the mobile app header is replaced by the hamburger/Features command bar, while desktop retains the global app header. At widths below 768 CSS px, all File actions are grouped at the top of the Features menu; from 768px upward, File remains a separate menu. The command bar and workspace body use the full available shell width after the sidebar, with the shared responsive content gutters and no second centered page-width wrapper. It adopts the established editor command-bar conventions for trigger-anchored File and Features menus, bounded menu scrolling, semantic focus states and direction-aware placement. The command bar stays sticky during document scrolling, using the viewport top on compact layouts and sitting below the 68px global header on desktop. JSON remains a regular document-flow workspace rather than a nested full-viewport media canvas. The generic “Privacy & data” disclosure is not rendered in tool interfaces.
 
 - Canonical route: `/json/formatter`.
 - Compatibility route: `/json/diff`, opening the same workspace in Compare mode.
@@ -14,7 +14,7 @@ The JSON workspace combines formatting, minification, strict syntax validation, 
 
 ## Workspace contract
 
-- File menu: import JSON, copy/download, undo/redo, load sample and clear.
+- File actions: import JSON, copy/download, undo/redo, load sample and clear. Below 768 CSS px, these actions appear as a labelled group at the top of the Features menu; at 768px and above they remain in the standalone File menu.
 - Features menu groups Core JSON, Inspect and Navigate, and Transform. Every listed operation must work; do not show placeholder actions.
 - The editor uses a one-based line-number gutter beside one no-wrap textarea. The gutter follows vertical scroll; the editor owns horizontal scrolling. No second editor is used to draw line numbers.
 - At wide screens, the source editor and a relevant secondary workspace panel can sit side by side; at narrower widths they stack. Validate and Find keys/values are single-column, result-only operations and do not reserve an output panel. Format, Minify, Sort Keys, Escape and Unescape show a transformed-text output panel; Tree Viewer shows its tree panel; Compare uses two source editors and its own difference results. Menus remain below the command bar and cap at 180px with internal scrolling when viewport height is 700px or less; otherwise they use the shared viewport-bounded maximum height.
