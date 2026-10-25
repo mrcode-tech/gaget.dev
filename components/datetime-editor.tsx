@@ -261,7 +261,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
       </nav>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
-        <div data-testid="datetime-workspace" className="flex min-h-max w-full flex-1 flex-col pb-8 md:h-full md:min-h-0">
+        <div data-testid="datetime-workspace" className="flex min-h-max w-full flex-1 flex-col md:h-full md:min-h-0">
           <div data-testid="datetime-workspace-grid" className={"grid min-h-max min-w-0 flex-1 items-stretch gap-0 md:h-full md:min-h-0 md:grid-rows-[minmax(0,1fr)] " + (activeFeature ? "md:grid-cols-[minmax(0,1fr)_320px]" : "")}>
             <section className={"flex min-h-0 min-w-0 flex-1 flex-col p-3 sm:p-6 lg:p-8 " + (!activeFeature ? "mx-auto w-full max-w-[1600px]" : "")}>
               <header data-testid="datetime-editor-intro" className="shrink-0 pb-0">
@@ -303,7 +303,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card sm:shadow-none">
             <div {...resizeHandleProps} className="mx-auto mt-1 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
             <div data-testid="datetime-feature-panel-header" className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 id="datetime-feature-panel-title" className="text-sm font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2><p className="hidden text-[11px] text-muted-foreground md:block">Feature parameters</p></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
-            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 sm:p-4"><DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={appLocale} calendar={calendar} numberingSystem={numberingSystem} /></div>
+            <div data-testid="datetime-feature-panel-content" className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 sm:p-4"><DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={appLocale} calendar={calendar} numberingSystem={numberingSystem} /></div>
           </div>
         </aside>}
       </div>
