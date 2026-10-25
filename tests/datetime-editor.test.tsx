@@ -143,6 +143,9 @@ describe("DateTimeEditor", () => {
     const panelHeader = within(panel).getByTestId("datetime-feature-panel-header");
     expect(panelHeader.className).toContain("border-b");
     expect(panel.className).not.toContain("border-b");
+    const workbenchContent = within(panel).getByTestId("datetime-workbench-content");
+    expect(workbenchContent.className).toContain("divide-y");
+    expect(workbenchContent.className).not.toContain("border-y");
     expect(panel.className).toContain("md:border-l");
     expect(panel.className).toContain("md:border-t-0");
     expect(panel.className).toContain("max-h-[70dvh]");
