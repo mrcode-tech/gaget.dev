@@ -629,6 +629,7 @@ test("Date & Time desktop parameter panel fits content and has only the required
     const workbenchElement = element.querySelector("[data-testid='datetime-workbench-content']")!;
     return {
       height: element.getBoundingClientRect().height,
+      maxHeight: Number.parseFloat(getComputedStyle(element).maxHeight),
       top: element.getBoundingClientRect().top,
       panelBorderBottom: getComputedStyle(element).borderBottomWidth,
       headerBorderBottom: getComputedStyle(headerElement).borderBottomWidth,
@@ -636,7 +637,7 @@ test("Date & Time desktop parameter panel fits content and has only the required
       workbenchBorderBottom: getComputedStyle(workbenchElement).borderBottomWidth,
     };
   });
-  expect(geometry.height, "short parameter forms should not stretch to fill the desktop viewport").toBeLessThan(600);
+  expect(geometry.height, "short parameter forms should remain comfortably below the panel max-height").toBeLessThan(geometry.maxHeight - 80);
   expect(geometry.panelBorderBottom, "the outer panel should not add a bottom separator").toBe("0px");
   expect(geometry.headerBorderBottom, "the panel title should have its required bottom separator").toBe("1px");
   expect(geometry.workbenchBorderTop, "the workbench should not duplicate the header separator").toBe("0px");
