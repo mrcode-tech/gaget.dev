@@ -188,10 +188,9 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
 
   useEffect(() => {
     if (!menuOpen) return;
-    const groupEntry = operationEntries.find((entry) => entry.group === menuOpen);
     const activeMenuId = menuOpen === "File" ? "json-file-menu"
       : menuOpen === "Feature" ? "json-features-menu"
-      : groupEntry ? `json-group-menu-${groupEntry.id}` : "";
+      : "json-group-menu";
     const activeMenu = activeMenuId ? menuBarRef.current?.querySelector<HTMLDivElement>(`[data-testid="${activeMenuId}"]`) : null;
     activeMenu?.querySelector<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')?.focus();
     const closeOnOutsidePointer = (event: PointerEvent) => {
@@ -203,17 +202,9 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
         focusMenuTrigger(menuOpen);
       }
     };
-    const closeFileMenuOnMobileResize = () => {
-      if (menuOpen === "File" && window.innerWidth < 768) {
-        setMenuOpen(null);
-        featuresTriggerRef.current?.focus();
-      }
-    };
-    window.addEventListener("resize", closeFileMenuOnMobileResize);
     document.addEventListener("pointerdown", closeOnOutsidePointer);
     document.addEventListener("keydown", closeOnEscape);
     return () => {
-      window.removeEventListener("resize", closeFileMenuOnMobileResize);
       document.removeEventListener("pointerdown", closeOnOutsidePointer);
       document.removeEventListener("keydown", closeOnEscape);
     };
@@ -465,7 +456,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
     { id: "unescape", label: t("json.unescape"), description: t("json.unescapeDescription"), group: t("json.transform") },
   ];
   const groups = [...new Set(operationEntries.map((entry) => entry.group))];
-  const featureSearch = useFeatureMenuSearch(menuOpen === "Features", operationEntries.length, "json", locale);
+  const featureSearch = useFeatureMenuSearch(menuOpen === "Feature", operationEntries.length, "json", locale);
   const filteredOperationEntries = operationEntries.filter((entry) => featureSearch.matches([entry.label, entry.description, entry.group]));
   const direction = localeDirections[locale];
 
@@ -507,7 +498,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
           const isOpen = menuOpen === group;
           return <div key={group} className="relative hidden shrink-0 md:block">
             <Button data-json-menu-trigger={group} variant={isOpen ? "secondary" : "ghost"} aria-expanded={isOpen} aria-haspopup="menu" onClick={() => setMenuOpen(isOpen ? null : group)}>{group}</Button>
-            {isOpen && <div role="menu" aria-label={group} data-testid={`json-group-menu-${firstEntry.id}`} onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>
+            {isOpen && <div role="menu" aria-label={group} data-testid="json-group-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>
               {operationEntries.filter((entry) => entry.group === group).map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); focusMenuTrigger(group); }}>
                 <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
               </button>)}
