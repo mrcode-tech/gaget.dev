@@ -194,6 +194,7 @@ it("does not render the redundant browser and calendar disclaimer", () => {
   expect(screen.getByRole("heading", { name: "Date & Time" })).toBeTruthy();
   expect(screen.getByRole("combobox", { name: "Calendar system" })).toBeTruthy();
   expect(screen.getByText("Show seconds")).toBeTruthy();
+  expect(screen.getByTestId("datetime-workspace").className).not.toContain("pb-8");
   expect(screen.queryByText(/Runs locally in your browser/i)).toBeNull();
   expect(screen.queryByText(/Calendar availability depends on your browser/i)).toBeNull();
 });
