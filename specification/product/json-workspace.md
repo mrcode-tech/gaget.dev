@@ -15,7 +15,7 @@ The JSON workspace combines formatting, minification, strict syntax validation, 
 ## Workspace contract
 
 - File actions: import JSON, copy/download, undo/redo, load sample and clear. Below 768 CSS px, these actions appear as a labelled group at the top of the Features menu; at 768px and above they remain in the standalone File menu.
-- Features menu groups Core JSON, Inspect and Navigate, and Transform. Every listed operation must work; do not show placeholder actions.
+- The desktop command bar places File and Features triggers together at the start of the bar; do not split them across opposite edges. The desktop Features menu groups operations under expandable category-heading buttons for Core JSON, Inspect and Navigate, and Transform; the currently selected operation's category is expanded by default. Category headings must be keyboard accessible and each operation remains a selectable menu item. On mobile, retain the single Features trigger with File actions grouped at the top. Every listed operation must work; do not show placeholder actions.
 - The editor uses a one-based line-number gutter beside one no-wrap textarea. The gutter follows vertical scroll; the editor owns horizontal scrolling. No second editor is used to draw line numbers.
 - At wide screens, the source editor and a relevant secondary workspace panel can sit side by side; at narrower widths they stack. Validate and Find keys/values are single-column, result-only operations and do not reserve an output panel. Format, Minify, Sort Keys, Escape and Unescape show a transformed-text output panel; Tree Viewer shows its tree panel; Compare uses two source editors and its own difference results. Menus remain below the command bar and cap at 180px with internal scrolling when viewport height is 700px or less; otherwise they use the shared viewport-bounded maximum height.
 - JSON source is always LTR even when surrounding labels are Persian or Arabic RTL.
@@ -80,6 +80,7 @@ Use the existing Tailwind breakpoints, not a JSON-specific breakpoint system. Ve
 - [x] Compare distinguishes missing/null and uses unambiguous paths.
 - [x] Sort/tree/find/escape/unescape work and are tested.
 - [x] File import/export/copy/sample/clear/undo/redo work locally.
+- [ ] Desktop File and Features triggers are adjacent at the left of the command bar; feature categories are expandable heading buttons, with the active category expanded by default; mobile retains a single Features trigger and groups File actions at the top.
 - [x] Desktop, tablet, mobile portrait and short-height landscape E2E checks pass.
 - [x] Persian/Arabic surrounding UI remains RTL without reversing JSON source.
 - [x] The exact final CI run and its screenshot/manifest artifact are inspected before marking this contract verified.
