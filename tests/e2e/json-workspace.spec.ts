@@ -295,6 +295,12 @@ test("keeps desktop JSON menus together on the left and exposes expandable featu
     await expect(menu.getByRole("button", { name: category })).toBeVisible();
   }
   await expect(menu.getByRole("menuitemradio", { name: /^Format/i })).toBeVisible();
-  await expect(menu.getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeAttached();
-  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeAttached();
+  await expect(menu.getByRole("menuitemradio", { name: /^Tree Viewer/i })).toBeVisible();
+  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeVisible();
+
+  const transformHeading = menu.getByRole("button", { name: "Transform" });
+  await transformHeading.click();
+  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeHidden();
+  await transformHeading.click();
+  await expect(menu.getByRole("menuitemradio", { name: /^Escape string contents/i })).toBeVisible();
 });
