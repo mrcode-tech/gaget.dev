@@ -447,7 +447,7 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
   const groups = [...new Set(operationEntries.map((entry) => entry.group))];
   const direction = localeDirections[locale];
 
-  return <section aria-label={t("json.workspace")} dir={direction} className="min-w-0 space-y-4">
+  return <section aria-label={t("json.workspace")} dir={direction} className="min-w-0">
     <input ref={fileInputRef} type="file" accept=".json,application/json,text/json" className="hidden" aria-label={t("json.openFile")} onChange={(event) => void importFile(event)} />
     <div ref={menuBarRef} role="navigation" aria-label={t("json.commandBar")} data-testid="json-editor-menubar" className="relative sticky top-0 z-[70] flex h-[68px] min-w-0 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 text-sm lg:top-[68px] sm:px-6">
       <div className="flex min-w-0 items-center gap-1.5">
