@@ -332,4 +332,22 @@ describe("JSON parser and transforms", () => {
     expect(commandBar.className).toContain("top-0");
     expect(commandBar.className).toContain("lg:top-[68px]");
   });
+it("shows the complete File action set in the standalone tablet/desktop menu", () => {
+  render(<JsonWorkbench />);
+  fireEvent.click(screen.getByRole("button", { name: "File" }));
+  const fileMenu = screen.getByTestId("json-file-menu");
+  for (const label of [
+    "Open JSON file…",
+    "Copy result",
+    "Download JSON",
+    "Undo",
+    "Redo",
+    "Load sample JSON",
+    "Clear document",
+  ]) {
+    expect(within(fileMenu).getByRole("menuitem", { name: label })).toBeTruthy();
+  }
+  expect(within(fileMenu).getAllByRole("menuitem")).toHaveLength(7);
+  expect(screen.queryByTestId("json-mobile-file-actions")).toBeNull();
+});
 });
