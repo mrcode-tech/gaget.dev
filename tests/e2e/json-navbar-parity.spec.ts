@@ -33,6 +33,8 @@ for (const viewport of viewports) {
         viewportWidth: document.documentElement.clientWidth,
       };
     });
+    const jsonHeadingBox = await page.getByRole("heading", { name: "JSON workspace", exact: true }).boundingBox();
+    const jsonOperationBox = await page.getByTestId("json-operation-header").boundingBox();
 
     await page.goto("/images/editor");
     const photoBar = page.getByTestId("editor-menubar");
@@ -41,7 +43,15 @@ for (const viewport of viewports) {
       const rect = element.getBoundingClientRect();
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     });
+    const photoHeadingBox = await page.getByRole("heading", { name: "Photo Editor", exact: true }).boundingBox();
+    const photoIntroBox = await page.getByTestId("photo-empty-intro").boundingBox();
 
+    expect(jsonHeadingBox).not.toBeNull();
+    expect(jsonOperationBox).not.toBeNull();
+    expect(photoHeadingBox).not.toBeNull();
+    expect(photoIntroBox).not.toBeNull();
+    expect(jsonHeadingBox!.x).toBeCloseTo(photoHeadingBox!.x, 0);
+    expect(jsonOperationBox!.x).toBeCloseTo(photoIntroBox!.x, 0);
     expect(jsonGeometry.x).toBeCloseTo(photoGeometry.x, 0);
     expect(jsonGeometry.y).toBeCloseTo(photoGeometry.y, 0);
     expect(jsonGeometry.width).toBeCloseTo(photoGeometry.width, 0);
