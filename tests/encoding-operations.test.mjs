@@ -33,6 +33,20 @@ test("HTML entities are decoded as text and Unicode escapes round-trip supplemen
   assert.equal(transformEncoding("unicode-escapes","decode",transformEncoding("unicode-escapes","encode","Hi 👋")),"Hi 👋");
   assert.throws(()=>transformEncoding("unicode-escapes","decode","\\u{110000}"),/scalar value/i);
 });
+test("quoted-printable encodes UTF-8 bytes, escapes trailing whitespace and round-trips line breaks", () => {
+  assert.equal(transformEncoding("quoted-printable", "encode", "Hello world!"), "Hello world!");
+  const encoded = transformEncoding("quoted-printable", "encode", "Hello \n👋");
+  assert.equal(encoded, "Hello=20\r\n=F0=9F=91=8B");
+  assert.equal(transformEncoding("quoted-printable", "decode", encoded), "Hello \n👋");
+  assert.equal(transformEncoding("quoted-printable", "decode", "A=3DB=21"), "A=B!");
+  assert.throws(() => transformEncoding("quoted-printable", "decode", "bad=QZ"), /quoted-printable escape/i);
+  assert.throws(() => transformEncoding("quoted-printable", "decode", "=FF"), /valid UTF-8/i);
+});
+test("quoted-printable wraps long lines within MIME line limits", () => {
+  const encoded = transformEncoding("quoted-printable", "encode", "a".repeat(200));
+  assert.ok(encoded.split("\r\n").every(line => line.length <= 76));
+  assert.equal(transformEncoding("quoted-printable", "decode", encoded), "a".repeat(200));
+});
 test("encoding operations enforce the input size limit", () => {
   assert.throws(()=>transformEncoding("hex","encode","x".repeat(1_000_001)),/safety limit/i);
 });

@@ -13,7 +13,7 @@
 | enc.binary | Binary ↔ bytes | Implemented for UTF-8 text; eight-bit groups required; invalid bits rejected |
 | enc.html-entities | Text ↔ HTML entities | Basic named and numeric entities implemented; decoded markup is never rendered; full HTML named-entity catalog pending |
 | enc.unicode-escapes | Unicode escape conversion | Implemented BMP `\\uXXXX` and supplementary `\\u{...}` forms; invalid scalar values rejected |
-| enc.quoted-printable | Quoted-printable | Proposed; not implemented |
+| enc.quoted-printable | Quoted-printable | Implemented for UTF-8 text; escapes non-ASCII bytes, wraps MIME lines, rejects malformed escapes and invalid UTF-8; decoder normalizes line endings to LF |
 | enc.charset | Selected charset conversion | Proposed; not implemented |
 | enc.text-byte-mode | Explicit text or byte/file mode | Text mode implemented; arbitrary file/byte input and download mode pending |
 

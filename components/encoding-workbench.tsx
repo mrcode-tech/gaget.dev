@@ -9,7 +9,7 @@ import { transformEncoding, type EncodingMode } from "@/lib/tools/encoding-opera
 const modes: { value: EncodingMode; label: string }[] = [
   { value: "url", label: "URL component" }, { value: "base64", label: "Base64" }, { value: "base64url", label: "Base64url" },
   { value: "base32", label: "Base32" }, { value: "hex", label: "Hexadecimal" }, { value: "binary", label: "Binary bytes" },
-  { value: "html-entities", label: "HTML entities" }, { value: "unicode-escapes", label: "Unicode escapes" }
+  { value: "html-entities", label: "HTML entities" }, { value: "unicode-escapes", label: "Unicode escapes" }, { value: "quoted-printable", label: "Quoted-printable" }
 ];
 const notes: Record<EncodingMode, string> = {
   url: "Encodes a URI component, not a complete URL structure.",
@@ -19,7 +19,8 @@ const notes: Record<EncodingMode, string> = {
   hex: "Converts UTF-8 text to hexadecimal bytes. Decoding requires complete byte pairs.",
   binary: "Displays each UTF-8 byte as eight bits. Decoding requires complete byte groups.",
   "html-entities": "Supports the five basic named entities plus decimal and hexadecimal numeric entities. Decoded markup is displayed as text only.",
-  "unicode-escapes": "Uses \\uXXXX escapes for BMP characters and \\u{...} escapes for supplementary code points."
+  "unicode-escapes": "Uses \\uXXXX escapes for BMP characters and \\u{...} escapes for supplementary code points.",
+  "quoted-printable": "Encodes UTF-8 text bytes for MIME-style transport, wraps lines, and normalizes line endings to LF when decoding."
 };
 export function EncodingWorkbench({ initialMode = "url" }: { initialMode?: EncodingMode }) {
   const [mode, setMode] = useState<EncodingMode>(initialMode);

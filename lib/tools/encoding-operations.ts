@@ -1,4 +1,4 @@
-export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes";
+export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable";
 export type EncodingDirection = "encode" | "decode";
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 function utf8(text: string): Uint8Array { return new TextEncoder().encode(text); }
@@ -37,6 +37,47 @@ function decodeBase32(value: string): Uint8Array {
   }
   if (bits && (buffer & ((1 << bits) - 1)) !== 0) throw new Error("Invalid non-zero trailing Base32 bits.");
   return Uint8Array.from(output);
+}
+function encodeQuotedPrintable(value: string): string {
+  const bytes = utf8(value);
+  let output = "", lineLength = 0;
+  const add = (token: string) => {
+    // A soft break uses one column for "="; keep encoded lines within 76 columns.
+    if (lineLength + token.length > 75) { output += "=\r\n"; lineLength = 0; }
+    output += token; lineLength += token.length;
+  };
+  const newline = () => { output += "\r\n"; lineLength = 0; };
+  for (let i = 0; i < bytes.length; i++) {
+    const byte = bytes[i];
+    if (byte === 13 && bytes[i + 1] === 10) { newline(); i++; continue; }
+    if (byte === 10 || byte === 13) { newline(); continue; }
+    const nextIsLineEnd = i + 1 === bytes.length || bytes[i + 1] === 10 || bytes[i + 1] === 13;
+    if ((byte >= 33 && byte <= 60) || (byte >= 62 && byte <= 126) || ((byte === 32 || byte === 9) && !nextIsLineEnd)) {
+      add(String.fromCharCode(byte));
+    } else {
+      add("=" + byte.toString(16).toUpperCase().padStart(2, "0"));
+    }
+  }
+  return output;
+}
+function decodeQuotedPrintable(value: string): string {
+  const bytes: number[] = [];
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    if (code === 61) {
+      if (value[i + 1] === "\r" && value[i + 2] === "\n") { i += 2; continue; }
+      if (value[i + 1] === "\n") { i++; continue; }
+      const hex = value.slice(i + 1, i + 3);
+      if (!/^[0-9a-f]{2}$/i.test(hex)) throw new Error("Invalid quoted-printable escape; use = followed by two hexadecimal digits.");
+      bytes.push(Number.parseInt(hex, 16)); i += 2; continue;
+    }
+    if (code === 13 && value[i + 1] === "\n") { bytes.push(10); i++; continue; }
+    if (code === 10) { bytes.push(10); continue; }
+    if (code > 0x7f) throw new Error("Quoted-printable input must be ASCII-encoded; encode non-ASCII bytes as =XX escapes.");
+    bytes.push(code);
+  }
+  try { return textFrom(Uint8Array.from(bytes)); }
+  catch { throw new Error("Quoted-printable data does not decode to valid UTF-8 text."); }
 }
 function encodeHex(bytes: Uint8Array): string { return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join(""); }
 function decodeHex(value: string): Uint8Array {
@@ -96,6 +137,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
       case "binary": return Array.from(utf8(input), b => b.toString(2).padStart(8, "0")).join(" ");
       case "html-entities": return encodeEntities(input);
       case "unicode-escapes": return encodeUnicode(input);
+      case "quoted-printable": return encodeQuotedPrintable(input);
     }
   }
   switch (mode) {
@@ -107,5 +149,6 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
     case "binary": return textFrom(decodeBinary(input));
     case "html-entities": return decodeEntities(input);
     case "unicode-escapes": return decodeUnicode(input);
+    case "quoted-printable": return decodeQuotedPrintable(input);
   }
 }
