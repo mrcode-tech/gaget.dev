@@ -41,3 +41,5 @@ A component's existence does not imply that all its states or consumers have bee
 
 ## Developer-tools expansion
 - `components/developer-tool-workbench.tsx` composes existing Button, Input, Textarea and Card primitives for the seven standalone developer-tool routes. Its operation contract and current layout are documented in `specification/new-feature/shared-components/developer-tool-workbench.md` and `specification/new-feature/wireframes/developer-tool-workbench.md`.
+
+- components/encoding-workbench.tsx provides the unified Encoding & Decoding selector and uses lib/tools/encoding-operations.ts for pure transforms. Contract: specification/new-feature/shared-components/encoding-workbench.md; wireframe: specification/new-feature/wireframes/encoding-workbench.md.

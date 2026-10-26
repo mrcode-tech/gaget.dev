@@ -4,7 +4,8 @@ This directory contains proposed reusable contracts, not claims that components 
 
 | Component | Status | Rationale | Wireframe |
 |---|---|---|---|
-| [Developer Tool Workbench](./developer-tool-workbench.md) | Implemented; contract synchronized | Shared text-first input/output shell for the seven standalone workbenches; composes existing primitives | [Developer Tool Workbench wireframe](../wireframes/developer-tool-workbench.md) |
+| [Developer Tool Workbench](./developer-tool-workbench.md) | Implemented; contract synchronized | Shared text-first input/output shell for seven standalone workbenches | [Developer Tool Workbench wireframe](../wireframes/developer-tool-workbench.md) |
+| [Encoding Workbench](./encoding-workbench.md) | Implemented; contract synchronized | Unified text-representation selector and UTF-8 conversion modes | [Encoding Workbench wireframe](../wireframes/encoding-workbench.md) |
 | [File input / dropzone](./file-input.md) | Proposal pending source audit | Accessible file selection for binary workflows; current component inventory does not identify a shared dropzone | [File input wireframes](../wireframes/file-input.md) |
 
 Add other component contracts only after proving a reuse gap. Keep one canonical contract and link consumers.
