@@ -28,7 +28,7 @@ The table is a family-level first pass. It identifies the intended destination o
 |---|---|---|---|
 | Base64 text encoding/decoding | `/encoding/base64` | Existing capability; assess parity | Current workspace handles UTF-8 text. Binary-file/Base64 conversions must remain byte-accurate and distinct from media data-URL tools. |
 | URL component encoding/decoding | `/encoding/url` | Existing capability; assess parity | Component encoding is not whole-URL validation. Malformed escapes must report errors. |
-| HTML entities, general escapes, Unicode escapes, code points, character inspection | New encoding/text workspace or a justified extension after audit | Candidate / not yet implemented | Keep JSON-string escaping in the JSON workspace; do not conflate JSON escaping with generic string escaping. |
+| HTML entities, general escapes, Unicode escapes, code points, character inspection | New encoding/text workspace or a justified extension after audit | Candidate / not yet implemented | Keep JSON-string escaping in the JSON workspace; do not conflate JSON escaping with generic string escaping. |\n| Regular-expression matching and capture inspection | `/text/regex` | Implemented; verification pending | JavaScript RegExp only; isolated Worker with a 300 ms termination boundary, bounded input/pattern/result count, and no server transfer. This does not provide cross-engine compatibility. |
 | Hex, binary, ASCII, byte arrays, hexdump, file signatures | New binary inspection workspace candidate | Candidate / not yet implemented | Byte-oriented data needs explicit encodings, offset semantics, and bounded input sizes. |
 | SHA-2 hashes | `/security/hash` | Implemented in this branch; CI verification pending | Web Crypto supports SHA-256/384/512. Does not imply HMAC, SHA-1, MD5, or file streaming. |
 | SHA-1, MD5, SHA-3, HMAC, CRC and other checksums | Security/hash workspace only when justified | Deferred pending per-operation review | Different security properties must be named honestly; checksum is not equivalent to a cryptographic hash. |
@@ -73,3 +73,12 @@ The table is a family-level first pass. It identifies the intended destination o
 4. Audit protected Photo, Audio, Date & Time, Video, and JSON workspaces for relevant operation gaps without changing their identity/routes or duplicating their functionality.
 5. Implement the highest-value safe gaps in cohesive workspaces, with specifications, tests, responsive/RTL/a11y verification and explicit limits.
 6. Open/update the pull request targeting `stage`; inspect every CI job, browser screenshots, and the evidence manifest. Fix failures at their root cause and verify the exact final commit.
+
+
+## Additional implementation slice — Regex Tester
+
+- Route: `/text/regex`; registered as available but not yet verified.
+- Supports JavaScript RegExp flags, all-match enumeration, match offsets, full matches and capture groups.
+- Runs in a dedicated browser Worker; a 300 ms watchdog terminates expensive expressions. Pattern length (2,000 characters), input size (256 KiB), and match count (1,000) are bounded. Worker creation failures are surfaced rather than falling back to the main thread.
+- Unit tests cover captures and offsets, implicit global matching, zero-width Unicode matches, invalid syntax/flags, size limits and match-count limits.
+- Verification still required: component tests, route smoke, lint, typecheck, build, E2E, responsive/RTL browser review and exact-commit GitHub CI. Do not mark this tool Verified until those checks pass.
