@@ -483,17 +483,6 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
           <Button data-json-menu-trigger="File" ref={fileTriggerRef} variant={menuOpen === "File" ? "secondary" : "ghost"} aria-expanded={menuOpen === "File"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "File" ? null : "File")}>{t("json.file")}</Button>
           {menuOpen === "File" && <div role="menu" aria-label={t("json.file")} data-testid="json-file-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),32rem)] w-64 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={window.innerWidth < 768 ? { position: "fixed", top: (fileTriggerRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: "1rem", right: "1rem", width: "auto", maxWidth: "none", marginTop: 0 } : { left: direction === "rtl" ? "auto" : 0, right: direction === "rtl" ? 0 : "auto" }}>{renderFileActions()}</div>}
         </div>
-        <div className="relative shrink-0 md:hidden">
-          <Button data-json-menu-trigger="Feature" ref={featuresTriggerRef} variant={menuOpen === "Feature" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Feature"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Feature" ? null : "Feature")}>{t("json.feature")}</Button>
-          {menuOpen === "Feature" && <div role="menu" aria-label={t("json.feature")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ position: "fixed", top: (featuresTriggerRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: "1rem", right: "1rem", width: "auto", maxWidth: "none", marginTop: 0 }}>
-            <div data-testid="json-mobile-feature-list">
-              {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
-              {featureSearch.canSearch && featureSearch.query.trim() && filteredOperationEntries.length === 0 ? <FeatureMenuNoResults /> : filteredOperationEntries.map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
-                <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
-              </button>)}
-            </div>
-          </div>}
-        </div>
         {groups.map((group) => {
           const firstEntry = operationEntries.find((entry) => entry.group === group);
           if (!firstEntry) return null;
@@ -508,11 +497,26 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
           </div>;
         })}
       </div>
+      <div className="relative ml-auto shrink-0 md:hidden">
+          <Button data-json-menu-trigger="Feature" ref={featuresTriggerRef} variant={menuOpen === "Feature" ? "secondary" : "ghost"} aria-expanded={menuOpen === "Feature"} aria-haspopup="menu" onClick={() => setMenuOpen(menuOpen === "Feature" ? null : "Feature")}>{t("json.feature")}</Button>
+          {menuOpen === "Feature" && <div role="menu" aria-label={t("json.feature")} data-testid="json-features-menu" onKeyDown={handleMenuKeyDown} className="absolute start-0 top-full z-50 mt-1 json-workspace-menu max-h-[min(calc(100dvh-16rem),34rem)] w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 shadow-xl" style={{ position: "fixed", top: (featuresTriggerRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: "1rem", right: "1rem", width: "auto", maxWidth: "none", marginTop: 0 }}>
+            <div data-testid="json-mobile-feature-list">
+              {featureSearch.canSearch && <FeatureMenuSearch value={featureSearch.query} onChange={featureSearch.setQuery} />}
+              {featureSearch.canSearch && featureSearch.query.trim() && filteredOperationEntries.length === 0 ? <FeatureMenuNoResults /> : filteredOperationEntries.map((entry) => <button key={entry.id} role="menuitemradio" aria-checked={operation === entry.id} className={`flex min-h-12 w-full items-start gap-2 rounded-md px-3 py-2 text-start hover:bg-accent ${operation === entry.id ? "bg-accent" : ""}`} onClick={() => { setOperation(entry.id); clearResult(); setMenuOpen(null); featuresTriggerRef.current?.focus(); }}>
+                <WandSparkles className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0"><span className="block text-sm leading-5">{entry.label}</span><span className="block text-xs leading-4 text-muted-foreground">{entry.description}</span></span>
+              </button>)}
+            </div>
+          </div>}
+        </div>
+
     </div>
 
     <div data-testid="json-workspace-content" className="w-full min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
       <h1 className="text-xl font-bold tracking-tight">{t("json.workspace")}</h1>
       <p className="text-sm text-muted-foreground">{t("json.workspaceDescription")}</p>
+
+          {status && !error && diagnostics.length === 0 && <p role="status" className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm"><Check className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />{status}</p>}
+          {(diagnostics.length > 0 || error) && <section aria-label={t("json.diagnostics")} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3"><div className="flex items-start gap-2 text-sm text-destructive"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><p role="alert">{error}</p></div>{diagnostics.length > 0 && <ul className="mt-2 space-y-1">{diagnostics.map((diagnostic, index) => <li key={`${diagnostic.source}-${diagnostic.offset}-${index}`}><button type="button" className="rounded px-1 py-1 text-start text-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("json.goToDiagnostic").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))} onClick={() => navigateDiagnostic(diagnostic)}><span className="font-medium">{diagnostic.source === "compare" ? t("json.documentB") : operation === "compare" ? t("json.documentA") : t("json.input")}</span> · {t("json.lineColumn").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))}: {diagnostic.message}</button></li>)}</ul>}</section>}
 
     <div data-testid="json-operation-header" className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="min-w-0"><h2 className="text-base font-semibold">{operationEntries.find((entry) => entry.id === operation)?.label}</h2><p data-testid="json-operation-description" className="text-sm text-muted-foreground">{operationEntries.find((entry) => entry.id === operation)?.description}</p></div>
@@ -570,9 +574,6 @@ export function JsonWorkbench({ initialMode = "format" }: { initialMode?: JsonOp
       </CardContent>
     </Card>}
 
-    {(diagnostics.length > 0 || error) && <section aria-label={t("json.diagnostics")} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3"><div className="flex items-start gap-2 text-sm text-destructive"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><p role="alert">{error}</p></div>{diagnostics.length > 0 && <ul className="mt-2 space-y-1">{diagnostics.map((diagnostic, index) => <li key={`${diagnostic.source}-${diagnostic.offset}-${index}`}><button type="button" className="rounded px-1 py-1 text-start text-sm underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("json.goToDiagnostic").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))} onClick={() => navigateDiagnostic(diagnostic)}><span className="font-medium">{diagnostic.source === "compare" ? t("json.documentB") : operation === "compare" ? t("json.documentA") : t("json.input")}</span> · {t("json.lineColumn").replace("{line}", String(diagnostic.line)).replace("{column}", String(diagnostic.column))}: {diagnostic.message}</button></li>)}</ul>}</section>}
-
-    {status && !error && diagnostics.length === 0 && <p role="status" className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm"><Check className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />{status}</p>}
     </div>
   </section>;
 }
