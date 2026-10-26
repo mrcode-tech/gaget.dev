@@ -12,6 +12,7 @@ const routes = [
   "/security/jwt-decoder",
   "/security/hash",
   "/data/csv-json",
+  "/text/regex",
   "/generators/uuid",
   "/images/editor",
   "/audio/editor",
