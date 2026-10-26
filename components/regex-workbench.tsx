@@ -41,15 +41,22 @@ export function RegexWorkbench() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const workerRef = useRef<Worker | null>(null);
+  const workerUrlRef = useRef<string | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
     workerRef.current?.terminate();
+    workerRef.current = null;
+    if (workerUrlRef.current) URL.revokeObjectURL(workerUrlRef.current);
+    workerUrlRef.current = null;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
   }, []);
 
   function run() {
     workerRef.current?.terminate();
+    workerRef.current = null;
+    if (workerUrlRef.current) URL.revokeObjectURL(workerUrlRef.current);
+    workerUrlRef.current = null;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setMatches([]);
     setError("");
@@ -66,8 +73,10 @@ export function RegexWorkbench() {
     try {
       url = URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
       worker = new Worker(url);
-      URL.revokeObjectURL(url);
+      workerUrlRef.current = url;
     } catch {
+      if (typeof url !== "undefined") URL.revokeObjectURL(url);
+      workerUrlRef.current = null;
       setError("This browser blocks the isolated regular-expression worker; no pattern was executed.");
       return;
     }
@@ -77,6 +86,8 @@ export function RegexWorkbench() {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       worker.terminate();
       if (workerRef.current === worker) workerRef.current = null;
+      if (workerUrlRef.current) URL.revokeObjectURL(workerUrlRef.current);
+      workerUrlRef.current = null;
       setBusy(false);
       if (event.data.error) { setError(event.data.error); return; }
       setMatches(event.data.matches ?? []);
@@ -86,12 +97,16 @@ export function RegexWorkbench() {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       worker.terminate();
       if (workerRef.current === worker) workerRef.current = null;
+      if (workerUrlRef.current) URL.revokeObjectURL(workerUrlRef.current);
+      workerUrlRef.current = null;
       setBusy(false);
       setError("The pattern could not be evaluated in the isolated worker.");
     };
     timeoutRef.current = setTimeout(() => {
       worker.terminate();
       if (workerRef.current === worker) workerRef.current = null;
+      if (workerUrlRef.current) URL.revokeObjectURL(workerUrlRef.current);
+      workerUrlRef.current = null;
       setBusy(false);
       setError("Pattern evaluation exceeded 300 ms and was stopped. Simplify the pattern or shorten the input.");
     }, 300);
@@ -116,7 +131,7 @@ export function RegexWorkbench() {
         <Textarea id="regex-input" value={input} maxLength={REGEX_INPUT_LIMIT} onChange={(event) => setInput(event.target.value)} dir="ltr" className="min-h-40 font-mono" />
         <div className="flex flex-wrap gap-2">
           <Button onClick={run} disabled={busy}><Play className="h-4 w-4" /> {busy ? "Testing…" : "Test pattern"}</Button>
-          <Button variant="outline" onClick={() => { workerRef.current?.terminate(); workerRef.current = null; if (timeoutRef.current) clearTimeout(timeoutRef.current); setPattern(""); setFlags("g"); setInput(""); setMatches([]); setError(""); setStatus(""); setBusy(false); }}><Trash2 className="h-4 w-4" /> Clear</Button>
+          <Button variant="outline" onClick={() => { workerRef.current?.terminate(); workerRef.current = null; if (workerUrlRef.current) URL.revokeObjectURL(workerUrlRef.current); workerUrlRef.current = null; if (timeoutRef.current) clearTimeout(timeoutRef.current); setPattern(""); setFlags("g"); setInput(""); setMatches([]); setError(""); setStatus(""); setBusy(false); }}><Trash2 className="h-4 w-4" /> Clear</Button>
         </div>
       </CardContent>
     </Card>
