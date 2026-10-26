@@ -172,7 +172,7 @@ try {
     } },
     { name: "invalid-diagnostics", route: "/json/formatter", run: async (page) => {
       await page.getByRole("textbox", { name: "Input JSON" }).fill('{\n  "broken": }');
-      await page.getByRole("button", { name: "Feature" }).click();
+      await page.getByRole("button", { name: (page.viewportSize()?.width ?? 1024) < 768 ? "Feature" : "Utilities" }).click();
       await page.getByRole("menuitemradio", { name: /Validate/ }).click();
       await page.getByRole("button", { name: "Run operation" }).click();
       await page.getByRole("button", { name: /Go to line 2/ }).waitFor({ state: "visible" });
@@ -184,10 +184,8 @@ try {
       await page.getByText("$.version").waitFor({ state: "visible" });
     } },
     { name: "file-menu", route: "/json/formatter", run: async (page) => {
-      if ((page.viewportSize()?.width ?? 1024) < 768) {
-        await page.getByRole("button", { name: "Feature" }).click();
-        await page.getByTestId("json-mobile-file-actions").waitFor({ state: "visible" });
-      } else {
+      {
+      {
         await page.getByRole("button", { name: "File" }).click();
         await page.getByTestId("json-file-menu").waitFor({ state: "visible" });
       }
@@ -202,7 +200,7 @@ try {
       const page = await browser.newPage({ viewport, colorScheme: "light", locale: "en-US" });
       await page.addInitScript(() => localStorage.setItem("theme", "light"));
       const url = new URL(state.route, baseURL).toString();
-      const evidenceState = state.name === "file-menu" && viewport.width < 768 ? "mobile-file-actions-in-features" : state.name;
+      const evidenceState = state.name === "file-menu" && viewport.width < 768 ? "mobile-file-menu" : state.name;
       const relative = path.join(commitSlug, "json-states", viewport.name, evidenceState + ".png");
       const destination = path.join(outputRoot, relative);
       try {
