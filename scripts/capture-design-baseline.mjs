@@ -32,10 +32,21 @@ const viewports = [
   { name: "mobile-390x844", width: 390, height: 844 },
   { name: "mobile-short-390x640", width: 390, height: 640 },
   { name: "tablet-768x1024", width: 768, height: 1024 },
-  { name: "desktop-1440x1000", width: 1440, height: 1000 },
+  { name: "desktop-1440x900", width: 1440, height: 900 },
+];
+const jsonViewports = [
+  { name: "mobile-320x568", width: 320, height: 568 },
+  { name: "mobile-390x844", width: 390, height: 844 },
+  { name: "mobile-430x932", width: 430, height: 932 },
+  { name: "tablet-768x1024", width: 768, height: 1024 },
+  { name: "tablet-1024x768", width: 1024, height: 768 },
+  { name: "desktop-1280x800", width: 1280, height: 800 },
+  { name: "desktop-1440x900", width: 1440, height: 900 },
+  { name: "wide-1920x1080", width: 1920, height: 1080 },
+  { name: "short-1280x600", width: 1280, height: 600 },
 ];
 const themes = ["light", "dark"];
-const rtlViewports = new Set(["mobile-390x844", "desktop-1440x1000"]);
+const rtlViewports = new Set(["mobile-390x844", "desktop-1440x900"]);
 const locales = [
   { name: "en", prefix: "", browserLocale: "en-US", routes, viewports },
   {
@@ -56,6 +67,10 @@ const locales = [
 const manifest = {
   generatedAt: new Date().toISOString(),
   commit,
+  branch: process.env.CI_TESTED_BRANCH ?? process.env.GITHUB_REF_NAME ?? "local",
+  runUrl: process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
+    ? `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+    : null,
   baseURL,
   browser: "Chromium (Playwright; version recorded after launch)",
   captures: [],
@@ -157,7 +172,7 @@ try {
     } },
     { name: "invalid-diagnostics", route: "/json/formatter", run: async (page) => {
       await page.getByRole("textbox", { name: "Input JSON" }).fill('{\n  "broken": }');
-      await page.getByRole("button", { name: "Features" }).click();
+      await page.getByRole("button", { name: (page.viewportSize()?.width ?? 1024) < 768 ? "Feature" : "Utilities" }).click();
       await page.getByRole("menuitemradio", { name: /Validate/ }).click();
       await page.getByRole("button", { name: "Run operation" }).click();
       await page.getByRole("button", { name: /Go to line 2/ }).waitFor({ state: "visible" });
@@ -173,16 +188,18 @@ try {
       await page.getByTestId("json-file-menu").waitFor({ state: "visible" });
     } },
     { name: "features-menu", route: "/json/formatter", run: async (page) => {
-      await page.getByRole("button", { name: "Features" }).click();
-      await page.getByTestId("json-features-menu").waitFor({ state: "visible" });
+      const triggerName = (page.viewportSize()?.width ?? 1024) < 768 ? "Feature" : "Utilities";
+      await page.getByRole("button", { name: triggerName, exact: true }).click();
+      await page.getByTestId((page.viewportSize()?.width ?? 1024) < 768 ? "json-features-menu" : "json-group-menu").waitFor({ state: "visible" });
     } },
   ];
-  for (const viewport of viewports) {
+  for (const viewport of jsonViewports) {
     for (const state of jsonStates) {
       const page = await browser.newPage({ viewport, colorScheme: "light", locale: "en-US" });
       await page.addInitScript(() => localStorage.setItem("theme", "light"));
       const url = new URL(state.route, baseURL).toString();
-      const relative = path.join(commitSlug, "json-states", viewport.name, state.name + ".png");
+      const evidenceState = state.name === "file-menu" && viewport.width < 768 ? "mobile-file-menu" : state.name;
+      const relative = path.join(commitSlug, "json-states", viewport.name, evidenceState + ".png");
       const destination = path.join(outputRoot, relative);
       try {
         const response = await page.goto(url, { waitUntil: "networkidle", timeout: 45000 });
@@ -196,14 +213,14 @@ try {
           direction: "ltr",
           viewport: { name: viewport.name, width: viewport.width, height: viewport.height },
           theme: "light",
-          state: state.name,
+          state: evidenceState,
           screenshot: relative,
           status: response.status(),
         });
         process.stdout.write("Captured " + state.route + " | " + viewport.name + " | light | en | " + state.name + "\n");
       } catch (error) {
-        manifest.failures.push({ route: state.route, locale: "en", viewport: viewport.name, theme: "light", state: state.name, error: String(error) });
-        process.stderr.write("Capture failed " + state.route + " | " + viewport.name + " | light | en | " + state.name + ": " + String(error) + "\n");
+        manifest.failures.push({ route: state.route, locale: "en", viewport: viewport.name, theme: "light", state: evidenceState, error: String(error) });
+        process.stderr.write("Capture failed " + state.route + " | " + viewport.name + " | light | en | " + evidenceState + ": " + String(error) + "\n");
       } finally {
         await page.close();
       }

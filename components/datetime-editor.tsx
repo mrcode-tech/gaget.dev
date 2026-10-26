@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, ShieldCheck, SlidersHorizontal, Menu, X, type LucideIcon } from "lucide-react";
+import { CalendarDays, Calculator, CalendarRange, Clock3, Globe2, Timer, Hourglass, FileClock, Code2, Braces, Copy, RotateCcw, SlidersHorizontal, Menu, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -261,7 +261,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
       </nav>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
-        <div data-testid="datetime-workspace" className="flex min-h-max w-full flex-1 flex-col pb-8 md:h-full md:min-h-0">
+        <div data-testid="datetime-workspace" className="flex min-h-max w-full flex-1 flex-col md:h-full md:min-h-0">
           <div data-testid="datetime-workspace-grid" className={"grid min-h-max min-w-0 flex-1 items-stretch gap-0 md:h-full md:min-h-0 md:grid-rows-[minmax(0,1fr)] " + (activeFeature ? "md:grid-cols-[minmax(0,1fr)_320px]" : "")}>
             <section className={"flex min-h-0 min-w-0 flex-1 flex-col p-3 sm:p-6 lg:p-8 " + (!activeFeature ? "mx-auto w-full max-w-[1600px]" : "")}>
               <header data-testid="datetime-editor-intro" className="shrink-0 pb-0">
@@ -299,15 +299,14 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
           </section>
             </section>
 
-        {activeFeature && <aside ref={panelRef} style={panelStyle} data-testid="datetime-feature-panel" id="datetime-feature-panel" role="region" aria-labelledby="datetime-feature-panel-title" className="fixed inset-x-0 bottom-0 z-40 flex h-[var(--feature-panel-height)] max-h-[70dvh] flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:relative md:inset-auto md:h-full md:min-h-full md:max-h-full md:w-[320px] md:shrink-0 md:border-l md:border-t-0 md:pb-0 md:shadow-none">
+        {activeFeature && <aside ref={panelRef} style={panelStyle} data-testid="datetime-feature-panel" id="datetime-feature-panel" role="region" aria-labelledby="datetime-feature-panel-title" className="fixed inset-x-0 bottom-0 z-40 flex h-[var(--feature-panel-height)] max-h-[70dvh] flex-col overflow-hidden border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-sm transition-[height,transform,opacity] duration-200 ease-out motion-reduce:transition-none md:relative md:inset-auto md:h-auto md:min-h-0 md:max-h-[calc(100dvh-136px)] md:w-[320px] md:shrink-0 md:self-start md:border-l md:border-t-0 md:pb-0 md:shadow-none">
           <div className="flex min-h-0 w-full flex-col overflow-hidden bg-card sm:shadow-none">
             <div {...resizeHandleProps} className="mx-auto mt-1 flex h-6 w-12 shrink-0 cursor-row-resize touch-none items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"><span aria-hidden="true" className="h-1 w-9 rounded-full bg-muted-foreground/50" /></div>
-            <div className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 id="datetime-feature-panel-title" className="text-sm font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2><p className="hidden text-[11px] text-muted-foreground md:block">Feature parameters</p></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
-            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 sm:p-4"><DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={appLocale} calendar={calendar} numberingSystem={numberingSystem} /></div>
+            <div data-testid="datetime-feature-panel-header" className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4"><div className="min-w-0"><h2 id="datetime-feature-panel-title" className="text-sm font-semibold">{features.find((f) => f.slug === activeFeature)?.title}</h2><p className="hidden text-[11px] text-muted-foreground md:block">Feature parameters</p></div><Button type="button" variant="ghost" size="icon" aria-label="Close selected feature" onClick={() => setActiveFeature(null)}><X className="h-4 w-4" /></Button></div>
+            <div data-testid="datetime-feature-panel-content" className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain p-3 sm:p-4"><DateTimeWorkbench key={activeFeature + "-" + referenceRevision} slug={activeFeature} referenceDate={seededReference?.date ?? selectedDate} referenceTime={seededReference?.time ?? selectedTime} timeZone={timeZone} locale={appLocale} calendar={calendar} numberingSystem={numberingSystem} /></div>
           </div>
         </aside>}
       </div>
-          <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Runs locally in your browser. Calendar availability depends on your browser&apos;s Intl implementation; Islamic calendar conventions may differ.</p>
           </div>
         </div>
     </main>

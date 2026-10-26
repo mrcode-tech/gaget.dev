@@ -10,7 +10,7 @@ export function CategoryLanding({ category }: { category: string }) {
   const categoryLabel = category === "Video" ? t("category.video") : t(`category.${category}`);
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-10">
+    <main className="mx-auto w-full max-w-[1600px] px-3 py-8 sm:px-6 lg:px-8">
       <nav className="mb-4 text-xs text-muted-foreground">
         {t("nav.categories")} / {categoryLabel}
       </nav>

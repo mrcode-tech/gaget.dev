@@ -36,7 +36,7 @@ export function ToolCatalog() {
   const direction = localeDirections[locale];
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-10">
+    <main data-testid="tool-catalog" className="mx-auto w-full max-w-[1600px] px-3 py-8 sm:px-6 lg:px-8">
       <header className="mb-7">
         <p className="eyebrow">{t("nav.allTools")}</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight">{t("nav.devTools")}</h1>

@@ -27,8 +27,10 @@ Shared shell changes must not imply media or date/time behavior parity where it 
 The JSON Formatter and Compare routes are compact workspace consumers of the shared application shell. They use the same mobile navigation contract and File/Features command-bar conventions, but they are not full-screen media editors.
 
 - Desktop keeps the global app header and sidebar; the JSON command bar sits above the workspace content.
-- Below the desktop breakpoint, hide the global app header and its spacer. The JSON command bar becomes the single mobile navigation row: hamburger/sidebar access, File on the left, and Features on the right. Search, language and theme controls must not appear in that row.
-- The JSON command bar spans the workspace content width without inheriting the generic `ToolLayout` outer top/horizontal gutters. Apply readable content gutters to the JSON workspace body below the bar, not around the bar itself. Keep the command bar at 68px to match the Photo Editor reference.\n- Keep the regular document-flow container for JSON instead of applying the media editor's `h-dvh overflow-hidden` canvas rules; JSON source, output, comparison and diagnostics can exceed a short viewport and must remain reachable by page scrolling. Keep the compact JSON command bar sticky within the viewport while document content scrolls: `top: 0` below the desktop breakpoint and offset below the 68px global header at desktop. Preserve document scrolling and avoid converting the whole JSON workspace into a nested scroll container.
+- Below the desktop breakpoint, hide the global app header and its spacer. The JSON command bar becomes the single mobile navigation row: hamburger/sidebar access on the left and Features on the right. Search, language and theme controls must not appear in that row.
+- At widths below 768 CSS px (XS/SM), aggregate all JSON File actions at the top of the Features menu under a clearly labelled File group. Hide the standalone File trigger/menu at those widths to avoid duplicate or unreachable navigation. At 768 CSS px and above (MD/tablet and desktop), keep the complete standalone File menu and omit the aggregated File group from Features.
+- The JSON command bar spans the entire available workspace width after the application sidebar, without a centered `max-width` constraint or generic `ToolLayout` outer top/horizontal gutters. Apply the same responsive content gutters as the editor shell to the JSON workspace body below the bar, without adding a second centered page-width wrapper around the title, description and editor. Keep the command bar at 68px to match the Photo Editor reference.
+- Keep the regular document-flow container for JSON instead of applying the media editor's `h-dvh overflow-hidden` canvas rules; JSON source, output, comparison and diagnostics can exceed a short viewport and must remain reachable by page scrolling. Keep the compact JSON command bar sticky within the viewport while document content scrolls: `top: 0` below the desktop breakpoint and offset below the 68px global header at desktop. Preserve document scrolling and avoid converting the whole JSON workspace into a nested scroll container.
 - Stack the source and result areas at narrow widths. A media-style resizable bottom sheet is not required for this JSON variant because output and comparison are document regions rather than a persistent media control panel. If a future JSON interaction needs a persistent resizable panel, reuse the established shared primitive instead of inventing a JSON-only resizing system.
 - File and Features menus must remain within the viewport, internally scroll at short heights, restore focus on Escape, and support keyboard menu navigation. The command bar remains visible during page scrolling without obscuring the workspace; its stacking context must keep menus above workspace content but below the global desktop header. JSON source and line-number gutter remain LTR even when surrounding chrome is RTL.
 
@@ -49,10 +51,12 @@ Use the repository's existing Tailwind ranges; do not add competing breakpoints.
 
 Height is a separate constraint. On short-height and landscape screens, controls must remain reachable; menus and panels scroll within their own bounds; do not assume a fixed viewport height. Use dynamic viewport sizing where available and respond to viewport resize/orientation changes.
 
+**Shared horizontal gutter contract:** standalone page containers (ToolLayout, Home, category landing, and the Dev Tools catalog) use a 1600px maximum content width with 12px horizontal gutters below 640px, 24px from 640px through 1023px, and 32px at 1024px and wider. Editor workspace content (Photo Editor, Video Editor, the Date & Time main column, and the JSON body) uses matching 12px/24px/32px internal gutters. Full-width editor command bars own their own padding; do not add ToolLayout outer gutters or a second centered max-width wrapper around them. Avoid applying horizontal gutters twice.
+
 ## 3. Command bar and menus
 
 - Keep the editor command bar visually and structurally distinct from global site navigation.
-- Keep File and Features triggers in stable locations; preserve button hit areas and prevent flex shrink from producing accidental overlap.
+- Keep File and Features triggers in stable locations; preserve button hit areas and prevent flex shrink from producing accidental overlap. For JSON only, File actions are aggregated into Features below 768px and remain a separate menu at 768px and above.
 - On compact editor routes, hide the global header and its spacer so the editor command bar is the single mobile navigation row. Date & Time places the hamburger and File trigger on the left and Features on the right; the hamburger must open the shared mobile sidebar drawer.
 - Date & Time File and Features menus open directly below that command bar, remain within viewport bounds, and must not create a duplicate hamburger or a second navigation row.
 - Menus anchor to their own trigger, remain within viewport margins, and own scrolling when content exceeds available height.
@@ -63,7 +67,7 @@ Height is a separate constraint. On short-height and landscape screens, controls
 ## 3.1 Mobile Features-menu search contract
 
 **Status:** Proposed contract for review; not an approval of a pixel-perfect design.
-**Applies to:** Photo/Image, Audio, Video, and Date & Time Features menus.
+**Applies to:** Photo/Image, Audio, Video, Date & Time, and the JSON workspace Features menu. JSON uses the same shared search hook/input/no-results components, but its mobile operations list is flat rather than grouped.
 
 ### Purpose and visibility
 
@@ -78,7 +82,7 @@ The Features menu can become long on small screens. Search should reduce scannin
 
 ### Placement, anatomy, and responsive behavior
 
-- Keep the existing menu trigger, anchoring, heading, close affordance, groups, icons, titles, descriptions, and selected state.
+- Keep the existing menu trigger, anchoring, heading, close affordance, icons, titles, descriptions, and selected state. Photo, Audio, Video and Date & Time retain their existing group headings; JSON mobile deliberately presents a single flat list without category headings or disclosure arrows, while its desktop menu retains grouped commands.
 - When enabled, place the search input immediately after the Features-menu heading/close row and before the first feature group. It spans the available inner menu width and participates in the menu's existing vertical flow.
 - Reuse the shared shadcn-style Input, semantic theme tokens, and existing Lucide search icon. Use direction-aware start positioning/padding, not hard-coded left/right alignment.
 - Keep the existing viewport-bounded menu and its single vertical scroll owner. Search results reduce list content but must not create a second nested scrolling region or horizontal page overflow. The menu remains usable on short-height and landscape mobile screens.
