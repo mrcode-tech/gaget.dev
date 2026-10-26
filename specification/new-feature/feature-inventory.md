@@ -16,15 +16,15 @@
 | sql-formatter | SQL Formatter | /sql/formatter | available with documented limits |
 | csv-json-converter | CSV ↔ JSON | /data/csv-json | available with documented limits |
 | html-formatter | HTML Formatter | /web/html-formatter | available with documented limits |
-| curl-converter | cURL Converter | /api/curl-converter | available with documented limits |
+| curl-converter | cURL Converter | /api/curl-converter | available with documented limits |\n| binary-math-workbench | Data, Binary & Math Workbench | /data/binary-math | available with documented limits |\n| network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
 
-There are 10 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
+There are now 12 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 
 ## Proposed capability traceability
 
 | Planning ID | Workspace and operations | Status / phase | Specification |
 |---|---|---|---|
-| enc.representations | URL component; Base64/Base64url; Base32; hex/binary; basic HTML entities; Unicode escapes; conditional Base58/Base85; quoted-printable; charset conversion; explicit text/byte modes | Core text representations plus quoted-printable implemented / 2; Base58/Base85, charset conversion and arbitrary file-byte mode pending | [Encoding](./categories/encoding-decoding.md) |
+| enc.representations | URL component; Base64/Base64url; Base32; hex/binary; basic HTML entities; Unicode escapes; conditional Base58/Base85; quoted-printable; charset conversion; explicit text/byte modes | Core text representations plus quoted-printable implemented / 2; Base58/Base85, charset conversion and dedicated byte transcoding pending; selected-file byte inspection now implemented | [Encoding](./categories/encoding-decoding.md) |
 | sec.digest | SHA-256/SHA-384/SHA-512 text digests | SHA-2 text subset implemented / 3; file bytes, SHA-3 and other digest families pending / 4 | [Security](./categories/security-cryptography.md) |
 | sec.mac-checksum | HMAC; CRC/checksums | HMAC-SHA-2 and CRC32/IEEE text subset implemented / 4; other checksum variants pending | [Security](./categories/security-cryptography.md) |
 | sec.encrypt | Supported encryption/decryption; key/ciphertext representation | Conditional / 4 | [Security](./categories/security-cryptography.md) |
@@ -40,12 +40,12 @@ There are 10 relevant standalone registry entries. Encoding & Decoding consolida
 | compress.archive | Archive listing/extraction with strict limits | Conditional / 5 | [Binary & math](./categories/compression-binary-math.md) |
 | binary.inspect | Hexdump, byte view, printable strings, byte-range compare | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
 | binary.numeric | Base conversion, signed/unsigned, endianness, XOR/bitwise, float representation | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
-| network.parse | IPv4/IPv6/CIDR, MAC, URI/domain/email/IP extraction, HTTP headers/cookies, offline records | Proposed / 4 | [Inspection](./categories/network-web-security-inspection.md) |
+| network.parse | IPv4/IPv6/CIDR, MAC, URI/domain/email/IP extraction, HTTP headers/cookies, offline records | IP/CIDR/MAC, supplied headers and cookies implemented / 4; candidate extraction and offline DNS records pending | [Inspection](./categories/network-web-security-inspection.md) |
 | token.jwt | JWT decode, claims and timestamp/expiry interpretation | Available entry; reverify / 4 | [Inspection](./categories/network-web-security-inspection.md) |
 | token.verify | Optional signature verification | Conditional, separate from decode / 4 | [Inspection](./categories/network-web-security-inspection.md) |
 | cert.inspect | PEM/DER, X.509 fields/fingerprints, key metadata, selected SSH public keys | Conditional / 4 | [Inspection](./categories/network-web-security-inspection.md) |
-| file.inspect | Magic bytes, headers, strings, byte frequency, entropy, metadata, binary diff | Proposed / 4 | [Inspection](./categories/network-web-security-inspection.md) |
-| math.numeric | Base conversion, arithmetic and modular arithmetic | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
+| file.inspect | Magic bytes, headers, strings, byte frequency, entropy, metadata, binary diff | Selected local file byte view, printable strings, byte frequency and entropy implemented / 4; full signature catalog, metadata parsers and file-to-file diff pending | [Inspection](./categories/network-web-security-inspection.md) |
+| math.numeric | Base conversion, arithmetic and modular arithmetic | BigInt base conversion, arithmetic, modular integer operations and numeric statistics implemented / 3; signed-width, endianness and IEEE float views pending | [Binary & math](./categories/compression-binary-math.md) |
 | math.stats | Statistics, character/byte frequency and entropy | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
 | workflow.pipeline | Typed chains, reorder/configure, intermediate results, batch and versioned recipes | Deferred / 6 | [Workflow/API](./categories/workflow-generators-api.md) |
 | gen.uuid | UUID v4 | Existing available / 3 | [Workflow/API](./categories/workflow-generators-api.md) |

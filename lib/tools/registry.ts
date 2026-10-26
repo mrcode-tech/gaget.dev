@@ -1,4 +1,4 @@
-import {Braces,Binary,KeyRound,Fingerprint,Hash,Regex,Clock3,FileCode2,Database,FileSpreadsheet,ShieldCheck,Code2,Image,Terminal,Music,Film,type LucideIcon} from "lucide-react";
+import {Braces,Binary,KeyRound,Fingerprint,Hash,Regex,Clock3,FileCode2,Database,FileSpreadsheet,ShieldCheck,Code2,Image,Terminal,Music,Film,Calculator,Network,type LucideIcon} from "lucide-react";
 export type WorkspaceId="image"|"audio"|"video"|"date-time"|"json";
 export type Tool={id:string;kind:"workspace"|"standalone";workspaceId?:WorkspaceId;name:string;description:string;href:string;category:string;keywords:string[];icon:LucideIcon;color:"blue"|"green"|"violet"|"rose"|"orange"|"cyan";status:"available"|"planned"};
 export const tools:Tool[]=[
