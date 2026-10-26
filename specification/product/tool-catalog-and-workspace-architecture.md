@@ -33,7 +33,7 @@ The catalog must render available tools as launchable links and planned tools as
 | Base64 Encoder / Decoder | `/encoding/base64` | Standalone for now | Text encoding requires explicit UTF-8 and invalid-input behavior. Similar input/output UI alone is insufficient reason to merge. |
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
 | UUID Generator | `/generators/uuid` | Standalone | Focused generation workflow. |
-| Hash Generator | `/security/hash` | Planned | Keep separate from JWT inspection; verify cryptographic implementation before launch. |
+| Hash Generator | `/security/hash` | Implemented; verification pending | Uses Web Crypto SHA-256/384/512 for UTF-8 text and files up to 32 MiB. Does not support HMAC, MD5, SHA-1, streaming, or signature verification. Keep separate from JWT inspection. |
 | Regex Tester | `/text/regex` | Planned | Distinct pattern-and-sample testing workflow. |
 | XML Formatter | `/xml/formatter` | Planned | Standalone formatting workflow. |
 | SQL Formatter | `/sql/formatter` | Planned | Standalone SQL-specific formatting workflow. |
