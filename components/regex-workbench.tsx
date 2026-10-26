@@ -69,13 +69,13 @@ export function RegexWorkbench() {
     try { new RegExp(pattern, flags); } catch (cause) { setError(cause instanceof Error ? cause.message : "Invalid regular expression."); return; }
 
     let worker: Worker;
-    let url: string;
+    let url: string | null = null;
     try {
       url = URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
       worker = new Worker(url);
       workerUrlRef.current = url;
     } catch {
-      if (typeof url !== "undefined") URL.revokeObjectURL(url);
+      if (url) URL.revokeObjectURL(url);
       workerUrlRef.current = null;
       setError("This browser blocks the isolated regular-expression worker; no pattern was executed.");
       return;
