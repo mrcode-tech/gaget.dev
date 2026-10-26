@@ -34,8 +34,8 @@ There are 10 relevant standalone registry entries. Encoding & Decoding consolida
 | data.query-string | Query-string parse/build, repeated keys, URI components | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
 | data.key-value | Key-value parse/build | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
 | data.asn1-tlv | Selected ASN.1/TLV inspection | Conditional / 5 | [Data](./categories/data-parsing-conversion.md) |
-| text.regex | Regex flags, matches and captures | Match/capture subset implemented / 3; replacement preview pending and pathological patterns remain a browser-runtime risk | [Text](./categories/text-and-regex.md) |
-| text.transform | Find/replace, split/join, trim, line sort/dedupe, case, Unicode normalization, escaping, stats, diff | Proposed / 3 | [Text](./categories/text-and-regex.md) |
+| text.regex | Regex flags, matches and captures | Implemented / 3; match/capture, replacement preview and bounded output; pathological patterns remain a browser-runtime risk | [Text](./categories/text-and-regex.md) |
+| text.transform | Find/replace, split/join, trim, line sort/dedupe, case, Unicode normalization, escaping, stats, diff | Core text transformations implemented / 3; operations have bounded input and line-diff limits | [Text](./categories/text-and-regex.md) |
 | compress.formats | gzip, zlib, DEFLATE, detection, size/ratio | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
 | compress.archive | Archive listing/extraction with strict limits | Conditional / 5 | [Binary & math](./categories/compression-binary-math.md) |
 | binary.inspect | Hexdump, byte view, printable strings, byte-range compare | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |

@@ -33,7 +33,7 @@ The catalog must render available tools as launchable links and planned tools as
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
 | UUID Generator | `/generators/uuid` | Standalone | Focused generation workflow. |
 | Hash Generator | `/security/hash` | Available with documented limits | Keep separate from JWT inspection; verify cryptographic implementation before launch. |
-| Regex Tester | `/text/regex` | Available with documented limits | Distinct pattern-and-sample testing workflow. |
+| Text & Regex Workbench | `/text/regex` | Available with documented limits | Related text transforms share one text input/output workflow; regex replacement is preview-only. |
 | XML Formatter | `/xml/formatter` | Available with documented limits | Standalone formatting workflow. |
 | SQL Formatter | `/sql/formatter` | Available with documented limits | Standalone SQL-specific formatting workflow. |
 | CSV ↔ JSON | `/data/csv-json` | Available with documented limits | Conversion workflow; do not combine with XML merely because both concern data formats. |

@@ -12,7 +12,7 @@
 
 ## Tool catalog architecture
 
-See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry records stable IDs, explicit availability status, and standalone/workspace kind. The JSON Workspace consolidates format, minify, validate and structural compare; `/json/diff` opens Compare mode for compatibility. Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter now have standalone routes and browser-local workbenches. Their implementation is intentionally scoped: regex replacement mode, complete XML/HTML/SQL parsers, full cURL flag semantics, and broader category operations remain incomplete.
+See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry records stable IDs, explicit availability status, and standalone/workspace kind. The JSON Workspace consolidates format, minify, validate and structural compare; `/json/diff` opens Compare mode for compatibility. Hash Generator, Text & Regex Workbench, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter have standalone routes and browser-local workbenches. Their implementation is intentionally scoped: complete XML/HTML/SQL parsers, full cURL flag semantics, charset conversion, binary/file workflows and broader category operations remain incomplete.
 
 ## Global routes and shell
 
@@ -37,7 +37,7 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 | `/security/jwt-decoder` | Decode JWT header and claims; inspect expiration | **Does not verify signatures.** This must remain explicit. |
 | `/generators/uuid` | Generate UUID v4 values with browser cryptographic API | Do not claim server-side uniqueness guarantees. |
 | `/security/hash` | SHA-256, SHA-384 and SHA-512 text digests using Web Crypto | Text input only; not encryption; file-byte hashing is not implemented. |
-| `/text/regex` | Match counts, indexes and capture groups for a supplied pattern | 50,000-character and 500-result caps; replacement preview is not implemented; pathological patterns may block the tab. |
+| `/text/regex` | Text & Regex Workbench: regex match/capture and replacement previews, find/replace, split/join, trim, sort/dedupe, case conversion, Unicode normalization, escaping, statistics and line diff | Regex input capped at 50,000 characters and 500 results; line diff capped at 500 lines per side; pathological patterns may block the tab. |
 | `/xml/formatter` | Lightweight XML text formatting and minifying with element nesting checks | Not a complete XML parser or schema validator; external entities are not resolved. |
 | `/sql/formatter` | Heuristic formatting/minifying of common SQL clauses | Not dialect-complete; never executes SQL. |
 | `/data/csv-json` | CSV to JSON and JSON arrays of objects to CSV | CSV imports remain strings; duplicate headers are disambiguated; formula-like CSV export values are prefixed. |

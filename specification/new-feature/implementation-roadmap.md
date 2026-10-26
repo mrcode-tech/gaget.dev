@@ -90,7 +90,7 @@ At each future invocation:
 | 0 — Audit | In progress; route and operation subset reconciled | Remaining proposal families, localization and edge-case coverage |
 | 1 — Contracts/shared design | In progress; shared text workbench contract synchronized | Responsive, RTL, keyboard and active error-state review |
 | 2 — Registry/encoding | Partial; unified text workbench implements URL/Base64/Base64url/Base32/hex/binary/basic HTML entities/Unicode escapes/quoted-printable; Base64 route redirects compatibly | Remaining charset modes, additional known-answer/malformed vectors and explicit arbitrary-byte/file workflows |
-| 3 — Planned tools | Partial; seven core routes available with documented limits; common text/data/binary transformations remain | Additional operation coverage, replacement mode, complete parsers, UI regression and responsive evidence |
+| 3 — Planned tools | Partial; seven core routes available with documented limits; core text transforms now implemented; data/binary/compression transformations remain | Additional operation coverage, replacement mode, complete parsers, UI regression and responsive evidence |
 | 4 — Security/inspection | Partial; SHA-2 text digest subset implemented; HMAC/checksum/network/certificate/file inspection pending | Security review, additional vectors, byte-input support and inspection tests |
 | 5 — Extended/conditional | Not started | Per-operation feasibility decision and tests |
 | 6 — Workflow/batch | Deferred | Stable contracts and separate review |
