@@ -12,7 +12,7 @@
 
 ## Tool catalog architecture
 
-See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry records stable IDs, explicit availability status, and standalone/workspace kind. The JSON Workspace consolidates format, minify, validate and structural compare; `/json/diff` opens Compare mode for compatibility. Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter remain planned until their route and runtime behavior are verified.
+See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry records stable IDs, explicit availability status, and standalone/workspace kind. The JSON Workspace consolidates format, minify, validate and structural compare; `/json/diff` opens Compare mode for compatibility. Hash Generator is implemented at `/security/hash`; its full CI and browser verification is pending. Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter remain planned until their route and runtime behavior are verified.
 
 ## Global routes and shell
 
@@ -35,9 +35,10 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 | `/encoding/url` | Encode/decode URL components | Decode errors are surfaced. This is component encoding, not full URL validation. |
 | `/encoding/base64` | UTF-8 text Base64 encode/decode | Distinguish text Base64 from media Base64 tools. |
 | `/security/jwt-decoder` | Decode JWT header and claims; inspect expiration | **Does not verify signatures.** This must remain explicit. |
+| `/security/hash` | SHA-256, SHA-384, and SHA-512 for UTF-8 text or files up to 32 MiB using Web Crypto | Local browser processing; files are loaded fully into memory. HMAC, MD5, SHA-1, streaming, and authenticity verification are not supported. CI/browser verification pending. |
 | `/generators/uuid` | Generate UUID v4 values with browser cryptographic API | Do not claim server-side uniqueness guarantees. |
 
-The route tree also contains planned registry destinations for JSON Diff, Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter. A registry item with `status: "planned"` is not an implemented route. Reconcile catalog status with actual route existence when adding tools.
+The route tree also contains planned registry destinations for Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter. Hash Generator now has a route and is marked available in the registry; see the capability notes above. A registry item with `status: "planned"` is not an implemented route. Reconcile catalog status with actual route existence when adding tools.
 
 ## Image workspace
 
