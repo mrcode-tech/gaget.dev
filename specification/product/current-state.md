@@ -31,9 +31,16 @@
 - `/encoding/url`
 - `/encoding/base64`
 - `/security/jwt-decoder` — decodes JWT contents but does not verify signatures.
-- `/generators/uuid`
+- `/generators/uuid` — generates UUID v4 values using the browser cryptographic API.
+- `/security/hash` — SHA-256, SHA-384 and SHA-512 text digests using Web Crypto; not encryption.
+- `/text/regex` — reports matches, indexes and capture groups with a 50,000-character input cap and 500-match output cap. JavaScript regex execution cannot be reliably interrupted, so pathological patterns can still block the tab.
+- `/xml/formatter` — lightweight XML text formatting/minifying with element-nesting checks; not a complete XML parser or schema validator.
+- `/sql/formatter` — heuristic SQL formatting/minifying only; no dialect-complete parser or query execution.
+- `/data/csv-json` — CSV and JSON-array-of-objects conversion; CSV cells remain strings and formula-like exported cells are prefixed.
+- `/web/html-formatter` — heuristic HTML text formatting/minifying; markup is never rendered as active HTML.
+- `/api/curl-converter` — parses a supported cURL subset and produces a redacted request preview; it never executes requests and reports unsupported flags.
 
-Additional registry entries may be planned or redirect to unified editors. Verify route existence and behavior before describing them as independent implemented pages.
+Broader capability families in the developer-tools proposal (additional encodings, replacement mode, full format parsers, binary/network/file inspection, HMAC/checksums, and workflow chains) remain incomplete or conditional; do not infer their availability from these routes.
 
 ## Current implementation-level design facts
 

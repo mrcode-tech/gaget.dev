@@ -1,6 +1,6 @@
 # Feature Inventory and Traceability
 
-**Evidence inspected:** capability proposal, lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory and route tree. Runtime behavior and CI were not executed during this documentation pass.
+**Evidence inspected:** capability proposal, registry, route tree, operation tests, production smoke/E2E checks, and matching CI evidence for the initial workbench implementation. This inventory distinguishes implemented subsets from broader proposed operations.
 
 ## Existing developer utilities
 
@@ -18,23 +18,23 @@
 | html-formatter | HTML Formatter | /web/html-formatter | planned |
 | curl-converter | cURL Converter | /api/curl-converter | planned |
 
-There are 11 relevant standalone registry entries: four marked available and seven planned. This is source metadata, not runtime verification. JSON Workspace is excluded from new-feature implementation. Photo, Audio, Video and Date & Time are separate and excluded.
+There are 11 relevant standalone registry entries. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subset described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 
 ## Proposed capability traceability
 
 | Planning ID | Workspace and operations | Status / phase | Specification |
 |---|---|---|---|
 | enc.representations | URL component; Base64/Base64url; Base32; conditional Base58/Base85; hex/binary; HTML entities; Unicode escapes; quoted-printable; charset conversion; explicit text/byte modes | Mixed / 2 | [Encoding](./categories/encoding-decoding.md) |
-| sec.digest | SHA-2/SHA-3; labelled legacy digests | Hash planned, rest proposed / 4 | [Security](./categories/security-cryptography.md) |
+| sec.digest | SHA-256/SHA-384/SHA-512 text digests | SHA-2 text subset implemented / 3; file bytes, SHA-3 and other digest families pending / 4 | [Security](./categories/security-cryptography.md) |
 | sec.mac-checksum | HMAC; CRC/checksums | Proposed / 4 | [Security](./categories/security-cryptography.md) |
 | sec.encrypt | Supported encryption/decryption; key/ciphertext representation | Conditional / 4 | [Security](./categories/security-cryptography.md) |
-| data.csv-json | CSV ↔ JSON, delimiters, quoting, headers and type policy | Planned / 3 | [Data](./categories/data-parsing-conversion.md) |
-| data.xml | XML parse/format/minify | Planned / 3 | [Data](./categories/data-parsing-conversion.md) |
+| data.csv-json | CSV ↔ JSON, delimiters, quoting, headers and type policy | CSV ↔ JSON implemented with string-cell policy / 3; broader type inference remains out of scope | [Data](./categories/data-parsing-conversion.md) |
+| data.xml | XML parse/format/minify | Lightweight element-nesting format/minify implemented / 3; complete XML parsing/validation pending | [Data](./categories/data-parsing-conversion.md) |
 | data.yaml | YAML parse/format and optional JSON conversion | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
 | data.query-string | Query-string parse/build, repeated keys, URI components | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
 | data.key-value | Key-value parse/build | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
 | data.asn1-tlv | Selected ASN.1/TLV inspection | Conditional / 5 | [Data](./categories/data-parsing-conversion.md) |
-| text.regex | Regex flags, matches, captures and replacement preview | Planned / 3 | [Text](./categories/text-and-regex.md) |
+| text.regex | Regex flags, matches and captures | Match/capture subset implemented / 3; replacement preview pending and pathological patterns remain a browser-runtime risk | [Text](./categories/text-and-regex.md) |
 | text.transform | Find/replace, split/join, trim, line sort/dedupe, case, Unicode normalization, escaping, stats, diff | Proposed / 3 | [Text](./categories/text-and-regex.md) |
 | compress.formats | gzip, zlib, DEFLATE, detection, size/ratio | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
 | compress.archive | Archive listing/extraction with strict limits | Conditional / 5 | [Binary & math](./categories/compression-binary-math.md) |
@@ -50,10 +50,10 @@ There are 11 relevant standalone registry entries: four marked available and sev
 | workflow.pipeline | Typed chains, reorder/configure, intermediate results, batch and versioned recipes | Deferred / 6 | [Workflow/API](./categories/workflow-generators-api.md) |
 | gen.uuid | UUID v4 | Existing available / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
 | gen.samples | Random test data, timestamps, identifiers and structured samples | Proposed / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
-| api.curl | Parse cURL, inspect request fields, generate client snippets | Planned / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
+| api.curl | Parse supported cURL subset and generate a redacted JavaScript fetch preview | Implemented subset / 3; broad flag and language coverage pending | [Workflow/API](./categories/workflow-generators-api.md) |
 | api.http | Inspect supplied HTTP request/response | Proposed / 4 | [Workflow/API](./categories/workflow-generators-api.md) |
-| format.sql | SQL formatting and dialect handling | Planned / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
-| format.html | HTML formatting/minifying | Planned / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
+| format.sql | SQL formatting and dialect handling | Heuristic common-clause formatter implemented / 3; dialect-complete parsing pending | [Workflow/API](./categories/workflow-generators-api.md) |
+| format.html | HTML formatting/minifying | Heuristic text formatting/minifying implemented / 3; complete parser pending | [Workflow/API](./categories/workflow-generators-api.md) |
 
 All 13 proposed workspace names are mapped. During Phase 0, expand each operation family into test cases and add any further incomplete registry entries found by source audit before coding.
 

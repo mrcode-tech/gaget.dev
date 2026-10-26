@@ -1,6 +1,6 @@
 # Tool Catalog and Workspace Architecture
 
-**Status:** Implemented navigation and JSON workspace baseline. Other registry destinations retain explicit planned status until their routes and runtime behavior are verified.
+**Status:** Implemented navigation and JSON workspace baseline. The seven formerly planned standalone routes now have browser-local workbenches and operation/route verification; their exact capability limits are recorded in the product inventory. Other registry entries retain planned status until their routes and runtime behavior are verified.
 
 ## Purpose and vocabulary
 
@@ -33,15 +33,15 @@ The catalog must render available tools as launchable links and planned tools as
 | Base64 Encoder / Decoder | `/encoding/base64` | Standalone for now | Text encoding requires explicit UTF-8 and invalid-input behavior. Similar input/output UI alone is insufficient reason to merge. |
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
 | UUID Generator | `/generators/uuid` | Standalone | Focused generation workflow. |
-| Hash Generator | `/security/hash` | Planned | Keep separate from JWT inspection; verify cryptographic implementation before launch. |
-| Regex Tester | `/text/regex` | Planned | Distinct pattern-and-sample testing workflow. |
-| XML Formatter | `/xml/formatter` | Planned | Standalone formatting workflow. |
-| SQL Formatter | `/sql/formatter` | Planned | Standalone SQL-specific formatting workflow. |
-| CSV ↔ JSON | `/data/csv-json` | Planned | Conversion workflow; do not combine with XML merely because both concern data formats. |
-| HTML Formatter | `/web/html-formatter` | Planned | Standalone markup formatting workflow. |
-| cURL Converter | `/api/curl-converter` | Planned | Request parsing and client-code generation are distinct from formatters. |
+| Hash Generator | `/security/hash` | Available with documented limits | Keep separate from JWT inspection; verify cryptographic implementation before launch. |
+| Regex Tester | `/text/regex` | Available with documented limits | Distinct pattern-and-sample testing workflow. |
+| XML Formatter | `/xml/formatter` | Available with documented limits | Standalone formatting workflow. |
+| SQL Formatter | `/sql/formatter` | Available with documented limits | Standalone SQL-specific formatting workflow. |
+| CSV ↔ JSON | `/data/csv-json` | Available with documented limits | Conversion workflow; do not combine with XML merely because both concern data formats. |
+| HTML Formatter | `/web/html-formatter` | Available with documented limits | Standalone markup formatting workflow. |
+| cURL Converter | `/api/curl-converter` | Available with documented limits | Request parsing and client-code generation are distinct from formatters. |
 
-These decisions are initial boundaries, not claims that every listed destination currently exists. Planned entries must remain unavailable until source routes, behavior and tests prove otherwise.
+These decisions describe current source boundaries. The seven newly implemented standalone routes are available with the limitations documented in the product inventory; any remaining planned entry must stay unavailable until source routes, behavior and tests prove otherwise.
 
 ## Proposed functional taxonomy
 
