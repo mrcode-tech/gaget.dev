@@ -41,7 +41,7 @@ function decodeBase32(value: string): Uint8Array {
 function encodeHex(bytes: Uint8Array): string { return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join(""); }
 function decodeHex(value: string): Uint8Array {
   const text = value.replace(/0x/gi, "").replace(/[\s:_-]/g, "");
-  if (!/^(?:[0-9a-f]{2})*$/i.test(text)) throw new Error("Hex input must contain complete pairs of hexadecimal digits.");
+  if (!/^(?:[0-9a-f]{2})*$/i.test(text)) throw new Error("Hex input must contain complete byte pairs of hexadecimal digits.");
   return Uint8Array.from(text.match(/.{2}/g) ?? [], pair => Number.parseInt(pair, 16));
 }
 function decodeBinary(value: string): Uint8Array {
