@@ -6,7 +6,12 @@ export async function digestBytes(bytes: Uint8Array, algorithm: DigestAlgorithm)
   if (!allowedAlgorithms.has(algorithm)) throw new TypeError("Unsupported digest algorithm");
   if (!(bytes instanceof Uint8Array)) throw new TypeError("Digest input must be bytes");
   if (!globalThis.crypto?.subtle) throw new Error("Web Crypto is unavailable");
-  const digest = await globalThis.crypto.subtle.digest(algorithm, bytes);
+
+  // Copy the exact view into a fresh ArrayBuffer. This preserves subarray offsets
+  // and satisfies Web Crypto's BufferSource typing without accepting SharedArrayBuffer.
+  const data = new Uint8Array(bytes.byteLength);
+  data.set(bytes);
+  const digest = await globalThis.crypto.subtle.digest(algorithm, data.buffer);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
