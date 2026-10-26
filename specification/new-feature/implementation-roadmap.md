@@ -1,6 +1,6 @@
 # Developer Tools Expansion — Implementation Roadmap
 
-**Status:** Active implementation. Seven formerly planned standalone tools have working browser-local subsets, operation tests, direct-route coverage, and CI verification. The broader Phase 2–6 capability families remain partially implemented; see the operation-level inventory; use the phase table below as the remaining-work source of truth.
+**Status:** Active implementation. Seven formerly planned standalone tools and two consolidated data/inspection workbenches have browser-local implementations with operation tests and direct-route coverage. The broader Phase 2–6 capability families remain partially implemented; use the operation-level inventory as the remaining-work source of truth.
 
 ## 1. Scope and baseline
 Primary source: [developer-tools capability proposal](../product/developer-tools-capability-proposal.md). Inspected sources include lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory, design-token contract, quality/accessibility contract, AI instructions and command.md.

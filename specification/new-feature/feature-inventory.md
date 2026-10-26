@@ -16,7 +16,9 @@
 | sql-formatter | SQL Formatter | /sql/formatter | available with documented limits |
 | csv-json-converter | CSV ↔ JSON | /data/csv-json | available with documented limits |
 | html-formatter | HTML Formatter | /web/html-formatter | available with documented limits |
-| curl-converter | cURL Converter | /api/curl-converter | available with documented limits |\n| binary-math-workbench | Data, Binary & Math Workbench | /data/binary-math | available with documented limits |\n| network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
+| curl-converter | cURL Converter | /api/curl-converter | available with documented limits |
+| binary-math-workbench | Data, Binary & Math Workbench | /data/binary-math | available with documented limits |
+| network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
 
 There are now 12 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 
