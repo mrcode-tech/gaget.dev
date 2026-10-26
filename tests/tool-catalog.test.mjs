@@ -95,6 +95,14 @@ test("Date & Time category routes directly to one unified editor", () => {
   }
 });
 
+test("Encoding category exposes one unified workbench with legacy Base64 compatibility", () => {
+  const encoding = tools.filter((tool) => tool.category === "Encoding");
+  assert.equal(encoding.length, 1);
+  assert.equal(encoding[0].name, "Encoding & Decoding");
+  assert.equal(encoding[0].href, "/encoding/url");
+  for (const keyword of ["url", "base64", "base64url", "base32", "hex", "binary", "html entities", "unicode escapes"]) assert.ok(encoding[0].keywords.includes(keyword));
+});
+
 test("tool identity, availability, and workspace ownership are explicit and valid", () => {
   assert.equal(new Set(tools.map((tool) => tool.id)).size, tools.length, "tool IDs must be unique and stable");
   for (const tool of tools) {

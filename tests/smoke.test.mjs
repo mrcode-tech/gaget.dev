@@ -27,6 +27,14 @@ const routes = [
   "/sitemap.xml",
 ];
 
+test("legacy Base64 route redirects to the unified encoding workbench in Base64 mode", async () => {
+  const response = await fetch(new URL("/encoding/base64", baseUrl), { redirect: "manual" });
+  assert.equal(response.status, 307);
+  const destination = new URL(response.headers.get("location"), baseUrl);
+  assert.equal(destination.pathname, "/encoding/url");
+  assert.equal(destination.searchParams.get("mode"), "base64");
+});
+
 for (const route of routes) {
   test(`production route responds successfully: ${route}`, async () => {
     const response = await fetch(new URL(route, baseUrl), { redirect: "manual" });
