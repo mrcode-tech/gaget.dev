@@ -57,3 +57,5 @@ GaGet.dev is a Next.js App Router application using React, TypeScript, Tailwind 
 - Current-state screenshots: generated from the running application; never manually alter them or mistake them for target designs.
 - Keep authored target assets grouped by product/feature and state. Generated screenshot manifests should record build identifier, route, viewport, theme, state and generation date.
 - Do not commit generated screenshot churn by default. Use the baseline workflow artifacts for review unless a deliberate, reviewed decision makes a stable screenshot fixture valuable.
+
+- [Developer Tools Expansion Package](./new-feature/README.md) — source-traced inventory, detailed category/tool contracts, reusable component proposals, target wireframes and the authoritative phased implementation roadmap. This package is planning documentation, not an implementation claim.
