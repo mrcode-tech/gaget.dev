@@ -5,7 +5,7 @@
 ## 1. Scope and baseline
 Primary source: [developer-tools capability proposal](../product/developer-tools-capability-proposal.md). Inspected sources include lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory, design-token contract, quality/accessibility contract, AI instructions and command.md.
 
-The registry has 11 relevant standalone entries. URL, Base64, JWT and UUID were already marked available; Hash, Regex, XML, SQL, CSV ↔ JSON, HTML and cURL now have implemented subsets. Do not expand their claims beyond the acceptance limits documented in the feature inventory. JSON Workspace is excluded from this initiative's implementation scope. Photo/Image, Audio, Video and Date & Time remain independent and excluded.
+The registry has 10 relevant standalone entries. Encoding & Decoding consolidates URL and Base64 operations while preserving `/encoding/base64` as a compatibility redirect; JWT and UUID remain standalone. Hash, Regex, XML, SQL, CSV ↔ JSON, HTML and cURL now have implemented subsets. Do not expand their claims beyond the acceptance limits documented in the feature inventory. JSON Workspace is excluded from this initiative's implementation scope. Photo/Image, Audio, Video and Date & Time remain independent and excluded.
 
 The initial planning pass did not run the app or CI. A later implementation run now verifies the seven new routes and operation helpers; re-check exact-revision CI artifacts for each subsequent change.
 
@@ -89,7 +89,7 @@ At each future invocation:
 |---|---|---|
 | 0 — Audit | In progress; route and operation subset reconciled | Remaining proposal families, localization and edge-case coverage |
 | 1 — Contracts/shared design | In progress; shared text workbench contract synchronized | Responsive, RTL, keyboard and active error-state review |
-| 2 — Registry/encoding | Partial; canonical URL/Base64 routes retained, broader representations pending | Base64url/hex/binary/Unicode/charset vectors and explicit text/byte modes |
+| 2 — Registry/encoding | Partial; unified text workbench implements URL/Base64/Base64url/Base32/hex/binary/basic HTML entities/Unicode escapes; Base64 route redirects compatibly | Remaining known-answer/malformed vectors, quoted-printable/charset modes and explicit arbitrary-byte/file workflows |
 | 3 — Planned tools | Partial; seven core routes available with documented limits; common text/data/binary transformations remain | Additional operation coverage, replacement mode, complete parsers, UI regression and responsive evidence |
 | 4 — Security/inspection | Partial; SHA-2 text digest subset implemented; HMAC/checksum/network/certificate/file inspection pending | Security review, additional vectors, byte-input support and inspection tests |
 | 5 — Extended/conditional | Not started | Per-operation feasibility decision and tests |

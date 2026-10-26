@@ -1,21 +1,21 @@
 # Encoding & Decoding
 
-**Status:** Proposal; URL and Base64 entries are marked available in registry but require runtime re-verification.
+**Status:** Partially implemented. The `/encoding/url` route is the unified text-representation workbench; `/encoding/base64` is a compatibility redirect to Base64 mode. Arbitrary file-byte workflows and several proposed variants remain pending.
 
 | ID | Operation | Contract and acceptance tests |
 |---|---|---|
-| enc.url-component | URL component encode/decode | Reserved chars, spaces, Unicode and malformed percent sequences; distinguish component encoding from URL parsing |
-| enc.base64-text | Text ↔ Base64 | Explicit UTF-8, padding/whitespace policy, empty and invalid input |
-| enc.base64url | URL-safe Base64 | Alphabet/padding policy, text vs bytes, known vectors |
-| enc.base32 | Base32 | Exact alphabet, case and padding; invalid characters |
+| enc.url-component | URL component encode/decode | Implemented; reserved chars, spaces, Unicode and malformed percent sequences; distinguish component encoding from URL parsing |
+| enc.base64-text | Text ↔ Base64 | Implemented; explicit UTF-8, standard padding and invalid-input errors |
+| enc.base64url | URL-safe Base64 | Implemented; URL-safe alphabet and unpadded output; UTF-8 text only |
+| enc.base32 | Base32 | Implemented RFC 4648 alphabet, case normalization, padding and invalid-character checks |
 | enc.base58/base85 | Selected Base58/Base85 variants | Conditional on maintenance/demand; alphabet variant explicit |
-| enc.hex | Hex ↔ bytes/text | Case, separators, odd-length and invalid characters |
-| enc.binary | Binary ↔ bytes | Grouping, leading zeros and invalid bits |
-| enc.html-entities | Text ↔ HTML entities | Named/numeric entities; never render decoded untrusted markup |
-| enc.unicode-escapes | Unicode escape conversion | BMP/supplementary code points and invalid surrogates |
-| enc.quoted-printable | Quoted-printable | Soft line breaks, invalid escapes, byte/text policy |
-| enc.charset | Selected charset conversion | Supported labels explicit; malformed/unsupported sequences fail clearly |
-| enc.text-byte-mode | Explicit text or byte/file mode | No implicit binary-to-text conversion; non-text bytes round-trip |
+| enc.hex | Hex ↔ bytes/text | Implemented for UTF-8 text; case/separators supported; odd-length and invalid characters rejected |
+| enc.binary | Binary ↔ bytes | Implemented for UTF-8 text; eight-bit groups required; invalid bits rejected |
+| enc.html-entities | Text ↔ HTML entities | Basic named and numeric entities implemented; decoded markup is never rendered; full HTML named-entity catalog pending |
+| enc.unicode-escapes | Unicode escape conversion | Implemented BMP `\\uXXXX` and supplementary `\\u{...}` forms; invalid scalar values rejected |
+| enc.quoted-printable | Quoted-printable | Proposed; not implemented |
+| enc.charset | Selected charset conversion | Proposed; not implemented |
+| enc.text-byte-mode | Explicit text or byte/file mode | Text mode implemented; arbitrary file/byte input and download mode pending |
 
 ## Interaction and processing
 Use the existing Textarea/editor for text and styled file selection only for byte/file operations. Place alphabet/encoding/padding options near the operation. Copy text output; download byte output with correct MIME where known. Preserve compatible input when switching operations. Prefer local processing; never place sensitive input in URLs/logs/storage. Bound expensive allocations.
@@ -23,4 +23,4 @@ Use the existing Textarea/editor for text and styled file selection only for byt
 See [wireframes](../wireframes/workspace-layouts.md#encoding--decoding).
 
 ## Acceptance
-Existing URL/Base64 routes remain functional or have tested aliases; every operation has known-answer and malformed-input tests; Unicode/binary data is not silently corrupted; unsupported variants are not presented as available; copy/download matches actual output. Encoding is not encryption.
+Existing URL/Base64 routes remain functional, with `/encoding/base64` redirecting to `?mode=base64`; supported modes have known-answer and malformed-input tests; Unicode/binary data is UTF-8 text-based and unsupported variants are not presented as available. Copy/download uses actual text output. Encoding is not encryption.
