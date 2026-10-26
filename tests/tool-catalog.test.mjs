@@ -119,7 +119,17 @@ test("JSON operations are consolidated into one available workspace", () => {
   assert.equal(json[0].href, "/json/formatter");
   for (const operation of ["format", "minify", "validate", "compare"]) assert.ok(json[0].keywords.includes(operation));
   const hash = tools.find((candidate) => candidate.id === "hash-generator");
-  assert.ok(hash); assert.equal(hash.status, "planned");
+  assert.ok(hash); assert.equal(hash.status, "available");
+});
+
+test("new standalone developer tools are launchable only after implementation and verification", () => {
+  const implemented = ["hash-generator", "regex-tester", "xml-formatter", "sql-formatter", "csv-json-converter", "html-formatter", "curl-converter"];
+  for (const id of implemented) {
+    const tool = tools.find((candidate) => candidate.id === id);
+    assert.ok(tool, `missing implemented tool ${id}`);
+    assert.equal(tool.status, "available", `${id} should be available after verification`);
+    assert.ok(tool.href.startsWith("/"), `${id} needs a canonical route`);
+  }
 });
 
 test("JWT Decoder copy accurately limits its security claim", () => {
