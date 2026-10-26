@@ -26,7 +26,7 @@ There are 10 relevant standalone registry entries. Encoding & Decoding consolida
 |---|---|---|---|
 | enc.representations | URL component; Base64/Base64url; Base32; hex/binary; basic HTML entities; Unicode escapes; conditional Base58/Base85; quoted-printable; charset conversion; explicit text/byte modes | Core text representations plus quoted-printable implemented / 2; Base58/Base85, charset conversion and arbitrary file-byte mode pending | [Encoding](./categories/encoding-decoding.md) |
 | sec.digest | SHA-256/SHA-384/SHA-512 text digests | SHA-2 text subset implemented / 3; file bytes, SHA-3 and other digest families pending / 4 | [Security](./categories/security-cryptography.md) |
-| sec.mac-checksum | HMAC; CRC/checksums | Proposed / 4 | [Security](./categories/security-cryptography.md) |
+| sec.mac-checksum | HMAC; CRC/checksums | HMAC-SHA-2 and CRC32/IEEE text subset implemented / 4; other checksum variants pending | [Security](./categories/security-cryptography.md) |
 | sec.encrypt | Supported encryption/decryption; key/ciphertext representation | Conditional / 4 | [Security](./categories/security-cryptography.md) |
 | data.csv-json | CSV ↔ JSON, delimiters, quoting, headers and type policy | CSV ↔ JSON implemented with string-cell policy / 3; broader type inference remains out of scope | [Data](./categories/data-parsing-conversion.md) |
 | data.xml | XML parse/format/minify | Lightweight element-nesting format/minify implemented / 3; complete XML parsing/validation pending | [Data](./categories/data-parsing-conversion.md) |

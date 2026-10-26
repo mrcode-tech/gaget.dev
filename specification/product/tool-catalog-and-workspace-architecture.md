@@ -32,7 +32,7 @@ The catalog must render available tools as launchable links and planned tools as
 | Encoding & Decoding | `/encoding/url` | Unified standalone workbench | URL components, Base64/Base64url/Base32, hex, binary, basic HTML entities and Unicode escapes share explicit text/byte representation behavior. `/encoding/base64` remains a tested compatibility redirect into Base64 mode. |
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
 | UUID Generator | `/generators/uuid` | Standalone | Focused generation workflow. |
-| Hash Generator | `/security/hash` | Available with documented limits | Keep separate from JWT inspection; verify cryptographic implementation before launch. |
+| Hash & Checksum Generator | `/security/hash` | Available with documented limits | SHA-2 digests, HMAC-SHA-2 and CRC32 are distinct operations; checksum is not cryptographic security. |
 | Text & Regex Workbench | `/text/regex` | Available with documented limits | Related text transforms share one text input/output workflow; regex replacement is preview-only. |
 | XML Formatter | `/xml/formatter` | Available with documented limits | Standalone formatting workflow. |
 | SQL Formatter | `/sql/formatter` | Available with documented limits | Standalone SQL-specific formatting workflow. |
