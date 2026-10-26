@@ -10,6 +10,7 @@ const routes = [
   "/encoding/url",
   "/encoding/base64",
   "/security/jwt-decoder",
+  "/security/hash",
   "/generators/uuid",
   "/images/editor",
   "/audio/editor",
