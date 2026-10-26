@@ -12,6 +12,8 @@ const routes = [
   { name: "json-formatter", path: "/json/formatter" },
   { name: "url-encoder", path: "/encoding/url" },
   { name: "base64", path: "/encoding/base64" },
+  { name: "hash-generator", path: "/security/hash" },
+  { name: "csv-json-converter", path: "/data/csv-json" },
   { name: "jwt-decoder", path: "/security/jwt-decoder" },
   { name: "uuid-generator", path: "/generators/uuid" },
   { name: "photo-editor", path: "/images/editor" },
