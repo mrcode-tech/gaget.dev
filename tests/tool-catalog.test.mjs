@@ -28,15 +28,12 @@ test("category registry has unique names and slugs, and every tool belongs to a 
   assert.ok(categories.length > 0, "category registry should not be empty");
   assert.equal(new Set(categories.map((category) => category.name)).size, categories.length, "category names must be unique");
   assert.equal(new Set(categories.map((category) => category.slug)).size, categories.length, "category slugs must be unique");
-
   const categoryNames = new Set(categories.map((category) => category.name));
   for (const category of categories) {
     assert.ok(category.slug.trim(), `${category.name} needs a slug`);
     assert.ok(category.href.startsWith("/"), `${category.name} needs an internal absolute route`);
   }
-  for (const tool of tools) {
-    assert.ok(categoryNames.has(tool.category), `${tool.name} references an unknown category: ${tool.category}`);
-  }
+  for (const tool of tools) assert.ok(categoryNames.has(tool.category), `${tool.name} references an unknown category: ${tool.category}`);
 });
 
 test("Dev Tools registry excludes independent media and date/time workspaces", () => {
@@ -53,9 +50,7 @@ test("Dev Tools registry excludes independent media and date/time workspaces", (
     assert.ok(developerToolCategories.some((category) => category.name === expected), `missing ${expected} developer category`);
   }
   assert.equal(new Set(developerTools.map((tool) => tool.id)).size, developerTools.length);
-  for (const category of developerToolCategories) {
-    assert.ok(developerTools.some((tool) => tool.category === category.name), `${category.name} must not be empty`);
-  }
+  for (const category of developerToolCategories) assert.ok(developerTools.some((tool) => tool.category === category.name), `${category.name} must not be empty`);
 });
 
 test("the Images category promotes the unified Photo Editor instead of duplicate image apps", () => {
@@ -70,9 +65,7 @@ test("Audio category exposes one unified editor with searchable capability keywo
   assert.equal(audioTools.length, 1, "audio capabilities should be grouped under one Audio Editor entry");
   assert.equal(audioTools[0].name, "Audio Editor");
   assert.equal(audioTools[0].href, "/audio/editor");
-  for (const keyword of ["trim", "split", "merge", "volume", "speed", "pitch", "metadata", "wav", "base64", "silence", "frequency", "recorder"]) {
-    assert.ok(audioTools[0].keywords.includes(keyword), `Audio Editor search keywords should include ${keyword}`);
-  }
+  for (const keyword of ["trim", "split", "merge", "volume", "speed", "pitch", "metadata", "wav", "base64", "silence", "frequency", "recorder"]) assert.ok(audioTools[0].keywords.includes(keyword), `Audio Editor search keywords should include ${keyword}`);
 });
 
 test("Video category exposes one unified editor with searchable video capabilities", () => {
@@ -80,9 +73,7 @@ test("Video category exposes one unified editor with searchable video capabiliti
   assert.equal(videoTools.length, 1, "video capabilities should be grouped under one Video Editor entry");
   assert.equal(videoTools[0].name, "Video Editor");
   assert.equal(videoTools[0].href, "/video/editor");
-  for (const keyword of ["trim", "split", "merge", "crop", "watermark", "speed", "metadata", "frames", "thumbnail", "subtitles", "convert", "compress", "gif", "base64", "record"]) {
-    assert.ok(videoTools[0].keywords.includes(keyword), `Video Editor search keywords should include ${keyword}`);
-  }
+  for (const keyword of ["trim", "split", "merge", "crop", "watermark", "speed", "metadata", "frames", "thumbnail", "subtitles", "convert", "compress", "gif", "base64", "record"]) assert.ok(videoTools[0].keywords.includes(keyword), `Video Editor search keywords should include ${keyword}`);
 });
 
 test("Date & Time category routes directly to one unified editor", () => {
@@ -90,9 +81,7 @@ test("Date & Time category routes directly to one unified editor", () => {
   assert.equal(dateTimeTools.length, 1, "date/time capabilities should be grouped under one unified editor entry");
   assert.equal(dateTimeTools[0].name, "Date & Time Editor");
   assert.equal(dateTimeTools[0].href, "/datetime/editor");
-  for (const keyword of ["date", "time", "calendar", "world clock", "time zone", "timestamp", "ics", "cron"]) {
-    assert.ok(dateTimeTools[0].keywords.includes(keyword), `Date & Time Editor search keywords should include ${keyword}`);
-  }
+  for (const keyword of ["date", "time", "calendar", "world clock", "time zone", "timestamp", "ics", "cron"]) assert.ok(dateTimeTools[0].keywords.includes(keyword), `Date & Time Editor search keywords should include ${keyword}`);
 });
 
 test("tool identity, availability, and workspace ownership are explicit and valid", () => {
@@ -104,13 +93,11 @@ test("tool identity, availability, and workspace ownership are explicit and vali
     if (tool.kind === "workspace") {
       assert.ok(tool.workspaceId, `${tool.name} must identify its workspace`);
       assert.equal(tool.href, ({ image: "/images/editor", audio: "/audio/editor", video: "/video/editor", "date-time": "/datetime/editor", json: "/json/formatter" })[tool.workspaceId], `${tool.name} must point to its canonical workspace route`);
-    } else {
-      assert.equal(tool.workspaceId, undefined, `${tool.name} must not claim a shared workspace`);
-    }
+    } else assert.equal(tool.workspaceId, undefined, `${tool.name} must not claim a shared workspace`);
   }
 });
 
-test("JSON operations are consolidated into one available workspace", () => {
+test("JSON operations are consolidated into one available workspace and hash generator is available", () => {
   const json = tools.filter((tool) => tool.category === "JSON");
   assert.equal(json.length, 1);
   assert.equal(json[0].id, "json-workspace");
@@ -119,7 +106,10 @@ test("JSON operations are consolidated into one available workspace", () => {
   assert.equal(json[0].href, "/json/formatter");
   for (const operation of ["format", "minify", "validate", "compare"]) assert.ok(json[0].keywords.includes(operation));
   const hash = tools.find((candidate) => candidate.id === "hash-generator");
-  assert.ok(hash); assert.equal(hash.status, "planned");
+  assert.ok(hash);
+  assert.equal(hash.status, "available");
+  assert.equal(hash.href, "/security/hash");
+  assert.ok(hash.keywords.includes("sha-256"));
 });
 
 test("JWT Decoder copy accurately limits its security claim", () => {
@@ -128,7 +118,6 @@ test("JWT Decoder copy accurately limits its security claim", () => {
   assert.match(jwt.description, /inspect|decode/i);
   assert.doesNotMatch(jwt.description, /verify signature|authenticity verified/i);
 });
-
 
 test("JSON comparison ignores object key order and reports structural changes", async () => {
   const { compareJsonDocuments } = await import("../lib/tools/json-workspace.ts");
