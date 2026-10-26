@@ -11,7 +11,7 @@ function base64FromBytes(bytes: Uint8Array): string {
 function bytesFromBase64(value: string, urlSafe = false): Uint8Array {
   let text = value.replace(/\s/g, "");
   if (urlSafe) text = text.replace(/-/g, "+").replace(/_/g, "/");
-  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(text) || text.length % 4 === 1 || /=/.test(text.slice(0, -2))) throw new Error("Invalid Base64 alphabet or padding.");
+  if (!/^[A-Za-z0-9+\/]*={0,2}$/.test(text) || text.length % 4 === 1 || /=/.test(text.slice(0, -2))) throw new Error("Invalid Base64 alphabet or padding.");
   text = text.replace(/=+$/, "");
   text += "=".repeat((4 - text.length % 4) % 4);
   try { return Uint8Array.from(atob(text), c => c.charCodeAt(0)); }
