@@ -110,6 +110,10 @@ test("JSON operations are consolidated into one available workspace and hash gen
   assert.equal(hash.status, "available");
   assert.equal(hash.href, "/security/hash");
   assert.ok(hash.keywords.includes("sha-256"));
+  const csv = tools.find((candidate) => candidate.id === "csv-json-converter");
+  assert.ok(csv);
+  assert.equal(csv.status, "available");
+  assert.equal(csv.href, "/data/csv-json");
 });
 
 test("JWT Decoder copy accurately limits its security claim", () => {
