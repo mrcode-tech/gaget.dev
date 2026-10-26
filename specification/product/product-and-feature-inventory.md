@@ -103,3 +103,14 @@ The implementation includes locale-aware formatting through `Intl.DateTimeFormat
 ## Date & Time calendar correctness contract
 
 The Date & Time workspace exposes Gregorian, Persian Solar Hijri, Islamic, Islamic Umm al-Qura, Hebrew, Buddhist, and Indian calendar options through the browser's Intl implementation. Display language and calendar system are independent settings: locale controls language and default numerals, while the selected calendar controls visible calendar day numbers, month boundaries, calendar year/month/day fields, and calendar-aware arithmetic. Visible day numbers are formatted directly with the selected `Intl.DateTimeFormat` calendar. Calendar display and calendar arithmetic are distinct from storage: selected-calendar year/month/day values drive calendar views, month/year arithmetic and leap-year detection. Time-zone, timestamp, JSON and fixed-date holiday displays honor the selected calendar where applicable, while ISO/Gregorian dates remain stable internal values for timestamps, date differences, and calendar exports. Week-number results are explicitly Gregorian ISO weeks. Islamic calendar dates follow the browser's locale data and can differ between conventions. Automated regression coverage lives in `tests/date-time-fields.test.tsx` and `tests/datetime-editor.test.tsx`; unsupported Intl combinations must be reported rather than silently presented as correct.
+
+
+## Regex Tester — implementation contract
+
+- Canonical route: `/text/regex`; standalone Text category tool.
+- Supports JavaScript regular-expression syntax, selectable flags, match offsets, full matches, capture groups, and copyable match summaries.
+- Executes the user-supplied pattern inside a dedicated browser Worker; the main thread terminates the worker after 300 ms. Pattern length is limited to 2,000 characters, input to 256 KiB, and results to 1,000 matches.
+- Invalid patterns/flags, unsupported flags, size limits, worker errors, and timeouts produce visible error feedback. No input is sent to a server.
+- Browser Worker/CSP restrictions can prevent execution; the UI reports this instead of falling back to main-thread evaluation.
+- This is a JavaScript RegExp tester, not a PCRE/Python/RE2 compatibility claim. Regex execution has inherent performance risk; worker termination is the execution boundary.
+- Status: implementation added on `feature/verification`; must remain unverified until unit, component, route smoke, lint, typecheck, production build, E2E and CI evidence pass for the exact commit.
