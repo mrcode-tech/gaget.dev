@@ -19,6 +19,8 @@
 | curl-converter | cURL Converter | /api/curl-converter | available with documented limits |
 | binary-math-workbench | Data, Binary & Math Workbench | /data/binary-math | available with documented limits |
 | network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
+| binary-math-workbench | Data, Binary & Math Workbench | /data/binary-math | available with documented limits |
+| network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
 
 There are now 12 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 
@@ -33,14 +35,14 @@ There are now 12 relevant standalone registry entries. Encoding & Decoding conso
 | data.csv-json | CSV ↔ JSON, delimiters, quoting, headers and type policy | CSV ↔ JSON implemented with string-cell policy / 3; broader type inference remains out of scope | [Data](./categories/data-parsing-conversion.md) |
 | data.xml | XML parse/format/minify | Lightweight element-nesting format/minify implemented / 3; complete XML parsing/validation pending | [Data](./categories/data-parsing-conversion.md) |
 | data.yaml | YAML parse/format and optional JSON conversion | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
-| data.query-string | Query-string parse/build, repeated keys, URI components | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
-| data.key-value | Key-value parse/build | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
+| data.query-string | Query-string parse/build, repeated keys, URI components | Implemented in `/data/binary-math` / 3; repeated keys and plus-space policy tested | [Data](./categories/data-parsing-conversion.md) |
+| data.key-value | Key-value parse/build | Key-value parse implemented in `/data/binary-math` / 3; builder remains pending | [Data](./categories/data-parsing-conversion.md) |
 | data.asn1-tlv | Selected ASN.1/TLV inspection | Conditional / 5 | [Data](./categories/data-parsing-conversion.md) |
 | text.regex | Regex flags, matches and captures | Implemented / 3; match/capture, replacement preview and bounded output; pathological patterns remain a browser-runtime risk | [Text](./categories/text-and-regex.md) |
 | text.transform | Find/replace, split/join, trim, line sort/dedupe, case, Unicode normalization, escaping, stats, diff | Core text transformations implemented / 3; operations have bounded input and line-diff limits | [Text](./categories/text-and-regex.md) |
-| compress.formats | gzip, zlib, DEFLATE, detection, size/ratio | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
+| compress.formats | gzip, zlib, DEFLATE, detection, size/ratio | gzip and zlib-wrapped DEFLATE compress/decompress implemented / 3; format detection pending | [Binary & math](./categories/compression-binary-math.md) |
 | compress.archive | Archive listing/extraction with strict limits | Conditional / 5 | [Binary & math](./categories/compression-binary-math.md) |
-| binary.inspect | Hexdump, byte view, printable strings, byte-range compare | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
+| binary.inspect | Hexdump, printable strings, byte statistics/entropy | Implemented in `/data/binary-math` and `/inspection/network-file` / 3–4; byte-range/file comparison pending | [Binary & math](./categories/compression-binary-math.md) |
 | binary.numeric | Base conversion, signed/unsigned, endianness, XOR/bitwise, float representation | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
 | network.parse | IPv4/IPv6/CIDR, MAC, URI/domain/email/IP extraction, HTTP headers/cookies, offline records | IP/CIDR/MAC, supplied headers and cookies implemented / 4; candidate extraction and offline DNS records pending | [Inspection](./categories/network-web-security-inspection.md) |
 | token.jwt | JWT decode, claims and timestamp/expiry interpretation | Available entry; reverify / 4 | [Inspection](./categories/network-web-security-inspection.md) |

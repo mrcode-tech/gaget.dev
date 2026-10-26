@@ -29,7 +29,7 @@ export function parseKeyValue(input:string):string {
 export function convertNumberBase(input:string,radix=10):string {
   const s=input.trim().replace(/_/g,"");if(!s)throw new Error("Enter an integer.");if(!Number.isInteger(radix)||radix<2||radix>36)throw new Error("Base must be between 2 and 36.");
   const sign=s.startsWith("-")?"-":"";const raw=sign?s.slice(1):s;let value:bigint;
-  try{if(/^0[xob]/i.test(raw))value=BigInt(raw);else{const chars="0123456789abcdefghijklmnopqrstuvwxyz";const r=BigInt(radix);let n=0n;for(const c of raw.toLowerCase()){const digit=chars.indexOf(c);if(digit<0||digit>=radix)throw new Error("Digit is not valid for base "+radix+".");n=n*r+BigInt(digit);}value=n*(sign?-1n:1n);}}
+  try{if(/^0[xob]/i.test(raw))value=BigInt(raw)*(sign?-1n:1n);else{const chars="0123456789abcdefghijklmnopqrstuvwxyz";const r=BigInt(radix);let n=0n;for(const c of raw.toLowerCase()){const digit=chars.indexOf(c);if(digit<0||digit>=radix)throw new Error("Digit is not valid for base "+radix+".");n=n*r+BigInt(digit);}value=n*(sign?-1n:1n);}}
   catch(e){if(e instanceof Error&&e.message.startsWith("Digit"))throw e;throw new Error("Enter a valid integer (decimal or prefixed 0x/0o/0b).");}
   return JSON.stringify({decimal:value.toString(10),binary:(value<0n?"-":"")+(value<0n?-value:value).toString(2),octal:(value<0n?"-":"")+(value<0n?-value:value).toString(8),hexadecimal:(value<0n?"-":"")+(value<0n?-value:value).toString(16).toUpperCase(),base:radix,representation:value.toString(radix)},null,2);
 }
@@ -92,7 +92,7 @@ export function numericStatistics(input:string):string {
 }
 export function arithmetic(input:string,options:ExtendedOptions={}):string {
  const a=Number(options.a),b=Number(options.b);if(!options.a?.trim()||!options.b?.trim()||!Number.isFinite(a)||!Number.isFinite(b))throw new Error("Enter two finite numbers in the A and B fields.");
- if(input==="modular"){let m:bigint;try{m=BigInt(options.modulus??"");}catch{throw new Error("Modulus must be a positive integer.");}if(m<=0n)throw new Error("Modulus must be a positive integer.");const x=BigInt(options.a),y=BigInt(options.b);return JSON.stringify({sum:((x+y)%m+m)%m,difference:((x-y)%m+m)%m,product:((x*y)%m+m)%m,modulus:m.toString()},null,2);}
+ if(input==="modular"){let m:bigint,x:bigint,y:bigint;try{m=BigInt(options.modulus??"");x=BigInt(options.a??"");y=BigInt(options.b??"");}catch{throw new Error("Modular arithmetic requires integer operands and a positive integer modulus.");}if(m<=0n)throw new Error("Modulus must be a positive integer.");return JSON.stringify({sum:((x+y)%m+m)%m,difference:((x-y)%m+m)%m,product:((x*y)%m+m)%m,modulus:m.toString()},null,2);}
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }
 export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
@@ -116,6 +116,6 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "cookies":return parseCookies(input);
  case "statistics":return numericStatistics(input);
  case "arithmetic":return arithmetic(input,options);
- case "compression":{const out=await compressBytes(bytes,(options.format==="deflate"?"deflate":"gzip"),options.action??"compress");return JSON.stringify({format:options.format==="deflate"?"deflate":"gzip",action:options.action??"compress",inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),base64Preview:typeof btoa==="function"?btoa(Array.from(out.slice(0,4096),b=>String.fromCharCode(b)).join("")):""},null,2);}
+ case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }

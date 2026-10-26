@@ -2,6 +2,8 @@
 
 ## Network & Web Data
 
+The `/inspection/network-file` workbench currently implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header parsing and supplied cookie-string parsing. It performs no network requests. Full candidate extraction, DNS records and certificate/key inspection remain conditional/pending.
+
 | ID | Operation | Acceptance criteria |
 |---|---|---|
 | net.ip | Parse/normalize IPv4 and IPv6 | Invalid ranges and malformed compression rejected |
