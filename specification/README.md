@@ -18,6 +18,7 @@
 - [Current-State Product Baseline](./product/current-state.md)
 - [Product and Feature Inventory](./product/product-and-feature-inventory.md)
 - [Tool Catalog and Workspace Architecture](./product/tool-catalog-and-workspace-architecture.md) — category taxonomy, tool/workspace boundaries, availability and verification contract.
+- [CyberChef Capability Reconciliation](./product/cyberchef-capability-reconciliation.md) — dated capability-family audit and operation-level reconciliation requirements; status is in progress.
 - [Feature Contract Reconciliation](./product/feature-contract-reconciliation.md) — preserves durable requirements from legacy proposals and records route-level verification gaps; requirements remain proposals until approved.
 - [Component Inventory](./components/component-inventory.md)
 - [Shared Editor Shell Contract](./components/shared-editor-shell.md) — proposed shared layout/interaction contract for Photo, Audio, Video, and Date & Time; not approved yet.
@@ -35,7 +36,7 @@ Current-state browser screenshots are generated from the build being evaluated a
 
 - **Current behavior:** source code, running application and tests for the build being evaluated.
 - **Expected behavior:** approved target-state specification and its explicitly approved assets.
-- **Shared rules:** Level 1 foundation documents and component contracts.
+- **Shared rules:** foundation documents and component contracts.
 - **Evidence:** screenshots and test reports demonstrate one build; they do not independently define design intent.
 - A route, registry label, visible button or mockup does not prove that a capability is fully implemented.
 - Use status labels consistently: `Implemented`, `Verified`, `Partial`, `Planned`, `Unsupported`, and `Proposal`. Explain the evidence for important status claims.
