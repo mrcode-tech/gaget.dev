@@ -18,6 +18,7 @@
 - [Current-State Product Baseline](./product/current-state.md)
 - [Product and Feature Inventory](./product/product-and-feature-inventory.md)
 - [Tool Catalog and Workspace Architecture](./product/tool-catalog-and-workspace-architecture.md) — category taxonomy, tool/workspace boundaries, availability and verification contract.
+- [Developer Tools Capability Proposal](./product/developer-tools-capability-proposal.md) — proposed consolidated developer-tool workspaces, capability inventory, delivery phases and definition of done; proposal only, not an implementation claim.
 - [Feature Contract Reconciliation](./product/feature-contract-reconciliation.md) — preserves durable requirements from legacy proposals and records route-level verification gaps; requirements remain proposals until approved.
 - [Component Inventory](./components/component-inventory.md)
 - [Shared Editor Shell Contract](./components/shared-editor-shell.md) — proposed shared layout/interaction contract for Photo, Audio, Video, and Date & Time; not approved yet.
