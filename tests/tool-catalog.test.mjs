@@ -110,6 +110,11 @@ test("JSON operations are consolidated into one available workspace and hash gen
   assert.equal(hash.status, "available");
   assert.equal(hash.href, "/security/hash");
   assert.ok(hash.keywords.includes("sha-256"));
+  const regex = tools.find((candidate) => candidate.id === "regex-tester");
+  assert.ok(regex);
+  assert.equal(regex.status, "available");
+  assert.equal(regex.href, "/text/regex");
+  assert.match(regex.description, /isolated browser worker/i);
   const csv = tools.find((candidate) => candidate.id === "csv-json-converter");
   assert.ok(csv);
   assert.equal(csv.status, "available");
