@@ -184,15 +184,13 @@ try {
       await page.getByText("$.version").waitFor({ state: "visible" });
     } },
     { name: "file-menu", route: "/json/formatter", run: async (page) => {
-      {
-      {
-        await page.getByRole("button", { name: "File" }).click();
-        await page.getByTestId("json-file-menu").waitFor({ state: "visible" });
-      }
+      await page.getByRole("button", { name: "File" }).click();
+      await page.getByTestId("json-file-menu").waitFor({ state: "visible" });
     } },
     { name: "features-menu", route: "/json/formatter", run: async (page) => {
-      await page.getByRole("button", { name: "Feature" }).click();
-      await page.getByTestId("json-features-menu").waitFor({ state: "visible" });
+      const triggerName = (page.viewportSize()?.width ?? 1024) < 768 ? "Feature" : "Utilities";
+      await page.getByRole("button", { name: triggerName, exact: true }).click();
+      await page.getByTestId((page.viewportSize()?.width ?? 1024) < 768 ? "json-features-menu" : "json-group-menu").waitFor({ state: "visible" });
     } },
   ];
   for (const viewport of jsonViewports) {
