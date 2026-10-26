@@ -11,6 +11,7 @@ const routes = [
   "/encoding/base64",
   "/security/jwt-decoder",
   "/security/hash",
+  "/data/csv-json",
   "/generators/uuid",
   "/images/editor",
   "/audio/editor",
