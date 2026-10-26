@@ -75,3 +75,8 @@ The current media and Date & Time destinations remain first-class global workspa
 Registry and workspace tests cover stable unique IDs, unique canonical destinations, category membership, explicit status, workspace IDs, and canonical workspace routes. JSON tests cover structural comparison including object key-order independence, nested edits, additions/removals, arrays, and invalid input. Keep `/json/diff` as a tested compatibility route into Compare mode. Catalog/browser tests must verify search, category discovery, empty results, planned-state non-launchability, direct canonical routes, legacy aliases, keyboard access, responsive behavior, and Persian/Arabic RTL.
 
 A green CI run is evidence only for the exact tested revision. Inspect its required job results, generated manifest and artifact contents. A mockup is target-design evidence, not proof that the running application conforms. Keep authored target wireframes labelled **Proposal** until explicitly approved.
+
+
+## Regex Tester status and capability contract
+
+The Regex Tester at `/text/regex` is implemented as a standalone tool using JavaScript RegExp semantics. It returns match offsets and capture groups, bounds the pattern/input/result sizes, and evaluates expressions in a dedicated Worker with a 300 ms termination limit. Worker creation failure is surfaced; there is no main-thread fallback. Mark it `Verified` only after exact-commit CI and browser checks pass. Regex Tester does not claim compatibility with other regex engines.
