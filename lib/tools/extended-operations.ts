@@ -29,9 +29,9 @@ export function parseKeyValue(input:string):string {
 export function convertNumberBase(input:string,radix=10):string {
   const s=input.trim().replace(/_/g,"");if(!s)throw new Error("Enter an integer.");if(!Number.isInteger(radix)||radix<2||radix>36)throw new Error("Base must be between 2 and 36.");
   const sign=s.startsWith("-")?"-":"";const raw=sign?s.slice(1):s;let value:bigint;
-  try{if(/^0[xob]/i.test(raw))value=BigInt(raw)*(sign?-1n:1n);else{const chars="0123456789abcdefghijklmnopqrstuvwxyz";const r=BigInt(radix);let n=0n;for(const c of raw.toLowerCase()){const digit=chars.indexOf(c);if(digit<0||digit>=radix)throw new Error("Digit is not valid for base "+radix+".");n=n*r+BigInt(digit);}value=n*(sign?-1n:1n);}}
+  try{if(/^0[xob]/i.test(raw))value=BigInt(raw)*(sign?-BigInt(1):BigInt(1));else{const chars="0123456789abcdefghijklmnopqrstuvwxyz";const r=BigInt(radix);let n=BigInt(0);for(const c of raw.toLowerCase()){const digit=chars.indexOf(c);if(digit<0||digit>=radix)throw new Error("Digit is not valid for base "+radix+".");n=n*r+BigInt(digit);}value=n*(sign?-BigInt(1):BigInt(1));}}
   catch(e){if(e instanceof Error&&e.message.startsWith("Digit"))throw e;throw new Error("Enter a valid integer (decimal or prefixed 0x/0o/0b).");}
-  return JSON.stringify({decimal:value.toString(10),binary:(value<0n?"-":"")+(value<0n?-value:value).toString(2),octal:(value<0n?"-":"")+(value<0n?-value:value).toString(8),hexadecimal:(value<0n?"-":"")+(value<0n?-value:value).toString(16).toUpperCase(),base:radix,representation:value.toString(radix)},null,2);
+  return JSON.stringify({decimal:value.toString(10),binary:(value<BigInt(0)?"-":"")+(value<BigInt(0)?-value:value).toString(2),octal:(value<BigInt(0)?"-":"")+(value<BigInt(0)?-value:value).toString(8),hexadecimal:(value<BigInt(0)?"-":"")+(value<BigInt(0)?-value:value).toString(16).toUpperCase(),base:radix,representation:value.toString(radix)},null,2);
 }
 const ascii=(b:number)=>b>=32&&b<=126?String.fromCharCode(b):".";
 export function hexDump(bytes:Uint8Array,width=16):string {
@@ -51,17 +51,17 @@ export function byteStatistics(bytes:Uint8Array):string {
 }
 function ipv4Number(s:string):bigint {
  const parts=s.split(".");if(parts.length!==4)throw new Error("IPv4 must contain four decimal octets.");
- let n=0n;for(const p of parts){if(!/^\d{1,3}$/.test(p)||Number(p)>255)throw new Error("IPv4 octets must be between 0 and 255.");n=(n<<8n)|BigInt(Number(p));}return n;
+ let n=BigInt(0);for(const p of parts){if(!/^\d{1,3}$/.test(p)||Number(p)>255)throw new Error("IPv4 octets must be between 0 and 255.");n=(n<<BigInt(8))|BigInt(Number(p));}return n;
 }
-function ipv4String(n:bigint):string{return [24n,16n,8n,0n].map(shift=>Number((n>>shift)&255n)).join(".");}
+function ipv4String(n:bigint):string{return [BigInt(24),BigInt(16),BigInt(8),BigInt(0)].map(shift=>Number((n>>shift)&BigInt(255))).join(".");}
 function ipv6Groups(source:string):number[] {
- let s=source.toLowerCase();if(s.includes(".")){const i=s.lastIndexOf(":");if(i<0)throw new Error("Invalid IPv6 address.");const v=ipv4Number(s.slice(i+1));s=s.slice(0,i+1)+((v>>16n)&65535n).toString(16)+":"+ (v&65535n).toString(16);}
+ let s=source.toLowerCase();if(s.includes(".")){const i=s.lastIndexOf(":");if(i<0)throw new Error("Invalid IPv6 address.");const v=ipv4Number(s.slice(i+1));s=s.slice(0,i+1)+((v>>BigInt(16))&BigInt(65535)).toString(16)+":"+ (v&BigInt(65535)).toString(16);}
  if((s.match(/::/g)||[]).length>1)throw new Error("Invalid IPv6 compression.");const split=s.split("::");const left=split[0]?split[0].split(":"):[],right=split.length===2&&split[1]?split[1].split(":"):[];const missing=8-left.length-right.length;if((split.length===1&&missing!==0)||(split.length===2&&missing<1))throw new Error("IPv6 must contain eight groups unless :: compresses at least one group.");
  const groups=[...left,...Array(missing).fill("0"),...right];if(groups.length!==8||groups.some(g=>! /^[0-9a-f]{1,4}$/.test(g)))throw new Error("Invalid IPv6 group.");return groups.map(g=>parseInt(g,16));
 }
-function ipv6Number(s:string):bigint{return ipv6Groups(s).reduce((n,g)=>(n<<16n)|BigInt(g),0n);}
+function ipv6Number(s:string):bigint{return ipv6Groups(s).reduce((n,g)=>(n<<BigInt(16))|BigInt(g),BigInt(0));}
 function ipv6String(n:bigint):string {
- const groups:number[]=[];for(let i=7;i>=0;i--)groups.unshift(Number((n>>BigInt(i*16))&65535n));
+ const groups:number[]=[];for(let i=7;i>=0;i--)groups.push(Number((n>>BigInt(i*16))&BigInt(65535)));
  let bestStart=-1,bestLen=1;for(let i=0;i<8;){if(groups[i]!==0){i++;continue;}let j=i;while(j<8&&groups[j]===0)j++;if(j-i>bestLen){bestStart=i;bestLen=j-i;}i=j;}
  const raw=groups.map(g=>g.toString(16));if(bestStart<0)return raw.join(":");const left=raw.slice(0,bestStart).join(":"),right=raw.slice(bestStart+bestLen).join(":");return left+"::"+right;
 }
@@ -70,8 +70,8 @@ export function inspectNetwork(input:string,mode:"ip"|"cidr"="ip"):string {
  if(mode==="ip"){if(s.includes(":"))return JSON.stringify({type:"IPv6",normalized:ipv6String(ipv6Number(s)),valid:true},null,2);const n=ipv4Number(s);return JSON.stringify({type:"IPv4",normalized:ipv4String(n),integer:n.toString(),valid:true},null,2);}
  const [address,prefixText,...rest]=s.split("/");if(rest.length||prefixText===undefined)throw new Error("CIDR must use address/prefix notation, for example 192.168.1.12/24.");
  const isV6=address.includes(":");const bits=isV6?128:32;const prefix=Number(prefixText);if(!Number.isInteger(prefix)||prefix<0||prefix>bits)throw new Error("CIDR prefix must be between 0 and "+bits+".");
- const host=isV6?ipv6Number(address):ipv4Number(address);const mask=prefix===0?0n:((1n<<BigInt(prefix))-1n)<<BigInt(bits-prefix);const network=host&mask;const last=network|((1n<<BigInt(bits-prefix))-1n);
- return JSON.stringify({type:isV6?"IPv6":"IPv4",prefix,network:isV6?ipv6String(network):ipv4String(network),lastAddress:isV6?ipv6String(last):ipv4String(last),addressCount:(last-network+1n).toString(),hostAddress:address},null,2);
+ const host=isV6?ipv6Number(address):ipv4Number(address);const mask=prefix===0?BigInt(0):((BigInt(1)<<BigInt(prefix))-BigInt(1))<<BigInt(bits-prefix);const network=host&mask;const last=network|((BigInt(1)<<BigInt(bits-prefix))-BigInt(1));
+ return JSON.stringify({type:isV6?"IPv6":"IPv4",prefix,network:isV6?ipv6String(network):ipv4String(network),lastAddress:isV6?ipv6String(last):ipv4String(last),addressCount:(last-network+BigInt(1)).toString(),hostAddress:address},null,2);
 }
 export function normalizeMac(input:string):string {
  const hex=input.replace(/[^0-9a-f]/gi,"");if(!/^[0-9a-f]{12}$/i.test(hex))throw new Error("Enter a 48-bit MAC address using 12 hexadecimal digits.");const upper=hex.toUpperCase();return upper.match(/.{2}/g)!.join(":");
@@ -92,7 +92,7 @@ export function numericStatistics(input:string):string {
 }
 export function arithmetic(input:string,options:ExtendedOptions={}):string {
  const a=Number(options.a),b=Number(options.b);if(!options.a?.trim()||!options.b?.trim()||!Number.isFinite(a)||!Number.isFinite(b))throw new Error("Enter two finite numbers in the A and B fields.");
- if(input==="modular"){let m:bigint,x:bigint,y:bigint;try{m=BigInt(options.modulus??"");x=BigInt(options.a??"");y=BigInt(options.b??"");}catch{throw new Error("Modular arithmetic requires integer operands and a positive integer modulus.");}if(m<=0n)throw new Error("Modulus must be a positive integer.");return JSON.stringify({sum:((x+y)%m+m)%m,difference:((x-y)%m+m)%m,product:((x*y)%m+m)%m,modulus:m.toString()},null,2);}
+ if(input==="modular"){let m:bigint,x:bigint,y:bigint;try{m=BigInt(options.modulus??"");x=BigInt(options.a??"");y=BigInt(options.b??"");}catch{throw new Error("Modular arithmetic requires integer operands and a positive integer modulus.");}if(m<=BigInt(0))throw new Error("Modulus must be a positive integer.");return JSON.stringify({sum:(((x+y)%m+m)%m).toString(),difference:(((x-y)%m+m)%m).toString(),product:(((x*y)%m+m)%m).toString(),modulus:m.toString()},null,2);}
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }
 export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
