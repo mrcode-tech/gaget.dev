@@ -31,6 +31,7 @@
 - `/encoding/url`
 - `/encoding/base64`
 - `/security/jwt-decoder` — decodes JWT contents but does not verify signatures.
+- `/security/hash` — browser Web Crypto SHA-256/384/512 digests for UTF-8 text and files up to 32 MiB; full-file buffering is used and CI/browser verification is pending.
 - `/generators/uuid`
 
 Additional registry entries may be planned or redirect to unified editors. Verify route existence and behavior before describing them as independent implemented pages.
