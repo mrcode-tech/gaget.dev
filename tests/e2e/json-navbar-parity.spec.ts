@@ -63,18 +63,22 @@ for (const viewport of viewports) {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await expect.poll(() => stickyBar.evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(viewport.width >= 1024 ? 68 : 0);
     const fileTrigger = page.getByRole("button", { name: "File", exact: true });
-    const featuresTrigger = page.getByRole("button", { name: "Features", exact: true });
-    await expect(featuresTrigger).toBeVisible();
+    const featureTrigger = page.getByRole("button", { name: viewport.width < 768 ? "Feature" : "Utilities", exact: true });
+    await expect(fileTrigger).toBeVisible();
+    await expect(featureTrigger).toBeVisible();
     if (viewport.width < 768) {
-      await expect(fileTrigger).toBeHidden();
-      await featuresTrigger.click();
-      await expect(page.getByTestId("json-mobile-file-actions")).toBeVisible();
-      await expect(page.getByTestId("json-file-menu")).toHaveCount(0);
+      await featureTrigger.click();
+      await expect(page.getByTestId("json-features-menu")).toBeVisible();
+      await expect(page.getByTestId("json-mobile-file-actions")).toHaveCount(0);
+      await featureTrigger.click();
+      await fileTrigger.click();
+      await expect(page.getByTestId("json-file-menu")).toBeVisible();
     } else {
-      await expect(fileTrigger).toBeVisible();
-      await featuresTrigger.click();
-      await expect(page.getByTestId("json-mobile-file-actions")).toBeHidden();
-      await featuresTrigger.click();
+      await expect(page.getByRole("button", { name: "View", exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Convert", exact: true })).toBeVisible();
+      await featureTrigger.click();
+      await expect(page.getByTestId("json-group-menu")).toBeVisible();
+      await featureTrigger.click();
       await fileTrigger.click();
       await expect(page.getByTestId("json-file-menu")).toBeVisible();
     }
