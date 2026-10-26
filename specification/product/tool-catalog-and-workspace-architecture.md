@@ -37,7 +37,7 @@ The catalog must render available tools as launchable links and planned tools as
 | Regex Tester | `/text/regex` | Planned | Distinct pattern-and-sample testing workflow. |
 | XML Formatter | `/xml/formatter` | Planned | Standalone formatting workflow. |
 | SQL Formatter | `/sql/formatter` | Planned | Standalone SQL-specific formatting workflow. |
-| CSV ↔ JSON | `/data/csv-json` | Planned | Conversion workflow; do not combine with XML merely because both concern data formats. |
+| CSV ↔ JSON | `/data/csv-json` | Implemented; verification pending | Converts CSV with unique headers to arrays of string-valued objects and scalar JSON-object arrays to CSV. Rejects nested JSON values and malformed/inconsistent CSV rather than silently coercing types. |
 | HTML Formatter | `/web/html-formatter` | Planned | Standalone markup formatting workflow. |
 | cURL Converter | `/api/curl-converter` | Planned | Request parsing and client-code generation are distinct from formatters. |
 
