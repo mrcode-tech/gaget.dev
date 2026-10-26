@@ -60,7 +60,7 @@ export function csvToJson(input: string, delimiter = ","): string {
   const objects = records.slice(1).filter((row) => !(row.length === 1 && row[0] === "")).map((row, index) => {
     if (row.length !== headers.length) throw new SyntaxError(`CSV row ${index + 2} has ${row.length} fields; expected ${headers.length}`);
     const item: Record<string, string> = {};
-    headers.forEach((header, column) => { item[header] = row[column]; });
+    headers.forEach((header, column) => { item[header] = row[column] ?? ""; });
     return item;
   });
   return JSON.stringify(objects, null, 2);
