@@ -37,7 +37,7 @@ The table is a family-level first pass. It identifies the intended destination o
 | Secure random bytes | Generator/security workspace candidate | Candidate / not yet implemented | Use `crypto.getRandomValues`; validate count and avoid logging or persisting output. |
 | Compression/decompression | Binary workspace candidate | Deferred pending format and resource-limit design | Bound input/output and expansion ratio; no unbounded decompression or recursive parsing. |
 | JSON parsing, formatting, validation, comparison, sorting, string escaping | `/json/formatter` | Consolidated in protected JSON workspace; parity audit pending | Do not add duplicate JSON routes. Preserve diagnostics, line numbers, File/Features behavior, and operation-specific results. |
-| XML, CSV, YAML, HTML, SQL, cURL and other structured text | Existing planned destinations where present | Planned; each needs implementation and tests | Define malformed input, duplicate keys, type preservation, nested data, escaping, and lossy conversion semantics before enabling. |
+| CSV ↔ JSON conversion | `/data/csv-json` | Implemented; CI/browser verification pending | CSV parsing handles quoting and embedded newlines, requires unique headers and consistent row widths, and preserves CSV values as strings. JSON-to-CSV accepts arrays of scalar objects only, uses first-seen header order, and documents null/missing-to-empty-field lossiness. |
 | Timestamps, date parsing/formatting, timezone operations | `/datetime/editor` | Protected workspace destination; parity audit pending | No duplicate generic date converter. Calendar and timezone behavior must follow the Date & Time contract. |
 | Image, audio, video transformations and metadata | Existing protected media workspaces | Protected destination; parity audit pending | Browser codecs, APIs, memory and metadata limitations must be truthful. Do not promise unsupported conversions. |
 | URL/URI, IPv4/IPv6, protocol dates, HTTP headers and certificate metadata | Existing URL tool or future network/protocol workspace | Candidate / not yet implemented | Local parsing does not prove reachability, ownership, or authenticity. Network operations require explicit consent and destination controls. |
@@ -56,6 +56,14 @@ The table is a family-level first pass. It identifies the intended destination o
 - Explicitly discloses that these algorithms are hashes, not encryption, and that MD5, SHA-1, HMAC, streaming, and authenticity verification are not supported.
 - Added known-answer tests for the empty SHA-256 input and a Unicode string, digest-length checks for all advertised algorithms, and invalid algorithm/input tests.
 - Status becomes **Verified** only after the exact final commit passes CI and route/browser behavior is inspected.
+
+### CSV ↔ JSON — `/data/csv-json`
+
+- Implemented a local CSV parser with quoted delimiters, doubled quotes, embedded line breaks, BOM handling, and CRLF/LF support.
+- CSV-to-JSON requires non-empty unique headers and consistent row widths; all cell values remain strings rather than guessing numeric/boolean/null types.
+- JSON-to-CSV accepts arrays of objects with scalar values only. Nested objects/arrays are rejected. Header order follows first appearance across the array; missing and null values become empty fields and this lossy behavior is disclosed.
+- Added tests for quoted fields, embedded newlines, BOM, malformed quotes, duplicate headers, inconsistent rows, stable headers, invalid JSON shapes, nested values, and empty input.
+- Status becomes **Verified** only after exact-commit CI and route/browser verification.
 
 ## Required next steps before calling the overall task complete
 
