@@ -25,7 +25,8 @@ describe("ToolCatalog", () => {
     }
     expect(screen.getByRole("link", { name: /JSON Workspace/ }).getAttribute("href")).toBe("/json/formatter");
     expect(screen.getByRole("link", { name: /JWT Decoder/ }).getAttribute("href")).toBe("/security/jwt-decoder");
-    expect(screen.getByRole("link", { name: /URL Encoder \/ Decoder/ }).getAttribute("href")).toBe("/encoding/url");
+    expect(screen.getByRole("link", { name: /Encoding & Decoding/ }).getAttribute("href")).toBe("/encoding/url");
+    expect(screen.queryByRole("link", { name: /Base64 Encoder \/ Decoder/ })).toBeNull();
   });
 
   it("searches only developer utilities and omits categories without matching tools", () => {

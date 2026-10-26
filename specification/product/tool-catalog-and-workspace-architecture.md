@@ -1,6 +1,6 @@
 # Tool Catalog and Workspace Architecture
 
-**Status:** Implemented navigation and JSON workspace baseline. Other registry destinations retain explicit planned status until their routes and runtime behavior are verified.
+**Status:** Implemented navigation and JSON workspace baseline. The seven formerly planned standalone routes now have browser-local workbenches and operation/route verification; their exact capability limits are recorded in the product inventory. Other registry entries retain planned status until their routes and runtime behavior are verified.
 
 ## Purpose and vocabulary
 
@@ -29,19 +29,18 @@ The catalog must render available tools as launchable links and planned tools as
 | Video Editor | `/video/editor` | Workspace | Video operations share media playback, timeline/seek and browser capability constraints. |
 | Date & Time Editor | `/datetime/editor` | Workspace | Date/time utilities share locale, calendar, time-zone and date-value semantics. |
 | JSON Workspace | `/json/formatter` | Workspace | Format, minify, validate, compare, sort keys, tree, find, and escape/unescape are operations inside one workspace; `/json/diff` remains a compatibility entry point into Compare mode. See [JSON Workspace Contract](./json-workspace.md). |
-| URL Encoder / Decoder | `/encoding/url` | Standalone for now | Component encoding has reserved-character and malformed-input semantics distinct from Base64. |
-| Base64 Encoder / Decoder | `/encoding/base64` | Standalone for now | Text encoding requires explicit UTF-8 and invalid-input behavior. Similar input/output UI alone is insufficient reason to merge. |
+| Encoding & Decoding | `/encoding/url` | Unified standalone workbench | URL components, Base64/Base64url/Base32, hex, binary, basic HTML entities and Unicode escapes share explicit text/byte representation behavior. `/encoding/base64` remains a tested compatibility redirect into Base64 mode. |
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
 | UUID Generator | `/generators/uuid` | Standalone | Focused generation workflow. |
-| Hash Generator | `/security/hash` | Planned | Keep separate from JWT inspection; verify cryptographic implementation before launch. |
-| Regex Tester | `/text/regex` | Planned | Distinct pattern-and-sample testing workflow. |
-| XML Formatter | `/xml/formatter` | Planned | Standalone formatting workflow. |
-| SQL Formatter | `/sql/formatter` | Planned | Standalone SQL-specific formatting workflow. |
-| CSV ↔ JSON | `/data/csv-json` | Planned | Conversion workflow; do not combine with XML merely because both concern data formats. |
-| HTML Formatter | `/web/html-formatter` | Planned | Standalone markup formatting workflow. |
-| cURL Converter | `/api/curl-converter` | Planned | Request parsing and client-code generation are distinct from formatters. |
+| Hash & Checksum Generator | `/security/hash` | Available with documented limits | SHA-2 digests, HMAC-SHA-2 and CRC32 are distinct operations; checksum is not cryptographic security. |
+| Text & Regex Workbench | `/text/regex` | Available with documented limits | Related text transforms share one text input/output workflow; regex replacement is preview-only. |
+| XML Formatter | `/xml/formatter` | Available with documented limits | Standalone formatting workflow. |
+| SQL Formatter | `/sql/formatter` | Available with documented limits | Standalone SQL-specific formatting workflow. |
+| CSV ↔ JSON | `/data/csv-json` | Available with documented limits | Conversion workflow; do not combine with XML merely because both concern data formats. |
+| HTML Formatter | `/web/html-formatter` | Available with documented limits | Standalone markup formatting workflow. |
+| cURL Converter | `/api/curl-converter` | Available with documented limits | Request parsing and client-code generation are distinct from formatters. |
 
-These decisions are initial boundaries, not claims that every listed destination currently exists. Planned entries must remain unavailable until source routes, behavior and tests prove otherwise.
+These decisions describe current source boundaries. The seven newly implemented standalone routes are available with the limitations documented in the product inventory; any remaining planned entry must stay unavailable until source routes, behavior and tests prove otherwise.
 
 ## Proposed functional taxonomy
 

@@ -12,7 +12,7 @@
 
 ## Tool catalog architecture
 
-See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry records stable IDs, explicit availability status, and standalone/workspace kind. The JSON Workspace consolidates format, minify, validate and structural compare; `/json/diff` opens Compare mode for compatibility. Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter remain planned until their route and runtime behavior are verified.
+See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace/operation model and candidate boundaries. The registry records stable IDs, explicit availability status, and standalone/workspace kind. The JSON Workspace consolidates format, minify, validate and structural compare; `/json/diff` opens Compare mode for compatibility. Hash Generator, Text & Regex Workbench, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter have standalone routes and browser-local workbenches. Their implementation is intentionally scoped: complete XML/HTML/SQL parsers, full cURL flag semantics, charset conversion, binary/file workflows and broader category operations remain incomplete.
 
 ## Global routes and shell
 
@@ -32,10 +32,17 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 |---|---|---|
 | `/json/formatter` | JSON workspace: format, minify, validate, compare, sort keys, tree view, find keys/values, escape/unescape, line-numbered input, diagnostics, File/Features menus, local import/export/copy and undo/redo | Strict local syntax scanner provides source offsets and one-based line/column; comparison ignores object key order, preserves array order, distinguishes missing/null and uses escaped paths. Advanced JSONPath/schema/repair/conversion/merge capabilities remain planned. See [JSON Workspace Contract](./json-workspace.md). |
 | `/json/diff` | Compatibility route into JSON Workspace Compare mode | Canonical metadata points to `/json/formatter`; no duplicate catalog entry. |
-| `/encoding/url` | Encode/decode URL components | Decode errors are surfaced. This is component encoding, not full URL validation. |
-| `/encoding/base64` | UTF-8 text Base64 encode/decode | Distinguish text Base64 from media Base64 tools. |
+| `/encoding/url` | Unified text-representation workbench: URL component, Base64, Base64url, Base32, hex, binary bytes, basic HTML entities and Unicode escapes | Text input only; byte representations use UTF-8; encoding is not encryption. |
+| `/encoding/base64` | Compatibility redirect to the unified workbench Base64 mode | Preserves existing bookmarks; not a separate catalog entry. |
 | `/security/jwt-decoder` | Decode JWT header and claims; inspect expiration | **Does not verify signatures.** This must remain explicit. |
 | `/generators/uuid` | Generate UUID v4 values with browser cryptographic API | Do not claim server-side uniqueness guarantees. |
+| `/security/hash` | SHA-256/384/512 text digests, HMAC-SHA-256/384/512 with an explicit text key, and CRC32/IEEE checksum | Text input only; HMAC key is not persisted; CRC32 is not cryptographic security; file-byte hashing is not implemented. |
+| `/text/regex` | Text & Regex Workbench: regex match/capture and replacement previews, find/replace, split/join, trim, sort/dedupe, case conversion, Unicode normalization, escaping, statistics and line diff | Regex input capped at 50,000 characters and 500 results; line diff capped at 500 lines per side; pathological patterns may block the tab. |
+| `/xml/formatter` | Lightweight XML text formatting and minifying with element nesting checks | Not a complete XML parser or schema validator; external entities are not resolved. |
+| `/sql/formatter` | Heuristic formatting/minifying of common SQL clauses | Not dialect-complete; never executes SQL. |
+| `/data/csv-json` | CSV to JSON and JSON arrays of objects to CSV | CSV imports remain strings; duplicate headers are disambiguated; formula-like CSV export values are prefixed. |
+| `/web/html-formatter` | Heuristic HTML formatting/minifying as text | Does not validate HTML or render markup. |
+| `/api/curl-converter` | Parse supported cURL options and produce a redacted JavaScript fetch preview | Never sends requests; unsupported flags are disclosed; secret-like headers, bodies and query parameters are redacted. |
 
 The route tree also contains planned registry destinations for JSON Diff, Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter. A registry item with `status: "planned"` is not an implemented route. Reconcile catalog status with actual route existence when adding tools.
 

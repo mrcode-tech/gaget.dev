@@ -28,12 +28,19 @@
 ### Standalone tools
 - `/json/formatter` — JSON Workspace with Format, Minify, Validate, Compare, Sort Keys, Tree Viewer, Find Keys/Values and Escape/Unescape operations, structured source diagnostics and local File actions. Its command bar spans the available workspace width; below 768 CSS px, File and Feature are separate menus, with File on the left and Feature aligned to the right; tablet/desktop show separate File, Utilities, View and Convert menus. Operation status and diagnostics are placed near the top of the workspace.
 - `/json/diff` — compatibility route opening Compare mode in the JSON Workspace.
-- `/encoding/url`
-- `/encoding/base64`
+- `/encoding/url` — unified text-representation workbench for URL components, Base64/Base64url, Base32, hex, binary bytes, basic HTML entities and Unicode escapes.
+- `/encoding/base64` — compatibility redirect to `/encoding/url?mode=base64`; it is not a separate catalog tool.
 - `/security/jwt-decoder` — decodes JWT contents but does not verify signatures.
-- `/generators/uuid`
+- `/generators/uuid` — generates UUID v4 values using the browser cryptographic API.
+- `/security/hash` — SHA-256, SHA-384 and SHA-512 text digests using Web Crypto; not encryption.
+- `/text/regex` — reports matches, indexes and capture groups with a 50,000-character input cap and 500-match output cap. JavaScript regex execution cannot be reliably interrupted, so pathological patterns can still block the tab.
+- `/xml/formatter` — lightweight XML text formatting/minifying with element-nesting checks; not a complete XML parser or schema validator.
+- `/sql/formatter` — heuristic SQL formatting/minifying only; no dialect-complete parser or query execution.
+- `/data/csv-json` — CSV and JSON-array-of-objects conversion; CSV cells remain strings and formula-like exported cells are prefixed.
+- `/web/html-formatter` — heuristic HTML text formatting/minifying; markup is never rendered as active HTML.
+- `/api/curl-converter` — parses a supported cURL subset and produces a redacted request preview; it never executes requests and reports unsupported flags.
 
-Additional registry entries may be planned or redirect to unified editors. Verify route existence and behavior before describing them as independent implemented pages.
+Broader capability families in the developer-tools proposal (additional encodings, replacement mode, full format parsers, binary/network/file inspection, HMAC/checksums, and workflow chains) remain incomplete or conditional; do not infer their availability from these routes.
 
 ## Current implementation-level design facts
 

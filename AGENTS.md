@@ -12,3 +12,7 @@ That document is the canonical AI workflow, including CI runtime maintenance and
 - Report exact test results and anything not verified.
 
 Do not duplicate the full workflow in this file. If this pointer conflicts with the canonical instructions, the canonical specification wins.
+
+## Developer-tools expansion
+
+For tasks covered by the proposed developer-tools expansion, read [the package README](specification/new-feature/README.md) and follow [the implementation roadmap](specification/new-feature/implementation-roadmap.md). Consult the linked inventory, category/tool specifications, wireframes and component contracts before implementation. Inspect existing components before proposing replacements; prefer existing shadcn/ui-style controls and wrappers. Update roadmap progress only with code/test evidence. This roadmap is additive and does not override specification/AI_INSTRUCTIONS.md.

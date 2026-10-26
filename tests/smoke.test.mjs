@@ -11,6 +11,13 @@ const routes = [
   "/encoding/base64",
   "/security/jwt-decoder",
   "/generators/uuid",
+  "/security/hash",
+  "/text/regex",
+  "/xml/formatter",
+  "/sql/formatter",
+  "/data/csv-json",
+  "/web/html-formatter",
+  "/api/curl-converter",
   "/images/editor",
   "/audio/editor",
   "/video/editor",
@@ -19,6 +26,14 @@ const routes = [
   "/robots.txt",
   "/sitemap.xml",
 ];
+
+test("legacy Base64 route redirects to the unified encoding workbench in Base64 mode", async () => {
+  const response = await fetch(new URL("/encoding/base64", baseUrl), { redirect: "manual" });
+  assert.equal(response.status, 307);
+  const destination = new URL(response.headers.get("location"), baseUrl);
+  assert.equal(destination.pathname, "/encoding/url");
+  assert.equal(destination.searchParams.get("mode"), "base64");
+});
 
 for (const route of routes) {
   test(`production route responds successfully: ${route}`, async () => {
