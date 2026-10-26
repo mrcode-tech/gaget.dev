@@ -7,7 +7,7 @@
 | Stable ID | Name | Canonical route | Registry status |
 |---|---|---|---|
 | url-encoder-decoder | URL Encoder / Decoder | /encoding/url | available |
-| base64-encoder-decoder | Base64 Encoder / Decoder | /encoding/base64 | available |
+
 | jwt-decoder | JWT Decoder | /security/jwt-decoder | available |
 | uuid-generator | UUID Generator | /generators/uuid | available |
 | hash-generator | Hash Generator | /security/hash | available with documented limits |

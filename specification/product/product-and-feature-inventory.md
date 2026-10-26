@@ -32,8 +32,8 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 |---|---|---|
 | `/json/formatter` | JSON workspace: format, minify, validate, compare, sort keys, tree view, find keys/values, escape/unescape, line-numbered input, diagnostics, File/Features menus, local import/export/copy and undo/redo | Strict local syntax scanner provides source offsets and one-based line/column; comparison ignores object key order, preserves array order, distinguishes missing/null and uses escaped paths. Advanced JSONPath/schema/repair/conversion/merge capabilities remain planned. See [JSON Workspace Contract](./json-workspace.md). |
 | `/json/diff` | Compatibility route into JSON Workspace Compare mode | Canonical metadata points to `/json/formatter`; no duplicate catalog entry. |
-| `/encoding/url` | Encode/decode URL components | Decode errors are surfaced. This is component encoding, not full URL validation. |
-| `/encoding/base64` | UTF-8 text Base64 encode/decode | Distinguish text Base64 from media Base64 tools. |
+| `/encoding/url` | Unified text-representation workbench: URL component, Base64, Base64url, Base32, hex, binary bytes, basic HTML entities and Unicode escapes | Text input only; byte representations use UTF-8; encoding is not encryption. |
+| `/encoding/base64` | Compatibility redirect to the unified workbench Base64 mode | Preserves existing bookmarks; not a separate catalog entry. |
 | `/security/jwt-decoder` | Decode JWT header and claims; inspect expiration | **Does not verify signatures.** This must remain explicit. |
 | `/generators/uuid` | Generate UUID v4 values with browser cryptographic API | Do not claim server-side uniqueness guarantees. |
 | `/security/hash` | SHA-256, SHA-384 and SHA-512 text digests using Web Crypto | Text input only; not encryption; file-byte hashing is not implemented. |
