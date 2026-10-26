@@ -14,6 +14,7 @@ const routes = [
   { name: "base64", path: "/encoding/base64" },
   { name: "hash-generator", path: "/security/hash" },
   { name: "csv-json-converter", path: "/data/csv-json" },
+  { name: "regex-tester", path: "/text/regex" },
   { name: "jwt-decoder", path: "/security/jwt-decoder" },
   { name: "uuid-generator", path: "/generators/uuid" },
   { name: "photo-editor", path: "/images/editor" },
@@ -29,6 +30,7 @@ const rtlRouteNames = new Set([
   "video-editor",
   "date-time-editor",
   "json-formatter",
+  "regex-tester",
 ]);
 const viewports = [
   { name: "mobile-390x844", width: 390, height: 844 },
