@@ -10,6 +10,9 @@
 - Output region: empty/result/error, with Copy or Download as applicable.
 - Avoid nested cards for every region; use clear boundaries and readable line lengths.
 
+## Current text-first workbench implementation
+The shared Developer Tool Workbench uses labelled controls, a source textarea, explicit Process/Clear actions, a separate read-only output textarea, and copy/download actions. Input and output sit in two columns at XL widths and stack at smaller widths. Operation-specific controls appear above the editors. The output is text-only; HTML is never injected into the document. Error messages use an alert role and preserve the source input. The current layout is an implementation record, not an approved target design.
+
 ## Encoding & Decoding
 Desktop: operation/input mode above side-by-side input/output panels. Convert/clear near input; copy/download near output.
 Mobile: operation selector, input mode/options, editor/file selection, convert action, output and copy/download. Text and bytes remain explicit.

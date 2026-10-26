@@ -10,13 +10,13 @@
 | base64-encoder-decoder | Base64 Encoder / Decoder | /encoding/base64 | available |
 | jwt-decoder | JWT Decoder | /security/jwt-decoder | available |
 | uuid-generator | UUID Generator | /generators/uuid | available |
-| hash-generator | Hash Generator | /security/hash | planned |
-| regex-tester | Regex Tester | /text/regex | planned |
-| xml-formatter | XML Formatter | /xml/formatter | planned |
-| sql-formatter | SQL Formatter | /sql/formatter | planned |
-| csv-json-converter | CSV ↔ JSON | /data/csv-json | planned |
-| html-formatter | HTML Formatter | /web/html-formatter | planned |
-| curl-converter | cURL Converter | /api/curl-converter | planned |
+| hash-generator | Hash Generator | /security/hash | available with documented limits |
+| regex-tester | Regex Tester | /text/regex | available with documented limits |
+| xml-formatter | XML Formatter | /xml/formatter | available with documented limits |
+| sql-formatter | SQL Formatter | /sql/formatter | available with documented limits |
+| csv-json-converter | CSV ↔ JSON | /data/csv-json | available with documented limits |
+| html-formatter | HTML Formatter | /web/html-formatter | available with documented limits |
+| curl-converter | cURL Converter | /api/curl-converter | available with documented limits |
 
 There are 11 relevant standalone registry entries. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subset described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 

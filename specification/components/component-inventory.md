@@ -37,3 +37,7 @@ Before adding a shared variant or extracting a new primitive, inspect all consum
 A component's existence does not imply that all its states or consumers have been visually verified. Update this inventory when responsibilities or ownership change.
 
 | Date & Time select field | `components/ui/native-select.tsx` | Consistent native select trigger surface and logical chevron inset | Shared by workspace settings and feature controls; verify LTR/RTL, themes, focus and long values. |
+
+
+## Developer-tools expansion
+- `components/developer-tool-workbench.tsx` composes existing Button, Input, Textarea and Card primitives for the seven standalone developer-tool routes. Its operation contract and current layout are documented in `specification/new-feature/shared-components/developer-tool-workbench.md` and `specification/new-feature/wireframes/developer-tool-workbench.md`.

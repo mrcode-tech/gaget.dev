@@ -1,6 +1,6 @@
 # Developer Tools Expansion — Design Package
 
-**Status:** Proposal and implementation planning only. This package does not claim proposed operations are implemented.
+**Status:** Active implementation package. Seven planned standalone tools now have working subsets; the inventory and roadmap identify their limits and the remaining proposed capabilities.
 
 ## Start here
 1. [Feature inventory](./feature-inventory.md) — stable IDs, status and traceability.

@@ -6,5 +6,6 @@ Reuse the existing shell and ToolLayout. Use current breakpoints: XS <640px, SM 
 
 - [Workspace layouts](./workspace-layouts.md) — category patterns and responsive behavior.
 - [File input](./file-input.md) — file-only and mixed-input patterns.
+- [Developer Tool Workbench](./developer-tool-workbench.md) — current text-first input/output layout for standalone developer tools.
 
 A small operation may reuse an existing workspace wireframe if the specification explicitly records that reuse.
