@@ -322,3 +322,42 @@ test("shows File, Utilities, View, and Convert as separate desktop menu triggers
   await expect(page.getByTestId("json-mobile-feature-list").getByRole("menuitemradio")).toHaveCount(9);
   await expect(page.getByTestId("json-mobile-file-actions")).toHaveCount(0);
 });
+
+
+test("mobile Feature trigger is right-aligned and operation status appears above the workspace editors", async ({ page }) => {
+  const bar = page.getByTestId("json-editor-menubar");
+  const fileTrigger = page.getByRole("button", { name: "File", exact: true });
+  const featureTrigger = page.getByRole("button", { name: "Feature", exact: true });
+  const run = page.getByTestId("json-run-operation");
+  const status = page.getByRole("status");
+  const input = page.getByRole("textbox", { name: "Input JSON" });
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 900 },
+    { width: 1280, height: 800 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/json/formatter");
+    await run.click();
+    await expect(status).toContainText("Operation completed.");
+    const statusBox = await status.boundingBox();
+    const inputBox = await input.boundingBox();
+    expect(statusBox).not.toBeNull();
+    expect(inputBox).not.toBeNull();
+    if (statusBox && inputBox) expect(statusBox.y + statusBox.height).toBeLessThan(inputBox.y);
+
+    if (viewport.width < 768) {
+      const barBox = await bar.boundingBox();
+      const featureBox = await featureTrigger.boundingBox();
+      const fileBox = await fileTrigger.boundingBox();
+      expect(barBox).not.toBeNull();
+      expect(featureBox).not.toBeNull();
+      expect(fileBox).not.toBeNull();
+      if (barBox && featureBox && fileBox) {
+        expect(featureBox.x).toBeGreaterThan(fileBox.x + fileBox.width);
+        expect(featureBox.x + featureBox.width).toBeGreaterThanOrEqual(barBox.x + barBox.width - 24);
+      }
+    }
+  }
+});
