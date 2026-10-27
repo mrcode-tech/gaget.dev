@@ -495,12 +495,13 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
         const magic=u16le(optional);
         if(magic===0x10b||magic===0x20b){
           metadata.optionalHeaderFormat=magic===0x10b?"PE32":"PE32+";
-          metadata.entryPointRva=u32le(optional+16);
-          metadata.subsystem=u16le(optional+68);
-          if(optionalSize>=72){
+          if(optionalSize>=20)metadata.entryPointRva=u32le(optional+16);
+          else notes.push("The optional header is too short to contain the entry-point field.");
+          if(optionalSize>=70){
+            metadata.subsystem=u16le(optional+68);
             const subsystemNames:Record<number,string>={1:"Native",2:"Windows GUI",3:"Windows console",5:"OS/2 console",7:"POSIX console",9:"Windows CE GUI",10:"EFI application",11:"EFI boot service driver",12:"EFI runtime driver",13:"EFI ROM image",14:"Xbox"};
             metadata.subsystemName=subsystemNames[metadata.subsystem as number]??"Unknown";
-          }
+          }else notes.push("The declared optional header is too short to contain the subsystem field.");
         }else notes.push("The optional-header magic is unsupported; only the DOS/COFF subset is reported.");
       }else notes.push("The optional header is truncated or its declared length exceeds the supplied bytes.");
       notes.push("PE header fields are best-effort metadata; no code is executed and no malware or safety verdict is produced.");

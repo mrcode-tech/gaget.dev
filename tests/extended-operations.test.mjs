@@ -116,6 +116,7 @@ test("PE metadata reads bounded DOS, COFF and optional headers without executing
  const view=new DataView(bytes.buffer);view.setUint16(0x84,0x8664,true);view.setUint16(0x86,3,true);view.setUint32(0x88,1234,true);view.setUint16(0x94,0x70,true);view.setUint16(0x96,0x0022,true);
  view.setUint16(0x98,0x20b,true);view.setUint32(0xa8,0x1000,true);view.setUint16(0x98+68,3,true);
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"Windows PE executable candidate");assert.equal(result.metadata.machine,"x86-64");assert.equal(result.metadata.sectionCount,3);assert.equal(result.metadata.optionalHeaderFormat,"PE32+");assert.equal(result.metadata.entryPointRva,0x1000);assert.match(result.caveat,/not proof/i);
+ const shortOptional=new Uint8Array(288);shortOptional.set([0x4d,0x5a],0);shortOptional[0x3c]=0x80;shortOptional.set([0x50,0x45,0,0],0x80);const shortView=new DataView(shortOptional.buffer);shortView.setUint16(0x84,0x8664,true);shortView.setUint16(0x94,2,true);shortView.setUint16(0x98,0x20b,true);const shortResult=JSON.parse(inspectFileMetadata(shortOptional));assert.equal("entryPointRva" in shortResult.metadata,false);assert.equal("subsystem" in shortResult.metadata,false);assert.match(shortResult.notes.join(" "),/too short/i);
  const truncated=new Uint8Array(64);truncated.set([0x4d,0x5a],0);truncated[0x3c]=0x70;assert.match(JSON.parse(inspectFileMetadata(truncated)).notes.join(" "),/signature.*COFF/i);
 });
 
@@ -127,7 +128,7 @@ test("ELF metadata decodes class, byte order, machine and entry point",()=>{
 });
 
 test("HTTP response URL headers redact OAuth codes, tokens, and credential values",()=>{
- const result=JSON.parse(parseHttpMessage("HTTP/1.1 302 Found\\nLocation: https://example.test/callback?code=oauth-secret&state=keep\\nReferer: https://example.test/?session=ref-secret\\n\\n"));
+ const result=JSON.parse(parseHttpMessage("HTTP/1.1 302 Found\nLocation: https://example.test/callback?code=oauth-secret&state=keep\nReferer: https://example.test/?session=ref-secret\n\n"));
  const location=result.headers.find(h=>h.name==="Location").value,referer=result.headers.find(h=>h.name==="Referer").value;
  assert.equal(location.includes("oauth-secret"),false);assert.match(location,/state=keep/);assert.equal(referer.includes("ref-secret"),false);
  assert.equal(JSON.stringify(result).includes("oauth-secret"),false);assert.equal(JSON.stringify(result).includes("ref-secret"),false);
