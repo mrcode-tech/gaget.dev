@@ -32,3 +32,10 @@ test("typed workflow supports Base64url, Base32 and Bitcoin Base58 without allow
  assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"base32-decode"}]}),/Incompatible/i);
  assert.throws(()=>validatePipelineRecipe({version:1,inputType:"base64url",steps:[{operation:"base64-decode"}]}),/Incompatible/i);
 });
+
+test("typed workflow encodes and decodes HTML entities as text without executing markup",()=>{
+ const result=executePipeline("<script>alert('x')</script>",{version:1,inputType:"text",steps:[{operation:"html-entities-encode"},{operation:"html-entities-decode"}]});
+ assert.equal(result.output,"<script>alert('x')</script>");
+ assert.equal(executePipeline("<b>&</b>",{version:1,inputType:"text",steps:[{operation:"html-entities-encode"}]}).output,"&lt;b&gt;&amp;&lt;/b&gt;");
+ assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"html-entities-decode"}]}),/Incompatible/i);
+});

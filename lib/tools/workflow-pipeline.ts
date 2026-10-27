@@ -1,8 +1,8 @@
 import { transformEncoding } from "./encoding-operations.ts";
 import { parseQueryString, buildQueryString } from "./extended-operations.ts";
-export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "hex" | "unicode" | "quoted-printable" | "json" | "query";
+export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "hex" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
 export const PIPELINE_INPUT_TYPES: {value:PipelineDataType;label:string}[] = [
- {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
+ {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
 ];
 export const PIPELINE_OPERATIONS = [
  {id:"trim",label:"Trim whitespace",input:"text",output:"text"},
@@ -24,6 +24,8 @@ export const PIPELINE_OPERATIONS = [
  {id:"unicode-unescape",label:"Unicode unescape",input:"unicode",output:"text"},
  {id:"quoted-printable-encode",label:"Quoted-printable encode",input:"text",output:"quoted-printable"},
  {id:"quoted-printable-decode",label:"Quoted-printable decode",input:"quoted-printable",output:"text"},
+ {id:"html-entities-encode",label:"HTML entity encode",input:"text",output:"entities"},
+ {id:"html-entities-decode",label:"HTML entity decode",input:"entities",output:"text"},
  {id:"json-format",label:"Format JSON",input:"json",output:"json"},
  {id:"json-minify",label:"Minify JSON",input:"json",output:"json"},
  {id:"query-parse",label:"Parse query string to JSON",input:"query",output:"json"},
@@ -62,7 +64,7 @@ export function parsePipelineRecipe(text:string):PipelineRecipe{
  return validatePipelineRecipe(value);
 }
 function applyOperation(id:PipelineOperation,input:string):string{
- const enc=(mode:"url"|"base64"|"base64url"|"base32"|"base58"|"hex"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
+ const enc=(mode:"url"|"base64"|"base64url"|"base32"|"base58"|"hex"|"html-entities"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
  switch(id){
   case "trim":return input.trim();
   case "uppercase":return input.toLocaleUpperCase("en-US");
@@ -83,6 +85,8 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "unicode-unescape":return enc("unicode-escapes","decode");
   case "quoted-printable-encode":return enc("quoted-printable","encode");
   case "quoted-printable-decode":return enc("quoted-printable","decode");
+  case "html-entities-encode":return enc("html-entities","encode");
+  case "html-entities-decode":return enc("html-entities","decode");
   case "json-format":return JSON.stringify(JSON.parse(input),null,2);
   case "json-minify":return JSON.stringify(JSON.parse(input));
   case "query-parse":return parseQueryString(input);
