@@ -1,6 +1,6 @@
 export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
-  | "query-parse" | "url-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
+  | "query-parse" | "url-parse" | "data-uri" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
   | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container";
@@ -23,6 +23,58 @@ export function parseUrlComponents(input:string):string {
     usernamePresent:Boolean(parsed.username),passwordPresent:Boolean(parsed.password),
     networkRequestsMade:false,
     note:"The URL is parsed as text only. No navigation or network request is made; credential values are intentionally omitted from output."
+  },null,2);
+}
+/** Parse a data: URI as bytes only. The payload is never rendered or executed. */
+export function parseDataUri(input:string):string {
+  guardText(input);
+  const source=input.trim();
+  if(!/^data:/i.test(source)) throw new Error("Enter a data URI beginning with data:.");
+  const comma=source.indexOf(",");
+  if(comma<0) throw new Error("Data URI must contain a comma between metadata and payload.");
+  const metadata=source.slice(5,comma);
+  const payload=source.slice(comma+1);
+  const parts=metadata.split(";");
+  const mediaType=parts[0]||"text/plain";
+  if(mediaType&&!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(mediaType))
+    throw new Error("Data URI media type must be a valid type/subtype token.");
+  const base64=parts.slice(1).some(part=>part.toLowerCase()==="base64");
+  const parameters=parts.slice(1).filter(part=>part&&part.toLowerCase()!=="base64");
+  if(parameters.some(part=>!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+=[^;]*$/.test(part)))
+    throw new Error("Data URI contains a malformed media-type parameter.");
+  let bytes:Uint8Array;
+  if(base64){
+    if(!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload))
+      throw new Error("Data URI contains invalid Base64 data or padding.");
+    let binary:string;
+    try{binary=atob(payload);}catch{throw new Error("Data URI contains invalid Base64 data.");}
+    bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0));
+  }else{
+    const out:number[]=[];
+    for(let i=0;i<payload.length;){
+      if(payload[i]==="%"){
+        const pair=payload.slice(i+1,i+3);
+        if(!/^[0-9a-f]{2}$/i.test(pair))throw new Error("Data URI contains an invalid percent escape.");
+        out.push(Number.parseInt(pair,16));i+=3;
+      }else{
+        const cp=payload.codePointAt(i)!;
+        const character=String.fromCodePoint(cp);
+        out.push(...new TextEncoder().encode(character));
+        i+=character.length;
+      }
+      if(out.length>MAX_INSPECT_BYTES)throw new Error("Decoded data URI payload is limited to 2,000,000 bytes.");
+    }
+    bytes=Uint8Array.from(out);
+  }
+  if(bytes.length>MAX_INSPECT_BYTES)throw new Error("Decoded data URI payload is limited to 2,000,000 bytes.");
+  let textPreview:string|null=null;
+  try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(bytes).slice(0,4000);}catch{}
+  return JSON.stringify({
+    mediaType,parameters,base64Encoded:base64,byteLength:bytes.length,
+    base64:typeof btoa==="function"?Array.from(bytes,(b)=>String.fromCharCode(b)).join("")&&btoa(Array.from(bytes,(b)=>String.fromCharCode(b)).join("")):null,
+    hexPreview:Array.from(bytes.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),
+    textPreview,payloadTruncated:bytes.length>4000,executed:false,networkRequestsMade:false,
+    note:"Parsed locally as data only. Payload is not rendered, executed, or fetched."
   },null,2);
 }
 export function parseQueryString(input:string):string {
@@ -400,6 +452,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  guardText(input);
  switch(operation){
  case "query-parse":return parseQueryString(input);
+ case "data-uri":return parseDataUri(input);
  case "url-parse":return parseUrlComponents(input);
  case "query-build":return buildQueryString(input);
  case "key-value":return parseKeyValue(input);
