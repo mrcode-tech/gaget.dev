@@ -1,8 +1,8 @@
-import { transformEncoding } from "./encoding-operations.ts";
+import { transformEncoding, convertCharset } from "./encoding-operations.ts";
 import { parseQueryString, buildQueryString } from "./extended-operations.ts";
-export type PipelineDataType = "text" | "url" | "base64" | "hex" | "unicode" | "quoted-printable" | "json" | "query";
+export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "hex" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
 export const PIPELINE_INPUT_TYPES: {value:PipelineDataType;label:string}[] = [
- {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
+ {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
 ];
 export const PIPELINE_OPERATIONS = [
  {id:"trim",label:"Trim whitespace",input:"text",output:"text"},
@@ -12,12 +12,26 @@ export const PIPELINE_OPERATIONS = [
  {id:"url-decode",label:"URL component decode",input:"url",output:"text"},
  {id:"base64-encode",label:"Base64 encode",input:"text",output:"base64"},
  {id:"base64-decode",label:"Base64 decode",input:"base64",output:"text"},
+ {id:"base64url-encode",label:"Base64url encode",input:"text",output:"base64url"},
+ {id:"base64url-decode",label:"Base64url decode",input:"base64url",output:"text"},
+ {id:"base32-encode",label:"Base32 encode",input:"text",output:"base32"},
+ {id:"base32-decode",label:"Base32 decode",input:"base32",output:"text"},
+ {id:"base58-encode",label:"Bitcoin Base58 encode",input:"text",output:"base58"},
+ {id:"base58-decode",label:"Bitcoin Base58 decode",input:"base58",output:"text"},
  {id:"hex-encode",label:"Hex encode UTF-8 bytes",input:"text",output:"hex"},
  {id:"hex-decode",label:"Hex decode UTF-8 bytes",input:"hex",output:"text"},
  {id:"unicode-escape",label:"Unicode escape",input:"text",output:"unicode"},
  {id:"unicode-unescape",label:"Unicode unescape",input:"unicode",output:"text"},
  {id:"quoted-printable-encode",label:"Quoted-printable encode",input:"text",output:"quoted-printable"},
  {id:"quoted-printable-decode",label:"Quoted-printable decode",input:"quoted-printable",output:"text"},
+ {id:"html-entities-encode",label:"HTML entity encode",input:"text",output:"entities"},
+ {id:"html-entities-decode",label:"HTML entity decode",input:"entities",output:"text"},
+ {id:"utf16le-encode",label:"UTF-16LE encode to hex",input:"text",output:"hex"},
+ {id:"utf16le-decode",label:"UTF-16LE decode from hex",input:"hex",output:"text"},
+ {id:"utf16be-encode",label:"UTF-16BE encode to hex",input:"text",output:"hex"},
+ {id:"utf16be-decode",label:"UTF-16BE decode from hex",input:"hex",output:"text"},
+ {id:"windows1252-encode",label:"Windows-1252 encode to hex",input:"text",output:"hex"},
+ {id:"windows1252-decode",label:"Windows-1252 decode from hex",input:"hex",output:"text"},
  {id:"json-format",label:"Format JSON",input:"json",output:"json"},
  {id:"json-minify",label:"Minify JSON",input:"json",output:"json"},
  {id:"query-parse",label:"Parse query string to JSON",input:"query",output:"json"},
@@ -56,7 +70,7 @@ export function parsePipelineRecipe(text:string):PipelineRecipe{
  return validatePipelineRecipe(value);
 }
 function applyOperation(id:PipelineOperation,input:string):string{
- const enc=(mode:"url"|"base64"|"hex"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
+ const enc=(mode:"url"|"base64"|"base64url"|"base32"|"base58"|"hex"|"html-entities"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
  switch(id){
   case "trim":return input.trim();
   case "uppercase":return input.toLocaleUpperCase("en-US");
@@ -65,12 +79,26 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "url-decode":return enc("url","decode");
   case "base64-encode":return enc("base64","encode");
   case "base64-decode":return enc("base64","decode");
+  case "base64url-encode":return enc("base64url","encode");
+  case "base64url-decode":return enc("base64url","decode");
+  case "base32-encode":return enc("base32","encode");
+  case "base32-decode":return enc("base32","decode");
+  case "base58-encode":return enc("base58","encode");
+  case "base58-decode":return enc("base58","decode");
   case "hex-encode":return enc("hex","encode");
   case "hex-decode":return enc("hex","decode");
   case "unicode-escape":return enc("unicode-escapes","encode");
   case "unicode-unescape":return enc("unicode-escapes","decode");
   case "quoted-printable-encode":return enc("quoted-printable","encode");
   case "quoted-printable-decode":return enc("quoted-printable","decode");
+  case "html-entities-encode":return enc("html-entities","encode");
+  case "html-entities-decode":return enc("html-entities","decode");
+  case "utf16le-encode":return convertCharset("encode",input,"utf-16le");
+  case "utf16le-decode":return convertCharset("decode",input,"utf-16le");
+  case "utf16be-encode":return convertCharset("encode",input,"utf-16be");
+  case "utf16be-decode":return convertCharset("decode",input,"utf-16be");
+  case "windows1252-encode":return convertCharset("encode",input,"windows-1252");
+  case "windows1252-decode":return convertCharset("decode",input,"windows-1252");
   case "json-format":return JSON.stringify(JSON.parse(input),null,2);
   case "json-minify":return JSON.stringify(JSON.parse(input));
   case "query-parse":return parseQueryString(input);
