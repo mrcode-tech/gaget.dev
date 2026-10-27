@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata } from "../lib/tools/extended-operations.ts";
+import { parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata, inspectCertificateContainer } from "../lib/tools/extended-operations.ts";
 test("query strings preserve repeated keys, plus spaces, and empty values",()=>{assert.deepEqual(JSON.parse(parseQueryString("?tag=a&tag=b&empty=&space=hello+world")),{tag:["a","b"],empty:"",space:"hello world"});assert.equal(buildQueryString('{"tag":["a","b"],"space":"hello world"}'),"tag=a&tag=b&space=hello%20world");assert.throws(()=>parseQueryString("bad=%Q"),/percent escape/i);});
 test("key-value parsing preserves duplicate values and rejects malformed lines",()=>{assert.deepEqual(JSON.parse(parseKeyValue("# comment\na=1\na=2\nempty=")),{a:["1","2"],empty:""});assert.throws(()=>parseKeyValue("missing delimiter"),/key=value/i);});
 test("base conversion uses BigInt for large values and validates radix",()=>{assert.equal(JSON.parse(convertNumberBase("18446744073709551615")).hexadecimal,"FFFFFFFFFFFFFFFF");assert.equal(JSON.parse(convertNumberBase("FF",16)).decimal,"255");assert.throws(()=>convertNumberBase("2",2),/digit/i);});
@@ -50,4 +50,16 @@ test("JPEG and ZIP metadata readers inspect bounded headers without extracting c
  const j=JSON.parse(inspectFileMetadata(jpeg));assert.equal(j.metadata.format,"JPEG");assert.equal(j.metadata.width,4);assert.equal(j.metadata.height,3);assert.equal(j.metadata.components,1);
  const zip=new Uint8Array(22);zip.set([0x50,0x4b,0x05,0x06],0);zip[8]=1;zip[10]=1;zip[12]=0;zip[13]=0;zip[16]=0;zip[17]=0;
  const z=JSON.parse(inspectFileMetadata(zip));assert.equal(z.metadata.format,"ZIP archive");assert.equal(z.metadata.totalEntries,1);assert.equal(z.metadata.centralDirectoryBytes,0);
+});
+
+test("PEM container inspection reports labels and fingerprints without claiming trust",async()=>{
+ const pem="-----BEGIN CERTIFICATE-----\nMAA=\n-----END CERTIFICATE-----";
+ const result=JSON.parse(await inspectCertificateContainer(pem,new TextEncoder().encode(pem)));
+ assert.equal(result.container,"PEM");assert.equal(result.blocks[0].pemLabel,"CERTIFICATE");assert.equal(result.blocks[0].derBytes,2);assert.match(result.blocks[0].sha256Fingerprint,/^(?:[A-F0-9]{2}:){31}[A-F0-9]{2}$/);assert.equal(result.trustValidated,false);
+ await assert.rejects(()=>inspectCertificateContainer("-----BEGIN CERTIFICATE-----\n!!!!\n-----END CERTIFICATE-----",new TextEncoder().encode("bad")),/PEM block contains invalid Base64/i);
+});
+test("DER container inspection validates the outer sequence length and reports trailing bytes",async()=>{
+ const result=JSON.parse(await inspectCertificateContainer("",Uint8Array.from([0x30,0x02,0x01,0x00,0xff])));
+ assert.equal(result.container,"DER ASN.1 SEQUENCE");assert.equal(result.declaredContentBytes,2);assert.equal(result.trailingBytes,1);assert.equal(result.trustValidated,false);
+ await assert.rejects(()=>inspectCertificateContainer("",Uint8Array.from([0x30,0x05,0x01])),/exceeds the supplied/i);
 });

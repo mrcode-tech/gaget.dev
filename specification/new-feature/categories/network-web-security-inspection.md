@@ -2,7 +2,7 @@
 
 ## Network & Web Data
 
-The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header/cookie parsing, pattern-only IPv4/IPv6 candidate extraction, offline DNS record parsing, redacted HTTP request/response inspection, common file-signature matching, selected PNG/GIF/BMP/JPEG/WebP/WAV/PDF/ZIP/ID3 metadata inspection, local byte-range inspection and two-file comparison. It performs no network requests. Certificate/key inspection and broader certificate/key parsing and additional format-specific metadata parsers remain conditional/pending.
+The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header/cookie parsing, pattern-only IPv4/IPv6 candidate extraction, offline DNS record parsing, redacted HTTP request/response inspection, common file-signature matching, selected PNG/GIF/BMP/JPEG/WebP/WAV/PDF/ZIP/ID3 metadata inspection, local byte-range inspection and two-file comparison. It performs no network requests. Certificate/key inspection and full X.509 field/key parsing, signature verification, trust validation and additional metadata parsers remain conditional/pending.
 
 | ID | Operation | Acceptance criteria |
 |---|---|---|
@@ -31,7 +31,9 @@ JWT registry entry jwt-decoder at /security/jwt-decoder is marked available, but
 
 | ID | Operation | Acceptance criteria |
 |---|---|---|
-| cert.pem-der | Parse supported PEM/DER | Supported labels/encodings explicit |
+| cert.pem-der | Inspect PEM labels and DER outer container | Implemented for bounded PEM blocks and DER SEQUENCE length; malformed labels/lengths rejected |
+| cert.fingerprint | SHA-256 fingerprint of exact PEM-decoded DER or selected DER bytes | Known digest algorithm, exact-byte semantics and no trust claim |
+| cert.x509-fields | Inspect subject, issuer, validity, extensions and serial | Pending complete ASN.1/X.509 parsing; do not infer fields from string search |
 | cert.x509-fields | Inspect subject, issuer, validity, extensions and serial | Parsing only unless trust validation actually exists |
 | cert.fingerprint | Calculate selected digest fingerprint | Known vectors and exact input bytes documented |
 | cert.public-key | Inspect supported public-key metadata | Show only reliably parsed fields |

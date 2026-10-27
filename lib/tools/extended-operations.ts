@@ -3,7 +3,7 @@ export type ExtendedOperation =
   | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
-  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata";
+  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container";
 export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
@@ -334,6 +334,50 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   return JSON.stringify({inputBytes:bytes.length,metadata,notes,processing:"Local byte parsing only; no file execution, extraction, or network access.",caveat:"Metadata fields are best-effort indicators, not proof of file validity or safety."},null,2);
 }
 
+
+/** Inspect PEM labels or the outer DER container and fingerprint exact bytes. This does not validate certificate trust. */
+export async function inspectCertificateContainer(input: string, bytes: Uint8Array): Promise<string> {
+  guardText(input); guardBytes(bytes);
+  let source=input;
+  if(!source.includes("-----BEGIN ")&&bytes.length){
+    try { const decoded=new TextDecoder("utf-8",{fatal:true}).decode(bytes); if(decoded.includes("-----BEGIN "))source=decoded; } catch {}
+  }
+  const blocks:Array<{label:string;bytes:Uint8Array}>=[];
+  const pattern=/-----BEGIN ([A-Z0-9][A-Z0-9 -]{0,63})-----\s*([A-Za-z0-9+/=\s]+?)\s*-----END \1-----/g;
+  for(const match of source.matchAll(pattern)){
+    const encoded=match[2].replace(/\s/g,"");
+    if(!encoded||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)||encoded.length%4===1)throw new Error("PEM block contains invalid Base64 data.");
+    const padded=encoded.replace(/=+$/,"")+"=".repeat((4-encoded.replace(/=+$/,"").length%4)%4);
+    let binary:string;try{binary=atob(padded);}catch{throw new Error("PEM block contains invalid Base64 data.");}
+    const der=Uint8Array.from(binary,ch=>ch.charCodeAt(0));
+    if(der.length>MAX_INSPECT_BYTES)throw new Error("Decoded PEM content is limited to 2,000,000 bytes.");
+    blocks.push({label:match[1],bytes:der});
+  }
+  if(source.includes("-----BEGIN ")&&blocks.length===0)throw new Error("PEM block is malformed or has mismatched BEGIN/END labels.");
+  const fingerprint=async(data:Uint8Array)=>{
+    const copy=data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength) as ArrayBuffer;
+    const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",copy));
+    return Array.from(digest,b=>b.toString(16).padStart(2,"0").toUpperCase()).join(":");
+  };
+  if(blocks.length){
+    const results=[];
+    for(const block of blocks)results.push({pemLabel:block.label,derBytes:block.bytes.length,sha256Fingerprint:await fingerprint(block.bytes),derOuterSequence:block.bytes[0]===0x30});
+    return JSON.stringify({container:"PEM",blocks:results,trustValidated:false,networkRequestsMade:false,note:"PEM labels and SHA-256 fingerprints are parsed locally. This does not parse all X.509 fields, verify signatures, validate a chain, or establish trust."},null,2);
+  }
+  if(bytes.length<2||bytes[0]!==0x30)throw new Error("Paste a PEM block or select a DER file with an ASN.1 SEQUENCE outer tag.");
+  let headerLength=2,declaredLength:number;
+  const first=bytes[1];
+  if(first<0x80)declaredLength=first;
+  else{
+    const count=first&0x7f;
+    if(count===0||count>4||2+count>bytes.length)throw new Error("DER uses an unsupported or malformed length encoding.");
+    declaredLength=0;for(let i=0;i<count;i++)declaredLength=declaredLength*256+bytes[2+i];headerLength=2+count;
+    if(declaredLength<128)throw new Error("DER length is not minimally encoded.");
+  }
+  if(headerLength+declaredLength>bytes.length)throw new Error("DER sequence length exceeds the supplied file bytes.");
+  return JSON.stringify({container:"DER ASN.1 SEQUENCE",inputBytes:bytes.length,outerTag:"0x30",headerBytes:headerLength,declaredContentBytes:declaredLength,trailingBytes:bytes.length-headerLength-declaredLength,sha256Fingerprint:await fingerprint(bytes),trustValidated:false,networkRequestsMade:false,note:"This inspects the outer DER length and fingerprints exact bytes only. It does not identify a certificate or key reliably, parse all X.509 fields, verify signatures, or establish trust."},null,2);
+}
+
 export async function runExtendedOperation(operation:ExtendedOperation,input:string,bytes:Uint8Array,options:ExtendedOptions={}):Promise<string> {
  guardText(input);
  switch(operation){
@@ -363,6 +407,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "http-message":return parseHttpMessage(input);
  case "file-signatures":return inspectFileSignatures(bytes);
  case "file-metadata":return inspectFileMetadata(bytes);
+ case "certificate-container":return inspectCertificateContainer(input,bytes);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }
