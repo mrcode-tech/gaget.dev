@@ -109,3 +109,19 @@ test("data URI parser handles percent and Base64 payloads as bounded bytes witho
 test("byte frequency includes every observed byte value and counts reconcile to input length",()=>{const result=JSON.parse(byteStatistics(new Uint8Array([0,1,1,2,255,255,255])));assert.equal(result.frequency.reduce((sum,item)=>sum+item.count,0),result.bytes);assert.deepEqual(result.frequency.map(item=>[item.byte,item.count]),[[0,1],[1,2],[2,1],[255,3]]);assert.equal(result.topByteValues.length,4);assert.equal(JSON.parse(byteStatistics(new Uint8Array())).frequency.length,0);});
 test("Unicode character statistics count code points, not UTF-16 code units",()=>{const result=JSON.parse(characterStatistics("😀a😀 é"));assert.equal(result.totalCodePoints,5);assert.equal(result.uniqueCodePoints,4);assert.equal(result.frequencies[0].character,"😀");assert.equal(result.frequencies[0].count,2);assert.equal(result.unit,"Unicode code points (not grapheme clusters)");});
 test("gzip and zlib compression preserve arbitrary binary bytes",async()=>{if(typeof CompressionStream==="undefined"||typeof DecompressionStream==="undefined")return;const bytes=new Uint8Array([0,255,128,0,1,13,10,254,42]);for(const format of ["gzip","deflate"]){const packed=await compressBytes(bytes,format,"compress");const unpacked=await compressBytes(packed,format,"decompress");assert.deepEqual(Array.from(unpacked),Array.from(bytes),format+" must preserve arbitrary byte values");}});
+
+
+test("PE metadata reads bounded DOS, COFF and optional headers without executing the file",()=>{
+ const bytes=new Uint8Array(288);bytes.set([0x4d,0x5a],0);bytes[0x3c]=0x80;bytes.set([0x50,0x45,0,0],0x80);
+ const view=new DataView(bytes.buffer);view.setUint16(0x84,0x8664,true);view.setUint16(0x86,3,true);view.setUint32(0x88,1234,true);view.setUint16(0x94,0x70,true);view.setUint16(0x96,0x0022,true);
+ view.setUint16(0x98,0x20b,true);view.setUint32(0xa8,0x1000,true);view.setUint16(0x98+68,3,true);
+ const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"Windows PE executable candidate");assert.equal(result.metadata.machine,"x86-64");assert.equal(result.metadata.sectionCount,3);assert.equal(result.metadata.optionalHeaderFormat,"PE32+");assert.equal(result.metadata.entryPointRva,0x1000);assert.match(result.caveat,/not proof/i);
+ const truncated=new Uint8Array(64);truncated.set([0x4d,0x5a],0);truncated[0x3c]=0x70;assert.match(JSON.parse(inspectFileMetadata(truncated)).notes.join(" "),/signature.*COFF/i);
+});
+
+test("ELF metadata decodes class, byte order, machine and entry point",()=>{
+ const bytes=new Uint8Array(64);bytes.set([0x7f,0x45,0x4c,0x46,2,1,1],0);const view=new DataView(bytes.buffer);
+ view.setUint16(16,2,true);view.setUint16(18,62,true);view.setUint32(20,1,true);view.setBigUint64(24,0x401000n,true);view.setUint16(52,64,true);view.setUint16(56,0,true);view.setUint16(60,0,true);
+ const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"ELF executable/object candidate");assert.equal(result.metadata.class,"ELF64");assert.equal(result.metadata.byteOrder,"little-endian");assert.equal(result.metadata.machine,"x86-64");assert.equal(result.metadata.objectType,"Executable");assert.equal(result.metadata.entryPoint,"0x0000000000401000");
+ const truncated=JSON.parse(inspectFileMetadata(Uint8Array.from([0x7f,0x45,0x4c,0x46,2,1,1])));assert.match(truncated.notes.join(" "),/truncated/i);
+});

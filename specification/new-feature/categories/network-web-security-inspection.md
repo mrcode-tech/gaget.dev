@@ -2,7 +2,7 @@
 
 ## Network & Web Data
 
-The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header/cookie parsing, pattern-only IPv4/IPv6 candidate extraction, offline DNS record parsing, redacted HTTP request/response inspection, common file-signature matching, selected PNG/GIF/BMP/JPEG/WebP/WAV/PDF/ZIP/ID3 metadata inspection, local byte-range inspection and two-file comparison. It performs no network requests. Certificate/key inspection and full X.509 field/key parsing, signature verification, trust validation and additional metadata parsers remain conditional/pending.
+The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header/cookie parsing, pattern-only IPv4/IPv6 candidate extraction, offline DNS record parsing, redacted HTTP request/response inspection, common file-signature matching, selected PNG/GIF/BMP/JPEG/WebP/WAV/PDF/ZIP/ID3/PE/ELF metadata inspection, local byte-range inspection and two-file comparison. It performs no network requests. Certificate/key inspection and full X.509 field/key parsing, signature verification, trust validation and additional metadata parsers remain conditional/pending.
 
 | ID | Operation | Acceptance criteria |
 |---|---|---|

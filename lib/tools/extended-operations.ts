@@ -358,6 +358,7 @@ export function inspectFileSignatures(bytes:Uint8Array):string {
  if(starts([0x50,0x4b,0x03,0x04])||starts([0x50,0x4b,0x05,0x06])||starts([0x50,0x4b,0x07,0x08]))add("ZIP container","application/zip","zip",0,hex(0,4));
  if(starts([0x1f,0x8b]))add("GZIP stream","application/gzip","gz",0,hex(0,2));
  if(starts([0x7f,0x45,0x4c,0x46]))add("ELF executable/object","application/x-elf","elf",0,hex(0,4));
+ if(ascii(0,2)==="MZ")add("Windows PE executable candidate","application/vnd.microsoft.portable-executable","exe",0,ascii(0,2));
  if(ascii(0,16)==="SQLite format 3\u0000")add("SQLite database","application/vnd.sqlite3","sqlite",0,"SQLite format 3");
  if(ascii(4,4)==="ftyp")add("ISO base media / MP4 family","video/mp4","mp4",4,ascii(4,4));
  if(ascii(0,4)==="OggS")add("Ogg container","application/ogg","ogg",0,ascii(0,4));
@@ -442,6 +443,57 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       metadata.format="MP3 with ID3 tag";metadata.id3Version="2."+bytes[3]+"."+bytes[4];metadata.id3TagBytes=(sizeBytes[0]<<21)|(sizeBytes[1]<<14)|(sizeBytes[2]<<7)|sizeBytes[3];metadata.id3Flags=bytes[5];
       if(10+(metadata.id3TagBytes as number)>bytes.length)notes.push("The declared ID3 tag extends beyond the supplied bytes.");
     } else notes.push("ID3 tag size uses invalid synchsafe bytes.");
+  } else if(ascii(0,2)==="MZ"&&bytes.length>=64){
+    metadata.format="Windows PE executable candidate";
+    const peOffset=u32le(0x3c)!;
+    if(peOffset>bytes.length-24||ascii(peOffset,4)!=="PE\u0000\u0000"){
+      notes.push("The DOS header is present, but a complete PE signature and COFF header were not found at the declared offset.");
+    }else{
+      const coff=peOffset+4,optional=coff+20,optionalSize=u16le(coff+16)!;
+      const machine=u16le(coff),sectionCount=u16le(coff+2),timestamp=u32le(coff+4),characteristics=u16le(coff+18);
+      const machineNames:Record<number,string>={0x014c:"x86",0x8664:"x86-64",0x01c0:"ARM",0x01c4:"ARMv7",0xaa64:"ARM64",0x0200:"IA-64",0x5032:"RISC-V 32-bit",0x5064:"RISC-V 64-bit",0x5128:"RISC-V 128-bit"};
+      metadata.peOffset=peOffset;metadata.machineCode="0x"+machine!.toString(16).padStart(4,"0").toUpperCase();metadata.machine=machineNames[machine!]??"Unknown machine";metadata.sectionCount=sectionCount;metadata.coffTimestampSecondsSinceUnixEpoch=timestamp;metadata.characteristics="0x"+characteristics!.toString(16).padStart(4,"0").toUpperCase();metadata.optionalHeaderBytes=optionalSize;
+      if(optionalSize>0&&optional+optionalSize<=bytes.length){
+        const magic=u16le(optional);
+        if(magic===0x10b||magic===0x20b){
+          metadata.optionalHeaderFormat=magic===0x10b?"PE32":"PE32+";
+          metadata.entryPointRva=u32le(optional+16);
+          metadata.subsystem=u16le(optional+68);
+          if(optionalSize>=72){
+            const subsystemNames:Record<number,string>={1:"Native",2:"Windows GUI",3:"Windows console",5:"OS/2 console",7:"POSIX console",9:"Windows CE GUI",10:"EFI application",11:"EFI boot service driver",12:"EFI runtime driver",13:"EFI ROM image",14:"Xbox"};
+            metadata.subsystemName=subsystemNames[metadata.subsystem as number]??"Unknown";
+          }
+        }else notes.push("The optional-header magic is unsupported; only the DOS/COFF subset is reported.");
+      }else notes.push("The optional header is truncated or its declared length exceeds the supplied bytes.");
+      notes.push("PE header fields are best-effort metadata; no code is executed and no malware or safety verdict is produced.");
+    }
+  } else if(ascii(0,4)==="\x7fELF"&&bytes.length>=16){
+    metadata.format="ELF executable/object candidate";
+    const elfClass=bytes[4],encoding=bytes[5],version=bytes[6];
+    metadata.class=elfClass===1?"ELF32":elfClass===2?"ELF64":"Unknown";
+    metadata.byteOrder=encoding===1?"little-endian":encoding===2?"big-endian":"Unknown";
+    metadata.identificationVersion=version;
+    if((elfClass===1||elfClass===2)&&(encoding===1||encoding===2)&&bytes.length>=(elfClass===1?52:64)){
+      const little=encoding===1;
+      const read16=(offset:number)=>little?u16le(offset):offset+2<=bytes.length?(bytes[offset]<<8)|bytes[offset+1]:null;
+      const read32=(offset:number)=>little?u32le(offset):u32be(offset);
+      const read64=(offset:number):string|null=>{
+        if(offset+8>bytes.length)return null;
+        let value=BigInt(0);
+        for(let index=0;index<8;index++)value=(value<<BigInt(8))|BigInt(bytes[offset+(little?7-index:index)]);
+        return "0x"+value.toString(16).padStart(16,"0");
+      };
+      const type=read16(16),machine=read16(18);
+      const types:Record<number,string>={0:"None",1:"Relocatable object",2:"Executable",3:"Shared object",4:"Core file"};
+      const machines:Record<number,string>={3:"x86",8:"MIPS",20:"PowerPC",21:"PowerPC64",22:"S390",40:"ARM",62:"x86-64",183:"AArch64",243:"RISC-V",258:"LoongArch"};
+      metadata.objectType=types[type as number]??"Unknown";metadata.objectTypeCode=type;
+      metadata.machine=machines[machine as number]??"Unknown";metadata.machineCode=machine;
+      metadata.entryPoint=elfClass===1?"0x"+(read32(24)??0).toString(16):read64(24);
+      metadata.headerBytes=read16(elfClass===1?40:52);
+      metadata.programHeaderCount=read16(elfClass===1?44:56);
+      metadata.sectionHeaderCount=read16(elfClass===1?48:60);
+      notes.push("ELF identification/header fields only; program segments and sections are not loaded or executed.");
+    }else notes.push("The ELF identification is truncated or uses an unsupported class/byte order.");
   } else {
     metadata.format="No supported metadata parser matched";
     notes.push("The file may be unsupported, truncated, or contain a format variant not handled by this inspector.");
