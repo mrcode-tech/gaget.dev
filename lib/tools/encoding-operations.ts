@@ -94,19 +94,18 @@ function decodeBase58(value: string): Uint8Array {
   while (number > BigInt(0)) { body.unshift(Number(number & BigInt(255))); number >>= BigInt(8); }
   return Uint8Array.from([...new Array<number>(zeros).fill(0), ...body]);
 }
-function encodeQuotedPrintable(value: string): string {
-  const bytes = utf8(value);
+function encodeQuotedPrintableBytes(bytes: Uint8Array, preserveLineBreakBytes = false): string {
   let output = "", lineLength = 0;
   const add = (token: string) => {
-    // A soft break uses one column for "="; keep encoded lines within 76 columns.
+    // Reserve one column for the soft-break marker to keep physical lines <= 76 columns.
     if (lineLength + token.length > 75) { output += "=\r\n"; lineLength = 0; }
     output += token; lineLength += token.length;
   };
   const newline = () => { output += "\r\n"; lineLength = 0; };
   for (let i = 0; i < bytes.length; i++) {
     const byte = bytes[i];
-    if (byte === 13 && bytes[i + 1] === 10) { newline(); i++; continue; }
-    if (byte === 10 || byte === 13) { newline(); continue; }
+    if (!preserveLineBreakBytes && byte === 13 && bytes[i + 1] === 10) { newline(); i++; continue; }
+    if (!preserveLineBreakBytes && (byte === 10 || byte === 13)) { newline(); continue; }
     const nextIsLineEnd = i + 1 === bytes.length || bytes[i + 1] === 10 || bytes[i + 1] === 13;
     if ((byte >= 33 && byte <= 60) || (byte >= 62 && byte <= 126) || ((byte === 32 || byte === 9) && !nextIsLineEnd)) {
       add(String.fromCharCode(byte));
@@ -116,7 +115,8 @@ function encodeQuotedPrintable(value: string): string {
   }
   return output;
 }
-function decodeQuotedPrintable(value: string): string {
+function encodeQuotedPrintable(value: string): string { return encodeQuotedPrintableBytes(utf8(value)); }
+function decodeQuotedPrintableBytes(value: string): Uint8Array {
   const bytes: number[] = [];
   for (let i = 0; i < value.length; i++) {
     const code = value.charCodeAt(i);
@@ -131,9 +131,17 @@ function decodeQuotedPrintable(value: string): string {
     if (code === 10) { bytes.push(10); continue; }
     if (code > 0x7f) throw new Error("Quoted-printable input must be ASCII-encoded; encode non-ASCII bytes as =XX escapes.");
     bytes.push(code);
+    if (bytes.length > MAX_ENCODING_FILE_BYTES) throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
   }
-  try { return textFrom(Uint8Array.from(bytes)); }
-  catch { throw new Error("Quoted-printable data does not decode to valid UTF-8 text."); }
+  if (bytes.length > MAX_ENCODING_FILE_BYTES) throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
+  return Uint8Array.from(bytes);
+}
+function decodeQuotedPrintable(value: string): string {
+  try { return textFrom(decodeQuotedPrintableBytes(value)); }
+  catch (error) {
+    if (error instanceof Error && /Invalid quoted-printable|Decoded byte output/.test(error.message)) throw error;
+    throw new Error("Quoted-printable data does not decode to valid UTF-8 text.");
+  }
 }
 function encodeHex(bytes: Uint8Array): string { return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join(""); }
 function decodeHex(value: string): Uint8Array {
@@ -148,7 +156,7 @@ function decodeBinary(value: string): Uint8Array {
   for (let i = 0; i < text.length; i += 8) bytes.push(Number.parseInt(text.slice(i, i + 8), 2));
   return Uint8Array.from(bytes);
 }
-export type ByteEncodingMode = "base64" | "base64url" | "hex" | "binary" | "base58" | "base85";
+export type ByteEncodingMode = "base64" | "base64url" | "base32" | "hex" | "binary" | "base58" | "base85" | "quoted-printable";
 export const MAX_ENCODING_FILE_BYTES = 2_000_000;
 export const MAX_ENCODING_OUTPUT_LENGTH = 1_000_000;
 export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array):string {
@@ -157,6 +165,8 @@ export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array)
  switch(mode){
   case "base64":output=base64FromBytes(bytes);break;
   case "base64url":output=base64FromBytes(bytes).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");break;
+  case "base32":output=encodeBase32(bytes);break;
+  case "quoted-printable":output=encodeQuotedPrintableBytes(bytes,true);break;
   case "hex":output=encodeHex(bytes);break;
   case "binary":output=Array.from(bytes,b=>b.toString(2).padStart(8,"0")).join(" ");break;
   case "base58":output=encodeBase58(bytes);break;
@@ -172,6 +182,8 @@ export function decodeByteRepresentation(mode:ByteEncodingMode,input:string):Uin
  switch(mode){
   case "base64":bytes=bytesFromBase64(input);break;
   case "base64url":bytes=bytesFromBase64(input,true);break;
+  case "base32":bytes=decodeBase32(input);break;
+  case "quoted-printable":bytes=decodeQuotedPrintableBytes(input);break;
   case "hex":bytes=decodeHex(input);break;
   case "binary":bytes=decodeBinary(input);break;
   case "base58":bytes=decodeBase58(input);break;
