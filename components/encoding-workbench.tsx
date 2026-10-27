@@ -14,11 +14,11 @@ const modes: { value: EncodingMode; label: string }[] = [
 const byteModes: ByteEncodingMode[] = ["base64","base64url","hex","binary","base58"];
 const notes: Record<EncodingMode, string> = {
   url: "Encodes a URI component, not a complete URL structure.",
-  base64: "Uses UTF-8 text and standard Base64 padding. Base64 is encoding, not encryption.",
-  base64url: "Uses the URL-safe Base64 alphabet and omits padding on encode.",
+  base64: "Uses standard Base64 padding; text input is UTF-8 and selected files are encoded as raw bytes. Base64 is encoding, not encryption.",
+  base64url: "Uses the URL-safe Base64 alphabet and omits padding on encode; text uses UTF-8 and selected files use raw bytes.",
   base32: "Uses the RFC 4648 Base32 alphabet with standard padding.",
-  hex: "Converts UTF-8 text to hexadecimal bytes. Decoding requires complete byte pairs.",
-  binary: "Displays each UTF-8 byte as eight bits. Decoding requires complete byte groups.",
+  hex: "Converts UTF-8 text or selected file bytes to hexadecimal. Decoding requires complete byte pairs.",
+  binary: "Displays UTF-8 text bytes or selected file bytes as eight-bit groups. Decoding requires complete byte groups.",
   "html-entities": "Supports the five basic named entities plus decimal and hexadecimal numeric entities. Decoded markup is displayed as text only.",
   "unicode-escapes": "Uses \\uXXXX escapes for BMP characters and \\u{...} escapes for supplementary code points.",
   "quoted-printable": "Encodes UTF-8 text bytes for MIME-style transport, wraps lines, and normalizes line endings to LF when decoding.",
