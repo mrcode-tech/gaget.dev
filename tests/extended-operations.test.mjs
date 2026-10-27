@@ -44,3 +44,10 @@ test("file metadata parser bounds input and safely labels unsupported bytes",()=
  assert.throws(()=>inspectFileMetadata(new Uint8Array(2_000_001)),/2,000,000 bytes/i);
  const result=JSON.parse(inspectFileMetadata(Uint8Array.from([1,2,3])));assert.equal(result.metadata.format,"No supported metadata parser matched");assert.match(result.caveat,/not proof/i);
 });
+
+test("JPEG and ZIP metadata readers inspect bounded headers without extracting content",()=>{
+ const jpeg=Uint8Array.from([0xff,0xd8,0xff,0xc0,0,8,8,0,3,0,4,1,0xff,0xd9]);
+ const j=JSON.parse(inspectFileMetadata(jpeg));assert.equal(j.metadata.format,"JPEG");assert.equal(j.metadata.width,4);assert.equal(j.metadata.height,3);assert.equal(j.metadata.components,1);
+ const zip=new Uint8Array(22);zip.set([0x50,0x4b,0x05,0x06],0);zip[8]=1;zip[10]=1;zip[12]=0;zip[13]=0;zip[16]=0;zip[17]=0;
+ const z=JSON.parse(inspectFileMetadata(zip));assert.equal(z.metadata.format,"ZIP archive");assert.equal(z.metadata.totalEntries,1);assert.equal(z.metadata.centralDirectoryBytes,0);
+});

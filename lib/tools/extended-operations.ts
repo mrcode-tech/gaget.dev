@@ -267,6 +267,25 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   const notes:string[]=[];
   if(ascii(0,8)==="\x89PNG\r\n\x1a\n" && bytes.length>=26){
     metadata.format="PNG";metadata.width=u32be(16);metadata.height=u32be(20);metadata.bitDepth=bytes[24];metadata.colorType=bytes[25];
+  } else if(bytes.length>=4&&bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff){
+    metadata.format="JPEG";let offset=2,found=false;
+    const startOfFrame=new Set([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf]);
+    while(offset+3<bytes.length){
+      if(bytes[offset]!==0xff){offset++;continue;}
+      while(offset<bytes.length&&bytes[offset]===0xff)offset++;
+      if(offset>=bytes.length)break;
+      const marker=bytes[offset++];
+      if(marker===0xd9||marker===0xda)break;
+      if(marker===0x01||(marker>=0xd0&&marker<=0xd7))continue;
+      if(offset+2>bytes.length)break;
+      const segmentLength=(bytes[offset]<<8)|bytes[offset+1];
+      if(segmentLength<2||offset+segmentLength>bytes.length){notes.push("A JPEG segment length is invalid or extends beyond the supplied bytes.");break;}
+      if(startOfFrame.has(marker)&&segmentLength>=8){
+        metadata.width=(bytes[offset+5]<<8)|bytes[offset+6];metadata.height=(bytes[offset+3]<<8)|bytes[offset+4];metadata.bitsPerSample=bytes[offset+2];metadata.components=bytes[offset+7];metadata.frameMarker="0x"+marker.toString(16).toUpperCase().padStart(2,"0");found=true;break;
+      }
+      offset+=segmentLength;
+    }
+    if(!found)notes.push("No complete supported JPEG start-of-frame segment was found in the supplied bytes.");
   } else if((ascii(0,6)==="GIF87a"||ascii(0,6)==="GIF89a")&&bytes.length>=10){
     metadata.format="GIF";metadata.width=u16le(6);metadata.height=u16le(8);metadata.version=ascii(0,6);
   } else if(ascii(0,2)==="BM"&&bytes.length>=30){
@@ -293,6 +312,15 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
     const declaredCounts=Array.from(text.matchAll(/\/Count\s+(\d{1,8})\b/g),m=>Number(m[1])).filter(n=>n>=0);
     if(declaredCounts.length)metadata.declaredPageCounts=declaredCounts.slice(0,50);
     notes.push("PDF page counts are lexical candidates only; compressed object streams and malformed files may hide or spoof counts.");
+  } else if(bytes.length>=4&&bytes[0]===0x50&&bytes[1]===0x4b&&(bytes[2]===0x03||bytes[2]===0x05||bytes[2]===0x07)){
+    metadata.format="ZIP archive";let eocd=-1;
+    const lower=Math.max(0,bytes.length-65_557);
+    for(let i=bytes.length-22;i>=lower;i--){if(bytes[i]===0x50&&bytes[i+1]===0x4b&&bytes[i+2]===0x05&&bytes[i+3]===0x06){const commentLength=u16le(i+20);if(commentLength!==null&&i+22+commentLength<=bytes.length){eocd=i;break;}}}
+    if(eocd>=0){
+      metadata.entriesOnThisDisk=u16le(eocd+8);metadata.totalEntries=u16le(eocd+10);metadata.centralDirectoryBytes=u32le(eocd+12);metadata.centralDirectoryOffset=u32le(eocd+16);
+      if(metadata.totalEntries===65535||metadata.centralDirectoryBytes===0xffffffff||metadata.centralDirectoryOffset===0xffffffff)notes.push("ZIP64 metadata is present or likely; extended values are not decoded by this inspector.");
+      if(u16le(eocd+4)!==0||u16le(eocd+6)!==0)notes.push("Multi-disk ZIP metadata is not fully interpreted.");
+    }else notes.push("The ZIP end-of-central-directory record was not found within the supplied bytes; the archive may be truncated or use an unsupported layout.");
   } else if(ascii(0,3)==="ID3"&&bytes.length>=10){
     const sizeBytes=[bytes[6],bytes[7],bytes[8],bytes[9]];
     if(sizeBytes.every(b=>(b&0x80)===0)){
