@@ -18,13 +18,13 @@ The `/data/binary-math` workbench implements browser-native gzip and zlib-wrappe
 | ID | Operation | Contract |
 |---|---|---|
 | binary.hexdump | Offset, hex bytes, printable view | Stable offsets, row width, bounded/virtualized output |
-| binary.bytes | Byte/range inspector | Offsets and byte values; no implicit text conversion |
+| binary.bytes | Byte/range inspector | Implemented: select a local file and inspect 1–256 bytes from a zero-based offset; output includes hex, decimal and printable ASCII views. Input remains capped at 2 MB. |
 | binary.strings | Printable-string extraction | Minimum length and character policy explicit |
 | binary.compare | Byte/file comparison | First differing offset, lengths and bounded output |
 | num.base-convert | Binary/octal/decimal/hex | Digit validation, range and arbitrary precision explicit |
 | num.signed-unsigned | Fixed-width integer interpretation | Implemented for 8/16/32/64-bit signed two’s-complement and unsigned integers, with range validation and endian byte views |
 | num.endianness | Interpret/serialize multi-byte values | Implemented in fixed-width integer and IEEE-754 views with big/little-endian known fixtures |
-| num.bitwise | XOR and bitwise operations | Operand width and truncation explicit |
+| num.bitwise | XOR and bitwise operations | Implemented unsigned AND/OR/XOR for 8/16/32/64-bit operands; rejects values outside selected width and returns decimal, padded hexadecimal and binary. NOT and signed bitwise modes remain pending. |
 | num.float | IEEE floating-point view | Implemented 32/64-bit DataView serialization; Float32 rounding disclosed and browser IEEE-754 behavior used for special values |
 
 ## Data Analysis & Mathematics

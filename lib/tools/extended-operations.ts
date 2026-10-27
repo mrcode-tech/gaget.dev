@@ -1,10 +1,10 @@
 export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
   | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
-  | "hexdump" | "strings" | "byte-stats" | "network" | "cidr"
+  | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "arithmetic" | "compression-detect"
   | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures";
-export type ExtendedOptions = { radix?: number; width?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
+export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; bits?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
 export function parseQueryString(input:string):string {
@@ -92,6 +92,14 @@ export function hexDump(bytes:Uint8Array,width=16):string {
   const lines:string[]=[];for(let offset=0;offset<bytes.length;offset+=width){const row=bytes.subarray(offset,Math.min(offset+width,bytes.length));const hex=Array.from(row,b=>b.toString(16).padStart(2,"0")).join(" ").padEnd(width*3-1," ");lines.push(offset.toString(16).padStart(8,"0")+"  "+hex+"  |"+Array.from(row,ascii).join("")+"|");}
   return lines.join("\n")||"(empty input)";
 }
+export function inspectByteRange(bytes:Uint8Array,offset=0,length=64):string {
+ guardBytes(bytes);
+ if(!Number.isInteger(offset)||offset<0||offset>bytes.length)throw new Error("Byte offset must be an integer between zero and the file length.");
+ if(!Number.isInteger(length)||length<1||length>256)throw new Error("Byte range length must be an integer from 1 to 256.");
+ const end=Math.min(bytes.length,offset+length),rows:{offset:number;hex:string;decimal:number;ascii:string}[]=[];
+ for(let start=offset;start<end;start+=16){const slice=bytes.slice(start,Math.min(start+16,end));rows.push({offset:start,hex:Array.from(slice,b=>b.toString(16).padStart(2,"0")).join(" "),decimal:Array.from(slice).join(" "),ascii:Array.from(slice,b=>b>=32&&b<=126?String.fromCharCode(b):".").join("")});}
+ return JSON.stringify({fileBytes:bytes.length,offset,lengthRequested:length,bytesReturned:end-offset,endOffsetExclusive:end,rows,offsetsAreZeroBased:true},null,2);
+}
 export function extractPrintableStrings(bytes:Uint8Array,minLength=4):string[] {
   guardBytes(bytes);if(!Number.isInteger(minLength)||minLength<2||minLength>128)throw new Error("Minimum string length must be between 2 and 128.");
   const out:string[]=[];let current="";for(const b of bytes){if(b>=32&&b<=126)current+=String.fromCharCode(b);else{if(current.length>=minLength)out.push(current);current="";}}if(current.length>=minLength)out.push(current);return out.slice(0,10_000);
@@ -146,6 +154,13 @@ export function numericStatistics(input:string):string {
 export function arithmetic(input:string,options:ExtendedOptions={}):string {
  const a=Number(options.a),b=Number(options.b);if(!options.a?.trim()||!options.b?.trim()||!Number.isFinite(a)||!Number.isFinite(b))throw new Error("Enter two finite numbers in the A and B fields.");
  if(input==="modular"){let m:bigint,x:bigint,y:bigint;try{m=BigInt(options.modulus??"");x=BigInt(options.a??"");y=BigInt(options.b??"");}catch{throw new Error("Modular arithmetic requires integer operands and a positive integer modulus.");}if(m<=BigInt(0))throw new Error("Modulus must be a positive integer.");return JSON.stringify({sum:(((x+y)%m+m)%m).toString(),difference:(((x-y)%m+m)%m).toString(),product:(((x*y)%m+m)%m).toString(),modulus:m.toString()},null,2);}
+ if(["and","or","xor"].includes(input)){
+  const width=options.bits??32;if(![8,16,32,64].includes(width))throw new Error("Bitwise width must be 8, 16, 32, or 64 bits.");
+  let x:bigint,y:bigint;try{x=BigInt(options.a??"");y=BigInt(options.b??"");}catch{throw new Error("Bitwise operations require integer operands.");}
+  const limit=BigInt(1)<<BigInt(width);if(x<0||y<0||x>=limit||y>=limit)throw new Error("Bitwise operands must fit the selected unsigned "+width+"-bit width.");
+  const result=input==="and"?(x&y):input==="or"?(x|y):(x^y);
+  return JSON.stringify({operation:input,width,decimal:result.toString(),hexadecimal:"0x"+result.toString(16).padStart(width/4,"0").toUpperCase(),binary:result.toString(2).padStart(width,"0")},null,2);
+ }
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }
 export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
@@ -236,6 +251,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "numeric-view":return numericView(input,options.bits??32,options.signed??false,options.endian??"big");
  case "float-view":return floatView(input,options.bits??32,options.endian??"big");
  case "hexdump":return hexDump(bytes,options.width??16);
+ case "byte-range":return inspectByteRange(bytes,options.offset??0,options.length??64);
  case "strings":return JSON.stringify(extractPrintableStrings(bytes,options.minLength??4),null,2);
  case "byte-stats":return byteStatistics(bytes);
  case "network":return inspectNetwork(input,"ip");
