@@ -1,4 +1,4 @@
-export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset";
+export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset" | "base58";
 export type EncodingDirection = "encode" | "decode";
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 function utf8(text: string): Uint8Array { return new TextEncoder().encode(text); }
@@ -37,6 +37,23 @@ function decodeBase32(value: string): Uint8Array {
   }
   if (bits && (buffer & ((1 << bits) - 1)) !== 0) throw new Error("Invalid non-zero trailing Base32 bits.");
   return Uint8Array.from(output);
+}
+const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function encodeBase58(bytes: Uint8Array): string {
+  let zeros = 0; while (zeros < bytes.length && bytes[zeros] === 0) zeros++;
+  let value = BigInt(0); for (const byte of bytes) value = (value << BigInt(8)) | BigInt(byte);
+  let result = "";
+  while (value > BigInt(0)) { const remainder = Number(value % BigInt(58)); result = BASE58[remainder] + result; value /= BigInt(58); }
+  return "1".repeat(zeros) + result;
+}
+function decodeBase58(value: string): Uint8Array {
+  const text = value.trim(); if (!text) return new Uint8Array();
+  let zeros = 0; while (zeros < text.length && text[zeros] === "1") zeros++;
+  let number = BigInt(0);
+  for (const character of text) { const digit = BASE58.indexOf(character); if (digit < 0) throw new Error("Base58 input contains a character outside the Bitcoin Base58 alphabet."); number = number * BigInt(58) + BigInt(digit); }
+  const body: number[] = [];
+  while (number > BigInt(0)) { body.unshift(Number(number & BigInt(255))); number >>= BigInt(8); }
+  return Uint8Array.from([...new Array<number>(zeros).fill(0), ...body]);
 }
 function encodeQuotedPrintable(value: string): string {
   const bytes = utf8(value);
@@ -174,6 +191,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
       case "html-entities": return encodeEntities(input);
       case "unicode-escapes": return encodeUnicode(input);
       case "quoted-printable": return encodeQuotedPrintable(input);
+      case "base58": return encodeBase58(utf8(input));
       case "charset": throw new Error("Use the charset converter with an explicit character set.");
     }
   }
@@ -187,6 +205,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
     case "html-entities": return decodeEntities(input);
     case "unicode-escapes": return decodeUnicode(input);
     case "quoted-printable": return decodeQuotedPrintable(input);
+    case "base58": return textFrom(decodeBase58(input));
     case "charset": throw new Error("Use the charset converter with an explicit character set.");
   }
 }

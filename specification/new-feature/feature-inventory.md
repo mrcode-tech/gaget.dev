@@ -28,7 +28,7 @@ There are now 12 relevant standalone registry entries. Encoding & Decoding conso
 
 | Planning ID | Workspace and operations | Status / phase | Specification |
 |---|---|---|---|
-| enc.representations | URL component; Base64/Base64url; Base32; hex/binary; basic HTML entities; Unicode escapes; conditional Base58/Base85; quoted-printable; charset conversion; explicit text/byte modes | Core text representations, quoted-printable and selected charset conversion implemented / 2; Base58/Base85 and dedicated arbitrary-file byte mode pending | [Encoding](./categories/encoding-decoding.md) |
+| enc.representations | URL component; Base64/Base64url; Base32; hex/binary; basic HTML entities; Unicode escapes; Base58; quoted-printable; charset conversion; explicit text/byte modes | Core text representations, quoted-printable and selected charset conversion implemented / 2; Base58/Base85 and dedicated arbitrary-file byte mode pending | [Encoding](./categories/encoding-decoding.md) |
 | sec.digest | SHA-256/SHA-384/SHA-512 text digests | SHA-2 text and local file-byte digests implemented / 3–4; SHA-3 and other digest families pending / 4 | [Security](./categories/security-cryptography.md) |
 | sec.mac-checksum | HMAC; CRC/checksums | HMAC-SHA-2 and CRC32/IEEE text subset implemented / 4; other checksum variants pending | [Security](./categories/security-cryptography.md) |
 | sec.encrypt | Supported encryption/decryption; key/ciphertext representation | Conditional / 4 | [Security](./categories/security-cryptography.md) |

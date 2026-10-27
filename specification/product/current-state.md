@@ -28,7 +28,7 @@
 ### Standalone tools
 - `/json/formatter` — JSON Workspace with Format, Minify, Validate, Compare, Sort Keys, Tree Viewer, Find Keys/Values and Escape/Unescape operations, structured source diagnostics and local File actions. Its command bar spans the available workspace width; below 768 CSS px, File and Feature are separate menus, with File on the left and Feature aligned to the right; tablet/desktop show separate File, Utilities, View and Convert menus. Operation status and diagnostics are placed near the top of the workspace.
 - `/json/diff` — compatibility route opening Compare mode in the JSON Workspace.
-- `/encoding/url` — unified text-representation workbench for URL components, Base64/Base64url, Base32, hex, binary bytes, basic HTML entities, Unicode escapes, quoted-printable, and UTF-8/UTF-16LE/BE/Windows-1252 conversion via hex bytes.
+- `/encoding/url` — unified text-representation workbench for URL components, Base64/Base64url, Base32, hex, binary bytes, basic HTML entities, Unicode escapes, quoted-printable, Bitcoin Base58, and UTF-8/UTF-16LE/BE/Windows-1252 conversion via hex bytes.
 - `/encoding/base64` — compatibility redirect to `/encoding/url?mode=base64`; it is not a separate catalog tool.
 - `/security/jwt-decoder` — decodes JWT contents but does not verify signatures.
 - `/generators/uuid` — generates UUID v4 values using the browser cryptographic API.

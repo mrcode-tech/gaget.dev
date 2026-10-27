@@ -60,3 +60,9 @@ test("charset conversion uses explicit encodings and hex byte representation", (
   assert.throws(() => convertCharset("encode", "🙂", "windows-1252"), /cannot be represented/i);
   assert.throws(() => convertCharset("decode", "f", "utf-8"), /complete byte pairs/i);
 });
+
+test("Base58 uses the Bitcoin alphabet, preserves leading zero bytes, and rejects ambiguous characters",()=>{
+  assert.equal(transformEncoding("base58","encode","Hello World"),"JxF12TrwUP45BMd");
+  assert.equal(transformEncoding("base58","decode","JxF12TrwUP45BMd"),"Hello World");
+  assert.throws(()=>transformEncoding("base58","decode","0OIl"),/Base58 alphabet/i);
+});

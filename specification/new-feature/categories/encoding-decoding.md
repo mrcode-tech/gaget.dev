@@ -8,7 +8,7 @@
 | enc.base64-text | Text ↔ Base64 | Implemented; explicit UTF-8, standard padding and invalid-input errors |
 | enc.base64url | URL-safe Base64 | Implemented; URL-safe alphabet and unpadded output; UTF-8 text only |
 | enc.base32 | Base32 | Implemented RFC 4648 alphabet, case normalization, padding and invalid-character checks |
-| enc.base58/base85 | Selected Base58/Base85 variants | Conditional on maintenance/demand; alphabet variant explicit |
+| enc.base58/base85 | Selected Base58/Base85 variants | Bitcoin Base58 implemented with leading-zero preservation and invalid-alphabet errors; Base85 remains conditional on an explicit alphabet variant and maintenance review |
 | enc.hex | Hex ↔ bytes/text | Implemented for UTF-8 text; case/separators supported; odd-length and invalid characters rejected |
 | enc.binary | Binary ↔ bytes | Implemented for UTF-8 text; eight-bit groups required; invalid bits rejected |
 | enc.html-entities | Text ↔ HTML entities | Basic named and numeric entities implemented; decoded markup is never rendered; full HTML named-entity catalog pending |
