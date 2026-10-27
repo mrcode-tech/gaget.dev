@@ -70,7 +70,7 @@ function decodeAscii85(input:string):Uint8Array {
  };
  for(const char of source){
   if(/\\s/.test(char))continue;
-  if(char==="z"){if(group.length)throw new Error("ASCII85 z shorthand is only valid at a group boundary.");out.push(0,0,0,0);continue;}
+  if(char==="z"){if(group.length)throw new Error("ASCII85 z shorthand is only valid at a group boundary.");out.push(0,0,0,0);if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");continue;}
   const code=char.charCodeAt(0);if(code<33||code>117)throw new Error("ASCII85 input contains a character outside the ! through u alphabet.");
   group.push(code-33);if(group.length===5)flush(false);
  }
@@ -148,7 +148,7 @@ function decodeBinary(value: string): Uint8Array {
   for (let i = 0; i < text.length; i += 8) bytes.push(Number.parseInt(text.slice(i, i + 8), 2));
   return Uint8Array.from(bytes);
 }
-export type ByteEncodingMode = "base64" | "base64url" | "hex" | "binary" | "base58";
+export type ByteEncodingMode = "base64" | "base64url" | "hex" | "binary" | "base58" | "base85";
 export const MAX_ENCODING_FILE_BYTES = 2_000_000;
 export const MAX_ENCODING_OUTPUT_LENGTH = 1_000_000;
 export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array):string {
