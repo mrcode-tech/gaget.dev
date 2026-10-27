@@ -132,3 +132,17 @@ test("HTTP response URL headers redact OAuth codes, tokens, and credential value
  assert.equal(location.includes("oauth-secret"),false);assert.match(location,/state=keep/);assert.equal(referer.includes("ref-secret"),false);
  assert.equal(JSON.stringify(result).includes("oauth-secret"),false);assert.equal(JSON.stringify(result).includes("ref-secret"),false);
 });
+
+
+test("Mach-O thin headers expose architecture and file type without executing code",()=>{
+ const bytes=new Uint8Array(152);bytes.set([0xcf,0xfa,0xed,0xfe]);const view=new DataView(bytes.buffer);
+ view.setUint32(4,0x0100000c,true);view.setUint32(8,0,true);view.setUint32(12,6,true);view.setUint32(16,12,true);view.setUint32(20,120,true);view.setUint32(24,0x85,true);view.setUint32(28,0,true);
+ const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"Mach-O thin binary candidate");assert.equal(result.metadata.headerByteOrder,"little-endian");assert.equal(result.metadata.headerWidth,64);assert.equal(result.metadata.cpu,"ARM64");assert.equal(result.metadata.fileType,"Dynamic library");assert.equal(result.metadata.loadCommandCount,12);assert.match(result.notes.join(" "),/not parsed/i);
+});
+
+test("Mach-O universal headers list bounded architecture slices and flag truncation",()=>{
+ const bytes=new Uint8Array(128);bytes.set([0xca,0xfe,0xba,0xbe]);const view=new DataView(bytes.buffer);
+ view.setUint32(4,1,false);view.setUint32(8,0x01000007,false);view.setUint32(12,3,false);view.setUint32(16,28,false);view.setUint32(20,100,false);view.setUint32(24,2,false);
+ const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"Mach-O universal binary candidate");assert.equal(result.metadata.declaredArchitectureCount,1);assert.equal(result.metadata.architectures[0].cpu,"x86-64");assert.equal(result.metadata.architectures[0].offset,"28");assert.equal(result.notes.length,0);
+ const truncated=new Uint8Array([0xca,0xfe,0xba,0xbe,0,0,0,2]);assert.match(JSON.parse(inspectFileMetadata(truncated)).notes.join(" "),/architecture table/i);
+});

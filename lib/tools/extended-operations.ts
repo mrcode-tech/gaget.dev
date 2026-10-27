@@ -361,6 +361,8 @@ export function inspectFileSignatures(bytes:Uint8Array):string {
  if(starts([0x1f,0x8b]))add("GZIP stream","application/gzip","gz",0,hex(0,2));
  if(starts([0x7f,0x45,0x4c,0x46]))add("ELF executable/object","application/x-elf","elf",0,hex(0,4));
  if(ascii(0,2)==="MZ")add("Windows PE executable candidate","application/vnd.microsoft.portable-executable","exe",0,ascii(0,2));
+ const magic4=Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join("");
+ if(["feedface","cefaedfe","feedfacf","cffaedfe","cafebabe","bebafeca","cafebabf","bfbafeca"].includes(magic4))add("Mach-O executable/object candidate","application/x-mach-binary","macho",0,magic4);
  if(ascii(0,16)==="SQLite format 3\u0000")add("SQLite database","application/vnd.sqlite3","sqlite",0,"SQLite format 3");
  if(ascii(4,4)==="ftyp")add("ISO base media / MP4 family","video/mp4","mp4",4,ascii(4,4));
  if(ascii(0,4)==="OggS")add("Ogg container","application/ogg","ogg",0,ascii(0,4));
@@ -445,6 +447,40 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       metadata.format="MP3 with ID3 tag";metadata.id3Version="2."+bytes[3]+"."+bytes[4];metadata.id3TagBytes=(sizeBytes[0]<<21)|(sizeBytes[1]<<14)|(sizeBytes[2]<<7)|sizeBytes[3];metadata.id3Flags=bytes[5];
       if(10+(metadata.id3TagBytes as number)>bytes.length)notes.push("The declared ID3 tag extends beyond the supplied bytes.");
     } else notes.push("ID3 tag size uses invalid synchsafe bytes.");
+  } else if(bytes.length>=4&&["feedface","cefaedfe","feedfacf","cffaedfe","cafebabe","bebafeca","cafebabf","bfbafeca"].includes(Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join(""))){
+    const magic=Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join("");
+    const fat=["cafebabe","bebafeca","cafebabf","bfbafeca"].includes(magic);
+    const little=["cefaedfe","cffaedfe","bebafeca","bfbafeca"].includes(magic);
+    const is64=["feedfacf","cffaedfe","cafebabf","bfbafeca"].includes(magic);
+    const read32=(offset:number)=>offset+4<=bytes.length?(little?(bytes[offset]|(bytes[offset+1]<<8)|(bytes[offset+2]<<16)|(bytes[offset+3]<<24))>>>0:u32be(offset)):null;
+    const read64=(offset:number):string|null=>{if(offset+8>bytes.length)return null;let value=BigInt(0);for(let index=0;index<8;index++)value=(value<<BigInt(8))|BigInt(bytes[offset+(little?7-index:index)]);return "0x"+value.toString(16);};
+    const cpuNames:Record<number,string>={7:"x86",0x01000007:"x86-64",12:"ARM",0x0100000c:"ARM64",18:"PowerPC",0x01000012:"PowerPC64"};
+    const fileTypes:Record<number,string>={1:"Object",2:"Executable",3:"Fixed VM library",4:"Core",5:"Preloaded executable",6:"Dynamic library",8:"Bundle",9:"Dynamic library stub",10:"Debug symbols",11:"Dynamic library stub"};
+    metadata.format=fat?"Mach-O universal binary candidate":"Mach-O thin binary candidate";
+    metadata.headerByteOrder=little?"little-endian":"big-endian";metadata.headerWidth=is64?64:32;
+    if(fat){
+      if(bytes.length<8)notes.push("The universal-binary header is truncated before its architecture count.");
+      else{
+        const count=read32(4)??0,entrySize=is64?32:20,available=Math.floor((bytes.length-8)/entrySize),shown=Math.min(count,available,32);
+        metadata.declaredArchitectureCount=count;metadata.architectureEntriesShown=shown;
+        const architectures:Record<string,unknown>[]=[];
+        for(let index=0;index<shown;index++){
+          const entry=8+index*entrySize,cpu=read32(entry),subtype=read32(entry+4),offset=is64?read64(entry+8):read32(entry+8)?.toString(),size=is64?read64(entry+16):read32(entry+12)?.toString(),align=read32(entry+(is64?24:16));
+          architectures.push({cpuType:cpu,cpu:cpuNames[cpu??-1]??"Unknown",cpuSubtype:subtype,offset,size,alignmentExponent:align});
+        }
+        metadata.architectures=architectures;
+        if(count>available)notes.push("The declared architecture table extends beyond the supplied bytes.");
+        if(count>32)notes.push("Architecture listing capped at 32 entries.");
+        for(const arch of architectures){const offset=Number(BigInt(arch.offset as string)),size=Number(BigInt(arch.size as string));if(Number.isFinite(offset)&&Number.isFinite(size)&&offset+size>bytes.length)notes.push("One or more declared architecture slices extend beyond the supplied bytes.");}
+      }
+    }else if(bytes.length<(is64?32:28))notes.push("The thin Mach-O header is truncated.");
+    else{
+      const cpu=read32(4),subtype=read32(8),fileType=read32(12),commands=read32(16),commandBytes=read32(20),flags=read32(24);
+      metadata.cpuType=cpu;metadata.cpu=cpuNames[cpu??-1]??"Unknown";metadata.cpuSubtype=subtype;metadata.fileType=fileTypes[fileType??-1]??"Unknown";metadata.fileTypeCode=fileType;metadata.loadCommandCount=commands;metadata.loadCommandBytes=commandBytes;metadata.flags=flags===null?null:"0x"+flags.toString(16).toUpperCase();
+      if(is64)metadata.reserved=read32(28);
+      if((is64?32:28)+(commandBytes??0)>bytes.length)notes.push("The declared load-command region extends beyond the supplied bytes.");
+      notes.push("Load commands are not parsed; header metadata is informational and does not validate or execute the binary.");
+    }
   } else if(ascii(0,2)==="MZ"&&bytes.length>=64){
     metadata.format="Windows PE executable candidate";
     const peOffset=u32le(0x3c)!;
