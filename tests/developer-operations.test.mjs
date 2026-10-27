@@ -34,3 +34,19 @@ test("CSV rejects quotes in unquoted fields and characters after a closing quote
  assert.throws(()=>parseCsv('name,value\n"Ada" ,1'),/after a closing CSV quote/i);
  assert.deepEqual(parseCsv('name,value\n"Ada","hello, world"'),[["name","value"],["Ada","hello, world"]]);
 });
+
+
+test("cURL GET mode appends data and URL-encodes literal values without sending a request",()=>{
+ const parsed=parseCurl("curl -G --data-urlencode 'q=hello world' --data 'page=2' https://example.test/search?existing=1");
+ assert.equal(parsed.method,"GET");assert.equal(parsed.body,undefined);
+ assert.equal(parsed.url,"https://example.test/search?existing=1&q=hello%20world&page=2");
+ const generated=JSON.parse(transformDeveloperTool("curl","curl -G --data-urlencode 'access_token=top secret' https://example.test/search"));
+ assert.equal(generated.request.method,"GET");assert.equal(generated.request.url.includes("top%20secret"),false);assert.equal(generated.request.url.includes("REDACTED"),true);
+});
+
+test("cURL data flags combine in order and file-backed URL-encoding is not read",()=>{
+ const parsed=parseCurl("curl -d a=1 --data-raw b=2 --data-urlencode 'q=two words' https://example.test");
+ assert.equal(parsed.method,"POST");assert.equal(parsed.body,"a=1&b=2&q=two%20words");
+ const fileBased=parseCurl("curl --data-urlencode @private.txt https://example.test");
+ assert.equal(fileBased.body,undefined);assert.match(fileBased.unsupported.join(" "),/file-based data is not read/i);
+});
