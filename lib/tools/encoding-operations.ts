@@ -1,4 +1,4 @@
-export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset" | "base58" | "base85";
+export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset" | "base58" | "base85" | "z85";
 export type EncodingDirection = "encode" | "decode";
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 function utf8(text: string): Uint8Array { return new TextEncoder().encode(text); }
@@ -37,6 +37,18 @@ function decodeBase32(value: string): Uint8Array {
   }
   if (bits && (buffer & ((1 << bits) - 1)) !== 0) throw new Error("Invalid non-zero trailing Base32 bits.");
   return Uint8Array.from(output);
+}
+const Z85_ALPHABET="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#";
+function encodeZ85(bytes:Uint8Array):string {
+ if(bytes.length%4!==0)throw new Error("Z85 requires an input byte length divisible by four; pad bytes explicitly if your protocol requires it.");
+ let output="";
+ for(let offset=0;offset<bytes.length;offset+=4){let value=BigInt(0);for(let i=0;i<4;i++)value=(value<<BigInt(8))|BigInt(bytes[offset+i]);const chars=new Array<string>(5);for(let i=4;i>=0;i--){chars[i]=Z85_ALPHABET[Number(value%BigInt(85))];value/=BigInt(85);}output+=chars.join("");}
+ return output;
+}
+function decodeZ85(input:string):Uint8Array {
+ const source=input.trim();if(source.length%5!==0)throw new Error("Z85 input length must be a multiple of five characters.");if(!/^[0-9a-zA-Z.\-:+=^!/*?&<>()\[\]{}@%$#]*$/.test(source))throw new Error("Z85 input contains a character outside the Z85 alphabet.");
+ const out:number[]=[];for(let offset=0;offset<source.length;offset+=5){let value=BigInt(0);for(const char of source.slice(offset,offset+5)){const digit=Z85_ALPHABET.indexOf(char);if(digit<0)throw new Error("Z85 input contains an invalid character.");value=value*BigInt(85)+BigInt(digit);}if(value>BigInt(0xffffffff))throw new Error("Z85 group exceeds the 32-bit byte range.");for(let shift=24;shift>=0;shift-=8)out.push(Number((value>>BigInt(shift))&BigInt(255));if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");}
+ return Uint8Array.from(out);
 }
 function encodeAscii85(bytes:Uint8Array):string {
  let out="<~";
@@ -171,6 +183,7 @@ export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array)
   case "binary":output=Array.from(bytes,b=>b.toString(2).padStart(8,"0")).join(" ");break;
   case "base58":output=encodeBase58(bytes);break;
   case "base85":output=encodeAscii85(bytes);break;
+  case "z85":output=encodeZ85(bytes);break;
   default:throw new Error("Unsupported byte encoding mode.");
  }
  if(output.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded output exceeds the 1,000,000 character limit; use a smaller file or a more compact encoding.");
@@ -188,6 +201,7 @@ export function decodeByteRepresentation(mode:ByteEncodingMode,input:string):Uin
   case "binary":bytes=decodeBinary(input);break;
   case "base58":bytes=decodeBase58(input);break;
   case "base85":bytes=decodeAscii85(input);break;
+  case "z85":bytes=decodeZ85(input);break;
   default:throw new Error("Unsupported byte encoding mode.");
  }
  if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
@@ -277,6 +291,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
       case "quoted-printable": return encodeQuotedPrintable(input);
       case "base58": return encodeBase58(utf8(input));
       case "base85": return encodeAscii85(utf8(input));
+      case "z85": return encodeZ85(utf8(input));
       case "charset": throw new Error("Use the charset converter with an explicit character set.");
     }
   }
@@ -292,6 +307,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
     case "quoted-printable": return decodeQuotedPrintable(input);
     case "base58": return textFrom(decodeBase58(input));
     case "base85": return textFrom(decodeAscii85(input));
+    case "z85": return textFrom(decodeZ85(input));
     case "charset": throw new Error("Use the charset converter with an explicit character set.");
   }
 }
