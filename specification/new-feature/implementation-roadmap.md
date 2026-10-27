@@ -96,7 +96,20 @@ At each future invocation:
 | 6 — Workflow/batch | Partial; `/workflow/pipeline` supports typed allowlisted text/encoding/JSON/query chains, reordering, bounded previews, sequential line batches and versioned recipe import/export | Worker/cancellation review, binary/file steps, additional adversarial recipe tests and any persistence decision remain deferred |
 | 7 — Quality | Continuous | Exact-revision test and visual evidence |
 
-## 6. Definition of done
+## 6. Conditional scope decisions
+
+The following proposal items are deliberately **not exposed as available tools** until their prerequisites are approved. These are explicit safety/maintenance deferrals, not claims that the proposed capability is implemented.
+
+- **YAML parsing/formatting:** defer until a maintained parser is selected and its license, security history, scalar typing, aliases/anchors, depth limits and multi-document policy are reviewed. Do not implement a home-grown partial parser and label it YAML-compatible.
+- **ASN.1/TLV and full X.509 fields/public-key parsing:** defer until a maintained parser and bounded-depth/length policy are approved. The existing PEM/DER container inspection and SHA-256 fingerprint do not establish certificate validity or trust.
+- **Archive listing/extraction:** defer until path traversal, symlink, entry-count, nesting, decompressed-size and archive-bomb defenses are specified and adversarial fixtures exist. No archive extraction operation is exposed.
+- **Encryption/decryption, JWT signature verification, certificate chain/hostname/revocation trust, and advanced cryptography:** defer until supported algorithms, key formats, nonce/tag handling, trust inputs and independent security review are explicit. Decoding/fingerprinting must not be presented as verification.
+- **Raw DEFLATE and binary/file workflow steps:** defer until browser support and byte-oriented typed contracts are stable across supported browsers; workflow workers/isolation and bounded memory are required before expanding the pipeline beyond text representations.
+- **Additional file metadata formats:** implement only with format fixtures, strict input/output limits and clear distinction between metadata hints and safety verdicts.
+
+A deferred item may be unblocked only by updating its operation contract, dependency/license review, adversarial tests, route/registry status and the matching feature inventory. Deferred items remain excluded from the available-tool count.
+
+## 7. Definition of done
 All scoped capabilities are implemented or explicitly deferred by documented decision; every available operation has working behavior and tests; registry/routes/localization agree; planned entries remain non-launchable until verified; shared components/tokens are reused; responsive, short-height, RTL, theme, keyboard and accessibility states are checked; privacy/security/resource limits match behavior; applicable tests, lint, typecheck, build and E2E pass on the exact revision; CI artifacts are inspected where required; existing workspaces do not regress; documentation is synchronized.
 
 See [feature inventory](./feature-inventory.md) for operation-level traceability.
