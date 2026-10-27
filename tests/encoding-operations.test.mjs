@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { transformEncoding } from "../lib/tools/encoding-operations.ts";
+import { transformEncoding, convertCharset } from "../lib/tools/encoding-operations.ts";
 
 test("URL component encoding handles reserved characters and malformed escapes", () => {
   assert.equal(transformEncoding("url","encode","a b&c"),"a%20b%26c");
@@ -52,7 +52,6 @@ test("encoding operations enforce the input size limit", () => {
 });
 
 test("charset conversion uses explicit encodings and hex byte representation", () => {
-  const { convertCharset } = require("../lib/tools/encoding-operations.ts");
   assert.equal(convertCharset("encode", "Hello", "utf-8"), "48656c6c6f");
   assert.equal(convertCharset("decode", "48656c6c6f", "utf-8"), "Hello");
   assert.equal(convertCharset("encode", "A", "utf-16le"), "4100");
