@@ -58,3 +58,13 @@ test("cURL preview redacts URL credentials, OAuth codes, session tokens, and sec
  for(const secret of ["alice","password123","oauth-secret","session-secret","client-secret-value","fragment-secret","header-secret"])assert.equal(JSON.stringify(result).includes(secret),false,secret+" leaked");
  assert.match(url,/mode=fast/);assert.match(url,/REDACTED/);
 });
+
+
+test("cURL parser consumes values for unsupported options instead of mistaking them for the URL",()=>{
+ const parsed=parseCurl("curl -F 'upload=@private.txt' --connect-timeout 5 https://example.test/upload");
+ assert.equal(parsed.url,"https://example.test/upload");
+ assert.equal(parsed.body,undefined);
+ assert.match(parsed.unsupported.join(" "),/--form|^-F/i);
+ assert.match(parsed.unsupported.join(" "),/--connect-timeout/);
+ assert.doesNotMatch(parsed.unsupported.join(" "),/private\.txt/);
+});

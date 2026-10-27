@@ -27,7 +27,7 @@ Do not build a pipeline engine until several operation contracts, errors and res
 
 | ID | Operation | Contract |
 |---|---|---|
-| api.curl-parse | Parse supported cURL commands | Never execute; support -G/--get query mode, ordered data combination and --data-urlencode for literal values; file-backed data and unsupported flags are reported rather than read or silently dropped |
+| api.curl-parse | Parse supported cURL commands | Never execute; support -G/--get query mode, ordered data combination and --data-urlencode for literal values; file-backed data is not read; unsupported value-taking flags consume their argument and are reported rather than silently dropped |
 | api.snippets | Generate client snippets | Supported languages explicit; preserve request semantics; redact likely secrets by default |
 | api.http-inspect | Inspect supplied HTTP request/response | Header/body boundaries documented; no implicit request |
 | format.sql | SQL formatting | Supported dialects explicit; never execute SQL |
