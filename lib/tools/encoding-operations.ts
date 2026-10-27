@@ -51,7 +51,7 @@ function encodeAscii85(bytes:Uint8Array):string {
  return out+"~>";
 }
 function decodeAscii85(input:string):Uint8Array {
- let source=input.replace(/\\s/g,"");
+  let source=input.replace(/\s/g,"");
  const hasStart=source.startsWith("<~"),hasEnd=source.endsWith("~>");
  if(hasStart!==hasEnd)throw new Error("ASCII85 Adobe wrappers must include both <~ and ~>.");
  if(hasStart)source=source.slice(2,-2);
@@ -69,7 +69,7 @@ function decodeAscii85(input:string):Uint8Array {
   if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
  };
  for(const char of source){
-  if(/\\s/.test(char))continue;
+  if(/\s/.test(char))continue;
   if(char==="z"){if(group.length)throw new Error("ASCII85 z shorthand is only valid at a group boundary.");out.push(0,0,0,0);if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");continue;}
   const code=char.charCodeAt(0);if(code<33||code>117)throw new Error("ASCII85 input contains a character outside the ! through u alphabet.");
   group.push(code-33);if(group.length===5)flush(false);
