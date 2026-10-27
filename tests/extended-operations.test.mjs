@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseUrlComponents, parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata, inspectCertificateContainer } from "../lib/tools/extended-operations.ts";
+import { parseUrlComponents, parseDataUri, parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata, inspectCertificateContainer } from "../lib/tools/extended-operations.ts";
 test("query strings preserve repeated keys, plus spaces, and empty values",()=>{assert.deepEqual(JSON.parse(parseQueryString("?tag=a&tag=b&empty=&space=hello+world")),{tag:["a","b"],empty:"",space:"hello world"});assert.equal(buildQueryString('{"tag":["a","b"],"space":"hello world"}'),"tag=a&tag=b&space=hello%20world");assert.throws(()=>parseQueryString("bad=%Q"),/percent escape/i);});
 test("key-value parsing preserves duplicate values and rejects malformed lines",()=>{assert.deepEqual(JSON.parse(parseKeyValue("# comment\na=1\na=2\nempty=")),{a:["1","2"],empty:""});assert.throws(()=>parseKeyValue("missing delimiter"),/key=value/i);});
 test("base conversion uses BigInt for large values and validates radix",()=>{assert.equal(JSON.parse(convertNumberBase("18446744073709551615")).hexadecimal,"FFFFFFFFFFFFFFFF");assert.equal(JSON.parse(convertNumberBase("FF",16)).decimal,"255");assert.throws(()=>convertNumberBase("2",2),/digit/i);});
@@ -16,6 +16,13 @@ test("key-value builder round-trips supported primitive and repeated values",()=
 test("network candidate extraction is offline and explicitly not validation",()=>{const r=JSON.parse(extractNetworkCandidates("See https://example.com/a, mail test@example.com, IPv6 2001:db8::1 and 192.168.1.1"));assert.deepEqual(r.urls,["https://example.com/a"]);assert.deepEqual(r.emails,["test@example.com"]);assert.deepEqual(r.ipv4Candidates,["192.168.1.1"]);assert.deepEqual(r.ipv6Candidates,["2001:db8::1"]);assert.ok(r.domainCandidates.includes("example.com"));assert.match(r.validation,/not validated/i);});
 test("integer view checks signed ranges and serializes explicit endianness",()=>{const big=JSON.parse(numericView("-2",16,true,"big"));assert.equal(big.hexadecimal,"0xFFFE");assert.equal(big.bytesHex,"ff fe");const little=JSON.parse(numericView("258",16,false,"little"));assert.equal(little.bytesHex,"02 01");assert.throws(()=>numericView("128",8,true),/outside/i);});
 test("IEEE-754 views return endian-specific byte representations",()=>{assert.equal(JSON.parse(floatView("1",32,"big")).hexadecimal,"0x3F800000");assert.equal(JSON.parse(floatView("1",32,"little")).hexadecimal,"0x0000803F");assert.throws(()=>floatView("1",16),/32 or 64/i);});
+test("decompression enforces the output cap while streaming",async()=>{
+ if(typeof CompressionStream==="undefined"||typeof DecompressionStream==="undefined")return;
+ const source=new Uint8Array(9_000_000).fill(65);
+ const compressed=new Uint8Array(await new Response(new Blob([source]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer());
+ assert.ok(compressed.length<2_000_000);
+ await assert.rejects(()=>compressBytes(compressed,"gzip","decompress"),/8,000,000 byte safety limit/i);
+});
 test("compression wrapper detection distinguishes gzip, zlib and unknown bytes",()=>{assert.equal(JSON.parse(detectCompression(new Uint8Array([0x1f,0x8b,0,0]))).detected,"gzip");assert.equal(JSON.parse(detectCompression(new Uint8Array([0x78,0x9c]))).detected,"zlib-wrapped DEFLATE");assert.equal(JSON.parse(detectCompression(new Uint8Array([0,1]))).detected,"unknown");});
 
 test("numeric view accepts signed prefixed integers and rejects malformed values",()=>{assert.equal(JSON.parse(numericView("-0x2",8,true)).hexadecimal,"0xFE");assert.equal(JSON.parse(numericView("+0x2",8,false)).value,"2");assert.throws(()=>numericView("nope",8),/decimal.*hexadecimal/i);});
@@ -68,4 +75,21 @@ test("URL component parsing preserves repeated query keys and omits credential v
  const result=JSON.parse(parseUrlComponents("https://alice:demo-passphrase@example.com:8443/a?tag=x&tag=y#part"));
  assert.equal(result.protocol,"https:");assert.equal(result.hostname,"example.com");assert.equal(result.port,"8443");assert.deepEqual(result.queryParameters.tag,["x","y"]);assert.equal(result.credentialsPresent,true);assert.equal(JSON.stringify(result).includes("demo-passphrase"),false);assert.equal(result.networkRequestsMade,false);
  assert.throws(()=>parseUrlComponents("/relative/path"),/absolute URL/i);
+});
+
+test("data URI parser handles percent and Base64 payloads as bounded bytes without executing them",()=>{
+ const percent=JSON.parse(parseDataUri("data:text/plain;charset=utf-8,Hello%20GaGet.dev"));
+ assert.equal(percent.mediaType,"text/plain");assert.deepEqual(percent.parameters,["charset=utf-8"]);assert.equal(percent.textPreview,"Hello GaGet.dev");assert.equal(percent.base64Encoded,false);assert.equal(percent.executed,false);
+ const binary=JSON.parse(parseDataUri("data:application/octet-stream;base64,AP8B"));
+ assert.equal(binary.byteLength,3);assert.equal(binary.hexPreview,"00 ff 01");assert.equal(binary.base64,"AP8B");assert.equal(binary.textPreview,null);
+ assert.throws(()=>parseDataUri("https://example.com"),/beginning with data:/i);
+ assert.throws(()=>parseDataUri("data:text/plain,%QZ"),/percent escape/i);
+ assert.equal(JSON.parse(parseDataUri("data:text/plain;base64,SGVsbG8")).textPreview,"Hello");
+ assert.equal(JSON.parse(parseDataUri("data:text/plain;base64,SGVsbG8=")).textPreview,"Hello");
+ assert.equal(JSON.parse(parseDataUri("data:," )).byteLength,0);
+ assert.throws(()=>parseDataUri("data:text/plain;base64,SGVsbG8!"),/Base64 data or padding/i);
+ assert.throws(()=>parseDataUri("data:text/plain;base64,A"),/Base64 data or padding/i);
+ assert.throws(()=>parseDataUri("data:text/plain;base64,AA="),/Base64 data or padding/i);
+ assert.throws(()=>parseDataUri("data:text/plain;base64,=AAA"),/Base64 data or padding/i);
+ assert.throws(()=>parseDataUri("data:text/plain,"+"x".repeat(2_000_001)),/200,000 character safety limit/i);
 });

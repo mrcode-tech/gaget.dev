@@ -1,6 +1,6 @@
 export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
-  | "query-parse" | "url-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
+  | "query-parse" | "url-parse" | "data-uri" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
   | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container";
@@ -23,6 +23,63 @@ export function parseUrlComponents(input:string):string {
     usernamePresent:Boolean(parsed.username),passwordPresent:Boolean(parsed.password),
     networkRequestsMade:false,
     note:"The URL is parsed as text only. No navigation or network request is made; credential values are intentionally omitted from output."
+  },null,2);
+}
+/** Parse a data: URI as bytes only. The payload is never rendered or executed. */
+export function parseDataUri(input:string):string {
+  guardText(input);
+  const source=input.trim();
+  if(!/^data:/i.test(source)) throw new Error("Enter a data URI beginning with data:.");
+  const comma=source.indexOf(",");
+  if(comma<0) throw new Error("Data URI must contain a comma between metadata and payload.");
+  const metadata=source.slice(5,comma);
+  const payload=source.slice(comma+1);
+  const parts=metadata.split(";");
+  const mediaType=parts[0]||"text/plain";
+  if(mediaType&&!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(mediaType))
+    throw new Error("Data URI media type must be a valid type/subtype token.");
+  const base64=parts.slice(1).some(part=>part.toLowerCase()==="base64");
+  const parameters=parts.slice(1).filter(part=>part&&part.toLowerCase()!=="base64");
+  if(parameters.some(part=>!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+=[^;]*$/.test(part)))
+    throw new Error("Data URI contains a malformed media-type parameter.");
+  let bytes:Uint8Array;
+  if(base64){
+    // Data URLs commonly omit Base64 padding; accept valid unpadded lengths
+    // while rejecting impossible one-character tails and misplaced padding.
+    if(!/^[A-Za-z0-9+/]*={0,2}$/.test(payload)||payload.length%4===1||/=/.test(payload.slice(0,-2))||(payload.includes("=")&&payload.length%4!==0))
+      throw new Error("Data URI contains invalid Base64 data or padding.");
+    const unpadded=payload.replace(/=+$/,"");
+    if(unpadded.length%4===1) throw new Error("Data URI contains invalid Base64 data or padding.");
+    const normalized=unpadded+"=".repeat((4-unpadded.length%4)%4);
+    let binary:string;
+    try{binary=atob(normalized);}catch{throw new Error("Data URI contains invalid Base64 data.");}
+    bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0));
+  }else{
+    const out:number[]=[];
+    for(let i=0;i<payload.length;){
+      if(payload[i]==="%"){
+        const pair=payload.slice(i+1,i+3);
+        if(!/^[0-9a-f]{2}$/i.test(pair))throw new Error("Data URI contains an invalid percent escape.");
+        out.push(Number.parseInt(pair,16));i+=3;
+      }else{
+        const cp=payload.codePointAt(i)!;
+        const character=String.fromCodePoint(cp);
+        out.push(...new TextEncoder().encode(character));
+        i+=character.length;
+      }
+      if(out.length>MAX_INSPECT_BYTES)throw new Error("Decoded data URI payload is limited to 2,000,000 bytes.");
+    }
+    bytes=Uint8Array.from(out);
+  }
+  if(bytes.length>MAX_INSPECT_BYTES)throw new Error("Decoded data URI payload is limited to 2,000,000 bytes.");
+  let textPreview:string|null=null;
+  try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(bytes).slice(0,4000);}catch{}
+  return JSON.stringify({
+    mediaType,parameters,base64Encoded:base64,byteLength:bytes.length,
+    base64:typeof btoa==="function"?btoa(Array.from(bytes,(b)=>String.fromCharCode(b)).join("")):null,
+    hexPreview:Array.from(bytes.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),
+    textPreview,payloadTruncated:bytes.length>4000,executed:false,networkRequestsMade:false,
+    note:"Parsed locally as data only. Payload is not rendered, executed, or fetched."
   },null,2);
 }
 export function parseQueryString(input:string):string {
@@ -197,8 +254,27 @@ export function arithmetic(input:string,options:ExtendedOptions={}):string {
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }
 export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
- guardBytes(bytes);const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
- const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));const output=new Uint8Array(await new Response(stream).arrayBuffer());if(output.byteLength>MAX_INSPECT_BYTES*4)throw new Error("Compressed/decompressed output exceeds the 8,000,000 byte safety limit.");return output;
+ guardBytes(bytes);
+ const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;
+ if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
+ const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));
+ const reader=stream.getReader(),chunks:Uint8Array[]=[];let total=0;
+ try {
+  while(true){
+   const {done,value}=await reader.read();if(done)break;
+   total+=value.byteLength;
+   // Enforce the cap while streaming; do not buffer an unbounded decompression bomb
+   // and only check its size after allocating the entire result.
+   if(total>MAX_INSPECT_BYTES*4){await reader.cancel();throw new Error("Compressed/decompressed output exceeds the 8,000,000 byte safety limit.");}
+   chunks.push(value);
+  }
+ } catch(error) {
+  try{await reader.cancel();}catch{}
+  throw error;
+ } finally {reader.releaseLock();}
+ const output=new Uint8Array(total);let offset=0;
+ for(const chunk of chunks){output.set(chunk,offset);offset+=chunk.byteLength;}
+ return output;
 }
 
 export function compareByteArrays(left:Uint8Array,right:Uint8Array):string {
@@ -400,6 +476,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  guardText(input);
  switch(operation){
  case "query-parse":return parseQueryString(input);
+ case "data-uri":return parseDataUri(input);
  case "url-parse":return parseUrlComponents(input);
  case "query-build":return buildQueryString(input);
  case "key-value":return parseKeyValue(input);

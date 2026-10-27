@@ -67,6 +67,14 @@ test("Base58 uses the Bitcoin alphabet, preserves leading zero bytes, and reject
   assert.throws(()=>transformEncoding("base58","decode","0OIl"),/Base58 alphabet/i);
 });
 
+test("Z85 follows the published HelloWorld vector and rejects non-block-aligned input",()=>{
+ const bytes=Uint8Array.from([0x86,0x4f,0xd2,0x6f,0xb5,0x59,0xf7,0x5b]);
+ assert.equal(encodeByteRepresentation("z85",bytes),"HelloWorld");
+ assert.deepEqual(Array.from(decodeByteRepresentation("z85","HelloWorld")),Array.from(bytes));
+ assert.throws(()=>encodeByteRepresentation("z85",Uint8Array.of(1,2,3)),/divisible by four/i);
+ assert.throws(()=>decodeByteRepresentation("z85","Hell"),/multiple of five/i);
+});
+
 test("byte encoders preserve raw file bytes and enforce bounded output",()=>{const bytes=Uint8Array.from([0,255,1]);assert.equal(encodeByteRepresentation("hex",bytes),"00ff01");assert.equal(encodeByteRepresentation("base64",bytes),"AP8B");assert.equal(encodeByteRepresentation("binary",bytes),"00000000 11111111 00000001");for(const mode of ["hex","base64","base64url","base32","binary","base58","base85","quoted-printable"])assert.deepEqual(Array.from(decodeByteRepresentation(mode,encodeByteRepresentation(mode,bytes))),Array.from(bytes));assert.throws(()=>encodeByteRepresentation("hex",new Uint8Array(2_000_001)),/2,000,000 bytes/i);});
 test("byte decoders can return non-UTF-8 bytes without decoding loss",()=>{assert.deepEqual(Array.from(decodeByteRepresentation("hex","ff00")), [255,0]);assert.deepEqual(Array.from(decodeByteRepresentation("base64","/wA=")),[255,0]);assert.throws(()=>decodeByteRepresentation("binary","101"),/eight bits/i);});
 

@@ -9,9 +9,9 @@ import { transformEncoding, convertCharset, encodeByteRepresentation, decodeByte
 const modes: { value: EncodingMode; label: string }[] = [
   { value: "url", label: "URL component" }, { value: "base64", label: "Base64" }, { value: "base64url", label: "Base64url" },
   { value: "base32", label: "Base32" }, { value: "hex", label: "Hexadecimal" }, { value: "binary", label: "Binary bytes" },
-  { value: "html-entities", label: "HTML entities" }, { value: "unicode-escapes", label: "Unicode escapes" }, { value: "quoted-printable", label: "Quoted-printable" }, { value: "charset", label: "Charset converter" }, { value: "base58", label: "Base58" }, { value: "base85", label: "ASCII85 (Adobe)" }
+  { value: "html-entities", label: "HTML entities" }, { value: "unicode-escapes", label: "Unicode escapes" }, { value: "quoted-printable", label: "Quoted-printable" }, { value: "charset", label: "Charset converter" }, { value: "base58", label: "Base58" }, { value: "base85", label: "ASCII85 (Adobe)" }, { value: "z85", label: "Z85 (ZeroMQ)" }
 ];
-const byteModes: ByteEncodingMode[] = ["base64","base64url","base32","hex","binary","base58","base85","quoted-printable"];
+const byteModes: ByteEncodingMode[] = ["base64","base64url","base32","hex","binary","base58","base85","z85","quoted-printable"];
 const notes: Record<EncodingMode, string> = {
   url: "Encodes a URI component, not a complete URL structure.",
   base64: "Uses standard Base64 padding; text input is UTF-8 and selected files are encoded as raw bytes. Base64 is encoding, not encryption.",
@@ -24,7 +24,8 @@ const notes: Record<EncodingMode, string> = {
   "quoted-printable": "Encodes UTF-8 text or arbitrary file bytes for MIME-style transport; file mode escapes raw line breaks to preserve bytes. Text decoding normalizes line endings to LF.",
   charset: "Convert text to UTF-8, UTF-16LE, UTF-16BE or Windows-1252 bytes (shown as hex), decode hex bytes, or decode a selected file using the chosen charset.",
   base58: "Uses the Bitcoin Base58 alphabet; leading zero bytes are preserved. This is encoding, not encryption.",
-  base85: "Uses Adobe ASCII85 with <~ ~> wrappers and the z shorthand; this is not the same as every Base85 variant."
+  base85: "Uses Adobe ASCII85 with <~ ~> wrappers and the z shorthand; this is not the same as every Base85 variant.",
+  z85: "Uses the ZeroMQ Z85 alphabet; input bytes must be divisible by four and encoded text length by five. Padding is never added implicitly."
 };
 export function EncodingWorkbench({ initialMode = "url" }: { initialMode?: EncodingMode }) {
   const [mode, setMode] = useState<EncodingMode>(initialMode);
