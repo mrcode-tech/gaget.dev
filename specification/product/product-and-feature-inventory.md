@@ -36,7 +36,7 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 | `/encoding/base64` | Compatibility redirect to the unified workbench Base64 mode | Preserves existing bookmarks; not a separate catalog entry. |
 | `/security/jwt-decoder` | Decode JWT header and claims; inspect expiration | **Does not verify signatures.** This must remain explicit. |
 | `/generators/uuid` | Generate UUID v4 values with browser cryptographic API | Do not claim server-side uniqueness guarantees. |
-| `/security/hash` | SHA-256/384/512 text digests, HMAC-SHA-256/384/512 with an explicit text key, and CRC32/IEEE checksum | Text input only; HMAC key is not persisted; CRC32 is not cryptographic security; file-byte hashing is not implemented. |
+| `/security/hash` | SHA-256/384/512 text digests, HMAC-SHA-256/384/512 with an explicit text key, and CRC32/IEEE checksum | Text input only; HMAC key is not persisted; CRC32 is not cryptographic security; raw file bytes are hashed without text decoding and files are not persisted. |
 | `/text/regex` | Text & Regex Workbench: regex match/capture and replacement previews, find/replace, split/join, trim, sort/dedupe, case conversion, Unicode normalization, escaping, statistics and line diff | Regex input capped at 50,000 characters and 500 results; line diff capped at 500 lines per side; pathological patterns may block the tab. |
 | `/xml/formatter` | Lightweight XML text formatting and minifying with element nesting checks | Not a complete XML parser or schema validator; external entities are not resolved. |
 | `/sql/formatter` | Heuristic formatting/minifying of common SQL clauses | Not dialect-complete; never executes SQL. |

@@ -1,6 +1,6 @@
 # Encoding & Decoding
 
-**Status:** Partially implemented. The `/encoding/url` route is the unified text-representation workbench; `/encoding/base64` is a compatibility redirect to Base64 mode. Arbitrary file-byte workflows and several proposed variants remain pending.
+**Status:** Partially implemented. The `/encoding/url` route is the unified text-representation workbench; `/encoding/base64` is a compatibility redirect to Base64 mode. Charset conversion now supports UTF-8, UTF-16LE/BE and Windows-1252 through explicit hex byte representations; arbitrary file-byte mode and several proposed variants remain pending.
 
 | ID | Operation | Contract and acceptance tests |
 |---|---|---|
@@ -14,8 +14,8 @@
 | enc.html-entities | Text ↔ HTML entities | Basic named and numeric entities implemented; decoded markup is never rendered; full HTML named-entity catalog pending |
 | enc.unicode-escapes | Unicode escape conversion | Implemented BMP `\\uXXXX` and supplementary `\\u{...}` forms; invalid scalar values rejected |
 | enc.quoted-printable | Quoted-printable | Implemented for UTF-8 text; escapes non-ASCII bytes, wraps MIME lines, rejects malformed escapes and invalid UTF-8; decoder normalizes line endings to LF |
-| enc.charset | Selected charset conversion | Proposed; not implemented |
-| enc.text-byte-mode | Explicit text or byte/file mode | Text mode implemented; arbitrary file/byte input and download mode pending |
+| enc.charset | Selected charset conversion | Implemented for UTF-8, UTF-16LE/BE and Windows-1252; encode outputs hex bytes, decode accepts hex bytes; unsupported Windows-1252 characters and malformed bytes error |
+| enc.text-byte-mode | Explicit text or byte/file mode | Text mode and explicit charset-to-hex / hex-to-text conversion implemented; direct arbitrary-file input and byte-output download remain pending |
 
 ## Interaction and processing
 Use the existing Textarea/editor for text and styled file selection only for byte/file operations. Place alphabet/encoding/padding options near the operation. Copy text output; download byte output with correct MIME where known. Preserve compatible input when switching operations. Prefer local processing; never place sensitive input in URLs/logs/storage. Bound expensive allocations.

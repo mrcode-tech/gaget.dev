@@ -1,6 +1,6 @@
 # Security & Cryptography
 
-**Status:** SHA-2 text digests, HMAC-SHA-2 and CRC32 are implemented. Encryption, SHA-3, legacy hashes and other checksum variants remain gated by separate security and feasibility review.
+**Status:** SHA-2 text and local-file-byte digests, HMAC-SHA-2 over text or file bytes, and CRC32 over text or file bytes are implemented. Encryption, SHA-3, legacy hashes and other checksum variants remain gated by separate security and feasibility review.
 
 | ID | Operation | Required behavior |
 |---|---|---|
@@ -14,7 +14,7 @@
 | sec.inspection | Security-oriented data inspection | Parsing, validation and verification are distinct |
 
 ## Hash & Checksum Generator contract
-Registry ID hash-generator; canonical route `/security/hash`. Supports SHA-256/384/512 text digests, HMAC-SHA-256/384/512 with an explicit text key, and CRC32/IEEE. The key remains in component memory only and is cleared by Clear; no file-byte mode is claimed. CRC32 is an error-detection checksum, not cryptographic security. Web Crypto availability errors are shown without clearing source text.
+Registry ID hash-generator; canonical route `/security/hash`. Supports SHA-256/384/512 digests and HMAC-SHA-256/384/512 with an explicit UTF-8 text key, plus CRC32/IEEE. Text input is capped at 200,000 characters; local file input is capped at 2 MB. Raw file bytes are hashed without text decoding. The key remains in component memory only and is cleared by Clear. CRC32 is not cryptographic security. CRC32 is an error-detection checksum, not cryptographic security. Web Crypto availability errors are shown without clearing source text.
 
 ## UI and privacy
 See [wireframes](../wireframes/workspace-layouts.md#security--cryptography). Visually distinguish digest, HMAC, checksum and approved encryption workflows. Never persist secrets/plaintext or transmit input. Do not include secrets in errors. Review cryptographic primitives and parameters before release.

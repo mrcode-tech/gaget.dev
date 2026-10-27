@@ -50,3 +50,14 @@ test("quoted-printable wraps long lines within MIME line limits", () => {
 test("encoding operations enforce the input size limit", () => {
   assert.throws(()=>transformEncoding("hex","encode","x".repeat(1_000_001)),/safety limit/i);
 });
+
+test("charset conversion uses explicit encodings and hex byte representation", () => {
+  const { convertCharset } = require("../lib/tools/encoding-operations.ts");
+  assert.equal(convertCharset("encode", "Hello", "utf-8"), "48656c6c6f");
+  assert.equal(convertCharset("decode", "48656c6c6f", "utf-8"), "Hello");
+  assert.equal(convertCharset("encode", "A", "utf-16le"), "4100");
+  assert.equal(convertCharset("encode", "A", "utf-16be"), "0041");
+  assert.equal(convertCharset("decode", "e9", "windows-1252"), "é");
+  assert.throws(() => convertCharset("encode", "🙂", "windows-1252"), /cannot be represented/i);
+  assert.throws(() => convertCharset("decode", "f", "utf-8"), /complete byte pairs/i);
+});

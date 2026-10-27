@@ -1,4 +1,4 @@
-export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable";
+export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset";
 export type EncodingDirection = "encode" | "decode";
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 function utf8(text: string): Uint8Array { return new TextEncoder().encode(text); }
@@ -125,6 +125,42 @@ function decodeUnicode(value: string): string {
     return String.fromCodePoint(code);
   });
 }
+export type SupportedCharset = "utf-8" | "utf-16le" | "utf-16be" | "windows-1252";
+export const SUPPORTED_CHARSETS: { value: SupportedCharset; label: string }[] = [
+  { value: "utf-8", label: "UTF-8" },
+  { value: "utf-16le", label: "UTF-16 little-endian" },
+  { value: "utf-16be", label: "UTF-16 big-endian" },
+  { value: "windows-1252", label: "Windows-1252" }
+];
+function charsetEncoder(value: string, charset: SupportedCharset): Uint8Array {
+  if (charset === "utf-8") return new TextEncoder().encode(value);
+  if (charset === "utf-16le" || charset === "utf-16be") {
+    const bytes = new Uint8Array(value.length * 2);
+    for (let i = 0; i < value.length; i++) {
+      const unit = value.charCodeAt(i);
+      if (charset === "utf-16le") { bytes[i * 2] = unit & 255; bytes[i * 2 + 1] = unit >>> 8; }
+      else { bytes[i * 2] = unit >>> 8; bytes[i * 2 + 1] = unit & 255; }
+    }
+    return bytes;
+  }
+  const decoder = new TextDecoder("windows-1252");
+  const reverse = new Map<string, number>();
+  for (let byte = 0; byte < 256; byte++) reverse.set(decoder.decode(Uint8Array.of(byte)), byte);
+  const bytes: number[] = [];
+  for (const character of value) {
+    const byte = reverse.get(character);
+    if (byte === undefined) throw new Error("This character cannot be represented in Windows-1252.");
+    bytes.push(byte);
+  }
+  return Uint8Array.from(bytes);
+}
+export function convertCharset(direction: EncodingDirection, input: string, charset: SupportedCharset): string {
+  if (input.length > 1_000_000) throw new Error("Input exceeds the 1,000,000 character safety limit.");
+  if (direction === "encode") return encodeHex(charsetEncoder(input, charset));
+  const bytes = decodeHex(input);
+  try { return new TextDecoder(charset, { fatal: true }).decode(bytes); }
+  catch { throw new Error("Bytes are invalid for the selected charset or contain an incomplete code unit."); }
+}
 export function transformEncoding(mode: EncodingMode, direction: EncodingDirection, input: string): string {
   if (input.length > 1_000_000) throw new Error("Input exceeds the 1,000,000 character safety limit.");
   if (direction === "encode") {
@@ -138,6 +174,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
       case "html-entities": return encodeEntities(input);
       case "unicode-escapes": return encodeUnicode(input);
       case "quoted-printable": return encodeQuotedPrintable(input);
+      case "charset": throw new Error("Use the charset converter with an explicit character set.");
     }
   }
   switch (mode) {
@@ -150,5 +187,6 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
     case "html-entities": return decodeEntities(input);
     case "unicode-escapes": return decodeUnicode(input);
     case "quoted-printable": return decodeQuotedPrintable(input);
+    case "charset": throw new Error("Use the charset converter with an explicit character set.");
   }
 }

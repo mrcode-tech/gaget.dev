@@ -14,12 +14,12 @@
 The shared Developer Tool Workbench uses labelled controls, a source textarea, explicit Process/Clear actions, a separate read-only output textarea, and copy/download actions. Input and output sit in two columns at XL widths and stack at smaller widths. Operation-specific controls appear above the editors. The output is text-only; HTML is never injected into the document. Error messages use an alert role and preserve the source input. The current layout is an implementation record, not an approved target design.
 
 ## Encoding & Decoding
-The current /encoding/url route consolidates URL components, Base64, Base64url, Base32, hex, binary, basic HTML entities and Unicode escapes under one operation selector. It is text-first: byte representations use UTF-8 and arbitrary files are not yet supported. /encoding/base64 is a compatibility redirect that opens Base64 mode.
+The current /encoding/url route consolidates URL components, Base64, Base64url, Base32, hex, binary, basic HTML entities and Unicode escapes under one operation selector. It supports UTF-8 text encodings and quoted-printable, plus charset conversion for UTF-8, UTF-16LE/BE and Windows-1252 via explicit hexadecimal bytes. Direct file input remains pending. /encoding/base64 is a compatibility redirect that opens Base64 mode.
 Desktop: operation/input mode above side-by-side input/output panels. Convert/clear near input; copy/download near output.
-Mobile: operation selector, direction, editor, convert action, output and copy/download. Text and bytes remain explicit.
+Mobile: operation selector, direction, editor, convert action, output and copy/download. Text and bytes remain explicit. Charset encoding returns hex bytes; charset decoding accepts hex bytes.
 
 ## Security & Cryptography
-Selector distinguishes Hash, HMAC, Checksum and only approved Encrypt/Decrypt. Algorithm/input type remain visible. Key fields are separate from ordinary input. Result shows algorithm and representation. No risky default encryption configuration.
+Selector distinguishes Hash, HMAC, Checksum and only approved Encrypt/Decrypt. Algorithm/input type remain visible. Text or a local file up to 2 MB may be selected; file hashing consumes raw bytes. Key fields are separate from ordinary input. Result shows algorithm and representation. No risky default encryption configuration.
 
 ## Data Parsing & Conversion
 Direction/format and relevant options above source/result editors. Desktop may use columns; mobile stacks. Parse errors include useful line/row context. Advanced options use an accessible disclosure where useful.
