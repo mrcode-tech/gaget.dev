@@ -77,3 +77,14 @@ test("cURL GET data is appended before fragments and ordinary data never reads @
  const literal=parseCurl("curl --data-raw @literal-value https://example.test/upload");
  assert.equal(literal.body,"@literal-value");
 });
+
+
+test("cURL --json produces a JSON body and default JSON headers without reading files",()=>{
+ const parsed=parseCurl("curl --json '{\"ok\":true}' https://example.test/api");
+ assert.equal(parsed.method,"POST");assert.equal(parsed.body,'{"ok":true}');
+ assert.deepEqual(parsed.headers,[["Content-Type","application/json"],["Accept","application/json"]]);
+ const custom=parseCurl("curl --header 'Content-Type: application/problem+json' --json '{\"ok\":false}' https://example.test/api");
+ assert.deepEqual(custom.headers,[["Content-Type","application/problem+json"],["Accept","application/json"]]);
+ const file=parseCurl("curl --json @body.json https://example.test/api");
+ assert.equal(file.body,undefined);assert.match(file.unsupported.join(" "),/file-backed data is not read/i);
+});
