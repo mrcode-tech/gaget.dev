@@ -2,7 +2,7 @@ export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
   | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
-  | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "arithmetic" | "compression-detect"
+  | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
   | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures";
 export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
@@ -151,6 +151,14 @@ export function numericStatistics(input:string):string {
  const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0),mean=sum/values.length,median=sorted.length%2?sorted[(sorted.length-1)/2]:(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2;const variance=values.reduce((s,n)=>s+(n-mean)**2,0)/values.length;
  return JSON.stringify({count:values.length,min:sorted[0],max:sorted[sorted.length-1],sum,mean,median,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance:values.length>1?values.reduce((s,n)=>s+(n-mean)**2,0)/(values.length-1):null},null,2);
 }
+export function characterStatistics(input:string):string {
+ guardText(input);
+ const counts=new Map<string,number>();let whitespace=0;
+ for(const character of Array.from(input)){counts.set(character,(counts.get(character)??0)+1);if(/\\s/u.test(character))whitespace++;}
+ const sorted=[...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].codePointAt(0)!-b[0].codePointAt(0));
+ const total=Array.from(input).length;
+ return JSON.stringify({unit:"Unicode code points (not grapheme clusters)",totalCodePoints:total,uniqueCodePoints:counts.size,whitespaceCodePoints:whitespace,frequencies:sorted.slice(0,100).map(([character,count])=>({character,codePoint:"U+"+character.codePointAt(0)!.toString(16).toUpperCase().padStart(4,"0"),count,percent:total?Number((count*100/total).toFixed(2)):0})),truncated:sorted.length>100},null,2);
+}
 export function arithmetic(input:string,options:ExtendedOptions={}):string {
  const a=Number(options.a),b=Number(options.b);
  if(!options.a?.trim()||(input!=="not"&&!options.b?.trim())||!Number.isFinite(a)||(input!=="not"&&!Number.isFinite(b)))throw new Error(input==="not"?"Enter a finite integer in the A field.":"Enter two finite numbers in the A and B fields.");
@@ -268,6 +276,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "network-extract":return extractNetworkCandidates(input);
  case "compression-detect":return detectCompression(bytes);
  case "statistics":return numericStatistics(input);
+ case "character-stats":return characterStatistics(input);
  case "arithmetic":return arithmetic(input,options);
  case "byte-compare":throw new Error("Choose two files in the workbench to compare bytes.");
  case "dns-records":return parseDnsRecords(input);
