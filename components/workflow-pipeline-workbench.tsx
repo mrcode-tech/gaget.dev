@@ -9,7 +9,7 @@ import { executeBatch, executePipeline, getCompatiblePipelineOperations, getPipe
 type StepRow={id:number;operation:PipelineOperation};
 const SAMPLE="Hello GaGet.dev!";
 export function WorkflowPipelineWorkbench(){
- const [input,setInput]=useState(SAMPLE),[inputType,setInputType]=useState<PipelineDataType>("text"),[steps,setSteps]=useState<StepRow[]>([{id:1,operation:"url-encode"},{id:2,operation:"base64-encode"}]),[nextId,setNextId]=useState(3),[output,setOutput]=useState(""),[stepResults,setStepResults]=useState<{index:number;operation:PipelineOperation;outputType:PipelineDataType;outputLength:number;preview:string}[]>([]),[error,setError]=useState(""),[batch,setBatch]=useState(false);
+ const [input,setInput]=useState(SAMPLE),[inputType,setInputType]=useState<PipelineDataType>("text"),[steps,setSteps]=useState<StepRow[]>([{id:1,operation:"trim"},{id:2,operation:"url-encode"}]),[nextId,setNextId]=useState(3),[output,setOutput]=useState(""),[stepResults,setStepResults]=useState<{index:number;operation:PipelineOperation;outputType:PipelineDataType;outputLength:number;preview:string}[]>([]),[error,setError]=useState(""),[batch,setBatch]=useState(false);
  function recipe():PipelineRecipe{return {version:1,inputType,steps:steps.map(s=>({operation:s.operation}))};}
  function resetResult(){setOutput("");setStepResults([]);setError("");}
  function typeBefore(index:number):PipelineDataType{let type=inputType;for(let i=0;i<index;i++){try{type=getPipelineOperation(steps[i].operation).output;}catch{return type;}}return type;}
