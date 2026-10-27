@@ -8,7 +8,7 @@ Reuse the existing JSON Workspace as the canonical JSON experience; do not dupli
 | data.xml | XML parse/format/minify | Namespaces, comments, CDATA, declarations and malformed nesting; external entities/network resolution disabled |
 | data.yaml | YAML parse/format, optional JSON conversion | Scalar typing, indentation, multi-document policy and alias/anchor limits documented |
 | data.query-string | Query-string parse/build | Repeated keys, empty values, plus vs encoded space, malformed escapes and ordering policy |
-| data.key-value | Key-value parse/build | Delimiter/escape policy, duplicate keys, whitespace, empty values and malformed lines |
+| data.key-value | Key-value parse/build | Parse and JSON-to-key=value builder implemented; repeated array values become repeated lines; multiline values and delimiter-containing keys rejected |
 | data.asn1-tlv | Selected ASN.1/TLV inspection | Conditional; maintained parser, bounded recursion and demand review |
 | data.uri-components | URI extraction/encoding | Reuse URL utility where appropriate; distinguish URL parsing from component encoding |
 

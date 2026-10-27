@@ -1,8 +1,8 @@
 export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
-  | "query-parse" | "query-build" | "key-value" | "number-base"
+  | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "strings" | "byte-stats" | "network" | "cidr"
-  | "mac" | "headers" | "cookies" | "statistics" | "arithmetic"
+  | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "arithmetic" | "compression-detect"
   | "compression";
 export type ExtendedOptions = { radix?: number; width?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
@@ -25,6 +25,58 @@ export function parseKeyValue(input:string):string {
   guardText(input);const result:Record<string,string|string[]>={};
   for(const [index,line] of input.split(/\r?\n/).entries()){if(!line.trim()||/^\s*[#;]/.test(line))continue;const i=line.indexOf("=");if(i<0)throw new Error("Line "+(index+1)+" must contain key=value.");const key=line.slice(0,i).trim(),value=line.slice(i+1).trim();if(!key)throw new Error("Line "+(index+1)+" has an empty key.");if(Object.hasOwn(result,key)){const prev=result[key];result[key]=Array.isArray(prev)?[...prev,value]:[prev,value];}else result[key]=value;}
   return JSON.stringify(result,null,2);
+}
+export function buildKeyValue(input:string):string {
+  guardText(input); let value: unknown;
+  try { value = JSON.parse(input); } catch { throw new Error("Provide a valid JSON object to build key=value text."); }
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Key-value input must be a JSON object.");
+  const lines: string[] = [];
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (!key.trim() || /[=\r\n]/.test(key)) throw new Error("Keys must be non-empty and cannot contain equals signs or line breaks.");
+    for (const item of (Array.isArray(raw) ? raw : [raw])) {
+      if (item !== null && typeof item === "object") throw new Error("Values must be strings, numbers, booleans, null, or arrays of these values.");
+      const text = item === null ? "" : String(item);
+      if (/[\r\n]/.test(text)) throw new Error("Multiline values are not supported by this key=value format.");
+      lines.push(key + "=" + text);
+    }
+  }
+  return lines.join("\n");
+}
+export function extractNetworkCandidates(input:string):string {
+  guardText(input);
+  const collect=(pattern:RegExp)=>Array.from(input.matchAll(pattern),m=>m[0].replace(/[),.;]+$/g,""));
+  const unique=(items:string[])=>Array.from(new Set(items));
+  const urls=unique(collect(/https?:\/\/[^\s<>"']+/gi));
+  const emails=unique(collect(/[A-Z0-9.!#$%&'*+\/= ?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+/gi).map(s=>s.replace(/\s/g,"")));
+  const ipv4=unique(collect(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g));
+  const domains=unique(collect(/\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63})\b/gi));
+  return JSON.stringify({urls,emails,ipv4Candidates:ipv4,domainCandidates:domains,validation:"Candidates are extracted by pattern only; they are not validated, resolved, or contacted."},null,2);
+}
+export function numericView(input:string,bits=32,signed=false,endian:"big"|"little"="big"):string {
+  if (![8,16,32,64].includes(bits)) throw new Error("Integer width must be 8, 16, 32, or 64 bits.");
+  const text=input.trim();
+  if (!/^[+-]?(?:\d+|0x[\da-f]+|0b[01]+|0o[0-7]+)$/i.test(text)) throw new Error("Enter a decimal, hexadecimal (0x), binary (0b), or octal (0o) integer.");
+  let value:bigint; try { value=BigInt(text); } catch { throw new Error("Enter a valid integer."); }
+  const width=BigInt(bits),modulus=BigInt(1)<<width;
+  const min=signed?-(BigInt(1)<<(width-BigInt(1))):BigInt(0);
+  const max=signed?(BigInt(1)<<(width-BigInt(1)))-BigInt(1):modulus-BigInt(1);
+  if(value<min||value>max) throw new Error("Value is outside the selected "+(signed?"signed":"unsigned")+" "+bits+"-bit range.");
+  const encoded=value<0?modulus+value:value,bytes=new Uint8Array(bits/8);
+  for(let i=0;i<bytes.length;i++){const shift=BigInt((endian==="little"?i:bytes.length-1-i)*8);bytes[i]=Number((encoded>>shift)&BigInt(255));}
+  return JSON.stringify({input:text,bits,signed,endian,value:value.toString(),unsignedValue:encoded.toString(),hexadecimal:"0x"+encoded.toString(16).padStart(bits/4,"0").toUpperCase(),bytesHex:Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join(" "),byteOrder:"Bytes are shown in the selected endianness."},null,2);
+}
+export function floatView(input:string,bits=32,endian:"big"|"little"="big"):string {
+  if(bits!==32&&bits!==64)throw new Error("Floating-point width must be 32 or 64 bits.");
+  const trimmed=input.trim(),value=Number(trimmed);if(trimmed===""||(Number.isNaN(value)&&trimmed.toLowerCase()!=="nan"))throw new Error("Enter a valid floating-point number (including Infinity or NaN if needed).");
+  const bytes=new Uint8Array(bits/8),view=new DataView(bytes.buffer);
+  if(bits===32)view.setFloat32(0,value,endian==="little");else view.setFloat64(0,value,endian==="little");
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("").toUpperCase();
+  return JSON.stringify({input:trimmed,bits,endian,value:Number.isNaN(value)?"NaN":value.toString(),hexadecimal:"0x"+hex,bytesHex:Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join(" "),note:"IEEE-754 representation; Float32 may round the input value."},null,2);
+}
+export function detectCompression(bytes:Uint8Array):string {
+  guardBytes(bytes);const gzip=bytes.length>=2&&bytes[0]===0x1f&&bytes[1]===0x8b,cmf=bytes[0]??0,flg=bytes[1]??0;
+  const zlib=bytes.length>=2&&(cmf&15)===8&&(cmf>>>4)<=7&&((cmf<<8)|flg)%31===0;
+  return JSON.stringify({bytes:bytes.length,detected:gzip?"gzip":zlib?"zlib-wrapped DEFLATE":"unknown",confidence:gzip||zlib?"wrapper signature matches":"no supported wrapper signature; raw DEFLATE and other formats cannot be distinguished from arbitrary bytes by this check",magicBytes:Array.from(bytes.slice(0,16),b=>b.toString(16).padStart(2,"0")).join(" ")},null,2);
 }
 export function convertNumberBase(input:string,radix=10):string {
   const s=input.trim().replace(/_/g,"");if(!s)throw new Error("Enter an integer.");if(!Number.isInteger(radix)||radix<2||radix>36)throw new Error("Base must be between 2 and 36.");
@@ -105,7 +157,10 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "query-parse":return parseQueryString(input);
  case "query-build":return buildQueryString(input);
  case "key-value":return parseKeyValue(input);
+ case "key-value-build":return buildKeyValue(input);
  case "number-base":return convertNumberBase(input,options.radix??10);
+ case "numeric-view":return numericView(input,options.bits??32,options.signed??false,options.endian??"big");
+ case "float-view":return floatView(input,options.bits??32,options.endian??"big");
  case "hexdump":return hexDump(bytes,options.width??16);
  case "strings":return JSON.stringify(extractPrintableStrings(bytes,options.minLength??4),null,2);
  case "byte-stats":return byteStatistics(bytes);
@@ -114,6 +169,8 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "mac":return normalizeMac(input);
  case "headers":return parseHttpHeaders(input);
  case "cookies":return parseCookies(input);
+ case "network-extract":return extractNetworkCandidates(input);
+ case "compression-detect":return detectCompression(bytes);
  case "statistics":return numericStatistics(input);
  case "arithmetic":return arithmetic(input,options);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
