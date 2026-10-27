@@ -3,7 +3,7 @@ export type ExtendedOperation =
   | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "arithmetic" | "compression-detect"
-  | "compression";
+  | "compression" | "byte-compare" | "dns-records" | "http-message";
 export type ExtendedOptions = { radix?: number; width?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
@@ -152,6 +152,48 @@ export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",act
  guardBytes(bytes);const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
  const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));const output=new Uint8Array(await new Response(stream).arrayBuffer());if(output.byteLength>MAX_INSPECT_BYTES*4)throw new Error("Compressed/decompressed output exceeds the 8,000,000 byte safety limit.");return output;
 }
+
+export function compareByteArrays(left:Uint8Array,right:Uint8Array):string {
+ guardBytes(left);guardBytes(right);
+ const length=Math.max(left.length,right.length),preview:{offset:number;left:string|null;right:string|null}[]=[];
+ let firstDifference:number|null=null,differingPositions=0;
+ for(let i=0;i<length;i++){const a=left[i],b=right[i];if(a===b)continue;if(firstDifference===null)firstDifference=i;differingPositions++;if(preview.length<100)preview.push({offset:i,left:a===undefined?null:a.toString(16).padStart(2,"0"),right:b===undefined?null:b.toString(16).padStart(2,"0")});}
+ return JSON.stringify({identical:left.length===right.length&&differingPositions===0,leftBytes:left.length,rightBytes:right.length,lengthDifference:right.length-left.length,commonPrefixBytes:firstDifference===null?Math.min(left.length,right.length):firstDifference,firstDifferenceOffset:firstDifference,differingPositions,preview,truncated:differingPositions>preview.length,offsetsAreZeroBased:true},null,2);
+}
+const DNS_TYPES=new Set(["A","AAAA","CNAME","MX","TXT","NS","SOA","SRV","PTR","CAA","HTTPS","SVCB","TLSA","DS","DNSKEY"]);
+export function parseDnsRecords(input:string):string {
+ guardText(input);const records:{owner:string;ttl:number|null;class:string;type:string;value:string;line:number}[]=[];let skippedLines=0;
+ for(const [index,raw] of input.replace(/\r\n/g,"\n").split("\n").entries()){
+  const line=raw.trim();if(!line||line.startsWith(";")||line.startsWith("#")||line.startsWith("$"))continue;
+  const tokens=line.match(/"(?:\\.|[^"\\])*"|\S+/g)??[];
+  const typeIndex=tokens.findIndex((token,i)=>i>0&&DNS_TYPES.has(token.toUpperCase()));
+  if(typeIndex<0){skippedLines++;continue;}
+  const owner=tokens[0],before=tokens.slice(1,typeIndex),ttlText=before.find(token=>/^\d+$/.test(token)),recordClass=before.find(token=>/^(IN|CH|HS)$/i.test(token))?.toUpperCase()??"IN",value=tokens.slice(typeIndex+1).join(" ");
+  if(!value)throw new Error("DNS record on line "+(index+1)+" is missing its value.");
+  records.push({owner,ttl:ttlText===undefined?null:Number(ttlText),class:recordClass,type:tokens[typeIndex].toUpperCase(),value,line:index+1});
+ }
+ if(!records.length)throw new Error("No supported DNS records were found. Paste zone-file or dig-style record lines.");
+ return JSON.stringify({count:records.length,records,skippedNonRecordLines:skippedLines,networkRequestsMade:false,note:"Offline text parsing only; records are not resolved, verified, or queried."},null,2);
+}
+const SENSITIVE_HTTP_HEADERS=/^(authorization|proxy-authorization|cookie|set-cookie|x-api-key|x-auth-token|x-access-token)$/i;
+export function parseHttpMessage(input:string):string {
+ guardText(input);const normalized=input.replace(/\r\n/g,"\n"),boundary=normalized.indexOf("\n\n"),head=boundary<0?normalized:normalized.slice(0,boundary),body=boundary<0?"":normalized.slice(boundary+2),lines=head.split("\n");
+ const startLine=(lines.shift()??"").trim();if(!startLine)throw new Error("Enter an HTTP request or response start line.");
+ const response=startLine.match(/^HTTP\/(\d(?:\.\d)?)\s+(\d{3})(?:\s+(.*))?$/i),request=startLine.match(/^([!#$%&'*+.^_|~0-9A-Za-z-]+)\s+(\S+)\s+HTTP\/(\d(?:\.\d)?)$/);
+ if(!response&&!request)throw new Error("Start line must be an HTTP request line or HTTP status line.");
+ const headers:{name:string;value:string;redacted:boolean}[]=[];
+ for(const [index,line] of lines.entries()){
+  if(!line.trim())continue;if(/^\s/.test(line))throw new Error("Obsolete folded header at line "+(index+2)+" is not supported.");
+  const colon=line.indexOf(":");if(colon<1)throw new Error("Header line "+(index+2)+" must use Name: value.");
+  const name=line.slice(0,colon).trim(),rawValue=line.slice(colon+1).trim();
+  if(!/^[!#$%&'*+.^_|~0-9A-Za-z-]+$/.test(name))throw new Error("Invalid HTTP header name at line "+(index+2)+".");
+  const redacted=SENSITIVE_HTTP_HEADERS.test(name);headers.push({name,value:redacted?"[REDACTED]":rawValue,redacted});
+ }
+ const grouped:Record<string,string[]>={};for(const header of headers)(grouped[header.name.toLowerCase()]??=[]).push(header.value);
+ const contentType=headers.find(h=>h.name.toLowerCase()==="content-type")?.value??null;
+ return JSON.stringify({messageType:response?"response":"request",startLine,...(response?{httpVersion:response[1],statusCode:Number(response[2]),reason:response[3]??""}:{method:request![1],target:request![2],httpVersion:request![3]}),headers,headerCount:headers.length,duplicateHeaders:Object.fromEntries(Object.entries(grouped).filter(([,values])=>values.length>1)),body:{utf8Bytes:new TextEncoder().encode(body).length,lineCount:body?body.split("\n").length:0,contentType,contentIncluded:false},networkRequestsMade:false,note:"Supplied HTTP text only. Sensitive header values are redacted and the body is deliberately omitted from the parsed result."},null,2);
+}
+
 export async function runExtendedOperation(operation:ExtendedOperation,input:string,bytes:Uint8Array,options:ExtendedOptions={}):Promise<string> {
  guardText(input);
  switch(operation){
@@ -174,6 +216,9 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "compression-detect":return detectCompression(bytes);
  case "statistics":return numericStatistics(input);
  case "arithmetic":return arithmetic(input,options);
+ case "byte-compare":throw new Error("Choose two files in the workbench to compare bytes.");
+ case "dns-records":return parseDnsRecords(input);
+ case "http-message":return parseHttpMessage(input);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }

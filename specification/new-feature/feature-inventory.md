@@ -55,7 +55,7 @@ There are now 14 relevant standalone registry entries. Encoding & Decoding conso
 | gen.uuid | UUID v4 | Existing available / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
 | gen.samples | Random test data, timestamps, identifiers and structured samples | Implemented at `/generators/sample-data`: bounded random strings/integers, synthetic JSON records, timestamps and UUID batches / 5 | [Workflow/API](./categories/workflow-generators-api.md) |
 | api.curl | Parse supported cURL subset and generate a redacted JavaScript fetch preview | Implemented subset / 3; broad flag and language coverage pending | [Workflow/API](./categories/workflow-generators-api.md) |
-| api.http | Inspect supplied HTTP request/response | Proposed / 4 | [Workflow/API](./categories/workflow-generators-api.md) |
+| api.http | Inspect supplied HTTP request/response | Implemented offline parser for request/status lines and headers; sensitive header redaction, body omitted from parsed output / 4 | [Workflow/API](./categories/workflow-generators-api.md) |
 | format.sql | SQL formatting and dialect handling | Heuristic common-clause formatter implemented / 3; dialect-complete parsing pending | [Workflow/API](./categories/workflow-generators-api.md) |
 | format.html | HTML formatting/minifying | Heuristic text formatting/minifying implemented / 3; complete parser pending | [Workflow/API](./categories/workflow-generators-api.md) |
 

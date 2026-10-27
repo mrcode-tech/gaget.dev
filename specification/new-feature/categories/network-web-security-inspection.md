@@ -2,7 +2,7 @@
 
 ## Network & Web Data
 
-The `/inspection/network-file` workbench currently implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header parsing and supplied cookie-string parsing. It performs no network requests. Candidate extraction for URLs, domains, email addresses and IPv4-shaped strings is now implemented as pattern-only/offline output; DNS records and certificate/key inspection remain conditional/pending.
+The `/inspection/network-file` workbench currently implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header parsing and supplied cookie-string parsing. It performs no network requests. Candidate extraction for URLs, domains, email addresses and IPv4-shaped strings is now implemented as pattern-only/offline output; Offline DNS record parsing and full HTTP request/response text inspection are implemented; certificate/key inspection remains conditional/pending.
 
 | ID | Operation | Acceptance criteria |
 |---|---|---|
@@ -11,6 +11,8 @@ The `/inspection/network-file` workbench currently implements IPv4/IPv6 normaliz
 | net.mac | Normalize MAC formats | Length/separator validation and deterministic normalization |
 | net.extract | Extract URI/domain/email/IP candidates | Implemented as deduplicated pattern candidates; explicitly not validation or resolution |
 | net.headers | Parse supplied HTTP headers | Duplicate-header policy explicit; no implicit request |
+| net.http-message | Inspect supplied HTTP request/response | Request/status line and duplicate headers parsed; sensitive headers redacted; body content omitted from parsed output; no network request |
+| net.offline-records | Parse supplied DNS record text | Common record types parsed from zone/dig-style lines; offline only, skipped lines reported |
 | net.cookies | Parse supplied cookie strings | No implication of browser cookie access or security validation |
 | net.offline-records | Inspect supplied DNS/network records | Offline unless a separate network action is approved |
 
