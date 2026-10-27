@@ -47,7 +47,7 @@ function encodeZ85(bytes:Uint8Array):string {
 }
 function decodeZ85(input:string):Uint8Array {
  const source=input.trim();if(source.length%5!==0)throw new Error("Z85 input length must be a multiple of five characters.");if(!/^[0-9a-zA-Z.\-:+=^!/*?&<>()\[\]{}@%$#]*$/.test(source))throw new Error("Z85 input contains a character outside the Z85 alphabet.");
- const out:number[]=[];for(let offset=0;offset<source.length;offset+=5){let value=BigInt(0);for(const char of source.slice(offset,offset+5)){const digit=Z85_ALPHABET.indexOf(char);if(digit<0)throw new Error("Z85 input contains an invalid character.");value=value*BigInt(85)+BigInt(digit);}if(value>BigInt(0xffffffff))throw new Error("Z85 group exceeds the 32-bit byte range.");for(let shift=24;shift>=0;shift-=8)out.push(Number((value>>BigInt(shift))&BigInt(255));if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");}
+ const out:number[]=[];for(let offset=0;offset<source.length;offset+=5){let value=BigInt(0);for(const char of source.slice(offset,offset+5)){const digit=Z85_ALPHABET.indexOf(char);if(digit<0)throw new Error("Z85 input contains an invalid character.");value=value*BigInt(85)+BigInt(digit);}if(value>BigInt(0xffffffff))throw new Error("Z85 group exceeds the 32-bit byte range.");for(let shift=24;shift>=0;shift-=8)out.push(Number((value>>BigInt(shift))&BigInt(255)));if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");}
  return Uint8Array.from(out);
 }
 function encodeAscii85(bytes:Uint8Array):string {
