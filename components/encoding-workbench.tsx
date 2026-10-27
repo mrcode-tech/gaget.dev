@@ -25,7 +25,6 @@ const notes: Record<EncodingMode, string> = {
   charset: "Convert text to UTF-8, UTF-16LE, UTF-16BE or Windows-1252 bytes (shown as hex), decode hex bytes, or decode a selected file using the chosen charset.",
   base58: "Uses the Bitcoin Base58 alphabet; leading zero bytes are preserved. This is encoding, not encryption.",
   base85: "Uses Adobe ASCII85 with <~ ~> wrappers and the z shorthand; this is not the same as every Base85 variant.",
-  z85: "Uses the ZeroMQ Z85 alphabet; input bytes must be divisible by four and encoded text length by five. Padding is never added implicitly.",
   z85: "Uses the ZeroMQ Z85 alphabet; input bytes must be divisible by four and encoded text length by five. Padding is never added implicitly."
 };
 export function EncodingWorkbench({ initialMode = "url" }: { initialMode?: EncodingMode }) {
