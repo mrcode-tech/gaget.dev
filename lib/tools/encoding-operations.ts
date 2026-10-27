@@ -159,7 +159,8 @@ export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array)
   case "base64url":output=base64FromBytes(bytes).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");break;
   case "hex":output=encodeHex(bytes);break;
   case "binary":output=Array.from(bytes,b=>b.toString(2).padStart(8,"0")).join(" ");break;
-  case "base58":output=encodeBase58(bytes);break;\n  case "base85":output=encodeAscii85(bytes);break;
+  case "base58":output=encodeBase58(bytes);break;
+  case "base85":output=encodeAscii85(bytes);break;
   default:throw new Error("Unsupported byte encoding mode.");
  }
  if(output.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded output exceeds the 1,000,000 character limit; use a smaller file or a more compact encoding.");
