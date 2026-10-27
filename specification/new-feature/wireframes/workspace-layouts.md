@@ -34,7 +34,7 @@ Operation/format/width/endianness above text or file input. Summary shows input 
 Inspector selection above text/byte/file input. Structured result distinguishes parse, decode, signature verification and trust. Pasted headers never trigger a request.
 
 ## Workflow, Generators & API Helpers
-API helper: pasted command/request → parsed structured preview → generated output with unsupported-syntax warnings. `/workflow/pipeline` provides typed allowlisted text/encoding/JSON/query steps, reorder controls, bounded intermediate output, sequential line batches and versioned recipe import/export. Binary/file operations, parallel batches, cancellation and persistence remain deferred pending separate safety review.
+API helper: pasted command/request → parsed structured preview → generated output with unsupported-syntax warnings. `/workflow/pipeline` provides typed allowlisted text/encoding/JSON/query steps, reorder controls, bounded intermediate output, sequential line batches and versioned recipe import/export. `/generators/sample-data` uses a single operation selector with bounded fields for random strings, integers, timestamps, synthetic JSON records and UUID batches. Binary/file operations, parallel batches, cancellation and persistence remain deferred pending separate safety review.
 
 ## Responsive contract
 
