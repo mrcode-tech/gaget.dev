@@ -1,12 +1,30 @@
 export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
-  | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
+  | "query-parse" | "url-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
   | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container";
 export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
+export function parseUrlComponents(input:string):string {
+  guardText(input);
+  let parsed:URL;
+  try { parsed=new URL(input.trim()); } catch { throw new Error("Enter a valid absolute URL, including its scheme (for example, https://example.com/path)."); }
+  const query:Record<string,string|string[]> = Object.create(null);
+  for(const [key,value] of parsed.searchParams.entries()){
+    if(Object.hasOwn(query,key)){const previous=query[key];query[key]=Array.isArray(previous)?[...previous,value]:[previous,value];}
+    else query[key]=value;
+  }
+  return JSON.stringify({
+    protocol:parsed.protocol,host:parsed.host,hostname:parsed.hostname,port:parsed.port||null,
+    pathname:parsed.pathname,search:parsed.search,hash:parsed.hash,origin:parsed.origin==="null"?null:parsed.origin,
+    queryParameters:query,credentialsPresent:Boolean(parsed.username||parsed.password),
+    usernamePresent:Boolean(parsed.username),passwordPresent:Boolean(parsed.password),
+    networkRequestsMade:false,
+    note:"The URL is parsed as text only. No navigation or network request is made; credential values are intentionally omitted from output."
+  },null,2);
+}
 export function parseQueryString(input:string):string {
   guardText(input); const source=input.startsWith("?")?input.slice(1):input; const result:Record<string,string|string[]>={};
   for(const part of source.split("&")) { if(!part)continue; const i=part.indexOf("="); const rawKey=i<0?part:part.slice(0,i),rawValue=i<0?"":part.slice(i+1);
@@ -382,6 +400,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  guardText(input);
  switch(operation){
  case "query-parse":return parseQueryString(input);
+ case "url-parse":return parseUrlComponents(input);
  case "query-build":return buildQueryString(input);
  case "key-value":return parseKeyValue(input);
  case "key-value-build":return buildKeyValue(input);
