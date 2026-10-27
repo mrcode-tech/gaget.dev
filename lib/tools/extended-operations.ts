@@ -361,7 +361,7 @@ export async function inspectCertificateContainer(input: string, bytes: Uint8Arr
     try { const decoded=new TextDecoder("utf-8",{fatal:true}).decode(bytes); if(decoded.includes("-----BEGIN "))source=decoded; } catch {}
   }
   const blocks:Array<{label:string;bytes:Uint8Array}>=[];
-  const pattern=/-----BEGIN ([A-Z0-9][A-Z0-9 -]{0,63})-----\s*([A-Za-z0-9+/=\s]+?)\s*-----END \1-----/g;
+  const pattern=/-----BEGIN ([A-Z0-9][A-Z0-9 -]{0,63})-----\s*([\s\S]*?)\s*-----END \1-----/g;
   for(const match of source.matchAll(pattern)){
     const encoded=match[2].replace(/\s/g,"");
     if(!encoded||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)||encoded.length%4===1)throw new Error("PEM block contains invalid Base64 data.");
