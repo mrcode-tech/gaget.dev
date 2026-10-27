@@ -56,7 +56,8 @@ export function numericView(input:string,bits=32,signed=false,endian:"big"|"litt
   if (![8,16,32,64].includes(bits)) throw new Error("Integer width must be 8, 16, 32, or 64 bits.");
   const text=input.trim();
   if (!/^[+-]?(?:\d+|0x[\da-f]+|0b[01]+|0o[0-7]+)$/i.test(text)) throw new Error("Enter a decimal, hexadecimal (0x), binary (0b), or octal (0o) integer.");
-  let value:bigint; try { value=BigInt(text); } catch { throw new Error("Enter a valid integer."); }
+  const negative=text.startsWith("-"),raw=text.replace(/^[+-]/,"");
+  let value:bigint; try { value=BigInt(raw)*(negative?-BigInt(1):BigInt(1)); } catch { throw new Error("Enter a valid integer."); }
   const width=BigInt(bits),modulus=BigInt(1)<<width;
   const min=signed?-(BigInt(1)<<(width-BigInt(1))):BigInt(0);
   const max=signed?(BigInt(1)<<(width-BigInt(1)))-BigInt(1):modulus-BigInt(1);
