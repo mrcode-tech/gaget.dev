@@ -174,7 +174,8 @@ export function decodeByteRepresentation(mode:ByteEncodingMode,input:string):Uin
   case "base64url":bytes=bytesFromBase64(input,true);break;
   case "hex":bytes=decodeHex(input);break;
   case "binary":bytes=decodeBinary(input);break;
-  case "base58":bytes=decodeBase58(input);break;\n  case "base85":bytes=decodeAscii85(input);break;
+  case "base58":bytes=decodeBase58(input);break;
+  case "base85":bytes=decodeAscii85(input);break;
   default:throw new Error("Unsupported byte encoding mode.");
  }
  if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
@@ -277,7 +278,8 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
     case "html-entities": return decodeEntities(input);
     case "unicode-escapes": return decodeUnicode(input);
     case "quoted-printable": return decodeQuotedPrintable(input);
-    case "base58": return textFrom(decodeBase58(input));\n    case "base85": return textFrom(decodeAscii85(input));
+    case "base58": return textFrom(decodeBase58(input));
+    case "base85": return textFrom(decodeAscii85(input));
     case "charset": throw new Error("Use the charset converter with an explicit character set.");
   }
 }
