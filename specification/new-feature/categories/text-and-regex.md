@@ -17,7 +17,7 @@
 | text.diff | Text comparison | Implemented bounded line-level additions/removals; normalizes CRLF/CR to LF for line comparison |
 
 ## Text & Regex Workbench contract
-Registry ID regex-tester; canonical route `/text/regex` remains stable. The operation selector includes regex matching/replacement, literal or regex find/replace, split/join, trim, line sort/deduplication, case conversion, Unicode normalization, HTML/JSON escaping, text statistics and bounded line diff. Regex results and replacement are previews; the source input is never overwritten. Regex input is limited to 50,000 characters and match output to 500 results. Browser regex execution cannot be reliably interrupted, so pathological patterns are isolated from the UI thread; the worker is terminated after 1 second and the input remains unchanged.
+Registry ID regex-tester; canonical route `/text/regex` remains stable. The operation selector includes regex matching/replacement, literal or regex find/replace, split/join, trim, line sort/deduplication, case conversion, Unicode normalization, HTML/JSON escaping, text statistics and bounded line diff. Regex results and replacement are previews; the source input is never overwritten. Regex input is limited to 50,000 characters and match output to 500 results. Regex evaluation runs in a dedicated worker and is terminated after 1 second, keeping pathological patterns from blocking the UI thread while leaving source input unchanged.
 
 See [wireframes](../wireframes/workspace-layouts.md#text--regular-expressions). Desktop may place settings beside sample/results; mobile stacks them and keeps match navigation reachable. Long outputs need explicit scroll ownership.
 

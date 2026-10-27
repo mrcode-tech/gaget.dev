@@ -36,13 +36,13 @@
 - `/security/hash` — SHA-256/384/512 digests and HMAC-SHA-2 over text or local file bytes (2 MB file limit), plus CRC32, CRC-16/CCITT-FALSE and Adler-32 text/file checksums; uses Web Crypto for cryptographic algorithms and does not encrypt.
 - `/data/binary-math` — URL component parsing with repeated query values and credential redaction; query-string/key-value conversions, number/bitwise/float views, bounded byte analysis and gzip/zlib-wrapped DEFLATE operations.
 - `/inspection/network-file` — offline IP/CIDR/MAC, HTTP-header/cookie/DNS parsing, HTTP message redaction of sensitive headers, recognizable secret URL query parameters and URL-bearing Location/Referer headers, file signatures and selected local PNG/GIF/BMP/JPEG/WebP/WAV/PDF/ZIP/ID3/PE/ELF/Mach-O metadata. PEM/DER container inspection reports labels/outer lengths and SHA-256 fingerprints; it does not validate certificate trust.
-- `/text/regex` — reports matches, indexes and capture groups with a 50,000-character input cap and 500-match output cap. JavaScript regex execution cannot be reliably interrupted, so pathological patterns can still block the tab.
+- `/text/regex` — reports matches, indexes and capture groups with a 50,000-character input cap and 500-match output cap. Regex matching and replacement run in a dedicated worker terminated after 1 second, keeping pathological patterns from blocking the tab.
 - `/xml/formatter` — lightweight XML text formatting/minifying with element-nesting checks; not a complete XML parser or schema validator.
 - `/sql/formatter` — heuristic SQL formatting/minifying only; no dialect-complete parser or query execution.
 - `/data/csv-json` — CSV and JSON-array-of-objects conversion; CSV cells remain strings and formula-like exported cells are prefixed.
 - `/web/html-formatter` — heuristic HTML text formatting/minifying; markup is never rendered as active HTML.
-- `/api/curl-converter` — parses a supported cURL subset including GET query mode, literal URL-encoded data and --json body shorthand, produces a redacted request preview, never executes requests, and reports unsupported flags.
-- `/workflow/pipeline` — typed allowlisted text/encoding/JSON/query pipeline with reorderable steps, bounded intermediate previews, sequential line batches and versioned recipe import/export; no arbitrary code execution or input persistence.
+- `/api/curl-converter` — parses a supported cURL subset including GET query mode, literal URL-encoded data and --json body shorthand, produces a redacted request preview (URL credentials, recognizable query/fragment values, sensitive headers and secret-like bodies), never executes requests, and reports unsupported flags.
+- `/workflow/pipeline` — typed allowlisted text/encoding/JSON/query pipeline (including ASCII85 and Z85) with reorderable steps, bounded intermediate previews, sequential line batches and versioned recipe import/export; no arbitrary code execution or input persistence.
 
 Broader capability families in the developer-tools proposal (full format parsers, advanced certificate/key parsing, archive formats, deeper metadata parsers and advanced workflow features) remain incomplete or conditional; do not infer their availability from these routes.
 
