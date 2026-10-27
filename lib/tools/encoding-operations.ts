@@ -168,7 +168,7 @@ function decodeBinary(value: string): Uint8Array {
   for (let i = 0; i < text.length; i += 8) bytes.push(Number.parseInt(text.slice(i, i + 8), 2));
   return Uint8Array.from(bytes);
 }
-export type ByteEncodingMode = "base64" | "base64url" | "base32" | "hex" | "binary" | "base58" | "base85" | "quoted-printable";
+export type ByteEncodingMode = "base64" | "base64url" | "base32" | "hex" | "binary" | "base58" | "base85" | "z85" | "quoted-printable";
 export const MAX_ENCODING_FILE_BYTES = 2_000_000;
 export const MAX_ENCODING_OUTPUT_LENGTH = 1_000_000;
 export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array):string {

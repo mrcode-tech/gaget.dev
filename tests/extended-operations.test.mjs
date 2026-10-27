@@ -77,6 +77,8 @@ test("data URI parser handles percent and Base64 payloads as bounded bytes witho
  assert.equal(binary.byteLength,3);assert.equal(binary.hexPreview,"00 ff 01");assert.equal(binary.base64,"AP8B");assert.equal(binary.textPreview,null);
  assert.throws(()=>parseDataUri("https://example.com"),/beginning with data:/i);
  assert.throws(()=>parseDataUri("data:text/plain,%QZ"),/percent escape/i);
- assert.equal(JSON.parse(parseDataUri("data:text/plain;base64,SGVsbG8")).textPreview,"Hello");\n assert.equal(JSON.parse(parseDataUri("data:," )).byteLength,0);\n assert.throws(()=>parseDataUri("data:text/plain;base64,SGVsbG8!"),/Base64 data or padding/i);
+ assert.equal(JSON.parse(parseDataUri("data:text/plain;base64,SGVsbG8")).textPreview,"Hello");
+ assert.equal(JSON.parse(parseDataUri("data:," )).byteLength,0);
+ assert.throws(()=>parseDataUri("data:text/plain;base64,SGVsbG8!"),/Base64 data or padding/i);
  assert.throws(()=>parseDataUri("data:text/plain,"+"x".repeat(2_000_001)),/200,000 character safety limit/i);
 });
