@@ -20,7 +20,7 @@ The `/data/binary-math` workbench implements browser-native gzip and zlib-wrappe
 | binary.hexdump | Offset, hex bytes, printable view | Stable offsets, row width, bounded/virtualized output |
 | binary.bytes | Byte/range inspector | Implemented: select a local file and inspect 1–256 bytes from a zero-based offset; output includes hex, decimal and printable ASCII views. Input remains capped at 2 MB. |
 | binary.strings | Printable-string extraction | Minimum length and character policy explicit |
-| binary.compare | Byte/file comparison | First differing offset, lengths and bounded output |
+| binary.compare | Byte/file comparison | Implemented: compares two local files up to 2 MB each; reports first differing zero-based offset, lengths, differing positions and at most 100 preview entries. |
 | num.base-convert | Binary/octal/decimal/hex | Digit validation, range and arbitrary precision explicit |
 | num.signed-unsigned | Fixed-width integer interpretation | Implemented for 8/16/32/64-bit signed two’s-complement and unsigned integers, with range validation and endian byte views |
 | num.endianness | Interpret/serialize multi-byte values | Implemented in fixed-width integer and IEEE-754 views with big/little-endian known fixtures |
