@@ -8,7 +8,7 @@ function redactCurlPairs(source:string):string {
   if(!pair)return pair;
   const equals=pair.indexOf("="),rawKey=equals<0?pair:pair.slice(0,equals);
   let key=rawKey;try{key=decodeURIComponent(rawKey.replace(/\+/g," "));}catch{}
-  return CURL_CURL_SENSITIVE_QUERY_NAME.test(key)?(equals<0?rawKey:rawKey+"=[REDACTED]"):pair;
+  return CURL_SENSITIVE_QUERY_NAME.test(key)?(equals<0?rawKey:rawKey+"=[REDACTED]"):pair;
  }).join("&");
 }
 const guard = (s:string) => { if (s.length > MAX_TEXT_LENGTH) throw new Error("Input exceeds the 200,000 character safety limit."); };
