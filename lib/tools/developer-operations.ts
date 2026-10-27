@@ -40,7 +40,7 @@ function tokenizeXml(source:string):XmlToken[]{
   if(/^<\//.test(value)){const m=value.match(/^<\/([A-Za-z_:][\w:.-]*)\s*>$/);if(!m)throw new Error("Malformed XML closing tag: "+value);tokens.push({kind:"end",name:m[1],value});}
   else{
    const m=value.match(/^<([A-Za-z_:][\w:.-]*)([\s\S]*?)\s*(\/?)>$/);if(!m)throw new Error("Malformed XML start tag: "+value);
-   const name=m[1];let rest=m[2],seen=new Set<string>();
+   const name=m[1];let rest=m[2];const seen=new Set<string>();
    while(rest.trim()){const am=rest.match(/^\s+([A-Za-z_:][\w:.-]*)\s*=\s*("[^"]*"|'[^']*')/);if(!am)throw new Error("Malformed XML attribute in "+name+".");if(seen.has(am[1]))throw new Error("Duplicate XML attribute "+am[1]+" in "+name+".");seen.add(am[1]);rest=rest.slice(am[0].length);}
    tokens.push({kind:m[3]==="/"?"empty":"start",name,value});
   }

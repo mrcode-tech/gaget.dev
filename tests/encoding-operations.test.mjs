@@ -79,5 +79,5 @@ test("Base32 and quoted-printable preserve arbitrary file bytes including invali
 });
 test("quoted-printable byte decoding is bounded and does not require UTF-8",()=>{
  assert.deepEqual(Array.from(decodeByteRepresentation("quoted-printable","=FF=00")),[255,0]);
- assert.throws(()=>decodeByteRepresentation("quoted-printable","=00".repeat(666668)),/2,000,000 bytes/i);
+ assert.throws(()=>decodeByteRepresentation("quoted-printable","=00".repeat(333334)),/Encoded input exceeds the 1,000,000 character limit/i);
 });
