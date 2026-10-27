@@ -13,7 +13,7 @@
 
 Do not build a pipeline engine until several operation contracts, errors and resource limits are stable.
 
-## Generators
+## Generators\n\n`/generators/sample-data` implements bounded random alphanumeric strings, inclusive integer ranges, device-clock timestamps, synthetic JSON records and UUID v4 batches. Output counts and lengths are capped; randomness is browser-local and is not presented as a password-strength recommendation.
 
 | ID | Operation | Contract |
 |---|---|---|
