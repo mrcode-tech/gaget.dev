@@ -11,7 +11,7 @@ The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv
 | net.mac | Normalize MAC formats | Length/separator validation and deterministic normalization |
 | net.extract | Extract URI/domain/email/IP candidates | Implemented as deduplicated pattern candidates; explicitly not validation or resolution |
 | net.headers | Parse supplied HTTP headers | Duplicate-header policy explicit; no implicit request |
-| net.http-message | Inspect supplied HTTP request/response | Request/status line and duplicate headers parsed; sensitive headers redacted; body content omitted from parsed output; no network request |
+| net.http-message | Inspect supplied HTTP request/response | Request/status line and duplicate headers parsed; sensitive headers and recognizable secret query parameters redacted (including Location/Referer URLs); body content omitted from parsed output; no network request |
 | net.file-signatures | Inspect local file magic bytes | Common image/document/archive/audio/executable signatures; 2 MB file cap; matches are not a safety verdict |
 | net.offline-records | Parse supplied DNS record text | Common record types parsed from zone/dig-style lines; offline only, skipped lines reported |
 | net.cookies | Parse supplied cookie strings | No implication of browser cookie access or security validation |

@@ -302,8 +302,9 @@ export function parseDnsRecords(input:string):string {
  return JSON.stringify({count:records.length,records,skippedNonRecordLines:skippedLines,networkRequestsMade:false,note:"Offline text parsing only; records are not resolved, verified, or queried."},null,2);
 }
 const SENSITIVE_HTTP_HEADERS=/^(authorization|proxy-authorization|www-authenticate|proxy-authenticate|cookie|set-cookie)$/i;
-const SENSITIVE_HTTP_HEADER_NAME=/(?:^|[-_])(?:api[-_]?key|access[-_]?token|auth[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?token|csrf[-_]?token|password|passwd|secret|credential|private[-_]?key|signature)(?:$|[-_])/i;
-const SENSITIVE_QUERY_NAME=/(?:^|[-_.])(?:access[-_.]?token|auth[-_.]?token|refresh[-_.]?token|id[-_.]?token|token|api[-_.]?key|key|password|passwd|secret|credential|session|signature|sig)(?:$|[-_.])/i;
+const SENSITIVE_HTTP_HEADER_NAME=/(?:^|[-_])(?:api[-_]?key|access[-_]?token|auth[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?token|security[-_]?token|csrf[-_]?token|password|passwd|secret|credential|private[-_]?key|signature)(?:$|[-_])/i;
+const SENSITIVE_HTTP_URL_HEADER=/^(?:location|content-location|referer|referrer)$/i;
+const SENSITIVE_QUERY_NAME=/(?:^|[-_.])(?:access[-_.]?token|auth[-_.]?token|refresh[-_.]?token|id[-_.]?token|security[-_.]?token|token|api[-_.]?key|client[-_.]?secret|authorization[-_.]?code|code|ticket|key|password|passwd|secret|credential|session|signature|sig)(?:$|[-_.])/i;
 function redactSensitivePairs(source:string):string {
  return source.split("&").map(pair=>{
   if(!pair)return pair;
@@ -334,7 +335,7 @@ export function parseHttpMessage(input:string):string {
   const colon=line.indexOf(":");if(colon<1)throw new Error("Header line "+(index+2)+" must use Name: value.");
   const name=line.slice(0,colon).trim(),rawValue=line.slice(colon+1).trim();
   if(!/^[!#$%&'*+.^_|~0-9A-Za-z-]+$/.test(name))throw new Error("Invalid HTTP header name at line "+(index+2)+".");
-  const redacted=SENSITIVE_HTTP_HEADERS.test(name)||SENSITIVE_HTTP_HEADER_NAME.test(name);headers.push({name,value:redacted?"[REDACTED]":rawValue,redacted});
+  const redacted=SENSITIVE_HTTP_HEADERS.test(name)||SENSITIVE_HTTP_HEADER_NAME.test(name);const value=redacted?"[REDACTED]":SENSITIVE_HTTP_URL_HEADER.test(name)?redactHttpTarget(rawValue):rawValue;headers.push({name,value,redacted:redacted||value!==rawValue});
  }
  const grouped:Record<string,string[]>={};for(const header of headers)(grouped[header.name.toLowerCase()]??=[]).push(header.value);
  const contentType=headers.find(h=>h.name.toLowerCase()==="content-type")?.value??null;

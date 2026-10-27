@@ -125,3 +125,10 @@ test("ELF metadata decodes class, byte order, machine and entry point",()=>{
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"ELF executable/object candidate");assert.equal(result.metadata.class,"ELF64");assert.equal(result.metadata.byteOrder,"little-endian");assert.equal(result.metadata.machine,"x86-64");assert.equal(result.metadata.objectType,"Executable");assert.equal(result.metadata.entryPoint,"0x0000000000401000");
  const shortElf=new Uint8Array(20);shortElf.set([0x7f,0x45,0x4c,0x46,2,1,1]);const truncated=JSON.parse(inspectFileMetadata(shortElf));assert.match(truncated.notes.join(" "),/truncated/i);
 });
+
+test("HTTP response URL headers redact OAuth codes, tokens, and credential values",()=>{
+ const result=JSON.parse(parseHttpMessage("HTTP/1.1 302 Found\\nLocation: https://example.test/callback?code=oauth-secret&state=keep\\nReferer: https://example.test/?session=ref-secret\\n\\n"));
+ const location=result.headers.find(h=>h.name==="Location").value,referer=result.headers.find(h=>h.name==="Referer").value;
+ assert.equal(location.includes("oauth-secret"),false);assert.match(location,/state=keep/);assert.equal(referer.includes("ref-secret"),false);
+ assert.equal(JSON.stringify(result).includes("oauth-secret"),false);assert.equal(JSON.stringify(result).includes("ref-secret"),false);
+});
