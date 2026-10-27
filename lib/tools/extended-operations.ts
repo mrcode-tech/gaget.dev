@@ -155,7 +155,7 @@ export function characterStatistics(input:string):string {
  guardText(input);
  const counts=new Map<string,number>();let whitespace=0;
  for(const character of Array.from(input)){counts.set(character,(counts.get(character)??0)+1);if(/\s/u.test(character))whitespace++;}
- const sorted=[...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].codePointAt(0)!-b[0].codePointAt(0)!);
+ const sorted=[...counts.entries()].sort((a,b)=>b[1]-a[1]||(a[0]?.codePointAt(0)??0)-(b[0]?.codePointAt(0)??0));
  const total=Array.from(input).length;
  return JSON.stringify({unit:"Unicode code points (not grapheme clusters)",totalCodePoints:total,uniqueCodePoints:counts.size,whitespaceCodePoints:whitespace,frequencies:sorted.slice(0,100).map(([character,count])=>({character,codePoint:"U+"+character.codePointAt(0)!.toString(16).toUpperCase().padStart(4,"0"),count,percent:total?Number((count*100/total).toFixed(2)):0})),truncated:sorted.length>100},null,2);
 }
