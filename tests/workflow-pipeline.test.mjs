@@ -8,3 +8,5 @@ test("batch mode is sequential, bounded, and isolates per-record failures",()=>{
 test("pipeline input and output resource limits are enforced",()=>{assert.throws(()=>executePipeline("x".repeat(200001),{version:1,inputType:"text",steps:[]}),/200,000/i);assert.throws(()=>executePipeline("x".repeat(600000),{version:1,inputType:"text",steps:[{operation:"base64-encode"}]}),/200,000/i);});
 
 test("batch input has a total-size cap before processing records",()=>{assert.throws(()=>executeBatch("x".repeat(200001),{version:1,inputType:"text",steps:[]}),/200,000 characters total/i);});
+
+test("batch processing isolates malformed encoded records",()=>{const result=JSON.parse(executeBatch("SGVsbG8=\n%%% ",{version:1,inputType:"base64",steps:[{operation:"base64-decode"}]}));assert.equal(result[0].output,"Hello");assert.match(result[1].error,/Base64/i);});
