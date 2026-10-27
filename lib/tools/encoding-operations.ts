@@ -109,6 +109,35 @@ function decodeBinary(value: string): Uint8Array {
   for (let i = 0; i < text.length; i += 8) bytes.push(Number.parseInt(text.slice(i, i + 8), 2));
   return Uint8Array.from(bytes);
 }
+export type ByteEncodingMode = "base64" | "base64url" | "hex" | "binary" | "base58";
+export const MAX_ENCODING_FILE_BYTES = 2_000_000;
+export const MAX_ENCODING_OUTPUT_LENGTH = 1_000_000;
+export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array):string {
+ if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Byte input is limited to 2,000,000 bytes.");
+ let output:string;
+ switch(mode){
+  case "base64":output=base64FromBytes(bytes);break;
+  case "base64url":output=base64FromBytes(bytes).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");break;
+  case "hex":output=encodeHex(bytes);break;
+  case "binary":output=Array.from(bytes,b=>b.toString(2).padStart(8,"0")).join(" ");break;
+  case "base58":output=encodeBase58(bytes);break;
+ }
+ if(output.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded output exceeds the 1,000,000 character limit; use a smaller file or a more compact encoding.");
+ return output;
+}
+export function decodeByteRepresentation(mode:ByteEncodingMode,input:string):Uint8Array {
+ if(input.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded input exceeds the 1,000,000 character limit.");
+ let bytes:Uint8Array;
+ switch(mode){
+  case "base64":bytes=bytesFromBase64(input);break;
+  case "base64url":bytes=bytesFromBase64(input,true);break;
+  case "hex":bytes=decodeHex(input);break;
+  case "binary":bytes=decodeBinary(input);break;
+  case "base58":bytes=decodeBase58(input);break;
+ }
+ if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
+ return bytes;
+}
 function encodeEntities(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
