@@ -3,7 +3,7 @@ export type ExtendedOperation =
   | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
-  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures";
+  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata";
 export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
@@ -255,6 +255,57 @@ export function inspectFileSignatures(bytes:Uint8Array):string {
  return JSON.stringify({bytes:bytes.length,firstBytesHex:hex(0,Math.min(32,bytes.length)),signatureMatches:matches,classification:matches.length?"Known signature match":"No known signature match",note:"Magic-byte matching is informational only; it does not validate the complete file, prove its extension, or establish that it is safe."},null,2);
 }
 
+
+/** Extracts bounded, non-executing metadata from a small set of common file headers. */
+export function inspectFileMetadata(bytes: Uint8Array): string {
+  guardBytes(bytes);
+  const u16le=(offset:number)=>offset+2<=bytes.length?bytes[offset]|(bytes[offset+1]<<8):null;
+  const u32le=(offset:number)=>offset+4<=bytes.length?(bytes[offset]|(bytes[offset+1]<<8)|(bytes[offset+2]<<16)|(bytes[offset+3]<<24))>>>0:null;
+  const u32be=(offset:number)=>offset+4<=bytes.length?((bytes[offset]*0x1000000)+(bytes[offset+1]<<16)+(bytes[offset+2]<<8)+bytes[offset+3])>>>0:null;
+  const ascii=(offset:number,length:number)=>Array.from(bytes.slice(offset,offset+length),b=>String.fromCharCode(b)).join("");
+  const metadata:Record<string,unknown>={};
+  const notes:string[]=[];
+  if(ascii(0,8)==="\x89PNG\r\n\x1a\n" && bytes.length>=26){
+    metadata.format="PNG";metadata.width=u32be(16);metadata.height=u32be(20);metadata.bitDepth=bytes[24];metadata.colorType=bytes[25];
+  } else if((ascii(0,6)==="GIF87a"||ascii(0,6)==="GIF89a")&&bytes.length>=10){
+    metadata.format="GIF";metadata.width=u16le(6);metadata.height=u16le(8);metadata.version=ascii(0,6);
+  } else if(ascii(0,2)==="BM"&&bytes.length>=30){
+    const width=u32le(18)!,heightRaw=u32le(22)!;
+    metadata.format="BMP";metadata.width=width>0x7fffffff?width-0x100000000:width;metadata.height=Math.abs(heightRaw>0x7fffffff?heightRaw-0x100000000:heightRaw);metadata.bitsPerPixel=u16le(28);
+  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP"&&ascii(12,4)==="VP8X"&&bytes.length>=30){
+    metadata.format="WebP";metadata.width=1+bytes[24]+(bytes[25]<<8)+(bytes[26]<<16);metadata.height=1+bytes[27]+(bytes[28]<<8)+(bytes[29]<<16);
+  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE"&&bytes.length>=12){
+    metadata.format="WAVE";let offset=12;let byteRate:number|null=null;let dataSize:number|null=null;
+    while(offset+8<=bytes.length){
+      const id=ascii(offset,4),size=u32le(offset+4)!;const body=offset+8;
+      if(size>bytes.length-body){notes.push("A chunk length extends beyond the supplied file bytes.");break;}
+      if(id==="fmt "&&size>=16){metadata.audioFormat=u16le(body);metadata.channels=u16le(body+2);metadata.sampleRate=u32le(body+4);byteRate=u32le(body+8);metadata.bitsPerSample=u16le(body+14);}
+      if(id==="data")dataSize=size;
+      if(id==="fmt "||id==="data"){if(dataSize!==null&&byteRate!==null&&byteRate>0){metadata.dataBytes=dataSize;metadata.durationSeconds=Number((dataSize/byteRate).toFixed(3));}}
+      offset=body+size+(size%2);
+    }
+    if(dataSize!==null){metadata.dataBytes=dataSize;if(byteRate&&byteRate>0)metadata.durationSeconds=Number((dataSize/byteRate).toFixed(3));}
+  } else if(ascii(0,5)==="%PDF-"&&bytes.length>=8){
+    metadata.format="PDF";metadata.version=ascii(5,3);
+    const text=ascii(0,bytes.length);
+    const pageObjects=Array.from(text.matchAll(/\/Type\s*\/Page\b/g)).length;
+    if(pageObjects)metadata.pageObjectCandidates=pageObjects;
+    const declaredCounts=Array.from(text.matchAll(/\/Count\s+(\d{1,8})\b/g),m=>Number(m[1])).filter(n=>n>=0);
+    if(declaredCounts.length)metadata.declaredPageCounts=declaredCounts.slice(0,50);
+    notes.push("PDF page counts are lexical candidates only; compressed object streams and malformed files may hide or spoof counts.");
+  } else if(ascii(0,3)==="ID3"&&bytes.length>=10){
+    const sizeBytes=[bytes[6],bytes[7],bytes[8],bytes[9]];
+    if(sizeBytes.every(b=>(b&0x80)===0)){
+      metadata.format="MP3 with ID3 tag";metadata.id3Version="2."+bytes[3]+"."+bytes[4];metadata.id3TagBytes=(sizeBytes[0]<<21)|(sizeBytes[1]<<14)|(sizeBytes[2]<<7)|sizeBytes[3];metadata.id3Flags=bytes[5];
+      if(10+(metadata.id3TagBytes as number)>bytes.length)notes.push("The declared ID3 tag extends beyond the supplied bytes.");
+    } else notes.push("ID3 tag size uses invalid synchsafe bytes.");
+  } else {
+    metadata.format="No supported metadata parser matched";
+    notes.push("The file may be unsupported, truncated, or contain a format variant not handled by this inspector.");
+  }
+  return JSON.stringify({inputBytes:bytes.length,metadata,notes,processing:"Local byte parsing only; no file execution, extraction, or network access.",caveat:"Metadata fields are best-effort indicators, not proof of file validity or safety."},null,2);
+}
+
 export async function runExtendedOperation(operation:ExtendedOperation,input:string,bytes:Uint8Array,options:ExtendedOptions={}):Promise<string> {
  guardText(input);
  switch(operation){
@@ -283,6 +334,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "dns-records":return parseDnsRecords(input);
  case "http-message":return parseHttpMessage(input);
  case "file-signatures":return inspectFileSignatures(bytes);
+ case "file-metadata":return inspectFileMetadata(bytes);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }
