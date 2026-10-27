@@ -3,13 +3,32 @@ export const MAX_TEXT_LENGTH = 200_000;
 const guard = (s:string) => { if (s.length > MAX_TEXT_LENGTH) throw new Error("Input exceeds the 200,000 character safety limit."); };
 export function parseCsv(s:string, d=","):string[][] {
  guard(s); if(d.length!==1 || /["\r\n]/.test(d)) throw new Error("Delimiter must be one non-quote character.");
- const rows:string[][]=[]; let row:string[]=[], cell="", quoted=false;
- for(let i=0;i<s.length;i++){const c=s[i]; if(quoted){if(c==='"'&&s[i+1]==='"'){cell+='"';i++;}else if(c==='"')quoted=false;else cell+=c;}
- else if(c==='"'&&!cell)quoted=true;else if(c===d){row.push(cell);cell="";}
- else if(c==="\r"||c==="\n"){if(c==="\r"&&s[i+1]==="\n")i++;row.push(cell);rows.push(row);row=[];cell="";}else cell+=c;}
+ const rows:string[][]=[];let row:string[]=[],cell="",quoted=false,afterQuote=false;
+ const endRow=()=>{row.push(cell);rows.push(row);row=[];cell="";afterQuote=false;};
+ for(let i=0;i<s.length;i++){
+  const ch=s[i];
+  if(quoted){
+   if(ch==='"'&&s[i+1]==='"'){cell+='"';i++;}
+   else if(ch==='"'){quoted=false;afterQuote=true;}
+   else cell+=ch;
+   continue;
+  }
+  if(afterQuote){
+   if(ch===d){row.push(cell);cell="";afterQuote=false;continue;}
+   if(ch==="\r"||ch==="\n"){if(ch==="\r"&&s[i+1]==="\n")i++;endRow();continue;}
+   throw new Error("Unexpected character after a closing CSV quote; expected a delimiter or line ending.");
+  }
+  if(ch==='"'){
+   if(cell.length!==0)throw new Error("A quoted CSV field must begin with a quote at the start of the cell.");
+   quoted=true;continue;
+  }
+  if(ch===d){row.push(cell);cell="";continue;}
+  if(ch==="\r"||ch==="\n"){if(ch==="\r"&&s[i+1]==="\n")i++;endRow();continue;}
+  cell+=ch;
+ }
  if(quoted)throw new Error("CSV contains an unclosed quoted field.");
- if(cell||row.length||!s.length||! /[\r\n]$/.test(s)){row.push(cell);rows.push(row);}
- if(rows[0]?.[0]?.charCodeAt(0)===0xfeff)rows[0][0]=rows[0][0].slice(1); return rows;
+ if(cell||row.length||afterQuote||!s.length||!/[\r\n]$/.test(s)){row.push(cell);rows.push(row);}
+ if(rows[0]?.[0]?.charCodeAt(0)===0xfeff)rows[0][0]=rows[0][0].slice(1);return rows;
 }
 function csvCell(v:unknown,d:string){let s=v==null?"":typeof v==="string"?v:JSON.stringify(v);if(typeof v==="string"&&/^[=+@\-\t\r]/.test(s))s="'"+s;return /["\r\n]/.test(s)||s.includes(d)?'"'+s.replace(/"/g,'""')+'"':s;}
 export function csvToJson(s:string,d=","){
@@ -23,12 +42,47 @@ export function jsonToCsv(s:string,d=","){
  guard(s);const data:unknown=JSON.parse(s);if(!Array.isArray(data)||data.some(r=>!r||typeof r!=="object"||Array.isArray(r)))throw new Error("Provide a JSON array of objects to convert to CSV.");
  const headers=[...new Set(data.flatMap(r=>Object.keys(r as object)))];return [headers.map(v=>csvCell(v,d)).join(d),...data.map(r=>headers.map(k=>csvCell((r as Record<string,unknown>)[k],d)).join(d))].join("\n");
 }
+type XmlToken={kind:"text"|"comment"|"cdata"|"pi"|"doctype"|"start"|"end"|"empty";value:string;name?:string};
+function tokenizeXml(source:string):XmlToken[]{
+ const tokens:XmlToken[]=[];let i=0;
+ while(i<source.length){
+  if(source[i]!=="<"){const end=source.indexOf("<",i),stop=end<0?source.length:end,value=source.slice(i,stop);if(value.includes("]]>"))throw new Error("XML character data cannot contain ]]>.");tokens.push({kind:"text",value});i=stop;continue;}
+  if(source.startsWith("<!--",i)){const end=source.indexOf("-->",i+4);if(end<0)throw new Error("Unclosed XML comment.");const value=source.slice(i,end+3);if(value.slice(4,-3).includes("--"))throw new Error("XML comments cannot contain --.");tokens.push({kind:"comment",value});i=end+3;continue;}
+  if(source.startsWith("<![CDATA[",i)){const end=source.indexOf("]]>",i+9);if(end<0)throw new Error("Unclosed CDATA section.");tokens.push({kind:"cdata",value:source.slice(i,end+3)});i=end+3;continue;}
+  if(source.startsWith("<?",i)){const end=source.indexOf("?>",i+2);if(end<0)throw new Error("Unclosed processing instruction.");tokens.push({kind:"pi",value:source.slice(i,end+2)});i=end+2;continue;}
+  if(/^<!DOCTYPE\b/i.test(source.slice(i,i+10))){
+   let quote="",brackets=0,end=-1;for(let j=i+9;j<source.length;j++){const ch=source[j];if(quote){if(ch===quote)quote="";continue;}if(ch==="'"||ch==='"'){quote=ch;continue;}if(ch==="[")brackets++;else if(ch==="]")brackets=Math.max(0,brackets-1);else if(ch===">"&&brackets===0){end=j;break;}}
+   if(end<0)throw new Error("Unclosed DOCTYPE declaration.");tokens.push({kind:"doctype",value:source.slice(i,end+1)});i=end+1;continue;
+  }
+  let quote="",end=-1;for(let j=i+1;j<source.length;j++){const ch=source[j];if(quote){if(ch===quote)quote="";continue;}if(ch==="'"||ch==='"'){quote=ch;continue;}if(ch===">"){end=j;break;}if(ch==="<")throw new Error("Unexpected < inside an XML tag.");}
+  if(end<0)throw new Error("Unclosed XML tag.");const value=source.slice(i,end+1);
+  if(/^<\//.test(value)){const m=value.match(/^<\/([A-Za-z_:][\w:.-]*)\s*>$/);if(!m)throw new Error("Malformed XML closing tag: "+value);tokens.push({kind:"end",name:m[1],value});}
+  else{
+   const m=value.match(/^<([A-Za-z_:][\w:.-]*)([\s\S]*?)\s*(\/?)>$/);if(!m)throw new Error("Malformed XML start tag: "+value);
+   const name=m[1];let rest=m[2];const seen=new Set<string>();
+   while(rest.trim()){const am=rest.match(/^\s+([A-Za-z_:][\w:.-]*)\s*=\s*("[^"]*"|'[^']*')/);if(!am)throw new Error("Malformed XML attribute in "+name+".");if(seen.has(am[1]))throw new Error("Duplicate XML attribute "+am[1]+" in "+name+".");seen.add(am[1]);rest=rest.slice(am[0].length);}
+   tokens.push({kind:m[3]==="/"?"empty":"start",name,value});
+  }
+  i=end+1;
+ }
+ return tokens;
+}
 export function formatXml(s:string,minify=false){
- guard(s);const tokens=s.replace(/>\s*</g,"><").match(/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<[^>]+>|[^<]+/gi)||[];
- if(!tokens.join("").trim())throw new Error("Enter an XML document.");const stack:string[]=[],lines:string[]=[];let depth=0;
- for(const t of tokens){const v=t.trim();if(!v)continue;if(/^<\//.test(v)){const n=v.match(/^<\/\s*([^\s>]+)/)?.[1];if(!n||stack.pop()!==n)throw new Error("Unexpected or mismatched closing tag: "+v);depth=Math.max(0,depth-1);}
- lines.push("  ".repeat(depth)+v);if(/^<[^!?/][^>]*>$/.test(v)&&! /\/\s*>$/.test(v)){const n=v.match(/^<([^\s/>]+)/)?.[1];if(!n)throw new Error("Malformed XML element.");stack.push(n);depth++;}}
- if(stack.length)throw new Error("Unclosed XML element: "+stack[stack.length-1]);return minify?lines.join("").replace(/>\s*</g,"><"):lines.join("\n");
+ guard(s);const tokens=tokenizeXml(s);if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
+ const stack:string[]=[],lines:string[]=[];let depth=0,roots=0,doctypeSeen=false,rootClosed=false;
+ for(const token of tokens){const {kind,value,name}=token;const v=value.trim();if(!v)continue;
+  if(kind==="text"){if(stack.length===0)throw new Error("Text is not allowed outside the XML root element.");lines.push("  ".repeat(depth)+v);continue;}
+  if(kind==="doctype"){if(doctypeSeen||roots>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");doctypeSeen=true;lines.push(v);continue;}
+  if(kind==="comment"||kind==="pi"){lines.push("  ".repeat(depth)+v);continue;}
+  if(kind==="cdata"){if(!stack.length)throw new Error("CDATA is only allowed inside the XML root element.");lines.push("  ".repeat(depth)+v);continue;}
+  if(kind==="end"){if(stack.pop()!==name)throw new Error("Unexpected or mismatched closing tag: "+v);depth--;if(stack.length===0)rootClosed=true;lines.push("  ".repeat(depth)+v);continue;}
+  if(stack.length===0){if(rootClosed||roots>0)throw new Error("XML must contain exactly one root element.");roots++;}
+  lines.push("  ".repeat(depth)+v);
+  if(kind==="start"){stack.push(name!);depth++;}else if(stack.length===0)rootClosed=true;
+ }
+ if(stack.length)throw new Error("Unclosed XML element: "+stack[stack.length-1]);
+ if(roots!==1)throw new Error("XML must contain exactly one root element.");
+ return minify?lines.join("").replace(/>\s*</g,"><"):lines.join("\n");
 }
 export function formatHtml(s:string,minify=false){
  guard(s);const tokens=s.match(/<!--[\s\S]*?-->|<![^>]*>|<[^>]+>|[^<]+/g)||[];

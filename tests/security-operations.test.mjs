@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
-import { computeHash, computeHashBytes, crc32Text, crc32Bytes } from "../lib/tools/security-operations.ts";
+import { computeHash, computeHashBytes, crc32Text, crc32Bytes, crc16CcittBytes, adler32Bytes } from "../lib/tools/security-operations.ts";
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
 test("CRC32 uses the standard IEEE vector and is labelled as a checksum", () => {
@@ -25,4 +25,17 @@ test("file-byte digest and checksum vectors use raw bytes with strict size limit
   assert.equal(await computeHashBytes(bytes, { mode: "digest", algorithm: "SHA-256" }), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
   assert.equal(crc32Bytes(new TextEncoder().encode("123456789")), "CBF43926");
   await assert.rejects(() => computeHashBytes(new Uint8Array(2_000_001), { mode: "crc32", algorithm: "SHA-256" }), /2,000,000 byte/i);
+});
+
+test("CRC-16/CCITT-FALSE and Adler-32 match standard check vectors",()=>{
+ const vector=new TextEncoder().encode("123456789");
+ assert.equal(crc16CcittBytes(vector),"29B1");
+ assert.equal(adler32Bytes(new TextEncoder().encode("Wikipedia")),"11E60398");
+ assert.equal(crc16CcittBytes(new Uint8Array()),"FFFF");
+});
+test("additional checksums operate on raw file bytes and enforce byte limits",async()=>{
+ const bytes=new TextEncoder().encode("123456789");
+ assert.equal(await computeHashBytes(bytes,{mode:"crc16-ccitt",algorithm:"SHA-256"}),"29B1");
+ assert.equal(await computeHashBytes(bytes,{mode:"adler32",algorithm:"SHA-256"}),adler32Bytes(bytes));
+ assert.throws(()=>crc16CcittBytes(new Uint8Array(2_000_001)),/2,000,000 byte/i);
 });

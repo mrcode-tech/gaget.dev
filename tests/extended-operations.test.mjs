@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures } from "../lib/tools/extended-operations.ts";
+import { parseUrlComponents, parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata, inspectCertificateContainer } from "../lib/tools/extended-operations.ts";
 test("query strings preserve repeated keys, plus spaces, and empty values",()=>{assert.deepEqual(JSON.parse(parseQueryString("?tag=a&tag=b&empty=&space=hello+world")),{tag:["a","b"],empty:"",space:"hello world"});assert.equal(buildQueryString('{"tag":["a","b"],"space":"hello world"}'),"tag=a&tag=b&space=hello%20world");assert.throws(()=>parseQueryString("bad=%Q"),/percent escape/i);});
 test("key-value parsing preserves duplicate values and rejects malformed lines",()=>{assert.deepEqual(JSON.parse(parseKeyValue("# comment\na=1\na=2\nempty=")),{a:["1","2"],empty:""});assert.throws(()=>parseKeyValue("missing delimiter"),/key=value/i);});
 test("base conversion uses BigInt for large values and validates radix",()=>{assert.equal(JSON.parse(convertNumberBase("18446744073709551615")).hexadecimal,"FFFFFFFFFFFFFFFF");assert.equal(JSON.parse(convertNumberBase("FF",16)).decimal,"255");assert.throws(()=>convertNumberBase("2",2),/digit/i);});
@@ -32,3 +32,40 @@ test("bitwise AND OR XOR enforce width and return decimal, hex and padded binary
 test("bitwise NOT masks to selected width and signed operations use two's-complement ranges",()=>{assert.deepEqual(JSON.parse(arithmetic("not",{a:"0",bits:8})),{operation:"not",width:8,decimal:"255",hexadecimal:"0xFF",binary:"11111111"});assert.equal(JSON.parse(arithmetic("not",{a:"0",bits:8,signed:true})).decimal,"-1");assert.deepEqual(JSON.parse(arithmetic("xor",{a:"-1",b:"1",bits:8,signed:true})),{operation:"xor",width:8,decimal:"-2",hexadecimal:"0xFE",binary:"11111110",signed:true,unsignedDecimal:"254"});assert.throws(()=>arithmetic("xor",{a:"128",b:"1",bits:8,signed:true}),/signed 8-bit/i);assert.throws(()=>arithmetic("not",{a:"1.5",bits:8}),/integer operands/i);});
 
 test("Unicode character statistics count code points and report bounded deterministic frequencies",()=>{const r=JSON.parse(characterStatistics("A😀Aé"));assert.equal(r.totalCodePoints,4);assert.equal(r.uniqueCodePoints,3);assert.equal(r.whitespaceCodePoints,0);assert.equal(JSON.parse(characterStatistics("a a")).whitespaceCodePoints,1);assert.equal(r.frequencies[0].character,"A");assert.equal(r.frequencies[0].count,2);assert.equal(r.frequencies.find(x=>x.character==="😀").codePoint,"U+1F600");assert.equal(JSON.parse(characterStatistics("")).totalCodePoints,0);});
+
+test("file metadata inspector reads PNG, GIF and WAV header fields without extracting or executing files",()=>{
+ const png=new Uint8Array(26);png.set([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],0);png.set([0,0,0,2,0,0,0,3],16);png[24]=8;png[25]=6;
+ const p=JSON.parse(inspectFileMetadata(png));assert.equal(p.metadata.format,"PNG");assert.equal(p.metadata.width,2);assert.equal(p.metadata.height,3);
+ const gif=Uint8Array.from([..."GIF89a"].map(c=>c.charCodeAt(0)).concat([4,0,5,0]));const g=JSON.parse(inspectFileMetadata(gif));assert.equal(g.metadata.width,4);assert.equal(g.metadata.height,5);
+ const wav=new Uint8Array(44+176400);wav.set([... "RIFF"].map(c=>c.charCodeAt(0)),0);wav.set([... "WAVE"].map(c=>c.charCodeAt(0)),8);wav.set([... "fmt "].map(c=>c.charCodeAt(0)),12);wav.set([16,0,0,0,1,0,2,0,0x44,0xac,0,0,0x10,0xb1,2,0,4,0,16,0],16);wav.set([... "data"].map(c=>c.charCodeAt(0)),36);wav.set([0x10,0xb1,2,0],40);
+ const w=JSON.parse(inspectFileMetadata(wav));assert.equal(w.metadata.format,"WAVE");assert.equal(w.metadata.channels,2);assert.equal(w.metadata.sampleRate,44100);assert.equal(w.metadata.durationSeconds,1);
+});
+test("file metadata parser bounds input and safely labels unsupported bytes",()=>{
+ assert.throws(()=>inspectFileMetadata(new Uint8Array(2_000_001)),/2,000,000 bytes/i);
+ const result=JSON.parse(inspectFileMetadata(Uint8Array.from([1,2,3])));assert.equal(result.metadata.format,"No supported metadata parser matched");assert.match(result.caveat,/not proof/i);
+});
+
+test("JPEG and ZIP metadata readers inspect bounded headers without extracting content",()=>{
+ const jpeg=Uint8Array.from([0xff,0xd8,0xff,0xc0,0,8,8,0,3,0,4,1,0xff,0xd9]);
+ const j=JSON.parse(inspectFileMetadata(jpeg));assert.equal(j.metadata.format,"JPEG");assert.equal(j.metadata.width,4);assert.equal(j.metadata.height,3);assert.equal(j.metadata.components,1);
+ const zip=new Uint8Array(22);zip.set([0x50,0x4b,0x05,0x06],0);zip[8]=1;zip[10]=1;zip[12]=0;zip[13]=0;zip[16]=0;zip[17]=0;
+ const z=JSON.parse(inspectFileMetadata(zip));assert.equal(z.metadata.format,"ZIP archive");assert.equal(z.metadata.totalEntries,1);assert.equal(z.metadata.centralDirectoryBytes,0);
+});
+
+test("PEM container inspection reports labels and fingerprints without claiming trust",async()=>{
+ const pem="-----BEGIN CERTIFICATE-----\nMAA=\n-----END CERTIFICATE-----";
+ const result=JSON.parse(await inspectCertificateContainer(pem,new TextEncoder().encode(pem)));
+ assert.equal(result.container,"PEM");assert.equal(result.blocks[0].pemLabel,"CERTIFICATE");assert.equal(result.blocks[0].derBytes,2);assert.match(result.blocks[0].sha256Fingerprint,/^(?:[A-F0-9]{2}:){31}[A-F0-9]{2}$/);assert.equal(result.trustValidated,false);
+ await assert.rejects(()=>inspectCertificateContainer("-----BEGIN CERTIFICATE-----\n!!!!\n-----END CERTIFICATE-----",new TextEncoder().encode("bad")),/PEM block contains invalid Base64/i);
+});
+test("DER container inspection validates the outer sequence length and reports trailing bytes",async()=>{
+ const result=JSON.parse(await inspectCertificateContainer("",Uint8Array.from([0x30,0x02,0x01,0x00,0xff])));
+ assert.equal(result.container,"DER ASN.1 SEQUENCE");assert.equal(result.declaredContentBytes,2);assert.equal(result.trailingBytes,1);assert.equal(result.trustValidated,false);
+ await assert.rejects(()=>inspectCertificateContainer("",Uint8Array.from([0x30,0x05,0x01])),/exceeds the supplied/i);
+});
+
+test("URL component parsing preserves repeated query keys and omits credential values",()=>{
+ const result=JSON.parse(parseUrlComponents("https://alice:demo-passphrase@example.com:8443/a?tag=x&tag=y#part"));
+ assert.equal(result.protocol,"https:");assert.equal(result.hostname,"example.com");assert.equal(result.port,"8443");assert.deepEqual(result.queryParameters.tag,["x","y"]);assert.equal(result.credentialsPresent,true);assert.equal(JSON.stringify(result).includes("demo-passphrase"),false);assert.equal(result.networkRequestsMade,false);
+ assert.throws(()=>parseUrlComponents("/relative/path"),/absolute URL/i);
+});

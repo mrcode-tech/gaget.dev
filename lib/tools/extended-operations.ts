@@ -1,12 +1,30 @@
 export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
-  | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
+  | "query-parse" | "url-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
-  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures";
+  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container";
 export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
+export function parseUrlComponents(input:string):string {
+  guardText(input);
+  let parsed:URL;
+  try { parsed=new URL(input.trim()); } catch { throw new Error("Enter a valid absolute URL, including its scheme (for example, https://example.com/path)."); }
+  const query:Record<string,string|string[]> = Object.create(null);
+  for(const [key,value] of parsed.searchParams.entries()){
+    if(Object.hasOwn(query,key)){const previous=query[key];query[key]=Array.isArray(previous)?[...previous,value]:[previous,value];}
+    else query[key]=value;
+  }
+  return JSON.stringify({
+    protocol:parsed.protocol,host:parsed.host,hostname:parsed.hostname,port:parsed.port||null,
+    pathname:parsed.pathname,search:parsed.search,hash:parsed.hash,origin:parsed.origin==="null"?null:parsed.origin,
+    queryParameters:query,credentialsPresent:Boolean(parsed.username||parsed.password),
+    usernamePresent:Boolean(parsed.username),passwordPresent:Boolean(parsed.password),
+    networkRequestsMade:false,
+    note:"The URL is parsed as text only. No navigation or network request is made; credential values are intentionally omitted from output."
+  },null,2);
+}
 export function parseQueryString(input:string):string {
   guardText(input); const source=input.startsWith("?")?input.slice(1):input; const result:Record<string,string|string[]>={};
   for(const part of source.split("&")) { if(!part)continue; const i=part.indexOf("="); const rawKey=i<0?part:part.slice(0,i),rawValue=i<0?"":part.slice(i+1);
@@ -255,10 +273,134 @@ export function inspectFileSignatures(bytes:Uint8Array):string {
  return JSON.stringify({bytes:bytes.length,firstBytesHex:hex(0,Math.min(32,bytes.length)),signatureMatches:matches,classification:matches.length?"Known signature match":"No known signature match",note:"Magic-byte matching is informational only; it does not validate the complete file, prove its extension, or establish that it is safe."},null,2);
 }
 
+
+/** Extracts bounded, non-executing metadata from a small set of common file headers. */
+export function inspectFileMetadata(bytes: Uint8Array): string {
+  guardBytes(bytes);
+  const u16le=(offset:number)=>offset+2<=bytes.length?bytes[offset]|(bytes[offset+1]<<8):null;
+  const u32le=(offset:number)=>offset+4<=bytes.length?(bytes[offset]|(bytes[offset+1]<<8)|(bytes[offset+2]<<16)|(bytes[offset+3]<<24))>>>0:null;
+  const u32be=(offset:number)=>offset+4<=bytes.length?((bytes[offset]*0x1000000)+(bytes[offset+1]<<16)+(bytes[offset+2]<<8)+bytes[offset+3])>>>0:null;
+  const ascii=(offset:number,length:number)=>Array.from(bytes.slice(offset,offset+length),b=>String.fromCharCode(b)).join("");
+  const metadata:Record<string,unknown>={};
+  const notes:string[]=[];
+  if(ascii(0,8)==="\x89PNG\r\n\x1a\n" && bytes.length>=26){
+    metadata.format="PNG";metadata.width=u32be(16);metadata.height=u32be(20);metadata.bitDepth=bytes[24];metadata.colorType=bytes[25];
+  } else if(bytes.length>=4&&bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff){
+    metadata.format="JPEG";let offset=2,found=false;
+    const startOfFrame=new Set([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf]);
+    while(offset+3<bytes.length){
+      if(bytes[offset]!==0xff){offset++;continue;}
+      while(offset<bytes.length&&bytes[offset]===0xff)offset++;
+      if(offset>=bytes.length)break;
+      const marker=bytes[offset++];
+      if(marker===0xd9||marker===0xda)break;
+      if(marker===0x01||(marker>=0xd0&&marker<=0xd7))continue;
+      if(offset+2>bytes.length)break;
+      const segmentLength=(bytes[offset]<<8)|bytes[offset+1];
+      if(segmentLength<2||offset+segmentLength>bytes.length){notes.push("A JPEG segment length is invalid or extends beyond the supplied bytes.");break;}
+      if(startOfFrame.has(marker)&&segmentLength>=8){
+        metadata.width=(bytes[offset+5]<<8)|bytes[offset+6];metadata.height=(bytes[offset+3]<<8)|bytes[offset+4];metadata.bitsPerSample=bytes[offset+2];metadata.components=bytes[offset+7];metadata.frameMarker="0x"+marker.toString(16).toUpperCase().padStart(2,"0");found=true;break;
+      }
+      offset+=segmentLength;
+    }
+    if(!found)notes.push("No complete supported JPEG start-of-frame segment was found in the supplied bytes.");
+  } else if((ascii(0,6)==="GIF87a"||ascii(0,6)==="GIF89a")&&bytes.length>=10){
+    metadata.format="GIF";metadata.width=u16le(6);metadata.height=u16le(8);metadata.version=ascii(0,6);
+  } else if(ascii(0,2)==="BM"&&bytes.length>=30){
+    const width=u32le(18)!,heightRaw=u32le(22)!;
+    metadata.format="BMP";metadata.width=width>0x7fffffff?width-0x100000000:width;metadata.height=Math.abs(heightRaw>0x7fffffff?heightRaw-0x100000000:heightRaw);metadata.bitsPerPixel=u16le(28);
+  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP"&&ascii(12,4)==="VP8X"&&bytes.length>=30){
+    metadata.format="WebP";metadata.width=1+bytes[24]+(bytes[25]<<8)+(bytes[26]<<16);metadata.height=1+bytes[27]+(bytes[28]<<8)+(bytes[29]<<16);
+  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE"&&bytes.length>=12){
+    metadata.format="WAVE";let offset=12;let byteRate:number|null=null;let dataSize:number|null=null;
+    while(offset+8<=bytes.length){
+      const id=ascii(offset,4),size=u32le(offset+4)!;const body=offset+8;
+      if(size>bytes.length-body){notes.push("A chunk length extends beyond the supplied file bytes.");break;}
+      if(id==="fmt "&&size>=16){metadata.audioFormat=u16le(body);metadata.channels=u16le(body+2);metadata.sampleRate=u32le(body+4);byteRate=u32le(body+8);metadata.bitsPerSample=u16le(body+14);}
+      if(id==="data")dataSize=size;
+      if(id==="fmt "||id==="data"){if(dataSize!==null&&byteRate!==null&&byteRate>0){metadata.dataBytes=dataSize;metadata.durationSeconds=Number((dataSize/byteRate).toFixed(3));}}
+      offset=body+size+(size%2);
+    }
+    if(dataSize!==null){metadata.dataBytes=dataSize;if(byteRate&&byteRate>0)metadata.durationSeconds=Number((dataSize/byteRate).toFixed(3));}
+  } else if(ascii(0,5)==="%PDF-"&&bytes.length>=8){
+    metadata.format="PDF";metadata.version=ascii(5,3);
+    const text=ascii(0,bytes.length);
+    const pageObjects=Array.from(text.matchAll(/\/Type\s*\/Page\b/g)).length;
+    if(pageObjects)metadata.pageObjectCandidates=pageObjects;
+    const declaredCounts=Array.from(text.matchAll(/\/Count\s+(\d{1,8})\b/g),m=>Number(m[1])).filter(n=>n>=0);
+    if(declaredCounts.length)metadata.declaredPageCounts=declaredCounts.slice(0,50);
+    notes.push("PDF page counts are lexical candidates only; compressed object streams and malformed files may hide or spoof counts.");
+  } else if(bytes.length>=4&&bytes[0]===0x50&&bytes[1]===0x4b&&(bytes[2]===0x03||bytes[2]===0x05||bytes[2]===0x07)){
+    metadata.format="ZIP archive";let eocd=-1;
+    const lower=Math.max(0,bytes.length-65_557);
+    for(let i=bytes.length-22;i>=lower;i--){if(bytes[i]===0x50&&bytes[i+1]===0x4b&&bytes[i+2]===0x05&&bytes[i+3]===0x06){const commentLength=u16le(i+20);if(commentLength!==null&&i+22+commentLength<=bytes.length){eocd=i;break;}}}
+    if(eocd>=0){
+      metadata.entriesOnThisDisk=u16le(eocd+8);metadata.totalEntries=u16le(eocd+10);metadata.centralDirectoryBytes=u32le(eocd+12);metadata.centralDirectoryOffset=u32le(eocd+16);
+      if(metadata.totalEntries===65535||metadata.centralDirectoryBytes===0xffffffff||metadata.centralDirectoryOffset===0xffffffff)notes.push("ZIP64 metadata is present or likely; extended values are not decoded by this inspector.");
+      if(u16le(eocd+4)!==0||u16le(eocd+6)!==0)notes.push("Multi-disk ZIP metadata is not fully interpreted.");
+    }else notes.push("The ZIP end-of-central-directory record was not found within the supplied bytes; the archive may be truncated or use an unsupported layout.");
+  } else if(ascii(0,3)==="ID3"&&bytes.length>=10){
+    const sizeBytes=[bytes[6],bytes[7],bytes[8],bytes[9]];
+    if(sizeBytes.every(b=>(b&0x80)===0)){
+      metadata.format="MP3 with ID3 tag";metadata.id3Version="2."+bytes[3]+"."+bytes[4];metadata.id3TagBytes=(sizeBytes[0]<<21)|(sizeBytes[1]<<14)|(sizeBytes[2]<<7)|sizeBytes[3];metadata.id3Flags=bytes[5];
+      if(10+(metadata.id3TagBytes as number)>bytes.length)notes.push("The declared ID3 tag extends beyond the supplied bytes.");
+    } else notes.push("ID3 tag size uses invalid synchsafe bytes.");
+  } else {
+    metadata.format="No supported metadata parser matched";
+    notes.push("The file may be unsupported, truncated, or contain a format variant not handled by this inspector.");
+  }
+  return JSON.stringify({inputBytes:bytes.length,metadata,notes,processing:"Local byte parsing only; no file execution, extraction, or network access.",caveat:"Metadata fields are best-effort indicators, not proof of file validity or safety."},null,2);
+}
+
+
+/** Inspect PEM labels or the outer DER container and fingerprint exact bytes. This does not validate certificate trust. */
+export async function inspectCertificateContainer(input: string, bytes: Uint8Array): Promise<string> {
+  guardText(input); guardBytes(bytes);
+  let source=input;
+  if(!source.includes("-----BEGIN ")&&bytes.length){
+    try { const decoded=new TextDecoder("utf-8",{fatal:true}).decode(bytes); if(decoded.includes("-----BEGIN "))source=decoded; } catch {}
+  }
+  const blocks:Array<{label:string;bytes:Uint8Array}>=[];
+  const pattern=/-----BEGIN ([A-Z0-9][A-Z0-9 -]{0,63})-----\s*([\s\S]*?)\s*-----END \1-----/g;
+  for(const match of source.matchAll(pattern)){
+    const encoded=match[2].replace(/\s/g,"");
+    if(!encoded||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)||encoded.length%4===1)throw new Error("PEM block contains invalid Base64 data.");
+    const padded=encoded.replace(/=+$/,"")+"=".repeat((4-encoded.replace(/=+$/,"").length%4)%4);
+    let binary:string;try{binary=atob(padded);}catch{throw new Error("PEM block contains invalid Base64 data.");}
+    const der=Uint8Array.from(binary,ch=>ch.charCodeAt(0));
+    if(der.length>MAX_INSPECT_BYTES)throw new Error("Decoded PEM content is limited to 2,000,000 bytes.");
+    blocks.push({label:match[1],bytes:der});
+  }
+  if(source.includes("-----BEGIN ")&&blocks.length===0)throw new Error("PEM block is malformed or has mismatched BEGIN/END labels.");
+  const fingerprint=async(data:Uint8Array)=>{
+    const copy=data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength) as ArrayBuffer;
+    const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",copy));
+    return Array.from(digest,b=>b.toString(16).padStart(2,"0").toUpperCase()).join(":");
+  };
+  if(blocks.length){
+    const results=[];
+    for(const block of blocks)results.push({pemLabel:block.label,derBytes:block.bytes.length,sha256Fingerprint:await fingerprint(block.bytes),derOuterSequence:block.bytes[0]===0x30});
+    return JSON.stringify({container:"PEM",blocks:results,trustValidated:false,networkRequestsMade:false,note:"PEM labels and SHA-256 fingerprints are parsed locally. This does not parse all X.509 fields, verify signatures, validate a chain, or establish trust."},null,2);
+  }
+  if(bytes.length<2||bytes[0]!==0x30)throw new Error("Paste a PEM block or select a DER file with an ASN.1 SEQUENCE outer tag.");
+  let headerLength=2,declaredLength:number;
+  const first=bytes[1];
+  if(first<0x80)declaredLength=first;
+  else{
+    const count=first&0x7f;
+    if(count===0||count>4||2+count>bytes.length)throw new Error("DER uses an unsupported or malformed length encoding.");
+    declaredLength=0;for(let i=0;i<count;i++)declaredLength=declaredLength*256+bytes[2+i];headerLength=2+count;
+    if(declaredLength<128)throw new Error("DER length is not minimally encoded.");
+  }
+  if(headerLength+declaredLength>bytes.length)throw new Error("DER sequence length exceeds the supplied file bytes.");
+  return JSON.stringify({container:"DER ASN.1 SEQUENCE",inputBytes:bytes.length,outerTag:"0x30",headerBytes:headerLength,declaredContentBytes:declaredLength,trailingBytes:bytes.length-headerLength-declaredLength,sha256Fingerprint:await fingerprint(bytes),trustValidated:false,networkRequestsMade:false,note:"This inspects the outer DER length and fingerprints exact bytes only. It does not identify a certificate or key reliably, parse all X.509 fields, verify signatures, or establish trust."},null,2);
+}
+
 export async function runExtendedOperation(operation:ExtendedOperation,input:string,bytes:Uint8Array,options:ExtendedOptions={}):Promise<string> {
  guardText(input);
  switch(operation){
  case "query-parse":return parseQueryString(input);
+ case "url-parse":return parseUrlComponents(input);
  case "query-build":return buildQueryString(input);
  case "key-value":return parseKeyValue(input);
  case "key-value-build":return buildKeyValue(input);
@@ -283,6 +425,8 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "dns-records":return parseDnsRecords(input);
  case "http-message":return parseHttpMessage(input);
  case "file-signatures":return inspectFileSignatures(bytes);
+ case "file-metadata":return inspectFileMetadata(bytes);
+ case "certificate-container":return inspectCertificateContainer(input,bytes);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }

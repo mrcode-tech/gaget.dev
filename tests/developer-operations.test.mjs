@@ -13,3 +13,24 @@ test("regex tester reports ranges and handles zero-width global matches",()=>{co
 test("text operations reject oversized input",()=>{assert.throws(()=>transformDeveloperTool("html","x".repeat(200001)),/safety limit/i);});
 
 test("cURL output redacts sensitive URL query parameters and consumes credential flags",()=>{const out=transformDeveloperTool("curl","curl -u user:password https://example.com/api?access_token=topsecret");assert.doesNotMatch(out,/user:password|access_token=topsecret|topsecret/);assert.match(out,/REDACTED/);});
+
+test("XML tokenizer handles quoted greater-than signs and rejects malformed lexical structures",()=>{
+ assert.match(formatXml('<root value="a > b"><item/></root>'),/value="a > b"/);
+ assert.throws(()=>formatXml("<root><!-- unfinished</root>"),/Unclosed XML comment/i);
+ assert.throws(()=>formatXml("<root a=\"1\" a=\"2\"/>"),/Duplicate XML attribute/i);
+ assert.throws(()=>formatXml("<root/><other/>"),/exactly one root/i);
+ assert.throws(()=>formatXml("text<root/>"),/outside the XML root/i);
+ assert.throws(()=>formatXml("<root><![CDATA[unfinished</root>"),/Unclosed CDATA/i);
+ assert.throws(()=>formatXml("<root><item></root>"),/mismatched/i);
+});
+test("XML DOCTYPE is treated as inert source and is never resolved",()=>{
+ const result=formatXml('<!DOCTYPE root [<!ENTITY local "value">]><root/>');
+ assert.match(result,/<!DOCTYPE root/);
+});
+
+test("CSV rejects quotes in unquoted fields and characters after a closing quote",()=>{
+ assert.throws(()=>parseCsv('na"me,value\nAda,1'),/quoted CSV field must begin/i);
+ assert.throws(()=>parseCsv('name,value\n"Ada"x,1'),/after a closing CSV quote/i);
+ assert.throws(()=>parseCsv('name,value\n"Ada" ,1'),/after a closing CSV quote/i);
+ assert.deepEqual(parseCsv('name,value\n"Ada","hello, world"'),[["name","value"],["Ada","hello, world"]]);
+});

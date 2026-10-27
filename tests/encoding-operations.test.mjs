@@ -67,7 +67,17 @@ test("Base58 uses the Bitcoin alphabet, preserves leading zero bytes, and reject
   assert.throws(()=>transformEncoding("base58","decode","0OIl"),/Base58 alphabet/i);
 });
 
-test("byte encoders preserve raw file bytes and enforce bounded output",()=>{const bytes=Uint8Array.from([0,255,1]);assert.equal(encodeByteRepresentation("hex",bytes),"00ff01");assert.equal(encodeByteRepresentation("base64",bytes),"AP8B");assert.equal(encodeByteRepresentation("binary",bytes),"00000000 11111111 00000001");for(const mode of ["hex","base64","base64url","binary","base58","base85"])assert.deepEqual(Array.from(decodeByteRepresentation(mode,encodeByteRepresentation(mode,bytes))),Array.from(bytes));assert.throws(()=>encodeByteRepresentation("hex",new Uint8Array(2_000_001)),/2,000,000 bytes/i);});
+test("byte encoders preserve raw file bytes and enforce bounded output",()=>{const bytes=Uint8Array.from([0,255,1]);assert.equal(encodeByteRepresentation("hex",bytes),"00ff01");assert.equal(encodeByteRepresentation("base64",bytes),"AP8B");assert.equal(encodeByteRepresentation("binary",bytes),"00000000 11111111 00000001");for(const mode of ["hex","base64","base64url","base32","binary","base58","base85","quoted-printable"])assert.deepEqual(Array.from(decodeByteRepresentation(mode,encodeByteRepresentation(mode,bytes))),Array.from(bytes));assert.throws(()=>encodeByteRepresentation("hex",new Uint8Array(2_000_001)),/2,000,000 bytes/i);});
 test("byte decoders can return non-UTF-8 bytes without decoding loss",()=>{assert.deepEqual(Array.from(decodeByteRepresentation("hex","ff00")), [255,0]);assert.deepEqual(Array.from(decodeByteRepresentation("base64","/wA=")),[255,0]);assert.throws(()=>decodeByteRepresentation("binary","101"),/eight bits/i);});
 
 test("Adobe ASCII85 uses explicit wrappers, zero shorthand, and partial groups",()=>{assert.equal(transformEncoding("base85","encode","Man " ),"<~9jqo^~>");assert.equal(transformEncoding("base85","decode","<~9jqo^~>"),"Man ");assert.equal(transformEncoding("base85","encode","\u0000\u0000\u0000\u0000"),"<~z~>");assert.equal(transformEncoding("base85","decode","<~z~>"),"\u0000\u0000\u0000\u0000");assert.equal(decodeByteRepresentation("base85",encodeByteRepresentation("base85",Uint8Array.from([0,1,2,3,255]))).join(","),"0,1,2,3,255");assert.throws(()=>transformEncoding("base85","decode","<~!~>"),/at least two/i);assert.throws(()=>transformEncoding("base85","decode","<~uuuuu~>"),/32-bit/i);assert.throws(()=>decodeByteRepresentation("base85","<~"+"z".repeat(500001)+"~>"),/2,000,000 bytes/i);});
+
+test("Base32 and quoted-printable preserve arbitrary file bytes including invalid UTF-8 and line breaks",()=>{
+ const bytes=Uint8Array.from([0,255,13,10,32,9,65]);
+ for(const mode of ["base32","quoted-printable"]) assert.deepEqual(Array.from(decodeByteRepresentation(mode,encodeByteRepresentation(mode,bytes))),Array.from(bytes));
+ assert.match(encodeByteRepresentation("quoted-printable",bytes),/=0D=0A/);
+});
+test("quoted-printable byte decoding is bounded and does not require UTF-8",()=>{
+ assert.deepEqual(Array.from(decodeByteRepresentation("quoted-printable","=FF=00")),[255,0]);
+ assert.throws(()=>decodeByteRepresentation("quoted-printable","=00".repeat(333334)),/Encoded input exceeds the 1,000,000 character limit/i);
+});
