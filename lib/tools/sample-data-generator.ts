@@ -26,6 +26,6 @@ export function generateSampleData(operation:SampleGeneratorOperation,options:Sa
   case "random-integer":return String(randomInteger(options.min??0,options.max??100));
   case "timestamp":{const now=new Date();return JSON.stringify({iso:now.toISOString(),unixSeconds:Math.floor(now.getTime()/1000),unixMilliseconds:now.getTime(),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||"unknown",note:"Timestamp reflects the device clock; it is not a trusted time source."},null,2);}
   case "sample-json":return JSON.stringify(Array.from({length:count},(_,i)=>({id:uuidV4(),name:"Sample User "+(i+1),email:"user"+(i+1)+"@example.test",active:randomInteger(0,1)===1,createdAt:new Date(Date.now()-i*60_000).toISOString()})),null,2);
-  case "uuid":return Array.from({length:count},()=>uuidV4()).join("\\n");
+  case "uuid":return Array.from({length:count},()=>uuidV4()).join("\n");
  }
 }

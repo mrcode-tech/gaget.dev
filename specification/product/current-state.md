@@ -31,7 +31,8 @@
 - `/encoding/url` — unified text-representation workbench for URL components, Base64/Base64url, Base32, hex, binary bytes, basic HTML entities, Unicode escapes, quoted-printable, Bitcoin Base58, and UTF-8/UTF-16LE/BE/Windows-1252 conversion via hex bytes.
 - `/encoding/base64` — compatibility redirect to `/encoding/url?mode=base64`; it is not a separate catalog tool.
 - `/security/jwt-decoder` — decodes JWT contents but does not verify signatures.
-- `/generators/uuid` — generates UUID v4 values using the browser cryptographic API.\n- `/generators/sample-data` — generates synthetic JSON records, random strings and integers, timestamps, and UUID batches with bounded counts and lengths.
+- `/generators/uuid` — generates UUID v4 values using the browser cryptographic API.
+- `/generators/sample-data` — generates synthetic JSON records, random strings and integers, timestamps, and UUID batches with bounded counts and lengths.
 - `/security/hash` — SHA-256/384/512 digests and HMAC-SHA-2 over text or local file bytes (2 MB file limit), plus CRC32 text/file checksums; uses Web Crypto for cryptographic algorithms and does not encrypt.
 - `/text/regex` — reports matches, indexes and capture groups with a 50,000-character input cap and 500-match output cap. JavaScript regex execution cannot be reliably interrupted, so pathological patterns can still block the tab.
 - `/xml/formatter` — lightweight XML text formatting/minifying with element-nesting checks; not a complete XML parser or schema validator.
