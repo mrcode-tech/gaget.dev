@@ -262,7 +262,8 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
       case "html-entities": return encodeEntities(input);
       case "unicode-escapes": return encodeUnicode(input);
       case "quoted-printable": return encodeQuotedPrintable(input);
-      case "base58": return encodeBase58(utf8(input));\n      case "base85": return encodeAscii85(utf8(input));
+      case "base58": return encodeBase58(utf8(input));
+      case "base85": return encodeAscii85(utf8(input));
       case "charset": throw new Error("Use the charset converter with an explicit character set.");
     }
   }
