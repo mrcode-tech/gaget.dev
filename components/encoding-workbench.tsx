@@ -23,7 +23,8 @@ const notes: Record<EncodingMode, string> = {
   "unicode-escapes": "Uses \\uXXXX escapes for BMP characters and \\u{...} escapes for supplementary code points.",
   "quoted-printable": "Encodes UTF-8 text bytes for MIME-style transport, wraps lines, and normalizes line endings to LF when decoding.",
   charset: "Convert text to UTF-8, UTF-16LE, UTF-16BE or Windows-1252 bytes (shown as hex), or decode hex bytes using the selected charset.",
-  base58: "Uses the Bitcoin Base58 alphabet; leading zero bytes are preserved. This is encoding, not encryption.",\n  base85: "Uses Adobe ASCII85 with <~ ~> wrappers and the z shorthand; this is not the same as every Base85 variant."
+  base58: "Uses the Bitcoin Base58 alphabet; leading zero bytes are preserved. This is encoding, not encryption.",
+  base85: "Uses Adobe ASCII85 with <~ ~> wrappers and the z shorthand; this is not the same as every Base85 variant."
 };
 export function EncodingWorkbench({ initialMode = "url" }: { initialMode?: EncodingMode }) {
   const [mode, setMode] = useState<EncodingMode>(initialMode);
