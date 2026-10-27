@@ -47,7 +47,7 @@ export function extractNetworkCandidates(input:string):string {
   const collect=(pattern:RegExp)=>Array.from(input.matchAll(pattern),m=>m[0].replace(/[),.;]+$/g,""));
   const unique=(items:string[])=>Array.from(new Set(items));
   const urls=unique(collect(/https?:\/\/[^\s<>"']+/gi));
-  const emails=unique(collect(/[A-Z0-9.!#$%&'*+\/= ?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+/gi).map(s=>s.replace(/\s/g,"")));
+  const emails=unique(collect(/[A-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+/gi).map(s=>s.replace(/\s/g,"")));
   const ipv4=unique(collect(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g));
   const domains=unique(collect(/\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63})\b/gi));
   return JSON.stringify({urls,emails,ipv4Candidates:ipv4,domainCandidates:domains,validation:"Candidates are extracted by pattern only; they are not validated, resolved, or contacted."},null,2);
