@@ -42,7 +42,7 @@
 - `/api/curl-converter` — parses a supported cURL subset and produces a redacted request preview; it never executes requests and reports unsupported flags.
 - `/workflow/pipeline` — typed allowlisted text/encoding/JSON/query pipeline with reorderable steps, bounded intermediate previews, sequential line batches and versioned recipe import/export; no arbitrary code execution or input persistence.
 
-Broader capability families in the developer-tools proposal (Base85, full format parsers, advanced certificate/key parsing, archive formats and advanced workflow features) remain incomplete or conditional; do not infer their availability from these routes.
+Broader capability families in the developer-tools proposal (Base85, full format parsers, advanced certificate/key parsing, archive formats, deeper metadata parsers and advanced workflow features) remain incomplete or conditional; do not infer their availability from these routes.
 
 ## Current implementation-level design facts
 
