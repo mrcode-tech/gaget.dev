@@ -1,14 +1,14 @@
 # Workflow, Generators & API Developer Helpers
 
-## Workflow & Batch Processing — deferred
+## Workflow & Batch Processing — implemented safe subset; advanced execution/persistence deferred
 
 | ID | Operation | Contract |
 |---|---|---|
-| flow.pipeline | Chain compatible operations | Typed inputs/outputs; incompatible steps blocked |
-| flow.reorder | Reorder/configure steps | Preserve compatible state; identify failing step |
-| flow.intermediate | Inspect intermediate output | Bounded previews and no secret disclosure |
-| flow.batch | Process records | Per-record error policy, bounded concurrency/memory, cancellation |
-| flow.recipe | Import/export versioned recipes | Schema validation; no executable code or secrets by default |
+| flow.pipeline | Chain compatible operations | Implemented allowlisted typed text/encoding/JSON/query operations; incompatible steps blocked before run; 20-step cap |
+| flow.reorder | Reorder/configure steps | Implemented up/down reordering; failures identify step index and operation |
+| flow.intermediate | Inspect intermediate output | Implemented previews capped at 2,000 characters per step; only allowlisted non-secret operations |
+| flow.batch | Process records | Implemented sequential line batches capped at 100 records and 200,000 total input characters with per-line errors; workers/cancellation remain deferred |
+| flow.recipe | Import/export versioned recipes | Implemented version 1 JSON import/export, 32 KB cap, strict field/operation/compatibility validation; recipes contain no input or secret values |
 | flow.persistence | Save recipes | Defer persistence decision; do not store inputs/secrets by default |
 
 Do not build a pipeline engine until several operation contracts, errors and resource limits are stable.

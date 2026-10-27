@@ -6,12 +6,12 @@
 
 | Stable ID | Name | Canonical route | Registry status |
 |---|---|---|---|
-| url-encoder-decoder | URL Encoder / Decoder | /encoding/url | available |
+| url-encoder-decoder | Encoding & Decoding | /encoding/url | available with documented limits |
 
 | jwt-decoder | JWT Decoder | /security/jwt-decoder | available |
 | uuid-generator | UUID Generator | /generators/uuid | available |
-| hash-generator | Hash Generator | /security/hash | available with documented limits |
-| regex-tester | Regex Tester | /text/regex | available with documented limits |
+| hash-generator | Hash & Checksum Generator | /security/hash | available with documented limits |
+| regex-tester | Text & Regex Workbench | /text/regex | available with documented limits |
 | xml-formatter | XML Formatter | /xml/formatter | available with documented limits |
 | sql-formatter | SQL Formatter | /sql/formatter | available with documented limits |
 | csv-json-converter | CSV ↔ JSON | /data/csv-json | available with documented limits |
@@ -19,10 +19,9 @@
 | curl-converter | cURL Converter | /api/curl-converter | available with documented limits |
 | binary-math-workbench | Data, Binary & Math Workbench | /data/binary-math | available with documented limits |
 | network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
-| binary-math-workbench | Data, Binary & Math Workbench | /data/binary-math | available with documented limits |
-| network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
+| workflow-pipeline | Workflow & Batch Workbench | /workflow/pipeline | available with documented limits |
 
-There are now 12 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
+There are now 13 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 
 ## Proposed capability traceability
 
@@ -51,7 +50,7 @@ There are now 12 relevant standalone registry entries. Encoding & Decoding conso
 | file.inspect | Magic bytes, headers, strings, byte frequency, entropy, metadata, binary diff | Selected local file byte view, printable strings, byte frequency and entropy implemented / 4; full signature catalog, metadata parsers and file-to-file diff pending | [Inspection](./categories/network-web-security-inspection.md) |
 | math.numeric | Base conversion, arithmetic and modular arithmetic | BigInt base conversion, arithmetic, modular integer operations, numeric statistics, fixed-width signed/unsigned views, endian byte order and IEEE-754 float views implemented / 3 | [Binary & math](./categories/compression-binary-math.md) |
 | math.stats | Statistics, character/byte frequency and entropy | Proposed / 3 | [Binary & math](./categories/compression-binary-math.md) |
-| workflow.pipeline | Typed chains, reorder/configure, intermediate results, batch and versioned recipes | Deferred / 6 | [Workflow/API](./categories/workflow-generators-api.md) |
+| workflow.pipeline | Typed chains, reorder/configure, bounded previews, sequential line batches, versioned recipe import/export | Implemented safe subset / 6; workers/cancellation, binary steps and persistence deferred | [Workflow/API](./categories/workflow-generators-api.md) |
 | gen.uuid | UUID v4 | Existing available / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
 | gen.samples | Random test data, timestamps, identifiers and structured samples | Proposed / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
 | api.curl | Parse supported cURL subset and generate a redacted JavaScript fetch preview | Implemented subset / 3; broad flag and language coverage pending | [Workflow/API](./categories/workflow-generators-api.md) |

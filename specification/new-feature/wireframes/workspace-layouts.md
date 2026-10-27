@@ -34,7 +34,7 @@ Operation/format/width/endianness above text or file input. Summary shows input 
 Inspector selection above text/byte/file input. Structured result distinguishes parse, decode, signature verification and trust. Pasted headers never trigger a request.
 
 ## Workflow, Generators & API Helpers
-API helper: pasted command/request → parsed structured preview → generated output with unsupported-syntax warnings. A later workflow builder uses typed steps/intermediate output but is deferred until contracts stabilize.
+API helper: pasted command/request → parsed structured preview → generated output with unsupported-syntax warnings. `/workflow/pipeline` provides typed allowlisted text/encoding/JSON/query steps, reorder controls, bounded intermediate output, sequential line batches and versioned recipe import/export. Binary/file operations, parallel batches, cancellation and persistence remain deferred pending separate safety review.
 
 ## Responsive contract
 

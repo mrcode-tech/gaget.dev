@@ -54,10 +54,10 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Exit:** each accepted operation has a maintained implementation path, supported-format contract and tests; deferred operations stay non-launchable.
 
 ### Phase 6 — Workflow and batch engine (P3)
-**Prerequisite:** stable typed operation contracts, errors and resource limits across multiple real tools.  
-**Scope:** typed chains, reorder/configure, intermediate outputs, batch processing, versioned recipe import/export and any approved persistence.  
+**Prerequisite:** stable typed operation contracts, errors and resource limits across multiple real tools. A constrained MVP is implemented for pure text/encoding/JSON/query operations only.  
+**Scope:** typed chains, reorder/configure, bounded intermediate previews, sequential line batch processing and versioned recipe import/export are implemented for a fixed allowlist. Persistence, parallel batches, cancellation, binary-file steps and arbitrary custom code remain deferred.  
 **Tests:** type compatibility, cancellation, bounded concurrency/memory, recipe validation, malicious input and secret redaction.  
-**Exit:** no arbitrary code execution, incompatible steps blocked, bounded processing and explicit persistence policy.
+**Exit:** MVP enforces an operation allowlist, blocks incompatible steps, caps recipes/steps/input/output/batch size, and exports recipes without source data or secrets. Full phase remains partial until cancellation/worker review, broader typed file operations, and additional adversarial UI tests are complete.
 
 ### Phase 7 — Cross-tool quality and release gates (P0, continuous)
 Run throughout every phase. Applicable package scripts include npm run test:unit, npm run test:component, npm run test:e2e, npm run lint, npm run typecheck and npm run build. Inspect CI workflow and required jobs before claiming verification. Never claim unrun checks passed.
@@ -93,7 +93,7 @@ At each future invocation:
 | 3 — Planned tools | Partial; seven core routes, text transforms, query/key-value conversion, BigInt base conversion, byte inspection, statistics and gzip/zlib-wrapped DEFLATE workbench available | Full XML/YAML/SQL parsers, byte/file comparison, archive support and expanded regression/visual evidence remain |
 | 4 — Security/inspection | Partial; SHA-2/HMAC/CRC32 over text and local file bytes plus offline IP/CIDR/MAC, HTTP-header/cookie parsing and local byte/string/entropy inspection implemented | Certificate/key parsing, metadata parsers, offline DNS records and deeper security review remain |
 | 5 — Extended/conditional | In progress; gzip and zlib-wrapped DEFLATE implemented with round-trip tests; archive, ASN.1/TLV and advanced crypto are explicitly conditional | Decide additional encodings/formats only after dependency/license and safety review; no archive extraction or unsupported crypto is exposed |
-| 6 — Workflow/batch | Deferred | Stable contracts and separate review |
+| 6 — Workflow/batch | Partial; `/workflow/pipeline` supports typed allowlisted text/encoding/JSON/query chains, reordering, bounded previews, sequential line batches and versioned recipe import/export | Worker/cancellation review, binary/file steps, additional adversarial recipe tests and any persistence decision remain deferred |
 | 7 — Quality | Continuous | Exact-revision test and visual evidence |
 
 ## 6. Definition of done

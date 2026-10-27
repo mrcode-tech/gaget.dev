@@ -39,8 +39,9 @@
 - `/data/csv-json` — CSV and JSON-array-of-objects conversion; CSV cells remain strings and formula-like exported cells are prefixed.
 - `/web/html-formatter` — heuristic HTML text formatting/minifying; markup is never rendered as active HTML.
 - `/api/curl-converter` — parses a supported cURL subset and produces a redacted request preview; it never executes requests and reports unsupported flags.
+- `/workflow/pipeline` — typed allowlisted text/encoding/JSON/query pipeline with reorderable steps, bounded intermediate previews, sequential line batches and versioned recipe import/export; no arbitrary code execution or input persistence.
 
-Broader capability families in the developer-tools proposal (additional encodings, full format parsers, advanced certificate/key parsing, extended binary operations, and workflow chains) remain incomplete or conditional; do not infer their availability from these routes.
+Broader capability families in the developer-tools proposal (additional encodings, full format parsers, advanced certificate/key parsing, extended binary operations, and advanced workflow features) remain incomplete or conditional; do not infer their availability from these routes.
 
 ## Current implementation-level design facts
 

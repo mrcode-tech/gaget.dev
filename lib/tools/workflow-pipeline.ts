@@ -29,7 +29,7 @@ export type PipelineRecipe = {version:1;inputType:PipelineDataType;steps:Pipelin
 export type PipelineStepResult = {index:number;operation:PipelineOperation;outputType:PipelineDataType;outputLength:number;preview:string};
 export const MAX_PIPELINE_INPUT=200_000,MAX_PIPELINE_OUTPUT=1_000_000,MAX_PIPELINE_STEPS=20,MAX_BATCH_RECORDS=100,MAX_RECIPE_BYTES=32_000;
 const typeSet=new Set<string>(PIPELINE_INPUT_TYPES.map(x=>x.value));
-const operationMap=new Map<string,typeof PIPELINE_OPERATIONS[number]>(PIPELINE_OPERATIONS.map(x=>[x.id,x]));
+const operationMap=new Map<string,typeof PIPELINE_OPERATIONS[number]>(PIPELINE_OPERATIONS.map(x=>[x.id,x] as const));
 export function getPipelineOperation(id:string){const operation=operationMap.get(id);if(!operation)throw new Error("Recipe contains an unsupported operation: "+id+".");return operation;}
 export function getCompatiblePipelineOperations(inputType:PipelineDataType){return PIPELINE_OPERATIONS.filter(operation=>operation.input===inputType);}
 export function validatePipelineRecipe(value:unknown):PipelineRecipe{
@@ -76,6 +76,7 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "query-parse":return parseQueryString(input);
   case "query-build":return buildQueryString(input);
  }
+ throw new Error("Unsupported pipeline operation.");
 }
 export function executePipeline(input:string,rawRecipe:PipelineRecipe):{output:string;steps:PipelineStepResult[]}{
  const recipe=validatePipelineRecipe(rawRecipe);if(input.length>MAX_PIPELINE_INPUT)throw new Error("Workflow input is limited to 200,000 characters.");
@@ -90,7 +91,13 @@ export function executePipeline(input:string,rawRecipe:PipelineRecipe):{output:s
  return {output,steps:results};
 }
 export function executeBatch(input:string,recipe:PipelineRecipe):string{
+ if(input.length>MAX_PIPELINE_INPUT)throw new Error("Batch input is limited to 200,000 characters total.");
  const lines=input.split(/\r?\n/);if(lines.length>MAX_BATCH_RECORDS)throw new Error("Batch mode is limited to 100 lines.");
- const results=lines.map((line,index)=>{try{return {line:index+1,output:executePipeline(line,recipe).output};}catch(error){return {line:index+1,error:error instanceof Error?error.message:"Unable to process line"};}});
+ const results:{line:number;output?:string;error?:string}[]=[];let total=0;
+ for(let index=0;index<lines.length;index++){
+  try{const output=executePipeline(lines[index],recipe).output;if(total+output.length>MAX_PIPELINE_OUTPUT)throw new Error("Batch result exceeds the 1,000,000 character limit.");total+=output.length;results.push({line:index+1,output});}
+  catch(error){const message=error instanceof Error?error.message:"Unable to process line";results.push({line:index+1,error:message});total+=message.length;}
+  if(total>MAX_PIPELINE_OUTPUT)throw new Error("Batch result exceeds the 1,000,000 character limit.");
+ }
  const output=JSON.stringify(results,null,2);if(output.length>MAX_PIPELINE_OUTPUT)throw new Error("Batch result exceeds the 1,000,000 character limit.");return output;
 }
