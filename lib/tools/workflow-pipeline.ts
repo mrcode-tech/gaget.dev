@@ -11,7 +11,13 @@ export const PIPELINE_OPERATIONS = [
  {id:"url-encode",label:"URL component encode",input:"text",output:"url"},
  {id:"url-decode",label:"URL component decode",input:"url",output:"text"},
  {id:"base64-encode",label:"Base64 encode",input:"text",output:"base64"},
- {id:"base64-decode",label:"Base64 decode",input:"base64",output:"text"},\n {id:"base64url-encode",label:"Base64url encode",input:"text",output:"base64url"},\n {id:"base64url-decode",label:"Base64url decode",input:"base64url",output:"text"},\n {id:"base32-encode",label:"Base32 encode",input:"text",output:"base32"},\n {id:"base32-decode",label:"Base32 decode",input:"base32",output:"text"},\n {id:"base58-encode",label:"Bitcoin Base58 encode",input:"text",output:"base58"},\n {id:"base58-decode",label:"Bitcoin Base58 decode",input:"base58",output:"text"},
+ {id:"base64-decode",label:"Base64 decode",input:"base64",output:"text"},
+ {id:"base64url-encode",label:"Base64url encode",input:"text",output:"base64url"},
+ {id:"base64url-decode",label:"Base64url decode",input:"base64url",output:"text"},
+ {id:"base32-encode",label:"Base32 encode",input:"text",output:"base32"},
+ {id:"base32-decode",label:"Base32 decode",input:"base32",output:"text"},
+ {id:"base58-encode",label:"Bitcoin Base58 encode",input:"text",output:"base58"},
+ {id:"base58-decode",label:"Bitcoin Base58 decode",input:"base58",output:"text"},
  {id:"hex-encode",label:"Hex encode UTF-8 bytes",input:"text",output:"hex"},
  {id:"hex-decode",label:"Hex decode UTF-8 bytes",input:"hex",output:"text"},
  {id:"unicode-escape",label:"Unicode escape",input:"text",output:"unicode"},
@@ -64,7 +70,13 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "url-encode":return enc("url","encode");
   case "url-decode":return enc("url","decode");
   case "base64-encode":return enc("base64","encode");
-  case "base64-decode":return enc("base64","decode");\n  case "base64url-encode":return enc("base64url","encode");\n  case "base64url-decode":return enc("base64url","decode");\n  case "base32-encode":return enc("base32","encode");\n  case "base32-decode":return enc("base32","decode");\n  case "base58-encode":return enc("base58","encode");\n  case "base58-decode":return enc("base58","decode");
+  case "base64-decode":return enc("base64","decode");
+  case "base64url-encode":return enc("base64url","encode");
+  case "base64url-decode":return enc("base64url","decode");
+  case "base32-encode":return enc("base32","encode");
+  case "base32-decode":return enc("base32","decode");
+  case "base58-encode":return enc("base58","encode");
+  case "base58-decode":return enc("base58","decode");
   case "hex-encode":return enc("hex","encode");
   case "hex-decode":return enc("hex","decode");
   case "unicode-escape":return enc("unicode-escapes","encode");
