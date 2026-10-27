@@ -3,7 +3,7 @@ export type ExtendedOperation =
   | "query-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "arithmetic" | "compression-detect"
-  | "compression" | "byte-compare" | "dns-records" | "http-message";
+  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures";
 export type ExtendedOptions = { radix?: number; width?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
@@ -194,6 +194,36 @@ export function parseHttpMessage(input:string):string {
  return JSON.stringify({messageType:response?"response":"request",startLine,...(response?{httpVersion:response[1],statusCode:Number(response[2]),reason:response[3]??""}:{method:request![1],target:request![2],httpVersion:request![3]}),headers,headerCount:headers.length,duplicateHeaders:Object.fromEntries(Object.entries(grouped).filter(([,values])=>values.length>1)),body:{utf8Bytes:new TextEncoder().encode(body).length,lineCount:body?body.split("\n").length:0,contentType,contentIncluded:false},networkRequestsMade:false,note:"Supplied HTTP text only. Sensitive header values are redacted and the body is deliberately omitted from the parsed result."},null,2);
 }
 
+
+export function inspectFileSignatures(bytes:Uint8Array):string {
+ guardBytes(bytes);
+ const ascii=(offset:number,length:number)=>Array.from(bytes.slice(offset,offset+length),b=>String.fromCharCode(b)).join("");
+ const hex=(offset:number,length:number)=>Array.from(bytes.slice(offset,offset+length),b=>b.toString(16).padStart(2,"0")).join(" ");
+ const matches:{format:string;mime:string;extension:string;offset:number;evidence:string}[]=[];
+ const add=(format:string,mime:string,extension:string,offset:number,evidence:string)=>matches.push({format,mime,extension,offset,evidence});
+ const starts=(values:number[])=>values.every((v,i)=>bytes[i]===v);
+ if(starts([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]))add("PNG image","image/png","png",0,hex(0,8));
+ if(starts([0xff,0xd8,0xff]))add("JPEG image","image/jpeg","jpg",0,hex(0,3));
+ if(ascii(0,6)==="GIF87a"||ascii(0,6)==="GIF89a")add("GIF image","image/gif","gif",0,ascii(0,6));
+ if(ascii(0,2)==="BM")add("BMP image","image/bmp","bmp",0,ascii(0,2));
+ if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP")add("WebP image","image/webp","webp",0,ascii(0,4)+"…"+ascii(8,4));
+ if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE")add("WAVE audio","audio/wav","wav",0,ascii(0,4)+"…"+ascii(8,4));
+ if(ascii(0,5)==="%PDF-")add("PDF document","application/pdf","pdf",0,ascii(0,5));
+ if(starts([0x50,0x4b,0x03,0x04])||starts([0x50,0x4b,0x05,0x06])||starts([0x50,0x4b,0x07,0x08]))add("ZIP container","application/zip","zip",0,hex(0,4));
+ if(starts([0x1f,0x8b]))add("GZIP stream","application/gzip","gz",0,hex(0,2));
+ if(starts([0x7f,0x45,0x4c,0x46]))add("ELF executable/object","application/x-elf","elf",0,hex(0,4));
+ if(ascii(0,16)==="SQLite format 3\u0000")add("SQLite database","application/vnd.sqlite3","sqlite",0,"SQLite format 3");
+ if(ascii(4,4)==="ftyp")add("ISO base media / MP4 family","video/mp4","mp4",4,ascii(4,4));
+ if(ascii(0,4)==="OggS")add("Ogg container","application/ogg","ogg",0,ascii(0,4));
+ if(ascii(0,3)==="ID3"||(bytes[0]===0xff&&bytes[1]!==undefined&&(bytes[1]&0xe0)===0xe0))add("MP3/audio frame candidate","audio/mpeg","mp3",0,hex(0,Math.min(3,bytes.length)));
+ if(starts([0x00,0x61,0x73,0x6d]))add("WebAssembly module","application/wasm","wasm",0,hex(0,4));
+ if(starts([0x37,0x7a,0xbc,0xaf,0x27,0x1c]))add("7-Zip archive","application/x-7z-compressed","7z",0,hex(0,6));
+ if(ascii(0,7)==="Rar!\x1a\x07")add("RAR archive","application/vnd.rar","rar",0,hex(0,7));
+ if(ascii(257,5)==="ustar")add("TAR archive","application/x-tar","tar",257,ascii(257,5));
+ if(ascii(0,4)==="II*\u0000"||ascii(0,4)==="MM\u0000*")add("TIFF image","image/tiff","tif",0,hex(0,4));
+ return JSON.stringify({bytes:bytes.length,firstBytesHex:hex(0,Math.min(32,bytes.length)),signatureMatches:matches,classification:matches.length?"Known signature match":"No known signature match",note:"Magic-byte matching is informational only; it does not validate the complete file, prove its extension, or establish that it is safe."},null,2);
+}
+
 export async function runExtendedOperation(operation:ExtendedOperation,input:string,bytes:Uint8Array,options:ExtendedOptions={}):Promise<string> {
  guardText(input);
  switch(operation){
@@ -219,6 +249,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "byte-compare":throw new Error("Choose two files in the workbench to compare bytes.");
  case "dns-records":return parseDnsRecords(input);
  case "http-message":return parseHttpMessage(input);
+ case "file-signatures":return inspectFileSignatures(bytes);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }
