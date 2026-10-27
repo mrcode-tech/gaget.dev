@@ -1,6 +1,6 @@
 # Security & Cryptography
 
-**Status:** SHA-2 text and local-file-byte digests, HMAC-SHA-2 over text or file bytes, and CRC32 over text or file bytes are implemented. Encryption, SHA-3, legacy hashes and other checksum variants remain gated by separate security and feasibility review.
+**Status:** SHA-2 text/file-byte digests, HMAC-SHA-2, CRC32/IEEE, CRC-16/CCITT-FALSE and Adler-32 are implemented for text or local file bytes. Encryption, SHA-3 and legacy hashes remain gated by separate security and feasibility review.
 
 | ID | Operation | Required behavior |
 |---|---|---|
