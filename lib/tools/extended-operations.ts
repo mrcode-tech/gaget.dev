@@ -4,7 +4,7 @@ export type ExtendedOperation =
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "arithmetic" | "compression-detect"
   | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures";
-export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; bits?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
+export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
 export function parseQueryString(input:string):string {
@@ -96,7 +96,7 @@ export function inspectByteRange(bytes:Uint8Array,offset=0,length=64):string {
  guardBytes(bytes);
  if(!Number.isInteger(offset)||offset<0||offset>bytes.length)throw new Error("Byte offset must be an integer between zero and the file length.");
  if(!Number.isInteger(length)||length<1||length>256)throw new Error("Byte range length must be an integer from 1 to 256.");
- const end=Math.min(bytes.length,offset+length),rows:{offset:number;hex:string;decimal:number;ascii:string}[]=[];
+ const end=Math.min(bytes.length,offset+length),rows:{offset:number;hex:string;decimal:string;ascii:string}[]=[];
  for(let start=offset;start<end;start+=16){const slice=bytes.slice(start,Math.min(start+16,end));rows.push({offset:start,hex:Array.from(slice,b=>b.toString(16).padStart(2,"0")).join(" "),decimal:Array.from(slice).join(" "),ascii:Array.from(slice,b=>b>=32&&b<=126?String.fromCharCode(b):".").join("")});}
  return JSON.stringify({fileBytes:bytes.length,offset,lengthRequested:length,bytesReturned:end-offset,endOffsetExclusive:end,rows,offsetsAreZeroBased:true},null,2);
 }
