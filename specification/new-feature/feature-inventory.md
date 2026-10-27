@@ -9,7 +9,7 @@
 | url-encoder-decoder | Encoding & Decoding | /encoding/url | available with documented limits |
 
 | jwt-decoder | JWT Decoder | /security/jwt-decoder | available |
-| uuid-generator | UUID Generator | /generators/uuid | available |
+| uuid-generator | UUID Generator | /generators/uuid | available |\n| sample-data-generator | Sample Data Generator | /generators/sample-data | available with documented limits |
 | hash-generator | Hash & Checksum Generator | /security/hash | available with documented limits |
 | regex-tester | Text & Regex Workbench | /text/regex | available with documented limits |
 | xml-formatter | XML Formatter | /xml/formatter | available with documented limits |
@@ -21,7 +21,7 @@
 | network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
 | workflow-pipeline | Workflow & Batch Workbench | /workflow/pipeline | available with documented limits |
 
-There are now 13 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
+There are now 14 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 
 ## Proposed capability traceability
 

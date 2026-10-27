@@ -49,9 +49,9 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Exit:** security review complete, unsupported algorithms absent, claims match behavior. Unresolved primitive/trust/dependency questions block only dependent operations.
 
 ### Phase 5 — Extended formats, generators and conditional operations (P2/P3)
-**Scope:** Additional encodings, YAML, ASN.1/TLV, extended generators and archive operations, each separately gated by demand and feasibility.  
+**Scope:** Bitcoin Base58 and a synthetic sample-data generator for strings, bounded integers, timestamps, UUID batches and JSON records are implemented. YAML, ASN.1/TLV, Base85, archives and other parser/crypto extensions remain conditional on dependency, license, maintenance and safety review.  
 **Tests:** format vectors, malformed data, dependency license/maintenance review, resource limits and regression.  
-**Exit:** each accepted operation has a maintained implementation path, supported-format contract and tests; deferred operations stay non-launchable.
+**Exit:** implemented generator and Base58 operations have unit tests and explicit limits. Conditional formats stay non-launchable until a maintained parser/primitive and adversarial test plan are approved.
 
 ### Phase 6 — Workflow and batch engine (P3)
 **Prerequisite:** stable typed operation contracts, errors and resource limits across multiple real tools. A constrained MVP is implemented for pure text/encoding/JSON/query operations only.  
