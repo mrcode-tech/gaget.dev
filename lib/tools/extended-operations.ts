@@ -325,6 +325,7 @@ export function parseHttpMessage(input:string):string {
  guardText(input);const normalized=input.replace(/\r\n/g,"\n"),boundary=normalized.indexOf("\n\n"),head=boundary<0?normalized:normalized.slice(0,boundary),body=boundary<0?"":normalized.slice(boundary+2),lines=head.split("\n");
  const startLine=(lines.shift()??"").trim();if(!startLine)throw new Error("Enter an HTTP request or response start line.");
  const response=startLine.match(/^HTTP\/(\d(?:\.\d)?)\s+(\d{3})(?:\s+(.*))?$/i),request=startLine.match(/^([!#$%&'*+.^_|~0-9A-Za-z-]+)\s+(\S+)\s+HTTP\/(\d(?:\.\d)?)$/);
+ if(!response&&!request)throw new Error("Start line must be an HTTP request line or HTTP status line.");
  const safeTarget=request?redactHttpTarget(request[2]):null;
  const safeStartLine=request?request[1]+" "+safeTarget+" HTTP/"+request[3]:startLine;
  const headers:{name:string;value:string;redacted:boolean}[]=[];
