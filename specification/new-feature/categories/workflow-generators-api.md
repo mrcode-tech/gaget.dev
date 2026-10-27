@@ -1,26 +1,26 @@
 # Workflow, Generators & API Developer Helpers
 
-## Workflow & Batch Processing — deferred
+## Workflow & Batch Processing — implemented safe subset; advanced execution/persistence deferred
 
 | ID | Operation | Contract |
 |---|---|---|
-| flow.pipeline | Chain compatible operations | Typed inputs/outputs; incompatible steps blocked |
-| flow.reorder | Reorder/configure steps | Preserve compatible state; identify failing step |
-| flow.intermediate | Inspect intermediate output | Bounded previews and no secret disclosure |
-| flow.batch | Process records | Per-record error policy, bounded concurrency/memory, cancellation |
-| flow.recipe | Import/export versioned recipes | Schema validation; no executable code or secrets by default |
+| flow.pipeline | Chain compatible operations | Implemented allowlisted typed text/encoding/JSON/query operations; incompatible steps blocked before run; 20-step cap |
+| flow.reorder | Reorder/configure steps | Implemented up/down reordering; failures identify step index and operation |
+| flow.intermediate | Inspect intermediate output | Implemented previews capped at 2,000 characters per step; only allowlisted non-secret operations |
+| flow.batch | Process records | Implemented sequential line batches capped at 100 records and 200,000 total input characters with per-line errors; workers/cancellation remain deferred |
+| flow.recipe | Import/export versioned recipes | Implemented version 1 JSON import/export, 32 KB cap, strict field/operation/compatibility validation; recipes contain no input or secret values |
 | flow.persistence | Save recipes | Defer persistence decision; do not store inputs/secrets by default |
 
 Do not build a pipeline engine until several operation contracts, errors and resource limits are stable.
 
-## Generators
+## Generators\n\n`/generators/sample-data` implements bounded random alphanumeric strings, inclusive integer ranges, device-clock timestamps, synthetic JSON records and UUID v4 batches. Output counts and lengths are capped; randomness is browser-local and is not presented as a password-strength recommendation.
 
 | ID | Operation | Contract |
 |---|---|---|
 | gen.uuid-v4 | Existing UUID v4 | Registry ID uuid-generator, route /generators/uuid; verify randomness and output |
-| gen.random-data | Sample strings/numbers/records | Seed/randomness semantics explicit; ordinary randomness is not cryptographically secure |
-| gen.timestamps | Timestamp forms | Seconds/milliseconds and timezone conventions explicit |
-| gen.identifiers | Selected identifiers | Stable format and collision expectations documented |
+| gen.random-data | Sample strings/numbers/records | Implemented random alphanumeric strings, inclusive bounded integers, and synthetic JSON records; uses browser crypto randomness and clearly labels values as test data |
+| gen.timestamps | Timestamp forms | Implemented ISO UTC, Unix seconds/milliseconds and detected browser time zone; device clock is explicitly not trusted |
+| gen.identifiers | Selected identifiers | UUID v4 batch generation implemented with cryptographic randomness when available; collision probability is not zero |
 | gen.payloads | Structured sample payloads | Synthetic examples only; no real user data |
 
 ## API & Developer Helpers

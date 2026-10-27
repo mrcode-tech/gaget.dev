@@ -1,4 +1,4 @@
-export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable";
+export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset" | "base58";
 export type EncodingDirection = "encode" | "decode";
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 function utf8(text: string): Uint8Array { return new TextEncoder().encode(text); }
@@ -37,6 +37,23 @@ function decodeBase32(value: string): Uint8Array {
   }
   if (bits && (buffer & ((1 << bits) - 1)) !== 0) throw new Error("Invalid non-zero trailing Base32 bits.");
   return Uint8Array.from(output);
+}
+const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function encodeBase58(bytes: Uint8Array): string {
+  let zeros = 0; while (zeros < bytes.length && bytes[zeros] === 0) zeros++;
+  let value = BigInt(0); for (const byte of bytes) value = (value << BigInt(8)) | BigInt(byte);
+  let result = "";
+  while (value > BigInt(0)) { const remainder = Number(value % BigInt(58)); result = BASE58[remainder] + result; value /= BigInt(58); }
+  return "1".repeat(zeros) + result;
+}
+function decodeBase58(value: string): Uint8Array {
+  const text = value.trim(); if (!text) return new Uint8Array();
+  let zeros = 0; while (zeros < text.length && text[zeros] === "1") zeros++;
+  let number = BigInt(0);
+  for (const character of text) { const digit = BASE58.indexOf(character); if (digit < 0) throw new Error("Base58 input contains a character outside the Bitcoin Base58 alphabet."); number = number * BigInt(58) + BigInt(digit); }
+  const body: number[] = [];
+  while (number > BigInt(0)) { body.unshift(Number(number & BigInt(255))); number >>= BigInt(8); }
+  return Uint8Array.from([...new Array<number>(zeros).fill(0), ...body]);
 }
 function encodeQuotedPrintable(value: string): string {
   const bytes = utf8(value);
@@ -92,6 +109,37 @@ function decodeBinary(value: string): Uint8Array {
   for (let i = 0; i < text.length; i += 8) bytes.push(Number.parseInt(text.slice(i, i + 8), 2));
   return Uint8Array.from(bytes);
 }
+export type ByteEncodingMode = "base64" | "base64url" | "hex" | "binary" | "base58";
+export const MAX_ENCODING_FILE_BYTES = 2_000_000;
+export const MAX_ENCODING_OUTPUT_LENGTH = 1_000_000;
+export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array):string {
+ if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Byte input is limited to 2,000,000 bytes.");
+ let output:string;
+ switch(mode){
+  case "base64":output=base64FromBytes(bytes);break;
+  case "base64url":output=base64FromBytes(bytes).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");break;
+  case "hex":output=encodeHex(bytes);break;
+  case "binary":output=Array.from(bytes,b=>b.toString(2).padStart(8,"0")).join(" ");break;
+  case "base58":output=encodeBase58(bytes);break;
+  default:throw new Error("Unsupported byte encoding mode.");
+ }
+ if(output.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded output exceeds the 1,000,000 character limit; use a smaller file or a more compact encoding.");
+ return output;
+}
+export function decodeByteRepresentation(mode:ByteEncodingMode,input:string):Uint8Array {
+ if(input.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded input exceeds the 1,000,000 character limit.");
+ let bytes:Uint8Array;
+ switch(mode){
+  case "base64":bytes=bytesFromBase64(input);break;
+  case "base64url":bytes=bytesFromBase64(input,true);break;
+  case "hex":bytes=decodeHex(input);break;
+  case "binary":bytes=decodeBinary(input);break;
+  case "base58":bytes=decodeBase58(input);break;
+  default:throw new Error("Unsupported byte encoding mode.");
+ }
+ if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
+ return bytes;
+}
 function encodeEntities(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
@@ -125,6 +173,42 @@ function decodeUnicode(value: string): string {
     return String.fromCodePoint(code);
   });
 }
+export type SupportedCharset = "utf-8" | "utf-16le" | "utf-16be" | "windows-1252";
+export const SUPPORTED_CHARSETS: { value: SupportedCharset; label: string }[] = [
+  { value: "utf-8", label: "UTF-8" },
+  { value: "utf-16le", label: "UTF-16 little-endian" },
+  { value: "utf-16be", label: "UTF-16 big-endian" },
+  { value: "windows-1252", label: "Windows-1252" }
+];
+function charsetEncoder(value: string, charset: SupportedCharset): Uint8Array {
+  if (charset === "utf-8") return new TextEncoder().encode(value);
+  if (charset === "utf-16le" || charset === "utf-16be") {
+    const bytes = new Uint8Array(value.length * 2);
+    for (let i = 0; i < value.length; i++) {
+      const unit = value.charCodeAt(i);
+      if (charset === "utf-16le") { bytes[i * 2] = unit & 255; bytes[i * 2 + 1] = unit >>> 8; }
+      else { bytes[i * 2] = unit >>> 8; bytes[i * 2 + 1] = unit & 255; }
+    }
+    return bytes;
+  }
+  const decoder = new TextDecoder("windows-1252");
+  const reverse = new Map<string, number>();
+  for (let byte = 0; byte < 256; byte++) reverse.set(decoder.decode(Uint8Array.of(byte)), byte);
+  const bytes: number[] = [];
+  for (const character of value) {
+    const byte = reverse.get(character);
+    if (byte === undefined) throw new Error("This character cannot be represented in Windows-1252.");
+    bytes.push(byte);
+  }
+  return Uint8Array.from(bytes);
+}
+export function convertCharset(direction: EncodingDirection, input: string, charset: SupportedCharset): string {
+  if (input.length > 1_000_000) throw new Error("Input exceeds the 1,000,000 character safety limit.");
+  if (direction === "encode") return encodeHex(charsetEncoder(input, charset));
+  const bytes = decodeHex(input);
+  try { return new TextDecoder(charset, { fatal: true }).decode(bytes); }
+  catch { throw new Error("Bytes are invalid for the selected charset or contain an incomplete code unit."); }
+}
 export function transformEncoding(mode: EncodingMode, direction: EncodingDirection, input: string): string {
   if (input.length > 1_000_000) throw new Error("Input exceeds the 1,000,000 character safety limit.");
   if (direction === "encode") {
@@ -138,6 +222,8 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
       case "html-entities": return encodeEntities(input);
       case "unicode-escapes": return encodeUnicode(input);
       case "quoted-printable": return encodeQuotedPrintable(input);
+      case "base58": return encodeBase58(utf8(input));
+      case "charset": throw new Error("Use the charset converter with an explicit character set.");
     }
   }
   switch (mode) {
@@ -150,5 +236,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
     case "html-entities": return decodeEntities(input);
     case "unicode-escapes": return decodeUnicode(input);
     case "quoted-printable": return decodeQuotedPrintable(input);
+    case "base58": return textFrom(decodeBase58(input));
+    case "charset": throw new Error("Use the charset converter with an explicit character set.");
   }
 }

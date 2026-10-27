@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { transformEncoding } from "../lib/tools/encoding-operations.ts";
+import { transformEncoding, convertCharset, encodeByteRepresentation, decodeByteRepresentation } from "../lib/tools/encoding-operations.ts";
 
 test("URL component encoding handles reserved characters and malformed escapes", () => {
   assert.equal(transformEncoding("url","encode","a b&c"),"a%20b%26c");
@@ -50,3 +50,22 @@ test("quoted-printable wraps long lines within MIME line limits", () => {
 test("encoding operations enforce the input size limit", () => {
   assert.throws(()=>transformEncoding("hex","encode","x".repeat(1_000_001)),/safety limit/i);
 });
+
+test("charset conversion uses explicit encodings and hex byte representation", () => {
+  assert.equal(convertCharset("encode", "Hello", "utf-8"), "48656c6c6f");
+  assert.equal(convertCharset("decode", "48656c6c6f", "utf-8"), "Hello");
+  assert.equal(convertCharset("encode", "A", "utf-16le"), "4100");
+  assert.equal(convertCharset("encode", "A", "utf-16be"), "0041");
+  assert.equal(convertCharset("decode", "e9", "windows-1252"), "é");
+  assert.throws(() => convertCharset("encode", "🙂", "windows-1252"), /cannot be represented/i);
+  assert.throws(() => convertCharset("decode", "f", "utf-8"), /complete byte pairs/i);
+});
+
+test("Base58 uses the Bitcoin alphabet, preserves leading zero bytes, and rejects ambiguous characters",()=>{
+  assert.equal(transformEncoding("base58","encode","Hello World"),"JxF12TrwUP45BMd");
+  assert.equal(transformEncoding("base58","decode","JxF12TrwUP45BMd"),"Hello World");
+  assert.throws(()=>transformEncoding("base58","decode","0OIl"),/Base58 alphabet/i);
+});
+
+test("byte encoders preserve raw file bytes and enforce bounded output",()=>{const bytes=Uint8Array.from([0,255,1]);assert.equal(encodeByteRepresentation("hex",bytes),"00ff01");assert.equal(encodeByteRepresentation("base64",bytes),"AP8B");assert.equal(encodeByteRepresentation("binary",bytes),"00000000 11111111 00000001");for(const mode of ["hex","base64","base64url","binary","base58"])assert.deepEqual(Array.from(decodeByteRepresentation(mode,encodeByteRepresentation(mode,bytes))),Array.from(bytes));assert.throws(()=>encodeByteRepresentation("hex",new Uint8Array(2_000_001)),/2,000,000 bytes/i);});
+test("byte decoders can return non-UTF-8 bytes without decoding loss",()=>{assert.deepEqual(Array.from(decodeByteRepresentation("hex","ff00")), [255,0]);assert.deepEqual(Array.from(decodeByteRepresentation("base64","/wA=")),[255,0]);assert.throws(()=>decodeByteRepresentation("binary","101"),/eight bits/i);});

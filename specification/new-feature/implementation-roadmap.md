@@ -1,6 +1,6 @@
 # Developer Tools Expansion — Implementation Roadmap
 
-**Status:** Active implementation. Seven formerly planned standalone tools and two consolidated data/inspection workbenches have browser-local implementations with operation tests and direct-route coverage. The broader Phase 2–6 capability families remain partially implemented; use the operation-level inventory as the remaining-work source of truth.
+**Status:** Active implementation. Seven formerly planned standalone tools, consolidated data/inspection workbenches, a bounded sample-data generator and a constrained workflow pipeline have browser-local implementations with operation tests and direct-route coverage. Phases 0–7 remain in progress or partial until the latest exact-revision CI evidence and remaining scoped gaps are resolved; use the operation-level inventory as the remaining-work source of truth.
 
 ## 1. Scope and baseline
 Primary source: [developer-tools capability proposal](../product/developer-tools-capability-proposal.md). Inspected sources include lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory, design-token contract, quality/accessibility contract, AI instructions and command.md.
@@ -49,15 +49,15 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Exit:** security review complete, unsupported algorithms absent, claims match behavior. Unresolved primitive/trust/dependency questions block only dependent operations.
 
 ### Phase 5 — Extended formats, generators and conditional operations (P2/P3)
-**Scope:** Additional encodings, YAML, ASN.1/TLV, extended generators and archive operations, each separately gated by demand and feasibility.  
+**Scope:** Bitcoin Base58 and a synthetic sample-data generator for strings, bounded integers, timestamps, UUID batches and JSON records are implemented. YAML, ASN.1/TLV, Base85, archives and other parser/crypto extensions remain conditional on dependency, license, maintenance and safety review.  
 **Tests:** format vectors, malformed data, dependency license/maintenance review, resource limits and regression.  
-**Exit:** each accepted operation has a maintained implementation path, supported-format contract and tests; deferred operations stay non-launchable.
+**Exit:** implemented generator and Base58 operations have unit tests and explicit limits. Conditional formats stay non-launchable until a maintained parser/primitive and adversarial test plan are approved.
 
 ### Phase 6 — Workflow and batch engine (P3)
-**Prerequisite:** stable typed operation contracts, errors and resource limits across multiple real tools.  
-**Scope:** typed chains, reorder/configure, intermediate outputs, batch processing, versioned recipe import/export and any approved persistence.  
+**Prerequisite:** stable typed operation contracts, errors and resource limits across multiple real tools. A constrained MVP is implemented for pure text/encoding/JSON/query operations only.  
+**Scope:** typed chains, reorder/configure, bounded intermediate previews, sequential line batch processing and versioned recipe import/export are implemented for a fixed allowlist. Persistence, parallel batches, cancellation, binary-file steps and arbitrary custom code remain deferred.  
 **Tests:** type compatibility, cancellation, bounded concurrency/memory, recipe validation, malicious input and secret redaction.  
-**Exit:** no arbitrary code execution, incompatible steps blocked, bounded processing and explicit persistence policy.
+**Exit:** MVP enforces an operation allowlist, blocks incompatible steps, caps recipes/steps/input/output/batch size, and exports recipes without source data or secrets. Full phase remains partial until cancellation/worker review, broader typed file operations, and additional adversarial UI tests are complete.
 
 ### Phase 7 — Cross-tool quality and release gates (P0, continuous)
 Run throughout every phase. Applicable package scripts include npm run test:unit, npm run test:component, npm run test:e2e, npm run lint, npm run typecheck and npm run build. Inspect CI workflow and required jobs before claiming verification. Never claim unrun checks passed.
@@ -89,11 +89,11 @@ At each future invocation:
 |---|---|---|
 | 0 — Audit | In progress; route and operation subset reconciled | Remaining proposal families, localization and edge-case coverage |
 | 1 — Contracts/shared design | In progress; shared text workbench contract synchronized | Responsive, RTL, keyboard and active error-state review |
-| 2 — Registry/encoding | Partial; unified text workbench implements URL/Base64/Base64url/Base32/hex/binary/basic HTML entities/Unicode escapes/quoted-printable; Base64 route redirects compatibly | Charset transcoding and byte-input mode for encoding are still pending; binary inspector now accepts local files up to 2 MB |
-| 3 — Planned tools | Partial; seven core routes, text transforms, query/key-value conversion, BigInt base conversion, byte inspection, statistics and gzip/zlib-wrapped DEFLATE workbench available | Complete parsers, richer byte conversions, archive support and expanded regression/visual evidence remain |
-| 4 — Security/inspection | Partial; SHA-2/HMAC/CRC32 plus offline IP/CIDR/MAC, HTTP-header/cookie parsing and local byte/string/entropy inspection implemented | Certificate/key parsing, metadata parsers, candidate extraction and deeper security review remain |
-| 5 — Extended/conditional | In progress; gzip and zlib-wrapped DEFLATE implemented with round-trip tests; archive, ASN.1/TLV and advanced crypto are explicitly conditional | Decide additional encodings/formats only after dependency/license and safety review; no archive extraction or unsupported crypto is exposed |
-| 6 — Workflow/batch | Deferred | Stable contracts and separate review |
+| 2 — Registry/encoding | Partial; unified text workbench implements URL/Base64/Base64url/Base32/hex/binary/basic HTML entities/Unicode escapes/quoted-printable, charset conversion and Bitcoin Base58; Base64 route redirects compatibly; bounded file-byte encode/decode/download supported for Base64/Base64url/hex/binary/Base58 | Charset conversion (UTF-8, UTF-16LE/BE, Windows-1252 via hex bytes) and Bitcoin Base58 are implemented; file-byte encoding/download is implemented for Base64/Base64url/hex/binary/Base58 with a 2 MB input and 1,000,000-character output limit; Base85 and file mode for other encodings remain pending |
+| 3 — Planned tools | Partial; standalone text/regex, XML/SQL/HTML/CSV/cURL, sample generator, data/binary/math and network/file workbenches are implemented with operation tests; query/key-value conversion, BigInt math, numeric views, byte comparison, byte inspection and gzip/zlib support are available | Full XML/YAML/SQL parsers, byte/file comparison, archive support and expanded regression/visual evidence remain |
+| 4 — Security/inspection | Partial; SHA-2/HMAC/CRC32 over text and local file bytes plus offline IP/CIDR/MAC, HTTP-header/cookie parsing and local byte/string/entropy inspection implemented | Certificate/key parsing, metadata parsers, offline DNS records and deeper security review remain |
+| 5 — Extended/conditional | Partial; gzip/zlib wrapper support, Bitcoin Base58, charset conversion and bounded synthetic sample-data generators implemented; YAML, Base85, archive, ASN.1/TLV, certificate parsing and advanced crypto remain conditional | Decide additional encodings/formats only after dependency/license and safety review; no archive extraction or unsupported crypto is exposed |
+| 6 — Workflow/batch | Partial; `/workflow/pipeline` supports typed allowlisted text/encoding/JSON/query chains, reordering, bounded previews, sequential line batches and versioned recipe import/export | Worker/cancellation review, binary/file steps, additional adversarial recipe tests and any persistence decision remain deferred |
 | 7 — Quality | Continuous | Exact-revision test and visual evidence |
 
 ## 6. Definition of done
