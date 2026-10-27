@@ -215,7 +215,7 @@ export function inspectFileSignatures(bytes:Uint8Array):string {
  if(ascii(0,16)==="SQLite format 3\u0000")add("SQLite database","application/vnd.sqlite3","sqlite",0,"SQLite format 3");
  if(ascii(4,4)==="ftyp")add("ISO base media / MP4 family","video/mp4","mp4",4,ascii(4,4));
  if(ascii(0,4)==="OggS")add("Ogg container","application/ogg","ogg",0,ascii(0,4));
- if(ascii(0,3)==="ID3"||(bytes[0]===0xff&&bytes[1]!==undefined&&(bytes[1]&0xe0)===0xe0))add("MP3/audio frame candidate","audio/mpeg","mp3",0,hex(0,Math.min(3,bytes.length)));
+ const firstByte=bytes[0],secondByte=bytes[1];if(ascii(0,3)==="ID3"||(firstByte===0xff&&secondByte!==undefined&&(secondByte&0xe0)===0xe0))add("MP3/audio frame candidate","audio/mpeg","mp3",0,hex(0,Math.min(3,bytes.length)));
  if(starts([0x00,0x61,0x73,0x6d]))add("WebAssembly module","application/wasm","wasm",0,hex(0,4));
  if(starts([0x37,0x7a,0xbc,0xaf,0x27,0x1c]))add("7-Zip archive","application/x-7z-compressed","7z",0,hex(0,6));
  if(ascii(0,7)==="Rar!\x1a\x07")add("RAR archive","application/vnd.rar","rar",0,hex(0,7));
