@@ -1,4 +1,4 @@
-export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset" | "base58";
+export type EncodingMode = "url" | "base64" | "base64url" | "base32" | "hex" | "binary" | "html-entities" | "unicode-escapes" | "quoted-printable" | "charset" | "base58" | "base85";
 export type EncodingDirection = "encode" | "decode";
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 function utf8(text: string): Uint8Array { return new TextEncoder().encode(text); }
@@ -37,6 +37,45 @@ function decodeBase32(value: string): Uint8Array {
   }
   if (bits && (buffer & ((1 << bits) - 1)) !== 0) throw new Error("Invalid non-zero trailing Base32 bits.");
   return Uint8Array.from(output);
+}
+function encodeAscii85(bytes:Uint8Array):string {
+ let out="<~";
+ for(let offset=0;offset<bytes.length;offset+=4){
+  const count=Math.min(4,bytes.length-offset);let value=BigInt(0);
+  for(let i=0;i<4;i++)value=(value<<BigInt(8))|BigInt(i<count?bytes[offset+i]:0);
+  if(count===4&&value===BigInt(0)){out+="z";continue;}
+  const chars=new Array<string>(5);
+  for(let i=4;i>=0;i--){chars[i]=String.fromCharCode(Number(value%BigInt(85))+33);value/=BigInt(85);}
+  out+=chars.slice(0,count+1).join("");
+ }
+ return out+"~>";
+}
+function decodeAscii85(input:string):Uint8Array {
+  let source=input.replace(/\s/g,"");
+ const hasStart=source.startsWith("<~"),hasEnd=source.endsWith("~>");
+ if(hasStart!==hasEnd)throw new Error("ASCII85 Adobe wrappers must include both <~ and ~>.");
+ if(hasStart)source=source.slice(2,-2);
+ const out:number[]=[];let group:number[]=[];
+ const flush=(final=false)=>{
+  if(!group.length)return;
+  if(final&&group.length===1)throw new Error("ASCII85 final group must contain at least two characters.");
+  const original=group.length;
+  while(group.length<5)group.push(84);
+  let value=BigInt(0);for(const digit of group)value=value*BigInt(85)+BigInt(digit);
+  if(value>BigInt(0xffffffff))throw new Error("ASCII85 group exceeds the 32-bit byte range.");
+  const n=Number(value);
+  const decoded=[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255];
+  out.push(...decoded.slice(0,final?original-1:4));group=[];
+  if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
+ };
+ for(const char of source){
+  if(/\s/.test(char))continue;
+  if(char==="z"){if(group.length)throw new Error("ASCII85 z shorthand is only valid at a group boundary.");out.push(0,0,0,0);if(out.length>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");continue;}
+  const code=char.charCodeAt(0);if(code<33||code>117)throw new Error("ASCII85 input contains a character outside the ! through u alphabet.");
+  group.push(code-33);if(group.length===5)flush(false);
+ }
+ flush(true);
+ return Uint8Array.from(out);
 }
 const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 function encodeBase58(bytes: Uint8Array): string {
@@ -109,7 +148,7 @@ function decodeBinary(value: string): Uint8Array {
   for (let i = 0; i < text.length; i += 8) bytes.push(Number.parseInt(text.slice(i, i + 8), 2));
   return Uint8Array.from(bytes);
 }
-export type ByteEncodingMode = "base64" | "base64url" | "hex" | "binary" | "base58";
+export type ByteEncodingMode = "base64" | "base64url" | "hex" | "binary" | "base58" | "base85";
 export const MAX_ENCODING_FILE_BYTES = 2_000_000;
 export const MAX_ENCODING_OUTPUT_LENGTH = 1_000_000;
 export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array):string {
@@ -121,6 +160,7 @@ export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array)
   case "hex":output=encodeHex(bytes);break;
   case "binary":output=Array.from(bytes,b=>b.toString(2).padStart(8,"0")).join(" ");break;
   case "base58":output=encodeBase58(bytes);break;
+  case "base85":output=encodeAscii85(bytes);break;
   default:throw new Error("Unsupported byte encoding mode.");
  }
  if(output.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded output exceeds the 1,000,000 character limit; use a smaller file or a more compact encoding.");
@@ -135,6 +175,7 @@ export function decodeByteRepresentation(mode:ByteEncodingMode,input:string):Uin
   case "hex":bytes=decodeHex(input);break;
   case "binary":bytes=decodeBinary(input);break;
   case "base58":bytes=decodeBase58(input);break;
+  case "base85":bytes=decodeAscii85(input);break;
   default:throw new Error("Unsupported byte encoding mode.");
  }
  if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
@@ -223,6 +264,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
       case "unicode-escapes": return encodeUnicode(input);
       case "quoted-printable": return encodeQuotedPrintable(input);
       case "base58": return encodeBase58(utf8(input));
+      case "base85": return encodeAscii85(utf8(input));
       case "charset": throw new Error("Use the charset converter with an explicit character set.");
     }
   }
@@ -237,6 +279,7 @@ export function transformEncoding(mode: EncodingMode, direction: EncodingDirecti
     case "unicode-escapes": return decodeUnicode(input);
     case "quoted-printable": return decodeQuotedPrintable(input);
     case "base58": return textFrom(decodeBase58(input));
+    case "base85": return textFrom(decodeAscii85(input));
     case "charset": throw new Error("Use the charset converter with an explicit character set.");
   }
 }

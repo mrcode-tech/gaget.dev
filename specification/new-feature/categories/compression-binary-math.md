@@ -18,13 +18,13 @@ The `/data/binary-math` workbench implements browser-native gzip and zlib-wrappe
 | ID | Operation | Contract |
 |---|---|---|
 | binary.hexdump | Offset, hex bytes, printable view | Stable offsets, row width, bounded/virtualized output |
-| binary.bytes | Byte/range inspector | Offsets and byte values; no implicit text conversion |
+| binary.bytes | Byte/range inspector | Implemented: select a local file and inspect 1–256 bytes from a zero-based offset; output includes hex, decimal and printable ASCII views. Input remains capped at 2 MB. |
 | binary.strings | Printable-string extraction | Minimum length and character policy explicit |
-| binary.compare | Byte/file comparison | First differing offset, lengths and bounded output |
+| binary.compare | Byte/file comparison | Implemented: compares two local files up to 2 MB each; reports first differing zero-based offset, lengths, differing positions and at most 100 preview entries. |
 | num.base-convert | Binary/octal/decimal/hex | Digit validation, range and arbitrary precision explicit |
 | num.signed-unsigned | Fixed-width integer interpretation | Implemented for 8/16/32/64-bit signed two’s-complement and unsigned integers, with range validation and endian byte views |
 | num.endianness | Interpret/serialize multi-byte values | Implemented in fixed-width integer and IEEE-754 views with big/little-endian known fixtures |
-| num.bitwise | XOR and bitwise operations | Operand width and truncation explicit |
+| num.bitwise | XOR and bitwise operations | Implemented AND/OR/XOR/NOT for 8/16/32/64-bit unsigned or signed two’s-complement operands; validates selected ranges and returns decimal, padded hexadecimal and binary representations. Signed results also report the unsigned bit pattern. |
 | num.float | IEEE floating-point view | Implemented 32/64-bit DataView serialization; Float32 rounding disclosed and browser IEEE-754 behavior used for special values |
 
 ## Data Analysis & Mathematics

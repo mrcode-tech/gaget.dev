@@ -9,9 +9,9 @@ import { transformEncoding, convertCharset, encodeByteRepresentation, decodeByte
 const modes: { value: EncodingMode; label: string }[] = [
   { value: "url", label: "URL component" }, { value: "base64", label: "Base64" }, { value: "base64url", label: "Base64url" },
   { value: "base32", label: "Base32" }, { value: "hex", label: "Hexadecimal" }, { value: "binary", label: "Binary bytes" },
-  { value: "html-entities", label: "HTML entities" }, { value: "unicode-escapes", label: "Unicode escapes" }, { value: "quoted-printable", label: "Quoted-printable" }, { value: "charset", label: "Charset converter" }, { value: "base58", label: "Base58" }
+  { value: "html-entities", label: "HTML entities" }, { value: "unicode-escapes", label: "Unicode escapes" }, { value: "quoted-printable", label: "Quoted-printable" }, { value: "charset", label: "Charset converter" }, { value: "base58", label: "Base58" }, { value: "base85", label: "ASCII85 (Adobe)" }
 ];
-const byteModes: ByteEncodingMode[] = ["base64","base64url","hex","binary","base58"];
+const byteModes: ByteEncodingMode[] = ["base64","base64url","hex","binary","base58","base85"];
 const notes: Record<EncodingMode, string> = {
   url: "Encodes a URI component, not a complete URL structure.",
   base64: "Uses standard Base64 padding; text input is UTF-8 and selected files are encoded as raw bytes. Base64 is encoding, not encryption.",
@@ -23,7 +23,8 @@ const notes: Record<EncodingMode, string> = {
   "unicode-escapes": "Uses \\uXXXX escapes for BMP characters and \\u{...} escapes for supplementary code points.",
   "quoted-printable": "Encodes UTF-8 text bytes for MIME-style transport, wraps lines, and normalizes line endings to LF when decoding.",
   charset: "Convert text to UTF-8, UTF-16LE, UTF-16BE or Windows-1252 bytes (shown as hex), or decode hex bytes using the selected charset.",
-  base58: "Uses the Bitcoin Base58 alphabet; leading zero bytes are preserved. This is encoding, not encryption."
+  base58: "Uses the Bitcoin Base58 alphabet; leading zero bytes are preserved. This is encoding, not encryption.",
+  base85: "Uses Adobe ASCII85 with <~ ~> wrappers and the z shorthand; this is not the same as every Base85 variant."
 };
 export function EncodingWorkbench({ initialMode = "url" }: { initialMode?: EncodingMode }) {
   const [mode, setMode] = useState<EncodingMode>(initialMode);
