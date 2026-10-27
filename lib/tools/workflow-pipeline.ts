@@ -1,8 +1,8 @@
 import { transformEncoding, convertCharset } from "./encoding-operations.ts";
 import { parseQueryString, buildQueryString } from "./extended-operations.ts";
-export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "hex" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
+export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "ascii85" | "z85" | "hex" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
 export const PIPELINE_INPUT_TYPES: {value:PipelineDataType;label:string}[] = [
- {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
+ {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"ascii85",label:"Adobe ASCII85 encoded"},{value:"z85",label:"ZeroMQ Z85 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
 ];
 export const PIPELINE_OPERATIONS = [
  {id:"trim",label:"Trim whitespace",input:"text",output:"text"},
@@ -18,6 +18,10 @@ export const PIPELINE_OPERATIONS = [
  {id:"base32-decode",label:"Base32 decode",input:"base32",output:"text"},
  {id:"base58-encode",label:"Bitcoin Base58 encode",input:"text",output:"base58"},
  {id:"base58-decode",label:"Bitcoin Base58 decode",input:"base58",output:"text"},
+ {id:"ascii85-encode",label:"Adobe ASCII85 encode",input:"text",output:"ascii85"},
+ {id:"ascii85-decode",label:"Adobe ASCII85 decode",input:"ascii85",output:"text"},
+ {id:"z85-encode",label:"ZeroMQ Z85 encode",input:"text",output:"z85"},
+ {id:"z85-decode",label:"ZeroMQ Z85 decode",input:"z85",output:"text"},
  {id:"hex-encode",label:"Hex encode UTF-8 bytes",input:"text",output:"hex"},
  {id:"hex-decode",label:"Hex decode UTF-8 bytes",input:"hex",output:"text"},
  {id:"unicode-escape",label:"Unicode escape",input:"text",output:"unicode"},
@@ -70,7 +74,7 @@ export function parsePipelineRecipe(text:string):PipelineRecipe{
  return validatePipelineRecipe(value);
 }
 function applyOperation(id:PipelineOperation,input:string):string{
- const enc=(mode:"url"|"base64"|"base64url"|"base32"|"base58"|"hex"|"html-entities"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
+ const enc=(mode:"url"|"base64"|"base64url"|"base32"|"base58"|"base85"|"z85"|"hex"|"html-entities"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
  switch(id){
   case "trim":return input.trim();
   case "uppercase":return input.toLocaleUpperCase("en-US");
@@ -85,6 +89,10 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "base32-decode":return enc("base32","decode");
   case "base58-encode":return enc("base58","encode");
   case "base58-decode":return enc("base58","decode");
+  case "ascii85-encode":return enc("base85","encode");
+  case "ascii85-decode":return enc("base85","decode");
+  case "z85-encode":return enc("z85","encode");
+  case "z85-decode":return enc("z85","decode");
   case "hex-encode":return enc("hex","encode");
   case "hex-decode":return enc("hex","decode");
   case "unicode-escape":return enc("unicode-escapes","encode");

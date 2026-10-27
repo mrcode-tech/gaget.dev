@@ -52,3 +52,12 @@ test("typed workflow supports explicit UTF-16 and Windows-1252 byte representati
  assert.equal(executePipeline(cp.output,{version:1,inputType:"hex",steps:[{operation:"windows1252-decode"}]}).output,"café");
  assert.throws(()=>executePipeline("🙂",{version:1,inputType:"text",steps:[{operation:"windows1252-encode"}]}),/cannot be represented/i);
 });
+
+test("typed workflow supports Adobe ASCII85 and ZeroMQ Z85 with explicit compatibility",()=>{
+ const ascii=executePipeline("Man ",{version:1,inputType:"text",steps:[{operation:"ascii85-encode"},{operation:"ascii85-decode"}]});
+ assert.equal(ascii.output,"Man ");assert.equal(ascii.steps[0].outputType,"ascii85");
+ const z85=executePipeline("abcd",{version:1,inputType:"text",steps:[{operation:"z85-encode"},{operation:"z85-decode"}]});
+ assert.equal(z85.output,"abcd");assert.equal(z85.steps[0].outputType,"z85");
+ assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"z85-decode"}]}),/Incompatible/i);
+ assert.throws(()=>executePipeline("abc",{version:1,inputType:"text",steps:[{operation:"z85-encode"}]}),/divisible by four/i);
+});

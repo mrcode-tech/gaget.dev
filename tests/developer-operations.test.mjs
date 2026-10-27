@@ -68,3 +68,12 @@ test("cURL parser consumes values for unsupported options instead of mistaking t
  assert.match(parsed.unsupported.join(" "),/--connect-timeout/);
  assert.doesNotMatch(parsed.unsupported.join(" "),/private\.txt/);
 });
+
+test("cURL GET data is appended before fragments and ordinary data never reads @files",()=>{
+ const get=parseCurl("curl -G --data-urlencode 'q=hello world' https://example.test/search?existing=1#anchor");
+ assert.equal(get.url,"https://example.test/search?existing=1&q=hello%20world#anchor");
+ const file=parseCurl("curl --data @private.txt https://example.test/upload");
+ assert.equal(file.body,undefined);assert.match(file.unsupported.join(" "),/file-backed data is not read/i);
+ const literal=parseCurl("curl --data-raw @literal-value https://example.test/upload");
+ assert.equal(literal.body,"@literal-value");
+});
