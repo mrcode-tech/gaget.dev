@@ -123,5 +123,5 @@ test("ELF metadata decodes class, byte order, machine and entry point",()=>{
  const bytes=new Uint8Array(64);bytes.set([0x7f,0x45,0x4c,0x46,2,1,1],0);const view=new DataView(bytes.buffer);
  view.setUint16(16,2,true);view.setUint16(18,62,true);view.setUint32(20,1,true);view.setBigUint64(24,0x401000n,true);view.setUint16(52,64,true);view.setUint16(56,0,true);view.setUint16(60,0,true);
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"ELF executable/object candidate");assert.equal(result.metadata.class,"ELF64");assert.equal(result.metadata.byteOrder,"little-endian");assert.equal(result.metadata.machine,"x86-64");assert.equal(result.metadata.objectType,"Executable");assert.equal(result.metadata.entryPoint,"0x0000000000401000");
- const truncated=JSON.parse(inspectFileMetadata(Uint8Array.from([0x7f,0x45,0x4c,0x46,2,1,1])));assert.match(truncated.notes.join(" "),/truncated/i);
+ const shortElf=new Uint8Array(20);shortElf.set([0x7f,0x45,0x4c,0x46,2,1,1]);const truncated=JSON.parse(inspectFileMetadata(shortElf));assert.match(truncated.notes.join(" "),/truncated/i);
 });
