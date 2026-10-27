@@ -21,3 +21,14 @@ test("async batch cancellation stops processing instead of swallowing the abort 
  const promise=executeBatchAsync(Array.from({length:100},(_,i)=>"line"+i).join("\n"),recipe,controller.signal);setTimeout(()=>controller.abort(),0);
  await assert.rejects(promise,/cancelled/i);
 });
+
+test("typed workflow supports Base64url, Base32 and Bitcoin Base58 without allowing incompatible byte/text steps",()=>{
+ const cases=[
+  {inputType:"text",steps:[{operation:"base64url-encode"},{operation:"base64url-decode"}],expected:"Hello 👋"},
+  {inputType:"text",steps:[{operation:"base32-encode"},{operation:"base32-decode"}],expected:"Hello 👋"},
+  {inputType:"text",steps:[{operation:"base58-encode"},{operation:"base58-decode"}],expected:"Hello 👋"}
+ ];
+ for(const c of cases){const result=executePipeline(c.expected,{version:1,inputType:c.inputType,steps:c.steps});assert.equal(result.output,c.expected);assert.equal(result.steps.length,2);}
+ assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"base32-decode"}]}),/Incompatible/i);
+ assert.throws(()=>validatePipelineRecipe({version:1,inputType:"base64url",steps:[{operation:"base64-decode"}]}),/Incompatible/i);
+});
