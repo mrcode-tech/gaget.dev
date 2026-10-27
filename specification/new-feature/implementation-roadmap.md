@@ -38,7 +38,7 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Exit:** stable IDs/routes, explicit text/byte semantics, tested errors and no broken bookmarks.
 
 ### Phase 3 — Planned foundational tools and common transformations (P1)
-**Scope:** Regex, Hash, XML, SQL, CSV ↔ JSON, HTML and cURL; common text transforms, data parsing, numeric conversion and core compression only after contracts are approved.  
+**Scope:** Regex, Hash, XML, SQL, CSV ↔ JSON, HTML and cURL; common text transforms, data parsing, numeric conversion and core compression only after contracts are approved. Regex execution is isolated in a worker with a bounded timeout.  
 **Read:** planned-tools.md and relevant category specs.  
 **Tests:** fixtures, malformed/boundary input, security/resource limits, copy/download, responsive/accessibility and route status.  
 **Exit:** each accepted tool works beyond a shell; supported syntax is explicit; unsupported cases visible; tests pass; registry status changes only after verification.
