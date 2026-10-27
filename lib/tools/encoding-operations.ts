@@ -121,6 +121,7 @@ export function encodeByteRepresentation(mode:ByteEncodingMode,bytes:Uint8Array)
   case "hex":output=encodeHex(bytes);break;
   case "binary":output=Array.from(bytes,b=>b.toString(2).padStart(8,"0")).join(" ");break;
   case "base58":output=encodeBase58(bytes);break;
+  default:throw new Error("Unsupported byte encoding mode.");
  }
  if(output.length>MAX_ENCODING_OUTPUT_LENGTH)throw new Error("Encoded output exceeds the 1,000,000 character limit; use a smaller file or a more compact encoding.");
  return output;
@@ -134,6 +135,7 @@ export function decodeByteRepresentation(mode:ByteEncodingMode,input:string):Uin
   case "hex":bytes=decodeHex(input);break;
   case "binary":bytes=decodeBinary(input);break;
   case "base58":bytes=decodeBase58(input);break;
+  default:throw new Error("Unsupported byte encoding mode.");
  }
  if(bytes.byteLength>MAX_ENCODING_FILE_BYTES)throw new Error("Decoded byte output is limited to 2,000,000 bytes.");
  return bytes;
