@@ -152,14 +152,20 @@ export function numericStatistics(input:string):string {
  return JSON.stringify({count:values.length,min:sorted[0],max:sorted[sorted.length-1],sum,mean,median,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance:values.length>1?values.reduce((s,n)=>s+(n-mean)**2,0)/(values.length-1):null},null,2);
 }
 export function arithmetic(input:string,options:ExtendedOptions={}):string {
- const a=Number(options.a),b=Number(options.b);if(!options.a?.trim()||!options.b?.trim()||!Number.isFinite(a)||!Number.isFinite(b))throw new Error("Enter two finite numbers in the A and B fields.");
+ const a=Number(options.a),b=Number(options.b);
+ if(!options.a?.trim()||(input!=="not"&&!options.b?.trim())||!Number.isFinite(a)||(input!=="not"&&!Number.isFinite(b)))throw new Error(input==="not"?"Enter a finite integer in the A field.":"Enter two finite numbers in the A and B fields.");
  if(input==="modular"){let m:bigint,x:bigint,y:bigint;try{m=BigInt(options.modulus??"");x=BigInt(options.a??"");y=BigInt(options.b??"");}catch{throw new Error("Modular arithmetic requires integer operands and a positive integer modulus.");}if(m<=BigInt(0))throw new Error("Modulus must be a positive integer.");return JSON.stringify({sum:(((x+y)%m+m)%m).toString(),difference:(((x-y)%m+m)%m).toString(),product:(((x*y)%m+m)%m).toString(),modulus:m.toString()},null,2);}
- if(["and","or","xor"].includes(input)){
+ if(["and","or","xor","not"].includes(input)){
   const width=options.bits??32;if(![8,16,32,64].includes(width))throw new Error("Bitwise width must be 8, 16, 32, or 64 bits.");
-  let x:bigint,y:bigint;try{x=BigInt(options.a??"");y=BigInt(options.b??"");}catch{throw new Error("Bitwise operations require integer operands.");}
-  const limit=BigInt(1)<<BigInt(width);if(x<0||y<0||x>=limit||y>=limit)throw new Error("Bitwise operands must fit the selected unsigned "+width+"-bit width.");
-  const result=input==="and"?(x&y):input==="or"?(x|y):(x^y);
-  return JSON.stringify({operation:input,width,decimal:result.toString(),hexadecimal:"0x"+result.toString(16).padStart(width/4,"0").toUpperCase(),binary:result.toString(2).padStart(width,"0")},null,2);
+  let x:bigint,y=BigInt(0);try{x=BigInt(options.a??"");if(input!=="not")y=BigInt(options.b??"");}catch{throw new Error("Bitwise operations require integer operands.");}
+  const limit=BigInt(1)<<BigInt(width),mask=limit-BigInt(1),isSigned=options.signed===true;
+  const min=isSigned?-(limit>>BigInt(1)):BigInt(0),max=isSigned?(limit>>BigInt(1))-BigInt(1):mask;
+  if(x<min||x>max||(input!=="not"&&(y<min||y>max)))throw new Error("Bitwise operands must fit the selected "+(isSigned?"signed ":"unsigned ")+width+"-bit width.");
+  const ux=x<0?x+limit:x,uy=y<0?y+limit:y;
+  const raw=input==="and"?(ux&uy):input==="or"?(ux|uy):input==="xor"?(ux^uy):((~ux)&mask);
+  const signedResult=isSigned&&(raw&(limit>>BigInt(1)))!==BigInt(0)?raw-limit:raw;
+  const base={operation:input,width,decimal:signedResult.toString(),hexadecimal:"0x"+raw.toString(16).padStart(width/4,"0").toUpperCase(),binary:raw.toString(2).padStart(width,"0")};
+  return JSON.stringify(isSigned?{...base,signed:true,unsignedDecimal:raw.toString()}:base,null,2);
  }
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }

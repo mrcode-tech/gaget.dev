@@ -24,7 +24,7 @@ The `/data/binary-math` workbench implements browser-native gzip and zlib-wrappe
 | num.base-convert | Binary/octal/decimal/hex | Digit validation, range and arbitrary precision explicit |
 | num.signed-unsigned | Fixed-width integer interpretation | Implemented for 8/16/32/64-bit signed two’s-complement and unsigned integers, with range validation and endian byte views |
 | num.endianness | Interpret/serialize multi-byte values | Implemented in fixed-width integer and IEEE-754 views with big/little-endian known fixtures |
-| num.bitwise | XOR and bitwise operations | Implemented unsigned AND/OR/XOR for 8/16/32/64-bit operands; rejects values outside selected width and returns decimal, padded hexadecimal and binary. NOT and signed bitwise modes remain pending. |
+| num.bitwise | XOR and bitwise operations | Implemented AND/OR/XOR/NOT for 8/16/32/64-bit unsigned or signed two’s-complement operands; validates selected ranges and returns decimal, padded hexadecimal and binary representations. Signed results also report the unsigned bit pattern. |
 | num.float | IEEE floating-point view | Implemented 32/64-bit DataView serialization; Float32 rounding disclosed and browser IEEE-754 behavior used for special values |
 
 ## Data Analysis & Mathematics
