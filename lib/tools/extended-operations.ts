@@ -44,10 +44,15 @@ export function parseDataUri(input:string):string {
     throw new Error("Data URI contains a malformed media-type parameter.");
   let bytes:Uint8Array;
   if(base64){
-    if(!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload))
+    // Data URLs commonly omit Base64 padding; accept valid unpadded lengths
+    // while rejecting impossible one-character tails and misplaced padding.
+    if(!/^[A-Za-z0-9+/]*={0,2}$/.test(payload)||payload.length%4===1||/=/.test(payload.slice(0,-2))||(payload.includes("=")&&payload.length%4!==0))
       throw new Error("Data URI contains invalid Base64 data or padding.");
+    const unpadded=payload.replace(/=+$/,"");
+    if(unpadded.length%4===1) throw new Error("Data URI contains invalid Base64 data or padding.");
+    const normalized=unpadded+"=".repeat((4-unpadded.length%4)%4);
     let binary:string;
-    try{binary=atob(payload);}catch{throw new Error("Data URI contains invalid Base64 data.");}
+    try{binary=atob(normalized);}catch{throw new Error("Data URI contains invalid Base64 data.");}
     bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0));
   }else{
     const out:number[]=[];
