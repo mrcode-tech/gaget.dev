@@ -50,3 +50,11 @@ test("cURL data flags combine in order and file-backed URL-encoding is not read"
  const fileBased=parseCurl("curl --data-urlencode @private.txt https://example.test");
  assert.equal(fileBased.body,undefined);assert.match(fileBased.unsupported.join(" "),/file-based data is not read/i);
 });
+
+
+test("cURL preview redacts URL credentials, OAuth codes, session tokens, and secret-like headers",()=>{
+ const output=transformDeveloperTool("curl","curl https://alice:password123@example.test/callback?code=oauth-secret&session=session-secret&client_secret=client-secret-value&mode=fast#ticket=fragment-secret -H 'X-Session-Token: header-secret'");
+ const result=JSON.parse(output),url=result.request.url;
+ for(const secret of ["alice","password123","oauth-secret","session-secret","client-secret-value","fragment-secret","header-secret"])assert.equal(JSON.stringify(result).includes(secret),false,secret+" leaked");
+ assert.match(url,/mode=fast/);assert.match(url,/REDACTED/);
+});
