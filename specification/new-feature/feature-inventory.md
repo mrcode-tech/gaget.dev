@@ -35,7 +35,8 @@ There are now 14 relevant standalone registry entries. Encoding & Decoding conso
 | data.csv-json | CSV ↔ JSON, delimiters, quoting, headers and type policy | CSV ↔ JSON implemented with string-cell policy / 3; broader type inference remains out of scope | [Data](./categories/data-parsing-conversion.md) |
 | data.xml | XML parse/format/minify | Lightweight element-nesting format/minify implemented / 3; complete XML parsing/validation pending | [Data](./categories/data-parsing-conversion.md) |
 | data.yaml | YAML parse/format and optional JSON conversion | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
-| data.uri-components | Parse absolute URL into components | Implemented in `/data/binary-math`; no requests, credential values omitted / 3 | [Data](./categories/data-parsing-conversion.md) |\n| data.query-string | Query-string parse/build, repeated keys, URI components | Implemented in `/data/binary-math` / 3; repeated keys and plus-space policy tested | [Data](./categories/data-parsing-conversion.md) |
+| data.uri-components | Parse absolute URL into components | Implemented in `/data/binary-math`; no requests, credential values omitted / 3 | [Data](./categories/data-parsing-conversion.md) |
+| data.query-string | Query-string parse/build, repeated keys, URI components | Implemented in `/data/binary-math` / 3; repeated keys and plus-space policy tested | [Data](./categories/data-parsing-conversion.md) |
 | data.key-value | Key-value parse/build | Key-value parse and JSON-to-key=value builder implemented in `/data/binary-math` / 3 | [Data](./categories/data-parsing-conversion.md) |
 | data.asn1-tlv | Selected ASN.1/TLV inspection | Conditional / 5 | [Data](./categories/data-parsing-conversion.md) |
 | text.regex | Regex flags, matches and captures | Implemented / 3; match/capture, replacement preview and bounded output; pathological patterns remain a browser-runtime risk | [Text](./categories/text-and-regex.md) |

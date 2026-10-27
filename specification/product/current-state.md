@@ -34,6 +34,8 @@
 - `/generators/uuid` — generates UUID v4 values using the browser cryptographic API.
 - `/generators/sample-data` — generates synthetic JSON records, random strings and integers, timestamps, and UUID batches with bounded counts and lengths.
 - `/security/hash` — SHA-256/384/512 digests and HMAC-SHA-2 over text or local file bytes (2 MB file limit), plus CRC32 text/file checksums; uses Web Crypto for cryptographic algorithms and does not encrypt.
+- `/data/binary-math` — URL component parsing with repeated query values and credential redaction; query-string/key-value conversions, number/bitwise/float views, bounded byte analysis and gzip/zlib-wrapped DEFLATE operations.
+- `/inspection/network-file` — offline IP/CIDR/MAC, HTTP-header/cookie/DNS parsing, HTTP message redaction, file signatures and selected local PNG/GIF/BMP/JPEG/WebP/WAV/PDF/ZIP/ID3 metadata. PEM/DER container inspection reports labels/outer lengths and SHA-256 fingerprints; it does not validate certificate trust.
 - `/text/regex` — reports matches, indexes and capture groups with a 50,000-character input cap and 500-match output cap. JavaScript regex execution cannot be reliably interrupted, so pathological patterns can still block the tab.
 - `/xml/formatter` — lightweight XML text formatting/minifying with element-nesting checks; not a complete XML parser or schema validator.
 - `/sql/formatter` — heuristic SQL formatting/minifying only; no dialect-complete parser or query execution.

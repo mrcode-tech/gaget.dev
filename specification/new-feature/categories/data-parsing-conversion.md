@@ -10,7 +10,7 @@ Reuse the existing JSON Workspace as the canonical JSON experience; do not dupli
 | data.query-string | Query-string parse/build | Repeated keys, empty values, plus vs encoded space, malformed escapes and ordering policy |
 | data.key-value | Key-value parse/build | Parse and JSON-to-key=value builder implemented; repeated array values become repeated lines; multiline values and delimiter-containing keys rejected |
 | data.asn1-tlv | Selected ASN.1/TLV inspection | Conditional; maintained parser, bounded recursion and demand review |
-| data.uri-components | URI extraction/encoding | Reuse URL utility where appropriate; distinguish URL parsing from component encoding |
+| data.uri-components | Parse absolute URL into components | Implemented offline in `/data/binary-math`; repeated query keys, origin/port/path/hash and credential redaction; no requests |
 
 ## CSV ↔ JSON planned tool
 Registry ID csv-json-converter; route candidate /data/csv-json; status planned. Direction is explicit. CSV options include delimiter, quote, header and empty-cell policy. Define accepted JSON shapes, defaulting to arrays of objects for CSV export. Duplicate/empty headers and uneven columns are deterministic and visible. Type inference is explicit, not silent. Copy/download use correct format. Consider spreadsheet formula injection; never execute cell contents.
