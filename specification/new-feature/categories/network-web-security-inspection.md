@@ -14,7 +14,6 @@ The `/inspection/network-file` workbench currently implements IPv4/IPv6 normaliz
 | net.http-message | Inspect supplied HTTP request/response | Request/status line and duplicate headers parsed; sensitive headers redacted; body content omitted from parsed output; no network request |
 | net.offline-records | Parse supplied DNS record text | Common record types parsed from zone/dig-style lines; offline only, skipped lines reported |
 | net.cookies | Parse supplied cookie strings | No implication of browser cookie access or security validation |
-| net.offline-records | Inspect supplied DNS/network records | Offline unless a separate network action is approved |
 
 ## Token & Web Security Inspector
 
