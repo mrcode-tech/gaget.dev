@@ -18,6 +18,8 @@ const routes = [
   "/data/csv-json",
   "/web/html-formatter",
   "/api/curl-converter",
+  "/data/binary-math",
+  "/inspection/network-file",
   "/images/editor",
   "/audio/editor",
   "/video/editor",

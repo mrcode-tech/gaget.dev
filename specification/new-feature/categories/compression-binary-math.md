@@ -2,6 +2,8 @@
 
 ## Compression & Decompression
 
+The `/data/binary-math` workbench implements browser-native gzip and zlib-wrapped DEFLATE compression/decompression. It limits input to 2 MB and resulting output to 8 MB. Raw DEFLATE and archive formats are not exposed.
+
 | ID | Operation | Contract |
 |---|---|---|
 | compress.gzip | gzip compress/decompress | Known fixtures, header/checksum validation and size reporting |
