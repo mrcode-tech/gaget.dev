@@ -301,23 +301,43 @@ export function parseDnsRecords(input:string):string {
  if(!records.length)throw new Error("No supported DNS records were found. Paste zone-file or dig-style record lines.");
  return JSON.stringify({count:records.length,records,skippedNonRecordLines:skippedLines,networkRequestsMade:false,note:"Offline text parsing only; records are not resolved, verified, or queried."},null,2);
 }
-const SENSITIVE_HTTP_HEADERS=/^(authorization|proxy-authorization|cookie|set-cookie|x-api-key|x-auth-token|x-access-token)$/i;
+const SENSITIVE_HTTP_HEADERS=/^(authorization|proxy-authorization|www-authenticate|proxy-authenticate|cookie|set-cookie)$/i;
+const SENSITIVE_HTTP_HEADER_NAME=/(?:^|[-_])(?:api[-_]?key|access[-_]?token|auth[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?token|csrf[-_]?token|password|passwd|secret|credential|private[-_]?key|signature)(?:$|[-_])/i;
+const SENSITIVE_QUERY_NAME=/(?:^|[-_.])(?:access[-_.]?token|auth[-_.]?token|refresh[-_.]?token|id[-_.]?token|token|api[-_.]?key|key|password|passwd|secret|credential|session|signature|sig)(?:$|[-_.])/i;
+function redactSensitivePairs(source:string):string {
+ return source.split("&").map(pair=>{
+  if(!pair)return pair;
+  const equals=pair.indexOf("="),rawKey=equals<0?pair:pair.slice(0,equals);
+  let key=rawKey;try{key=decodeURIComponent(rawKey.replace(/\+/g," "));}catch{}
+  if(!SENSITIVE_QUERY_NAME.test(key))return pair;
+  return equals<0?rawKey:rawKey+"=[REDACTED]";
+ }).join("&");
+}
+function redactHttpTarget(target:string):string {
+ let safe=target.replace(/^(?:[a-z][a-z0-9+.-]*:)?\/\/[^/@\s]*@/i,match=>match.slice(0,match.indexOf("//")+2)+"[REDACTED]@");
+ const hash=safe.indexOf("#"),fragment=hash>=0?safe.slice(hash+1):"",withoutFragment=hash>=0?safe.slice(0,hash):safe;
+ const query=withoutFragment.indexOf("?"),base=query>=0?withoutFragment.slice(0,query):withoutFragment,queryText=query>=0?withoutFragment.slice(query+1):"";
+ safe=query>=0?base+"?"+redactSensitivePairs(queryText):base;
+ if(hash>=0)safe+="#"+redactSensitivePairs(fragment);
+ return safe;
+}
 export function parseHttpMessage(input:string):string {
  guardText(input);const normalized=input.replace(/\r\n/g,"\n"),boundary=normalized.indexOf("\n\n"),head=boundary<0?normalized:normalized.slice(0,boundary),body=boundary<0?"":normalized.slice(boundary+2),lines=head.split("\n");
  const startLine=(lines.shift()??"").trim();if(!startLine)throw new Error("Enter an HTTP request or response start line.");
  const response=startLine.match(/^HTTP\/(\d(?:\.\d)?)\s+(\d{3})(?:\s+(.*))?$/i),request=startLine.match(/^([!#$%&'*+.^_|~0-9A-Za-z-]+)\s+(\S+)\s+HTTP\/(\d(?:\.\d)?)$/);
- if(!response&&!request)throw new Error("Start line must be an HTTP request line or HTTP status line.");
+ const safeTarget=request?redactHttpTarget(request[2]):null;
+ const safeStartLine=request?request[1]+" "+safeTarget+" HTTP/"+request[3]:startLine;
  const headers:{name:string;value:string;redacted:boolean}[]=[];
  for(const [index,line] of lines.entries()){
   if(!line.trim())continue;if(/^\s/.test(line))throw new Error("Obsolete folded header at line "+(index+2)+" is not supported.");
   const colon=line.indexOf(":");if(colon<1)throw new Error("Header line "+(index+2)+" must use Name: value.");
   const name=line.slice(0,colon).trim(),rawValue=line.slice(colon+1).trim();
   if(!/^[!#$%&'*+.^_|~0-9A-Za-z-]+$/.test(name))throw new Error("Invalid HTTP header name at line "+(index+2)+".");
-  const redacted=SENSITIVE_HTTP_HEADERS.test(name);headers.push({name,value:redacted?"[REDACTED]":rawValue,redacted});
+  const redacted=SENSITIVE_HTTP_HEADERS.test(name)||SENSITIVE_HTTP_HEADER_NAME.test(name);headers.push({name,value:redacted?"[REDACTED]":rawValue,redacted});
  }
  const grouped:Record<string,string[]>={};for(const header of headers)(grouped[header.name.toLowerCase()]??=[]).push(header.value);
  const contentType=headers.find(h=>h.name.toLowerCase()==="content-type")?.value??null;
- return JSON.stringify({messageType:response?"response":"request",startLine,...(response?{httpVersion:response[1],statusCode:Number(response[2]),reason:response[3]??""}:{method:request![1],target:request![2],httpVersion:request![3]}),headers,headerCount:headers.length,duplicateHeaders:Object.fromEntries(Object.entries(grouped).filter(([,values])=>values.length>1)),body:{utf8Bytes:new TextEncoder().encode(body).length,lineCount:body?body.split("\n").length:0,contentType,contentIncluded:false},networkRequestsMade:false,note:"Supplied HTTP text only. Sensitive header values are redacted and the body is deliberately omitted from the parsed result."},null,2);
+ return JSON.stringify({messageType:response?"response":"request",startLine:safeStartLine,...(response?{httpVersion:response[1],statusCode:Number(response[2]),reason:response[3]??""}:{method:request![1],target:safeTarget!,httpVersion:request![3]}),headers,headerCount:headers.length,duplicateHeaders:Object.fromEntries(Object.entries(grouped).filter(([,values])=>values.length>1)),body:{utf8Bytes:new TextEncoder().encode(body).length,lineCount:body?body.split("\n").length:0,contentType,contentIncluded:false},networkRequestsMade:false,note:"Supplied HTTP text only. Sensitive header values and recognizable secret query parameters are redacted; the body is deliberately omitted from the parsed result."},null,2);
 }
 
 

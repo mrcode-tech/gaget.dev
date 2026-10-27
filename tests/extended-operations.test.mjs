@@ -29,7 +29,19 @@ test("numeric view accepts signed prefixed integers and rejects malformed values
 
 test("byte comparison reports exact difference offsets and length mismatch",()=>{const result=JSON.parse(compareByteArrays(Uint8Array.from([1,2,3]),Uint8Array.from([1,9,3,4])));assert.equal(result.identical,false);assert.equal(result.firstDifferenceOffset,1);assert.equal(result.lengthDifference,1);assert.equal(result.differingPositions,2);assert.equal(result.preview[0].left,"02");assert.equal(result.preview[0].right,"09");});
 test("offline DNS parser recognizes common records without making network requests",()=>{const result=JSON.parse(parseDnsRecords('example.com. 3600 IN A 192.0.2.1\nexample.com. 300 IN MX 10 mail.example.com.\nexample.com. 300 IN TXT "v=spf1 -all"'));assert.equal(result.count,3);assert.equal(result.records[0].type,"A");assert.equal(result.records[1].value,"10 mail.example.com.");assert.equal(result.networkRequestsMade,false);assert.throws(()=>parseDnsRecords("this line has no known record type"),/No supported DNS records/i);});
-test("HTTP message inspection redacts sensitive headers and omits the body",()=>{const result=JSON.parse(parseHttpMessage('POST /login HTTP/1.1\nHost: example.test\nAuthorization: Bearer secret-token\nCookie: session=secret\nContent-Type: application/json\n\n{"password":"secret-body"}'));assert.equal(result.messageType,"request");assert.equal(result.method,"POST");assert.equal(result.headers.find(h=>h.name==="Authorization").value,"[REDACTED]");assert.equal(result.body.contentIncluded,false);assert.equal(JSON.stringify(result).includes("secret-body"),false);assert.throws(()=>parseHttpMessage("not an HTTP message"),/Start line/i);});
+test("HTTP message inspection redacts sensitive headers, query parameters, and URL credentials",()=>{
+ const source='POST https://alice:password123@example.test/login?access_token=secret-token&mode=fast&api_key=another-secret#session=frag-secret HTTP/1.1\nHost: example.test\nAuthorization: Bearer auth-secret\nCookie: session=cookie-secret\nX-Refresh-Token: refresh-secret\nContent-Type: application/json\n\n{"password":"secret-body"}';
+ const result=JSON.parse(parseHttpMessage(source));
+ assert.equal(result.messageType,"request");assert.equal(result.method,"POST");
+ assert.equal(result.headers.find(h=>h.name==="Authorization").value,"[REDACTED]");
+ assert.equal(result.headers.find(h=>h.name==="X-Refresh-Token").value,"[REDACTED]");
+ assert.equal(result.headers.find(h=>h.name==="Cookie").value,"[REDACTED]");
+ assert.equal(result.body.contentIncluded,false);
+ assert.equal(result.target.includes("secret-token"),false);assert.equal(result.target.includes("another-secret"),false);
+ assert.match(result.target,/mode=fast/);assert.equal(result.target.includes("password123"),false);assert.equal(result.target.includes("frag-secret"),false);
+ assert.equal(JSON.stringify(result).includes("secret-body"),false);assert.equal(JSON.stringify(result).includes("auth-secret"),false);
+ assert.throws(()=>parseHttpMessage("not an HTTP message"),/Start line/i);
+});
 
 test("file signature inspector identifies common magic bytes without making a safety claim",()=>{const png=JSON.parse(inspectFileSignatures(Uint8Array.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])));assert.equal(png.signatureMatches[0].format,"PNG image");assert.match(png.note,/does not.*safe/i);const unknown=JSON.parse(inspectFileSignatures(Uint8Array.from([1,2,3,4])));assert.equal(unknown.classification,"No known signature match");});
 
