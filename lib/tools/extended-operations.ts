@@ -168,9 +168,10 @@ export function parseDnsRecords(input:string):string {
   const tokens=line.match(/"(?:\\.|[^"\\])*"|\S+/g)??[];
   const typeIndex=tokens.findIndex((token,i)=>i>0&&DNS_TYPES.has(token.toUpperCase()));
   if(typeIndex<0){skippedLines++;continue;}
-  const owner=tokens[0],before=tokens.slice(1,typeIndex),ttlText=before.find(token=>/^\d+$/.test(token)),recordClass=before.find(token=>/^(IN|CH|HS)$/i.test(token))?.toUpperCase()??"IN",value=tokens.slice(typeIndex+1).join(" ");
+  const owner=tokens[0]??"",recordType=tokens[typeIndex]?.toUpperCase(),before=tokens.slice(1,typeIndex),ttlText=before.find(token=>/^\d+$/.test(token)),recordClass=before.find(token=>/^(IN|CH|HS)$/i.test(token))?.toUpperCase()??"IN",value=tokens.slice(typeIndex+1).join(" ");
+  if(!owner||!recordType){skippedLines++;continue;}
   if(!value)throw new Error("DNS record on line "+(index+1)+" is missing its value.");
-  records.push({owner,ttl:ttlText===undefined?null:Number(ttlText),class:recordClass,type:tokens[typeIndex].toUpperCase(),value,line:index+1});
+  records.push({owner,ttl:ttlText===undefined?null:Number(ttlText),class:recordClass,type:recordType,value,line:index+1});
  }
  if(!records.length)throw new Error("No supported DNS records were found. Paste zone-file or dig-style record lines.");
  return JSON.stringify({count:records.length,records,skippedNonRecordLines:skippedLines,networkRequestsMade:false,note:"Offline text parsing only; records are not resolved, verified, or queried."},null,2);
