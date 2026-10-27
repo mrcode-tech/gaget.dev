@@ -16,6 +16,13 @@ test("key-value builder round-trips supported primitive and repeated values",()=
 test("network candidate extraction is offline and explicitly not validation",()=>{const r=JSON.parse(extractNetworkCandidates("See https://example.com/a, mail test@example.com, IPv6 2001:db8::1 and 192.168.1.1"));assert.deepEqual(r.urls,["https://example.com/a"]);assert.deepEqual(r.emails,["test@example.com"]);assert.deepEqual(r.ipv4Candidates,["192.168.1.1"]);assert.deepEqual(r.ipv6Candidates,["2001:db8::1"]);assert.ok(r.domainCandidates.includes("example.com"));assert.match(r.validation,/not validated/i);});
 test("integer view checks signed ranges and serializes explicit endianness",()=>{const big=JSON.parse(numericView("-2",16,true,"big"));assert.equal(big.hexadecimal,"0xFFFE");assert.equal(big.bytesHex,"ff fe");const little=JSON.parse(numericView("258",16,false,"little"));assert.equal(little.bytesHex,"02 01");assert.throws(()=>numericView("128",8,true),/outside/i);});
 test("IEEE-754 views return endian-specific byte representations",()=>{assert.equal(JSON.parse(floatView("1",32,"big")).hexadecimal,"0x3F800000");assert.equal(JSON.parse(floatView("1",32,"little")).hexadecimal,"0x0000803F");assert.throws(()=>floatView("1",16),/32 or 64/i);});
+test("decompression enforces the output cap while streaming",async()=>{
+ if(typeof CompressionStream==="undefined"||typeof DecompressionStream==="undefined")return;
+ const source=new Uint8Array(9_000_000).fill(65);
+ const compressed=new Uint8Array(await new Response(new Blob([source]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer());
+ assert.ok(compressed.length<2_000_000);
+ await assert.rejects(()=>compressBytes(compressed,"gzip","decompress"),/8,000,000 byte safety limit/i);
+});
 test("compression wrapper detection distinguishes gzip, zlib and unknown bytes",()=>{assert.equal(JSON.parse(detectCompression(new Uint8Array([0x1f,0x8b,0,0]))).detected,"gzip");assert.equal(JSON.parse(detectCompression(new Uint8Array([0x78,0x9c]))).detected,"zlib-wrapped DEFLATE");assert.equal(JSON.parse(detectCompression(new Uint8Array([0,1]))).detected,"unknown");});
 
 test("numeric view accepts signed prefixed integers and rejects malformed values",()=>{assert.equal(JSON.parse(numericView("-0x2",8,true)).hexadecimal,"0xFE");assert.equal(JSON.parse(numericView("+0x2",8,false)).value,"2");assert.throws(()=>numericView("nope",8),/decimal.*hexadecimal/i);});

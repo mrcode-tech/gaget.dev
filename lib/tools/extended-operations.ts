@@ -254,8 +254,27 @@ export function arithmetic(input:string,options:ExtendedOptions={}):string {
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }
 export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
- guardBytes(bytes);const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
- const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));const output=new Uint8Array(await new Response(stream).arrayBuffer());if(output.byteLength>MAX_INSPECT_BYTES*4)throw new Error("Compressed/decompressed output exceeds the 8,000,000 byte safety limit.");return output;
+ guardBytes(bytes);
+ const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;
+ if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
+ const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));
+ const reader=stream.getReader(),chunks:Uint8Array[]=[];let total=0;
+ try {
+  while(true){
+   const {done,value}=await reader.read();if(done)break;
+   total+=value.byteLength;
+   // Enforce the cap while streaming; do not buffer an unbounded decompression bomb
+   // and only check its size after allocating the entire result.
+   if(total>MAX_INSPECT_BYTES*4){await reader.cancel();throw new Error("Compressed/decompressed output exceeds the 8,000,000 byte safety limit.");}
+   chunks.push(value);
+  }
+ } catch(error) {
+  try{await reader.cancel();}catch{}
+  throw error;
+ } finally {reader.releaseLock();}
+ const output=new Uint8Array(total);let offset=0;
+ for(const chunk of chunks){output.set(chunk,offset);offset+=chunk.byteLength;}
+ return output;
 }
 
 export function compareByteArrays(left:Uint8Array,right:Uint8Array):string {
