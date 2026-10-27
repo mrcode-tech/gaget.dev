@@ -1,4 +1,4 @@
-import { transformEncoding } from "./encoding-operations.ts";
+import { transformEncoding, convertCharset } from "./encoding-operations.ts";
 import { parseQueryString, buildQueryString } from "./extended-operations.ts";
 export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "hex" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
 export const PIPELINE_INPUT_TYPES: {value:PipelineDataType;label:string}[] = [
@@ -26,6 +26,12 @@ export const PIPELINE_OPERATIONS = [
  {id:"quoted-printable-decode",label:"Quoted-printable decode",input:"quoted-printable",output:"text"},
  {id:"html-entities-encode",label:"HTML entity encode",input:"text",output:"entities"},
  {id:"html-entities-decode",label:"HTML entity decode",input:"entities",output:"text"},
+ {id:"utf16le-encode",label:"UTF-16LE encode to hex",input:"text",output:"hex"},
+ {id:"utf16le-decode",label:"UTF-16LE decode from hex",input:"hex",output:"text"},
+ {id:"utf16be-encode",label:"UTF-16BE encode to hex",input:"text",output:"hex"},
+ {id:"utf16be-decode",label:"UTF-16BE decode from hex",input:"hex",output:"text"},
+ {id:"windows1252-encode",label:"Windows-1252 encode to hex",input:"text",output:"hex"},
+ {id:"windows1252-decode",label:"Windows-1252 decode from hex",input:"hex",output:"text"},
  {id:"json-format",label:"Format JSON",input:"json",output:"json"},
  {id:"json-minify",label:"Minify JSON",input:"json",output:"json"},
  {id:"query-parse",label:"Parse query string to JSON",input:"query",output:"json"},
@@ -87,6 +93,12 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "quoted-printable-decode":return enc("quoted-printable","decode");
   case "html-entities-encode":return enc("html-entities","encode");
   case "html-entities-decode":return enc("html-entities","decode");
+  case "utf16le-encode":return convertCharset("encode",input,"utf-16le");
+  case "utf16le-decode":return convertCharset("decode",input,"utf-16le");
+  case "utf16be-encode":return convertCharset("encode",input,"utf-16be");
+  case "utf16be-decode":return convertCharset("decode",input,"utf-16be");
+  case "windows1252-encode":return convertCharset("encode",input,"windows-1252");
+  case "windows1252-decode":return convertCharset("decode",input,"windows-1252");
   case "json-format":return JSON.stringify(JSON.parse(input),null,2);
   case "json-minify":return JSON.stringify(JSON.parse(input));
   case "query-parse":return parseQueryString(input);

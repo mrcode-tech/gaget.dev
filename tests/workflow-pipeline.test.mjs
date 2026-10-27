@@ -39,3 +39,16 @@ test("typed workflow encodes and decodes HTML entities as text without executing
  assert.equal(executePipeline("<b>&</b>",{version:1,inputType:"text",steps:[{operation:"html-entities-encode"}]}).output,"&lt;b&gt;&amp;&lt;/b&gt;");
  assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"html-entities-decode"}]}),/Incompatible/i);
 });
+
+test("typed workflow supports explicit UTF-16 and Windows-1252 byte representations",()=>{
+ const utf16le=executePipeline("A😀",{version:1,inputType:"text",steps:[{operation:"utf16le-encode"}]});
+ assert.equal(utf16le.output,"41003dd800de");
+ assert.equal(executePipeline(utf16le.output,{version:1,inputType:"hex",steps:[{operation:"utf16le-decode"}]}).output,"A😀");
+ const utf16be=executePipeline("A",{version:1,inputType:"text",steps:[{operation:"utf16be-encode"}]});
+ assert.equal(utf16be.output,"0041");
+ assert.equal(executePipeline(utf16be.output,{version:1,inputType:"hex",steps:[{operation:"utf16be-decode"}]}).output,"A");
+ const cp=executePipeline("café",{version:1,inputType:"text",steps:[{operation:"windows1252-encode"}]});
+ assert.equal(cp.output,"636166e9");
+ assert.equal(executePipeline(cp.output,{version:1,inputType:"hex",steps:[{operation:"windows1252-decode"}]}).output,"café");
+ assert.throws(()=>executePipeline("🙂",{version:1,inputType:"text",steps:[{operation:"windows1252-encode"}]}),/cannot be represented/i);
+});
