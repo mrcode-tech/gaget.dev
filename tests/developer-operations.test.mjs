@@ -27,3 +27,10 @@ test("XML DOCTYPE is treated as inert source and is never resolved",()=>{
  const result=formatXml('<!DOCTYPE root [<!ENTITY local "value">]><root/>');
  assert.match(result,/<!DOCTYPE root/);
 });
+
+test("CSV rejects quotes in unquoted fields and characters after a closing quote",()=>{
+ assert.throws(()=>parseCsv('na"me,value\nAda,1'),/quoted CSV field must begin/i);
+ assert.throws(()=>parseCsv('name,value\n"Ada"x,1'),/after a closing CSV quote/i);
+ assert.throws(()=>parseCsv('name,value\n"Ada" ,1'),/after a closing CSV quote/i);
+ assert.deepEqual(parseCsv('name,value\n"Ada","hello, world"'),[["name","value"],["Ada","hello, world"]]);
+});

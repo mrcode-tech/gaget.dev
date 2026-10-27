@@ -3,13 +3,32 @@ export const MAX_TEXT_LENGTH = 200_000;
 const guard = (s:string) => { if (s.length > MAX_TEXT_LENGTH) throw new Error("Input exceeds the 200,000 character safety limit."); };
 export function parseCsv(s:string, d=","):string[][] {
  guard(s); if(d.length!==1 || /["\r\n]/.test(d)) throw new Error("Delimiter must be one non-quote character.");
- const rows:string[][]=[]; let row:string[]=[], cell="", quoted=false;
- for(let i=0;i<s.length;i++){const c=s[i]; if(quoted){if(c==='"'&&s[i+1]==='"'){cell+='"';i++;}else if(c==='"')quoted=false;else cell+=c;}
- else if(c==='"'&&!cell)quoted=true;else if(c===d){row.push(cell);cell="";}
- else if(c==="\r"||c==="\n"){if(c==="\r"&&s[i+1]==="\n")i++;row.push(cell);rows.push(row);row=[];cell="";}else cell+=c;}
+ const rows:string[][]=[];let row:string[]=[],cell="",quoted=false,afterQuote=false;
+ const endRow=()=>{row.push(cell);rows.push(row);row=[];cell="";afterQuote=false;};
+ for(let i=0;i<s.length;i++){
+  const ch=s[i];
+  if(quoted){
+   if(ch==='"'&&s[i+1]==='"'){cell+='"';i++;}
+   else if(ch==='"'){quoted=false;afterQuote=true;}
+   else cell+=ch;
+   continue;
+  }
+  if(afterQuote){
+   if(ch===d){row.push(cell);cell="";afterQuote=false;continue;}
+   if(ch==="\r"||ch==="\n"){if(ch==="\r"&&s[i+1]==="\n")i++;endRow();continue;}
+   throw new Error("Unexpected character after a closing CSV quote; expected a delimiter or line ending.");
+  }
+  if(ch==='"'){
+   if(cell.length!==0)throw new Error("A quoted CSV field must begin with a quote at the start of the cell.");
+   quoted=true;continue;
+  }
+  if(ch===d){row.push(cell);cell="";continue;}
+  if(ch==="\r"||ch==="\n"){if(ch==="\r"&&s[i+1]==="\n")i++;endRow();continue;}
+  cell+=ch;
+ }
  if(quoted)throw new Error("CSV contains an unclosed quoted field.");
- if(cell||row.length||!s.length||! /[\r\n]$/.test(s)){row.push(cell);rows.push(row);}
- if(rows[0]?.[0]?.charCodeAt(0)===0xfeff)rows[0][0]=rows[0][0].slice(1); return rows;
+ if(cell||row.length||afterQuote||!s.length||!/[\r\n]$/.test(s)){row.push(cell);rows.push(row);}
+ if(rows[0]?.[0]?.charCodeAt(0)===0xfeff)rows[0][0]=rows[0][0].slice(1);return rows;
 }
 function csvCell(v:unknown,d:string){let s=v==null?"":typeof v==="string"?v:JSON.stringify(v);if(typeof v==="string"&&/^[=+@\-\t\r]/.test(s))s="'"+s;return /["\r\n]/.test(s)||s.includes(d)?'"'+s.replace(/"/g,'""')+'"':s;}
 export function csvToJson(s:string,d=","){

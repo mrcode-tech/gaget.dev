@@ -32,7 +32,7 @@ There are now 14 relevant standalone registry entries. Encoding & Decoding conso
 | sec.digest | SHA-256/SHA-384/SHA-512 text digests | SHA-2 text and local file-byte digests implemented / 3–4; SHA-3 and other digest families pending / 4 | [Security](./categories/security-cryptography.md) |
 | sec.mac-checksum | HMAC; CRC/checksums | HMAC-SHA-2, CRC32/IEEE, CRC-16/CCITT-FALSE and Adler-32 implemented for text and local file bytes / 4 | [Security](./categories/security-cryptography.md) |
 | sec.encrypt | Supported encryption/decryption; key/ciphertext representation | Conditional / 4 | [Security](./categories/security-cryptography.md) |
-| data.csv-json | CSV ↔ JSON, delimiters, quoting, headers and type policy | CSV ↔ JSON implemented with string-cell policy / 3; broader type inference remains out of scope | [Data](./categories/data-parsing-conversion.md) |
+| data.csv-json | CSV ↔ JSON, delimiters, quoting, headers and type policy | CSV ↔ JSON implemented with string-cell policy and strict quote-placement validation / 3; broader type inference remains out of scope | [Data](./categories/data-parsing-conversion.md) |
 | data.xml | XML parse/format/minify | Lightweight element-nesting format/minify implemented / 3; complete XML parsing/validation pending | [Data](./categories/data-parsing-conversion.md) |
 | data.yaml | YAML parse/format and optional JSON conversion | Proposed / 3 | [Data](./categories/data-parsing-conversion.md) |
 | data.uri-components | Parse absolute URL into components | Implemented in `/data/binary-math`; no requests, credential values omitted / 3 | [Data](./categories/data-parsing-conversion.md) |

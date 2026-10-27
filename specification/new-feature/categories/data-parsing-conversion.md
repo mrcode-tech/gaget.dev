@@ -4,7 +4,7 @@ Reuse the existing JSON Workspace as the canonical JSON experience; do not dupli
 
 | ID | Operation | Acceptance criteria |
 |---|---|---|
-| data.csv-json | CSV ↔ JSON | Quoted delimiters/newlines, escaped quotes, duplicate headers, uneven rows, empty cells, BOM, Unicode, nested JSON and type policy tested |
+| data.csv-json | CSV ↔ JSON | Quoted delimiters/newlines, escaped quotes, invalid quote placement, characters after closing quotes, duplicate headers, uneven rows, empty cells, BOM, Unicode, nested JSON and type policy tested |
 | data.xml | XML parse/format/minify | Namespaces, comments, CDATA, declarations and malformed nesting; external entities/network resolution disabled |
 | data.yaml | YAML parse/format, optional JSON conversion | Scalar typing, indentation, multi-document policy and alias/anchor limits documented |
 | data.query-string | Query-string parse/build | Repeated keys, empty values, plus vs encoded space, malformed escapes and ordering policy |
