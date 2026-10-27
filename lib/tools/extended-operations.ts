@@ -71,7 +71,7 @@ export function parseDataUri(input:string):string {
   try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(bytes).slice(0,4000);}catch{}
   return JSON.stringify({
     mediaType,parameters,base64Encoded:base64,byteLength:bytes.length,
-    base64:typeof btoa==="function"?Array.from(bytes,(b)=>String.fromCharCode(b)).join("")&&btoa(Array.from(bytes,(b)=>String.fromCharCode(b)).join("")):null,
+    base64:typeof btoa==="function"?btoa(Array.from(bytes,(b)=>String.fromCharCode(b)).join("")):null,
     hexPreview:Array.from(bytes.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),
     textPreview,payloadTruncated:bytes.length>4000,executed:false,networkRequestsMade:false,
     note:"Parsed locally as data only. Payload is not rendered, executed, or fetched."
