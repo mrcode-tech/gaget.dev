@@ -17,7 +17,7 @@ it("processes selected UTF-8 text files in text-only encoding modes",async()=>{
  render(<EncodingWorkbench initialMode="html-entities"/>);
  const file=new File(["<b>&</b>"],"sample.txt",{type:"text/plain"});
  Object.defineProperty(file,"arrayBuffer",{value:async()=>new TextEncoder().encode("<b>&</b>").buffer});
- fireEvent.change(screen.getByLabelText("Choose UTF-8 text file"),{target:{files:[file]}});
+ fireEvent.change(screen.getByLabelText("Choose encoding file"),{target:{files:[file]}});
  fireEvent.click(screen.getByRole("button",{name:"Encode"}));
  await waitFor(()=>expect((screen.getByRole("textbox",{name:"Encoding output"}) as HTMLTextAreaElement).value).toBe("&lt;b&gt;&amp;&lt;/b&gt;"));
 });
@@ -26,7 +26,7 @@ it("decodes Unicode escapes from a selected UTF-8 text file",async()=>{
  fireEvent.click(screen.getByRole("button",{name:"Decode mode"}));
  const file=new File(["\\u{1F44B}"],"escaped.txt",{type:"text/plain"});
  Object.defineProperty(file,"arrayBuffer",{value:async()=>new TextEncoder().encode("\\u{1F44B}").buffer});
- fireEvent.change(screen.getByLabelText("Choose UTF-8 text file"),{target:{files:[file]}});
+ fireEvent.change(screen.getByLabelText("Choose encoding file"),{target:{files:[file]}});
  fireEvent.click(screen.getByRole("button",{name:"Decode"}));
  await waitFor(()=>expect((screen.getByRole("textbox",{name:"Encoding output"}) as HTMLTextAreaElement).value).toBe("👋"));
 });
