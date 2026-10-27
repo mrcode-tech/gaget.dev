@@ -101,3 +101,34 @@ export function executeBatch(input:string,recipe:PipelineRecipe):string{
  }
  const output=JSON.stringify(results,null,2);if(output.length>MAX_PIPELINE_OUTPUT)throw new Error("Batch result exceeds the 1,000,000 character limit.");return output;
 }
+
+function yieldToBrowser(): Promise<void> { return new Promise(resolve => setTimeout(resolve, 0)); }
+export async function executePipelineAsync(input:string,rawRecipe:PipelineRecipe,signal?:AbortSignal):Promise<{output:string;steps:PipelineStepResult[]}> {
+ const recipe=validatePipelineRecipe(rawRecipe);
+ if(input.length>MAX_PIPELINE_INPUT)throw new Error("Workflow input is limited to 200,000 characters.");
+ let output=input,currentType=recipe.inputType;const results:PipelineStepResult[]=[];
+ for(let index=0;index<recipe.steps.length;index++){
+  if(signal?.aborted)throw new Error("Workflow cancelled.");
+  const step=recipe.steps[index],contract=getPipelineOperation(step.operation);
+  if(contract.input!==currentType)throw new Error("Incompatible workflow step at position "+(index+1)+".");
+  try{output=applyOperation(step.operation,output);}catch(error){throw new Error("Step "+(index+1)+" ("+contract.label+") failed: "+(error instanceof Error?error.message:"invalid input"));}
+  if(output.length>MAX_PIPELINE_OUTPUT)throw new Error("Workflow output exceeds the 1,000,000 character limit at step "+(index+1)+".");
+  currentType=contract.output;results.push({index,operation:step.operation,outputType:currentType,outputLength:output.length,preview:output.slice(0,2000)});
+  await yieldToBrowser();
+ }
+ if(signal?.aborted)throw new Error("Workflow cancelled.");
+ return {output,steps:results};
+}
+export async function executeBatchAsync(input:string,recipe:PipelineRecipe,signal?:AbortSignal):Promise<string> {
+ if(input.length>MAX_PIPELINE_INPUT)throw new Error("Batch input is limited to 200,000 characters total.");
+ const lines=input.split(/\r?\n/);if(lines.length>MAX_BATCH_RECORDS)throw new Error("Batch mode is limited to 100 lines.");
+ const results:{line:number;output?:string;error?:string}[]=[];let total=0;
+ for(let index=0;index<lines.length;index++){
+  if(signal?.aborted)throw new Error("Workflow cancelled.");
+  try{const output=(await executePipelineAsync(lines[index],recipe,signal)).output;if(total+output.length>MAX_PIPELINE_OUTPUT)throw new Error("Batch result exceeds the 1,000,000 character limit.");total+=output.length;results.push({line:index+1,output});}
+  catch(error){if(signal?.aborted)throw new Error("Workflow cancelled.");const message=error instanceof Error?error.message:"Unable to process line";results.push({line:index+1,error:message});total+=message.length;}
+  if(total>MAX_PIPELINE_OUTPUT)throw new Error("Batch result exceeds the 1,000,000 character limit.");
+  await yieldToBrowser();
+ }
+ const output=JSON.stringify(results,null,2);if(output.length>MAX_PIPELINE_OUTPUT)throw new Error("Batch result exceeds the 1,000,000 character limit.");return output;
+}
