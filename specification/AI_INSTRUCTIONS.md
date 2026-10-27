@@ -168,3 +168,13 @@ Report separately:
 
 Do not invent results or run identifiers. A task is verified only when its required checks have actually completed successfully and relevant evidence has been inspected, or when any blocker is clearly disclosed without claiming completion.
 
+## Developer Tools Expansion roadmap
+
+For tasks concerning the developer-tools expansion, consult [the package README](./new-feature/README.md), [feature inventory](./new-feature/feature-inventory.md) and [implementation roadmap](./new-feature/implementation-roadmap.md) before coding. Read linked category/tool specifications, wireframes and component contracts for the selected phase. This roadmap is the authoritative phase/dependency/progress plan for the initiative; this file remains the canonical repository workflow.
+
+- Verify registry entries and routes in source and runtime. A route string or available label does not prove every operation works.
+- Keep Photo/Image, Audio, Video, Date & Time and the existing JSON Workspace outside this initiative's implementation scope. Reuse their components only where appropriate.
+- Reuse existing components/ui primitives, application components and design tokens before proposing replacements. Prefer shadcn/ui-style controls and styled file selection over raw unstyled controls.
+- A new reusable component requires a documented gap analysis, component contract, wireframe, accessibility/responsive states and tests.
+- Do not claim encoding is encryption, token decoding is signature verification, or file-analysis indicators prove safety. Document resource limits and privacy behavior.
+- Update roadmap phase status only with implementation and verification evidence. Record consequential unresolved product/security decisions rather than guessing.

@@ -84,3 +84,13 @@ The agent must inspect the actual current status, diffs, tests, CI, and document
 ## What “done” means
 
 A task is not complete merely because code or documentation was edited. It is complete when the requested scope is implemented, affected specifications and assets are synchronized, applicable verification has been run and reported honestly, and remaining gaps are clearly stated.
+
+## Developer Tools Expansion — phased implementation
+
+For this initiative, use the authoritative [implementation roadmap](specification/new-feature/implementation-roadmap.md), [package README](specification/new-feature/README.md) and [feature inventory](specification/new-feature/feature-inventory.md). Read linked category/tool specifications, wireframes and shared-component contracts for the selected phase before coding.
+
+Reusable command:
+
+> Based on command.md, continue the GaGet.dev developer-tools roadmap: inspect current Git status and verification evidence, select the next eligible incomplete phase from specification/new-feature/implementation-roadmap.md, implement only that phase, test it, update the roadmap with evidence/blockers, and report the next eligible phase. Do not create or switch branches, commit, push, merge or deploy unless separately authorized.
+
+Repeated invocations must resume from code/test evidence and dependencies. Do not repeat completed work or mark a phase complete because a page shell exists. This roadmap supplements the canonical AI workflow and existing command requirements.
