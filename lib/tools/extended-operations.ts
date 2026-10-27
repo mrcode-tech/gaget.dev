@@ -183,8 +183,9 @@ export function extractPrintableStrings(bytes:Uint8Array,minLength=4):string[] {
 export function byteStatistics(bytes:Uint8Array):string {
   guardBytes(bytes);const counts=new Uint32Array(256);for(const b of bytes)counts[b]++;
   const nonzero=Array.from(counts).filter(n=>n>0).length;let entropy=0;if(bytes.length)for(const count of counts){if(count){const p=count/bytes.length;entropy-=p*Math.log2(p);}}
-  const top=Array.from(counts,(count,value)=>({byte:value,count,percent:bytes.length?Number((count*100/bytes.length).toFixed(3)):0})).filter(x=>x.count).sort((a,b)=>b.count-a.count||a.byte-b.byte).slice(0,16);
-  return JSON.stringify({bytes:bytes.length,uniqueByteValues:nonzero,entropyBitsPerByte:Number(entropy.toFixed(6)),entropyInterpretation:"A statistical indicator only; not proof of encryption, malware, or file safety.",topByteValues:top},null,2);
+  const frequency=Array.from(counts,(count,value)=>({byte:value,count,percent:bytes.length?Number((count*100/bytes.length).toFixed(3)):0})).filter(item=>item.count>0);
+  const top=[...frequency].sort((a,b)=>b.count-a.count||a.byte-b.byte).slice(0,16);
+  return JSON.stringify({bytes:bytes.length,uniqueByteValues:nonzero,entropyBitsPerByte:Number(entropy.toFixed(6)),entropyInterpretation:"A statistical indicator only; not proof of encryption, malware, or file safety.",frequency,topByteValues:top,frequencyTruncated:false},null,2);
 }
 function ipv4Number(s:string):bigint {
  const parts=s.split(".");if(parts.length!==4)throw new Error("IPv4 must contain four decimal octets.");
