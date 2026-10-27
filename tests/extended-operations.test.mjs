@@ -37,7 +37,7 @@ test("file metadata inspector reads PNG, GIF and WAV header fields without extra
  const png=new Uint8Array(26);png.set([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],0);png.set([0,0,0,2,0,0,0,3],16);png[24]=8;png[25]=6;
  const p=JSON.parse(inspectFileMetadata(png));assert.equal(p.metadata.format,"PNG");assert.equal(p.metadata.width,2);assert.equal(p.metadata.height,3);
  const gif=Uint8Array.from([..."GIF89a"].map(c=>c.charCodeAt(0)).concat([4,0,5,0]));const g=JSON.parse(inspectFileMetadata(gif));assert.equal(g.metadata.width,4);assert.equal(g.metadata.height,5);
- const wav=new Uint8Array(44);wav.set([... "RIFF"].map(c=>c.charCodeAt(0)),0);wav.set([... "WAVE"].map(c=>c.charCodeAt(0)),8);wav.set([... "fmt "].map(c=>c.charCodeAt(0)),12);wav.set([16,0,0,0,1,0,2,0,0x44,0xac,0,0,0x10,0xb1,2,0,4,0,16,0],16);wav.set([... "data"].map(c=>c.charCodeAt(0)),36);wav.set([0x10,0xb1,2,0],40);
+ const wav=new Uint8Array(44+176400);wav.set([... "RIFF"].map(c=>c.charCodeAt(0)),0);wav.set([... "WAVE"].map(c=>c.charCodeAt(0)),8);wav.set([... "fmt "].map(c=>c.charCodeAt(0)),12);wav.set([16,0,0,0,1,0,2,0,0x44,0xac,0,0,0x10,0xb1,2,0,4,0,16,0],16);wav.set([... "data"].map(c=>c.charCodeAt(0)),36);wav.set([0x10,0xb1,2,0],40);
  const w=JSON.parse(inspectFileMetadata(wav));assert.equal(w.metadata.format,"WAVE");assert.equal(w.metadata.channels,2);assert.equal(w.metadata.sampleRate,44100);assert.equal(w.metadata.durationSeconds,1);
 });
 test("file metadata parser bounds input and safely labels unsupported bytes",()=>{
