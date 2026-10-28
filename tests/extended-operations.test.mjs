@@ -236,3 +236,13 @@ test("OpenSSH parser rejects mismatched embedded key types, malformed blobs, and
  await assert.rejects(()=>inspectSshPublicKey("ssh-ed25519 AAAA"),/truncated|invalid length/i);
  await assert.rejects(()=>inspectSshPublicKey("ssh-dss AAAA"),/Unsupported OpenSSH/i);
 });
+
+test("OpenSSH Ed25519 public-key inspection accepts whitespace and never returns the comment",async()=>{
+ const field=value=>{const header=Buffer.alloc(4);header.writeUInt32BE(value.length);return Buffer.concat([header,value]);};
+ const blob=Buffer.concat([field(Buffer.from("ssh-ed25519")),field(Buffer.from(Array.from({length:32},(_,index)=>index)))]);
+ const result=JSON.parse(await inspectSshPublicKey("ssh-ed25519   "+blob.toString("base64")+"   workstation key"));
+ assert.equal(result.type,"ssh-ed25519");assert.equal(result.keyMetadata.publicKeyBytes,32);
+ assert.equal(result.commentPresent,true);assert.equal(result.commentReturned,false);
+ assert.match(result.fingerprint,/^SHA256:[A-Za-z0-9+/]+$/);
+ assert.equal(result.trustValidated,false);assert.equal(result.networkRequestsMade,false);
+});

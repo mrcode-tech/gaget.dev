@@ -672,7 +672,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
 /** Inspect a single OpenSSH public-key line. Fingerprinting is not trust validation. */
 export async function inspectSshPublicKey(input: string): Promise<string> {
   guardText(input);
-  const parts = input.trim().split(/\\s+/);
+  const parts = input.trim().split(/\s+/);
   if (parts.length < 2 || !parts[0]) throw new Error("Expected an OpenSSH key type followed by Base64 key data.");
   const type = parts[0], encoded = parts[1];
   if (!new Set(["ssh-rsa","ssh-ed25519","ecdsa-sha2-nistp256","ecdsa-sha2-nistp384","ecdsa-sha2-nistp521","sk-ssh-ed25519@openssh.com","sk-ecdsa-sha2-nistp256@openssh.com"]).has(type)) throw new Error("Unsupported OpenSSH public-key type.");
