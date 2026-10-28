@@ -142,3 +142,10 @@ test("CSV export protects formula triggers after leading whitespace and control 
  const rows=JSON.parse(csvToJson(csv));
  assert.deepEqual(rows.map(row=>row.value),["'  =1+1","'\u00a0+cmd","'\t@SUM(1,1)","safe"]);
 });
+
+test("cURL --data-ascii aliases --data and file-backed values remain unread",()=>{
+ const parsed=parseCurl("curl --data-ascii 'name=GaGet' --data 'mode=fast' https://example.test");
+ assert.equal(parsed.method,"POST");assert.equal(parsed.body,"name=GaGet&mode=fast");
+ const file=parseCurl("curl --data-ascii @private.txt https://example.test/upload");
+ assert.equal(file.body,undefined);assert.match(file.unsupported.join(" "),/file-backed data is not read/i);
+});
