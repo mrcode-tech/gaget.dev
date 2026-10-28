@@ -434,7 +434,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       if(optionalFieldsValid&&(flags&16))readOptionalField("comment");
       if(optionalFieldsValid&&(flags&2)){if(cursor+2>bytes.length){notes.push("The GZIP header CRC field is truncated.");optionalFieldsValid=false;}else{metadata.headerCrc16Present=true;cursor+=2;}}
       metadata.headerBytesAvailable=cursor;
-      metadata.trailerPresent=bytes.length>=cursor+8;
+      metadata.trailerPresent=optionalFieldsValid&&bytes.length>=cursor+8;
       if(!metadata.trailerPresent)notes.push("The GZIP trailer is not fully present in the supplied bytes; header fields are not stream validation.");
       notes.push("GZIP header CRC, compressed payload and trailer checksums are not validated by this metadata inspector.");
     }
