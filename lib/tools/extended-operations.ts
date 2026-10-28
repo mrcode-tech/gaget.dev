@@ -1,9 +1,9 @@
 export const MAX_INSPECT_BYTES = 2_000_000;
 export type ExtendedOperation =
-  | "query-parse" | "url-parse" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
+  | "query-parse" | "url-parse" | "data-uri" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
-  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container";
+  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container" | "ssh-public-key";
 export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
@@ -25,8 +25,74 @@ export function parseUrlComponents(input:string):string {
     note:"The URL is parsed as text only. No navigation or network request is made; credential values are intentionally omitted from output."
   },null,2);
 }
+/** Parse a data: URI as bytes only. The payload is never rendered or executed. */
+export function parseDataUri(input:string):string {
+  guardText(input);
+  const source=input.trim();
+  if(!/^data:/i.test(source)) throw new Error("Enter a data URI beginning with data:.");
+  const comma=source.indexOf(",");
+  if(comma<0) throw new Error("Data URI must contain a comma between metadata and payload.");
+  const metadata=source.slice(5,comma);
+  const payload=source.slice(comma+1);
+  const parts=metadata.split(";");
+  const declaredMediaType=parts[0];
+  const mediaType=declaredMediaType||"text/plain";
+  if(mediaType&&!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(mediaType))
+    throw new Error("Data URI media type must be a valid type/subtype token.");
+  const metadataParts=parts.slice(1);
+  if(metadataParts.some(part=>part===""))throw new Error("Data URI contains an empty media-type parameter.");
+  const base64Flags=metadataParts.filter(part=>part.toLowerCase()==="base64");
+  if(base64Flags.length>1||(base64Flags.length===1&&metadataParts[metadataParts.length-1]?.toLowerCase()!=="base64"))
+    throw new Error("The data URI base64 flag must appear once, at the end of its metadata.");
+  const base64=base64Flags.length===1;
+  const parameters=metadataParts.filter(part=>part.toLowerCase()!=="base64");
+  if(parameters.some(part=>!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+=[^;]*$/.test(part)))
+    throw new Error("Data URI contains a malformed media-type parameter.");
+  const parameterNames=parameters.map(part=>part.slice(0,part.indexOf("=")).toLowerCase());
+  if(new Set(parameterNames).size!==parameterNames.length)throw new Error("Data URI contains duplicate media-type parameters.");
+  if(!declaredMediaType&&!parameterNames.includes("charset"))parameters.unshift("charset=US-ASCII");
+  let bytes:Uint8Array;
+  if(base64){
+    // Data URLs commonly omit Base64 padding; accept valid unpadded lengths
+    // while rejecting impossible one-character tails and misplaced padding.
+    if(!/^[A-Za-z0-9+/]*={0,2}$/.test(payload)||payload.length%4===1||/=/.test(payload.slice(0,-2))||(payload.includes("=")&&payload.length%4!==0))
+      throw new Error("Data URI contains invalid Base64 data or padding.");
+    const unpadded=payload.replace(/=+$/,"");
+    if(unpadded.length%4===1) throw new Error("Data URI contains invalid Base64 data or padding.");
+    const normalized=unpadded+"=".repeat((4-unpadded.length%4)%4);
+    let binary:string;
+    try{binary=atob(normalized);}catch{throw new Error("Data URI contains invalid Base64 data.");}
+    bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0));
+  }else{
+    const out:number[]=[];
+    for(let i=0;i<payload.length;){
+      if(payload[i]==="%"){
+        const pair=payload.slice(i+1,i+3);
+        if(!/^[0-9a-f]{2}$/i.test(pair))throw new Error("Data URI contains an invalid percent escape.");
+        out.push(Number.parseInt(pair,16));i+=3;
+      }else{
+        const cp=payload.codePointAt(i)!;
+        const character=String.fromCodePoint(cp);
+        out.push(...new TextEncoder().encode(character));
+        i+=character.length;
+      }
+      if(out.length>MAX_INSPECT_BYTES)throw new Error("Decoded data URI payload is limited to 2,000,000 bytes.");
+    }
+    bytes=Uint8Array.from(out);
+  }
+  if(bytes.length>MAX_INSPECT_BYTES)throw new Error("Decoded data URI payload is limited to 2,000,000 bytes.");
+  let textPreview:string|null=null;
+  try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(bytes).slice(0,4000);}catch{}
+  return JSON.stringify({
+    mediaType,parameters,base64Encoded:base64,byteLength:bytes.length,
+    base64:typeof btoa==="function"?btoa(Array.from(bytes,(b)=>String.fromCharCode(b)).join("")):null,
+    hexPreview:Array.from(bytes.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),
+    textPreview,payloadTruncated:bytes.length>4000,executed:false,networkRequestsMade:false,
+    note:"Parsed locally as data only. Payload is not rendered, executed, or fetched."
+  },null,2);
+}
 export function parseQueryString(input:string):string {
-  guardText(input); const source=input.startsWith("?")?input.slice(1):input; const result:Record<string,string|string[]>={};
+  guardText(input); const source=input.startsWith("?")?input.slice(1):input; const result:Record<string,string|string[]>=Object.create(null) as Record<string,string|string[]>;
   for(const part of source.split("&")) { if(!part)continue; const i=part.indexOf("="); const rawKey=i<0?part:part.slice(0,i),rawValue=i<0?"":part.slice(i+1);
     let key:string,value:string; try { key=decodeURIComponent(rawKey.replace(/\+/g," ")); value=decodeURIComponent(rawValue.replace(/\+/g," ")); } catch { throw new Error("Query string contains an invalid percent escape."); }
     if(Object.hasOwn(result,key)){const previous=result[key];result[key]=Array.isArray(previous)?[...previous,value]:[previous,value];}else result[key]=value;
@@ -40,7 +106,7 @@ export function buildQueryString(input:string):string {
   return pairs.join("&");
 }
 export function parseKeyValue(input:string):string {
-  guardText(input);const result:Record<string,string|string[]>={};
+  guardText(input);const result:Record<string,string|string[]>=Object.create(null) as Record<string,string|string[]>;
   for(const [index,line] of input.split(/\r?\n/).entries()){if(!line.trim()||/^\s*[#;]/.test(line))continue;const i=line.indexOf("=");if(i<0)throw new Error("Line "+(index+1)+" must contain key=value.");const key=line.slice(0,i).trim(),value=line.slice(i+1).trim();if(!key)throw new Error("Line "+(index+1)+" has an empty key.");if(Object.hasOwn(result,key)){const prev=result[key];result[key]=Array.isArray(prev)?[...prev,value]:[prev,value];}else result[key]=value;}
   return JSON.stringify(result,null,2);
 }
@@ -99,7 +165,7 @@ export function detectCompression(bytes:Uint8Array):string {
   return JSON.stringify({bytes:bytes.length,detected:gzip?"gzip":zlib?"zlib-wrapped DEFLATE":"unknown",confidence:gzip||zlib?"wrapper signature matches":"no supported wrapper signature; raw DEFLATE and other formats cannot be distinguished from arbitrary bytes by this check",magicBytes:Array.from(bytes.slice(0,16),b=>b.toString(16).padStart(2,"0")).join(" ")},null,2);
 }
 export function convertNumberBase(input:string,radix=10):string {
-  const s=input.trim().replace(/_/g,"");if(!s)throw new Error("Enter an integer.");if(!Number.isInteger(radix)||radix<2||radix>36)throw new Error("Base must be between 2 and 36.");
+  const s=input.trim().replace(/_/g,"");if(!s)throw new Error("Enter an integer.");if(s.replace(/^[+-]/,"").length>10_000)throw new Error("Integer input is limited to 10,000 digits.");if(!Number.isInteger(radix)||radix<2||radix>36)throw new Error("Base must be between 2 and 36.");
   const sign=s.startsWith("-")?"-":"";const raw=sign?s.slice(1):s;let value:bigint;
   try{if(/^0[xob]/i.test(raw))value=BigInt(raw)*(sign?-BigInt(1):BigInt(1));else{const chars="0123456789abcdefghijklmnopqrstuvwxyz";const r=BigInt(radix);let n=BigInt(0);for(const c of raw.toLowerCase()){const digit=chars.indexOf(c);if(digit<0||digit>=radix)throw new Error("Digit is not valid for base "+radix+".");n=n*r+BigInt(digit);}value=n*(sign?-BigInt(1):BigInt(1));}}
   catch(e){if(e instanceof Error&&e.message.startsWith("Digit"))throw e;throw new Error("Enter a valid integer (decimal or prefixed 0x/0o/0b).");}
@@ -126,8 +192,9 @@ export function extractPrintableStrings(bytes:Uint8Array,minLength=4):string[] {
 export function byteStatistics(bytes:Uint8Array):string {
   guardBytes(bytes);const counts=new Uint32Array(256);for(const b of bytes)counts[b]++;
   const nonzero=Array.from(counts).filter(n=>n>0).length;let entropy=0;if(bytes.length)for(const count of counts){if(count){const p=count/bytes.length;entropy-=p*Math.log2(p);}}
-  const top=Array.from(counts,(count,value)=>({byte:value,count,percent:bytes.length?Number((count*100/bytes.length).toFixed(3)):0})).filter(x=>x.count).sort((a,b)=>b.count-a.count||a.byte-b.byte).slice(0,16);
-  return JSON.stringify({bytes:bytes.length,uniqueByteValues:nonzero,entropyBitsPerByte:Number(entropy.toFixed(6)),entropyInterpretation:"A statistical indicator only; not proof of encryption, malware, or file safety.",topByteValues:top},null,2);
+  const frequency=Array.from(counts,(count,value)=>({byte:value,count,percent:bytes.length?Number((count*100/bytes.length).toFixed(3)):0})).filter(item=>item.count>0);
+  const top=[...frequency].sort((a,b)=>b.count-a.count||a.byte-b.byte).slice(0,16);
+  return JSON.stringify({bytes:bytes.length,uniqueByteValues:nonzero,entropyBitsPerByte:Number(entropy.toFixed(6)),entropyInterpretation:"A statistical indicator only; not proof of encryption, malware, or file safety.",frequency,topByteValues:top,frequencyTruncated:false},null,2);
 }
 function ipv4Number(s:string):bigint {
  const parts=s.split(".");if(parts.length!==4)throw new Error("IPv4 must contain four decimal octets.");
@@ -158,17 +225,33 @@ export function normalizeMac(input:string):string {
 }
 export function parseHttpHeaders(input:string):string {
  guardText(input);const headers:{name:string;value:string}[]=[];for(const [i,line] of input.replace(/\r\n/g,"\n").split("\n").entries()){if(!line.trim())continue;if(/^\s/.test(line))throw new Error("Obsolete folded header at line "+(i+1)+" is not supported.");const p=line.indexOf(":");if(p<1)throw new Error("Header line "+(i+1)+" must use Name: value.");const name=line.slice(0,p).trim(),value=line.slice(p+1).trim();if(!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(name))throw new Error("Invalid header name at line "+(i+1)+".");headers.push({name,value});}
- const grouped:Record<string,string[]>={};for(const h of headers){const k=h.name.toLowerCase();(grouped[k]??=[]).push(h.value);}
+ const grouped:Record<string,string[]>=Object.create(null) as Record<string,string[]>;for(const h of headers){const k=h.name.toLowerCase();(grouped[k]??=[]).push(h.value);}
  return JSON.stringify({count:headers.length,headers,duplicates:Object.fromEntries(Object.entries(grouped).filter(([,v])=>v.length>1)),securityNote:"Parses supplied text only; no network request is made."},null,2);
 }
 export function parseCookies(input:string):string {
- guardText(input);const result:Record<string,string|string[]>={};for(const part of input.split(";")){const p=part.trim();if(!p)continue;const i=p.indexOf("=");if(i<1)throw new Error("Cookie entries must use name=value.");const key=p.slice(0,i).trim(),value=p.slice(i+1).trim();if(Object.hasOwn(result,key)){const prev=result[key];result[key]=Array.isArray(prev)?[...prev,value]:[prev,value];}else result[key]=value;}
+ guardText(input);const result:Record<string,string|string[]>=Object.create(null) as Record<string,string|string[]>;for(const part of input.split(";")){const p=part.trim();if(!p)continue;const i=p.indexOf("=");if(i<1)throw new Error("Cookie entries must use name=value.");const key=p.slice(0,i).trim(),value=p.slice(i+1).trim();if(Object.hasOwn(result,key)){const prev=result[key];result[key]=Array.isArray(prev)?[...prev,value]:[prev,value];}else result[key]=value;}
  return JSON.stringify(result,null,2);
 }
 export function numericStatistics(input:string):string {
  guardText(input);const values=input.trim().split(/[\s,;]+/).filter(Boolean).map(Number);if(!values.length||values.some(n=>!Number.isFinite(n)))throw new Error("Enter a non-empty list of finite numbers separated by spaces, commas, or semicolons.");
- const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0),mean=sum/values.length,median=sorted.length%2?sorted[(sorted.length-1)/2]:(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2;const variance=values.reduce((s,n)=>s+(n-mean)**2,0)/values.length;
- return JSON.stringify({count:values.length,min:sorted[0],max:sorted[sorted.length-1],sum,mean,median,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance:values.length>1?values.reduce((s,n)=>s+(n-mean)**2,0)/(values.length-1):null},null,2);
+ const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0);
+ if(!Number.isFinite(sum))throw new Error("Statistics exceed the finite numeric range; use smaller-magnitude values.");
+ const medianOf=(items:number[]):number|null=>!items.length?null:items.length%2?items[(items.length-1)/2]:items[items.length/2-1]/2+items[items.length/2]/2;
+ const mean=sum/values.length,median=medianOf(sorted)!;
+ const min=sorted[0],max=sorted[sorted.length-1],range=max-min;
+ if(!Number.isFinite(range))throw new Error("Numeric range exceeds the finite numeric range; use smaller-magnitude values.");
+ const lowerHalf=sorted.slice(0,Math.floor(sorted.length/2)),upperHalf=sorted.slice(Math.ceil(sorted.length/2));
+ const q1=medianOf(lowerHalf),q3=medianOf(upperHalf),interquartileRange=q1===null||q3===null?null:q3-q1;
+ const absoluteDeviations=values.map(n=>Math.abs(n-median)).sort((a,b)=>a-b),medianAbsoluteDeviation=medianOf(absoluteDeviations);
+ const absoluteDeviationSum=values.reduce((total,n)=>total+Math.abs(n-mean),0),meanAbsoluteDeviation=absoluteDeviationSum/values.length;
+ if(!Number.isFinite(absoluteDeviationSum)||!Number.isFinite(interquartileRange??0)||!Number.isFinite(medianAbsoluteDeviation??0))throw new Error("Deviation statistics exceed the finite numeric range; use smaller-magnitude values.");
+ const squaredDeviationSum=values.reduce((total,n)=>total+(n-mean)**2,0);
+ if(!Number.isFinite(squaredDeviationSum))throw new Error("Variance exceeds the finite numeric range; use smaller-magnitude values.");
+ const variance=squaredDeviationSum/values.length,sampleVariance=values.length>1?squaredDeviationSum/(values.length-1):null;
+ const counts=new Map<number,number>();for(const value of values)counts.set(value,(counts.get(value)??0)+1);
+ let modeFrequency=0;for(const count of counts.values())if(count>modeFrequency)modeFrequency=count;
+ const modes=modeFrequency>1?[...counts.entries()].filter(([,count])=>count===modeFrequency).map(([value])=>value).sort((a,b)=>a-b):[];
+ return JSON.stringify({count:values.length,min,max,range,sum,mean,median,q1,q3,quartileMethod:"Median of lower and upper halves; excludes the overall median when count is odd.",interquartileRange,modes,modeFrequency:modeFrequency>1?modeFrequency:null,meanAbsoluteDeviation,medianAbsoluteDeviationFromMedian:medianAbsoluteDeviation,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance,sampleStandardDeviation:sampleVariance===null?null:Math.sqrt(sampleVariance)},null,2);
 }
 export function characterStatistics(input:string):string {
  guardText(input);
@@ -197,8 +280,27 @@ export function arithmetic(input:string,options:ExtendedOptions={}):string {
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }
 export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
- guardBytes(bytes);const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
- const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));const output=new Uint8Array(await new Response(stream).arrayBuffer());if(output.byteLength>MAX_INSPECT_BYTES*4)throw new Error("Compressed/decompressed output exceeds the 8,000,000 byte safety limit.");return output;
+ guardBytes(bytes);
+ const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;
+ if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
+ const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));
+ const reader=stream.getReader(),chunks:Uint8Array[]=[];let total=0;
+ try {
+  while(true){
+   const {done,value}=await reader.read();if(done)break;
+   total+=value.byteLength;
+   // Enforce the cap while streaming; do not buffer an unbounded decompression bomb
+   // and only check its size after allocating the entire result.
+   if(total>MAX_INSPECT_BYTES*4){await reader.cancel();throw new Error("Compressed/decompressed output exceeds the 8,000,000 byte safety limit.");}
+   chunks.push(value);
+  }
+ } catch(error) {
+  try{await reader.cancel();}catch{}
+  throw error;
+ } finally {reader.releaseLock();}
+ const output=new Uint8Array(total);let offset=0;
+ for(const chunk of chunks){output.set(chunk,offset);offset+=chunk.byteLength;}
+ return output;
 }
 
 export function compareByteArrays(left:Uint8Array,right:Uint8Array):string {
@@ -224,23 +326,45 @@ export function parseDnsRecords(input:string):string {
  if(!records.length)throw new Error("No supported DNS records were found. Paste zone-file or dig-style record lines.");
  return JSON.stringify({count:records.length,records,skippedNonRecordLines:skippedLines,networkRequestsMade:false,note:"Offline text parsing only; records are not resolved, verified, or queried."},null,2);
 }
-const SENSITIVE_HTTP_HEADERS=/^(authorization|proxy-authorization|cookie|set-cookie|x-api-key|x-auth-token|x-access-token)$/i;
+const SENSITIVE_HTTP_HEADERS=/^(authorization|proxy-authorization|www-authenticate|proxy-authenticate|cookie|set-cookie)$/i;
+const SENSITIVE_HTTP_HEADER_NAME=/(?:^|[-_])(?:api[-_]?key|access[-_]?token|auth[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?token|security[-_]?token|csrf[-_]?token|password|passwd|secret|credential|private[-_]?key|signature)(?:$|[-_])/i;
+const SENSITIVE_HTTP_URL_HEADER=/^(?:location|content-location|referer|referrer)$/i;
+const SENSITIVE_QUERY_NAME=/(?:^|[-_.])(?:access[-_.]?token|auth[-_.]?token|refresh[-_.]?token|id[-_.]?token|security[-_.]?token|token|api[-_.]?key|client[-_.]?secret|authorization[-_.]?code|code|ticket|key|password|passwd|secret|credential|session|signature|sig)(?:$|[-_.])/i;
+function redactSensitivePairs(source:string):string {
+ return source.split("&").map(pair=>{
+  if(!pair)return pair;
+  const equals=pair.indexOf("="),rawKey=equals<0?pair:pair.slice(0,equals);
+  let key=rawKey;try{key=decodeURIComponent(rawKey.replace(/\+/g," "));}catch{}
+  if(!SENSITIVE_QUERY_NAME.test(key))return pair;
+  return equals<0?rawKey:rawKey+"=[REDACTED]";
+ }).join("&");
+}
+function redactHttpTarget(target:string):string {
+ let safe=target.replace(/^(?:[a-z][a-z0-9+.-]*:)?\/\/[^/@\s]*@/i,match=>match.slice(0,match.indexOf("//")+2)+"[REDACTED]@");
+ const hash=safe.indexOf("#"),fragment=hash>=0?safe.slice(hash+1):"",withoutFragment=hash>=0?safe.slice(0,hash):safe;
+ const query=withoutFragment.indexOf("?"),base=query>=0?withoutFragment.slice(0,query):withoutFragment,queryText=query>=0?withoutFragment.slice(query+1):"";
+ safe=query>=0?base+"?"+redactSensitivePairs(queryText):base;
+ if(hash>=0)safe+="#"+redactSensitivePairs(fragment);
+ return safe;
+}
 export function parseHttpMessage(input:string):string {
  guardText(input);const normalized=input.replace(/\r\n/g,"\n"),boundary=normalized.indexOf("\n\n"),head=boundary<0?normalized:normalized.slice(0,boundary),body=boundary<0?"":normalized.slice(boundary+2),lines=head.split("\n");
  const startLine=(lines.shift()??"").trim();if(!startLine)throw new Error("Enter an HTTP request or response start line.");
  const response=startLine.match(/^HTTP\/(\d(?:\.\d)?)\s+(\d{3})(?:\s+(.*))?$/i),request=startLine.match(/^([!#$%&'*+.^_|~0-9A-Za-z-]+)\s+(\S+)\s+HTTP\/(\d(?:\.\d)?)$/);
  if(!response&&!request)throw new Error("Start line must be an HTTP request line or HTTP status line.");
+ const safeTarget=request?redactHttpTarget(request[2]):null;
+ const safeStartLine=request?request[1]+" "+safeTarget+" HTTP/"+request[3]:startLine;
  const headers:{name:string;value:string;redacted:boolean}[]=[];
  for(const [index,line] of lines.entries()){
   if(!line.trim())continue;if(/^\s/.test(line))throw new Error("Obsolete folded header at line "+(index+2)+" is not supported.");
   const colon=line.indexOf(":");if(colon<1)throw new Error("Header line "+(index+2)+" must use Name: value.");
   const name=line.slice(0,colon).trim(),rawValue=line.slice(colon+1).trim();
   if(!/^[!#$%&'*+.^_|~0-9A-Za-z-]+$/.test(name))throw new Error("Invalid HTTP header name at line "+(index+2)+".");
-  const redacted=SENSITIVE_HTTP_HEADERS.test(name);headers.push({name,value:redacted?"[REDACTED]":rawValue,redacted});
+  const redacted=SENSITIVE_HTTP_HEADERS.test(name)||SENSITIVE_HTTP_HEADER_NAME.test(name);const value=redacted?"[REDACTED]":SENSITIVE_HTTP_URL_HEADER.test(name)?redactHttpTarget(rawValue):rawValue;headers.push({name,value,redacted:redacted||value!==rawValue});
  }
- const grouped:Record<string,string[]>={};for(const header of headers)(grouped[header.name.toLowerCase()]??=[]).push(header.value);
+ const grouped:Record<string,string[]>=Object.create(null) as Record<string,string[]>;for(const header of headers)(grouped[header.name.toLowerCase()]??=[]).push(header.value);
  const contentType=headers.find(h=>h.name.toLowerCase()==="content-type")?.value??null;
- return JSON.stringify({messageType:response?"response":"request",startLine,...(response?{httpVersion:response[1],statusCode:Number(response[2]),reason:response[3]??""}:{method:request![1],target:request![2],httpVersion:request![3]}),headers,headerCount:headers.length,duplicateHeaders:Object.fromEntries(Object.entries(grouped).filter(([,values])=>values.length>1)),body:{utf8Bytes:new TextEncoder().encode(body).length,lineCount:body?body.split("\n").length:0,contentType,contentIncluded:false},networkRequestsMade:false,note:"Supplied HTTP text only. Sensitive header values are redacted and the body is deliberately omitted from the parsed result."},null,2);
+ return JSON.stringify({messageType:response?"response":"request",startLine:safeStartLine,...(response?{httpVersion:response[1],statusCode:Number(response[2]),reason:response[3]??""}:{method:request![1],target:safeTarget!,httpVersion:request![3]}),headers,headerCount:headers.length,duplicateHeaders:Object.fromEntries(Object.entries(grouped).filter(([,values])=>values.length>1)),body:{utf8Bytes:new TextEncoder().encode(body).length,lineCount:body?body.split("\n").length:0,contentType,contentIncluded:false},networkRequestsMade:false,note:"Supplied HTTP text only. Sensitive header values and recognizable secret query parameters are redacted; the body is deliberately omitted from the parsed result."},null,2);
 }
 
 
@@ -255,12 +379,16 @@ export function inspectFileSignatures(bytes:Uint8Array):string {
  if(starts([0xff,0xd8,0xff]))add("JPEG image","image/jpeg","jpg",0,hex(0,3));
  if(ascii(0,6)==="GIF87a"||ascii(0,6)==="GIF89a")add("GIF image","image/gif","gif",0,ascii(0,6));
  if(ascii(0,2)==="BM")add("BMP image","image/bmp","bmp",0,ascii(0,2));
+ if(bytes.length>=4&&((bytes[0]===0x49&&bytes[1]===0x49&&bytes[2]===0x2a&&bytes[3]===0)||(bytes[0]===0x4d&&bytes[1]===0x4d&&bytes[2]===0&&bytes[3]===0x2a)))add("TIFF image","image/tiff","tif",0,ascii(0,4));
  if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP")add("WebP image","image/webp","webp",0,ascii(0,4)+"…"+ascii(8,4));
  if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE")add("WAVE audio","audio/wav","wav",0,ascii(0,4)+"…"+ascii(8,4));
  if(ascii(0,5)==="%PDF-")add("PDF document","application/pdf","pdf",0,ascii(0,5));
  if(starts([0x50,0x4b,0x03,0x04])||starts([0x50,0x4b,0x05,0x06])||starts([0x50,0x4b,0x07,0x08]))add("ZIP container","application/zip","zip",0,hex(0,4));
  if(starts([0x1f,0x8b]))add("GZIP stream","application/gzip","gz",0,hex(0,2));
  if(starts([0x7f,0x45,0x4c,0x46]))add("ELF executable/object","application/x-elf","elf",0,hex(0,4));
+ if(ascii(0,2)==="MZ")add("Windows PE executable candidate","application/vnd.microsoft.portable-executable","exe",0,ascii(0,2));
+ const magic4=Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join("");
+ if(["feedface","cefaedfe","feedfacf","cffaedfe","cafebabe","bebafeca","cafebabf","bfbafeca"].includes(magic4))add("Mach-O executable/object candidate","application/x-mach-binary","macho",0,magic4);
  if(ascii(0,16)==="SQLite format 3\u0000")add("SQLite database","application/vnd.sqlite3","sqlite",0,"SQLite format 3");
  if(ascii(4,4)==="ftyp")add("ISO base media / MP4 family","video/mp4","mp4",4,ascii(4,4));
  if(ascii(0,4)==="OggS")add("Ogg container","application/ogg","ogg",0,ascii(0,4));
@@ -283,7 +411,34 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   const ascii=(offset:number,length:number)=>Array.from(bytes.slice(offset,offset+length),b=>String.fromCharCode(b)).join("");
   const metadata:Record<string,unknown>={};
   const notes:string[]=[];
-  if(ascii(0,8)==="\x89PNG\r\n\x1a\n" && bytes.length>=26){
+  if(bytes.length>=2&&bytes[0]===0x1f&&bytes[1]===0x8b){
+    metadata.format="GZIP stream";
+    if(bytes.length<10)notes.push("The GZIP fixed header is truncated.");
+    else{
+      const method=bytes[2],flags=bytes[3],mtime=u32le(4)!;
+      metadata.compressionMethod=method===8?"DEFLATE":`Unknown (${method})`;
+      metadata.modificationTimeSeconds=mtime===0?null:mtime;
+      metadata.modificationTimeIso=mtime===0?null:new Date(mtime*1000).toISOString();
+      metadata.extraFlags=bytes[8];
+      metadata.operatingSystem=({0:"FAT",3:"Unix",7:"Macintosh",11:"NTFS",255:"Unknown"} as Record<number,string>)[bytes[9]]??`Unknown (${bytes[9]})`;
+      metadata.flags={textHint:!!(flags&1),headerCrcPresent:!!(flags&2),extraFieldPresent:!!(flags&4),originalFilenamePresent:!!(flags&8),commentPresent:!!(flags&16),reservedBits:flags&0xe0};
+      if(method!==8)notes.push("The GZIP compression method is not DEFLATE (8).");
+      if(flags&0xe0)notes.push("Reserved GZIP flag bits are set.");
+      let cursor=10,optionalFieldsValid=true;
+      if(flags&4){
+        if(cursor+2>bytes.length){notes.push("The GZIP extra-field length is truncated.");optionalFieldsValid=false;}
+        else{const length=u16le(cursor)!;cursor+=2;if(cursor+length>bytes.length){notes.push("The GZIP extra field extends beyond the supplied bytes.");optionalFieldsValid=false;}else{metadata.extraFieldBytes=length;cursor+=length;}}
+      }
+      const readOptionalField=(name:string)=>{if(cursor>=bytes.length){notes.push("The GZIP "+name+" field is truncated.");optionalFieldsValid=false;return;}const end=bytes.indexOf(0,cursor);if(end<0){notes.push("The GZIP "+name+" field has no NUL terminator in the supplied bytes.");optionalFieldsValid=false;cursor=bytes.length;return;}if(end-cursor>4096){notes.push("The GZIP "+name+" field exceeds the 4,096-byte metadata inspection limit.");optionalFieldsValid=false;cursor=end+1;return;}metadata[name+"Bytes"]=end-cursor;cursor=end+1;};
+      if(optionalFieldsValid&&(flags&8))readOptionalField("originalFilename");
+      if(optionalFieldsValid&&(flags&16))readOptionalField("comment");
+      if(optionalFieldsValid&&(flags&2)){if(cursor+2>bytes.length){notes.push("The GZIP header CRC field is truncated.");optionalFieldsValid=false;}else{metadata.headerCrc16Present=true;cursor+=2;}}
+      metadata.headerBytesAvailable=cursor;
+      metadata.trailerPresent=optionalFieldsValid&&bytes.length>=cursor+8;
+      if(!metadata.trailerPresent)notes.push("The GZIP trailer is not fully present in the supplied bytes; header fields are not stream validation.");
+      notes.push("GZIP header CRC, compressed payload and trailer checksums are not validated by this metadata inspector.");
+    }
+  } else if(ascii(0,8)==="\x89PNG\r\n\x1a\n" && bytes.length>=26){
     metadata.format="PNG";metadata.width=u32be(16);metadata.height=u32be(20);metadata.bitDepth=bytes[24];metadata.colorType=bytes[25];
   } else if(bytes.length>=4&&bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff){
     metadata.format="JPEG";let offset=2,found=false;
@@ -309,8 +464,95 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   } else if(ascii(0,2)==="BM"&&bytes.length>=30){
     const width=u32le(18)!,heightRaw=u32le(22)!;
     metadata.format="BMP";metadata.width=width>0x7fffffff?width-0x100000000:width;metadata.height=Math.abs(heightRaw>0x7fffffff?heightRaw-0x100000000:heightRaw);metadata.bitsPerPixel=u16le(28);
-  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP"&&ascii(12,4)==="VP8X"&&bytes.length>=30){
+  } else if(bytes.length>=8&&((bytes[0]===0x49&&bytes[1]===0x49&&bytes[2]===0x2a&&bytes[3]===0)||(bytes[0]===0x4d&&bytes[1]===0x4d&&bytes[2]===0&&bytes[3]===0x2a))){
+    const little=bytes[0]===0x49;
+    const u16be=(offset:number)=>offset+2<=bytes.length?(bytes[offset]<<8)|bytes[offset+1]:null;
+    const read16=(offset:number)=>little?u16le(offset):u16be(offset);
+    const read32=(offset:number)=>little?u32le(offset):u32be(offset);
+    metadata.format="TIFF image (classic TIFF)";metadata.byteOrder=little?"little-endian":"big-endian";
+    const ifdOffset=read32(4);metadata.firstIfdOffset=ifdOffset;
+    if(ifdOffset===null||ifdOffset===0||ifdOffset+2>bytes.length)notes.push("The first TIFF image-directory offset is invalid or outside the supplied bytes.");
+    else{
+      const entryCount=read16(ifdOffset);
+      if(entryCount===null)notes.push("The TIFF image-directory entry count is truncated.");
+      else{
+        metadata.firstIfdEntryCount=entryCount;
+        const names:Record<number,string>={256:"width",257:"height",258:"bitsPerSample",259:"compression",262:"photometricInterpretation",273:"stripOffsetsCount",274:"orientation",277:"samplesPerPixel",278:"rowsPerStrip",279:"stripByteCountsCount",282:"xResolution",283:"yResolution",284:"planarConfiguration",296:"resolutionUnit",305:"software",306:"dateTime",315:"artist",33432:"copyright",339:"sampleFormat"};
+        const sizes:Record<number,number>={1:1,2:1,3:2,4:4,5:8,6:1,7:1,8:2,9:4,10:8,11:4,12:8};
+        const inspected=Math.min(entryCount,256);
+        if(entryCount>inspected)notes.push("Only the first 256 TIFF directory entries were inspected.");
+        for(let index=0;index<inspected;index++){
+          const entry=ifdOffset+2+index*12;
+          if(entry+12>bytes.length){notes.push("The TIFF image-directory table is truncated.");break;}
+          const tag=read16(entry)??0,name=names[tag];if(!name)continue;
+          const type=read16(entry+2)??0,count=read32(entry+4)??0;
+          if(name==="stripOffsetsCount"||name==="stripByteCountsCount"){metadata[name]=count;continue;}
+          if(!sizes[type]||count===0){notes.push("TIFF tag "+name+" has an unsupported type or empty value.");continue;}
+          if(name==="bitsPerSample"&&count>8){notes.push("The TIFF BitsPerSample array exceeds the inspection limit.");continue;}
+          if(["software","dateTime","artist","copyright"].includes(name)&&count>256){notes.push("TIFF text tag "+name+" exceeds the inspection limit.");continue;}
+          const valueBytes=count*sizes[type],valueOffset=valueBytes<=4?entry+8:read32(entry+8);
+          if(valueOffset===null||valueOffset>bytes.length||valueBytes>bytes.length-valueOffset){notes.push("TIFF tag "+name+" points beyond the supplied bytes.");continue;}
+          const valueAt=(position:number):number|null=>{
+            if(type===1||type===6||type===7)return bytes[position]??null;
+            if(type===3||type===8){const value=read16(position);return value===null?null:type===8&&value>0x7fff?value-0x10000:value;}
+            if(type===4||type===9){const value=read32(position);return value===null?null:type===9&&value>0x7fffffff?value-0x100000000:value;}
+            return null;
+          };
+          if(name==="bitsPerSample"){
+            if(type!==3&&type!==4){notes.push("TIFF BitsPerSample uses an unsupported numeric type.");continue;}
+            const values:number[]=[];for(let n=0;n<count;n++){const value=valueAt(valueOffset+n*sizes[type]);if(value!==null)values.push(value);}
+            metadata.bitsPerSample=values;continue;
+          }
+          if(name==="xResolution"||name==="yResolution"){
+            if(type===5&&count===1){const numerator=read32(valueOffset),denominator=read32(valueOffset+4);if(numerator!==null&&denominator!==null&&denominator>0)metadata[name]=Number((numerator/denominator).toFixed(4));else notes.push("TIFF "+name+" has an invalid rational value.");}
+            else notes.push("TIFF "+name+" is not a single unsigned rational value.");
+            continue;
+          }
+          if(["software","dateTime","artist","copyright"].includes(name)){
+            if(type!==2){notes.push("TIFF text tag "+name+" is not ASCII text.");continue;}
+            metadata[name]=ascii(valueOffset,count).replace(/\0+$/,"");continue;
+          }
+          const value=valueAt(valueOffset);
+          if(value!==null)metadata[name]=value;else notes.push("TIFF tag "+name+" uses an unsupported value type.");
+        }
+        const nextOffset=ifdOffset+2+entryCount*12;
+        if(nextOffset+4<=bytes.length){const next=read32(nextOffset);if(next!==null&&next!==0){metadata.hasAdditionalImageDirectories=true;if(next+2>bytes.length)notes.push("A later TIFF image directory points beyond the supplied bytes.");}}
+        else notes.push("The TIFF image-directory table or next-directory pointer is truncated.");
+      }
+    }
+    notes.push("TIFF directory metadata only; image pixels are not decoded.");
+   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP"&&ascii(12,4)==="VP8X"&&bytes.length>=30){
     metadata.format="WebP";metadata.width=1+bytes[24]+(bytes[25]<<8)+(bytes[26]<<16);metadata.height=1+bytes[27]+(bytes[28]<<8)+(bytes[29]<<16);
+  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="AVI "&&bytes.length>=12){
+    metadata.format="AVI container candidate";metadata.declaredRiffBytes=(u32le(4)??0)+8;
+    if((metadata.declaredRiffBytes as number)>bytes.length)notes.push("The declared RIFF size extends beyond the supplied bytes.");
+    let avih:number|undefined;for(let offset=12;offset+8<=bytes.length;offset++){if(ascii(offset,4)==="avih"){avih=offset-12;break;}}
+    if(avih!==undefined){
+      const size=u32le(12+avih+4)??0,body=12+avih+8;
+      if(size>=40&&body+40<=bytes.length){
+        const micros=u32le(body)??0,frames=u32le(body+16)??0;
+        metadata.microsecondsPerFrame=micros;metadata.frameCount=frames;metadata.streamCount=u32le(body+24);
+        metadata.width=u32le(body+32);metadata.height=u32le(body+36);
+        if(micros>0&&frames>0)metadata.durationSeconds=Number((micros*frames/1_000_000).toFixed(3));
+      }else notes.push("The AVI main-header chunk is absent, truncated, or shorter than its required fixed fields.");
+    }else notes.push("No AVI main-header chunk was found in the supplied bytes.");
+    notes.push("AVI metadata is a bounded header hint; streams and codecs are not decoded.");
+  } else if(bytes.length>=16&&ascii(4,4)==="ftyp"){
+    metadata.format="ISO Base Media File Format (MP4-family) candidate";
+    const size32=u32be(0)??0;let boxSize=BigInt(size32),brandOffset=8,headerValid=true;
+    if(size32===1&&bytes.length>=24){boxSize=BigInt(0);for(let i=8;i<16;i++)boxSize=(boxSize<<BigInt(8))|BigInt(bytes[i]);brandOffset=16;metadata.extendedBoxSize=boxSize.toString();}
+    else if(size32===1){headerValid=false;notes.push("The extended ftyp box size is truncated.");}
+    else if(size32===0)boxSize=BigInt(bytes.length);
+    metadata.ftypBoxBytes=boxSize.toString();
+    if(boxSize<BigInt(brandOffset+8))notes.push("The ftyp box declares a size too small to contain brand metadata.");
+    if(boxSize>BigInt(bytes.length))notes.push("The ftyp box extends beyond the supplied bytes.");
+    if(headerValid&&boxSize>=BigInt(brandOffset+8)&&bytes.length>=brandOffset+8){metadata.majorBrand=ascii(brandOffset,4);metadata.minorVersion=u32be(brandOffset+4);}
+    const limit=headerValid&&boxSize>=BigInt(brandOffset+8)?Math.min(bytes.length,Number(boxSize>BigInt(bytes.length)?BigInt(bytes.length):boxSize),brandOffset+8+32*4):brandOffset+8;
+    const brands:string[]=[];
+    for(let offset=brandOffset+8;offset+4<=limit;offset+=4)brands.push(ascii(offset,4));
+    if(brands.length)metadata.compatibleBrands=brands;
+    if(boxSize>BigInt(brandOffset+8)&&((boxSize-BigInt(brandOffset+8))%BigInt(4))!==BigInt(0))notes.push("The ftyp compatible-brand region has an incomplete trailing entry.");
+    notes.push("Only the bounded ftyp header is inspected; media samples, tracks and codecs are not decoded.");
   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE"&&bytes.length>=12){
     metadata.format="WAVE";let offset=12;let byteRate:number|null=null;let dataSize:number|null=null;
     while(offset+8<=bytes.length){
@@ -345,6 +587,117 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       metadata.format="MP3 with ID3 tag";metadata.id3Version="2."+bytes[3]+"."+bytes[4];metadata.id3TagBytes=(sizeBytes[0]<<21)|(sizeBytes[1]<<14)|(sizeBytes[2]<<7)|sizeBytes[3];metadata.id3Flags=bytes[5];
       if(10+(metadata.id3TagBytes as number)>bytes.length)notes.push("The declared ID3 tag extends beyond the supplied bytes.");
     } else notes.push("ID3 tag size uses invalid synchsafe bytes.");
+  } else if(ascii(0,4)==="fLaC"&&bytes.length>=8){
+    metadata.format="FLAC audio candidate";
+    const header=bytes[4],blockType=header&0x7f,blockSize=(bytes[5]<<16)|(bytes[6]<<8)|bytes[7];
+    const blockNames:Record<number,string>={0:"STREAMINFO",1:"PADDING",2:"APPLICATION",3:"SEEKTABLE",4:"VORBIS_COMMENT",5:"CUESHEET",6:"PICTURE"};
+    metadata.firstMetadataBlock={type:blockNames[blockType]??"Reserved/unknown",typeCode:blockType,isLast:(header&0x80)!==0,declaredBytes:blockSize};
+    if(blockSize>bytes.length-8)notes.push("The first FLAC metadata block extends beyond the supplied bytes.");
+    if(blockType===0&&blockSize>=34&&bytes.length>=42){
+      const sampleRate=(bytes[18]<<12)|(bytes[19]<<4)|(bytes[20]>>4),channels=((bytes[20]>>1)&7)+1,bitsPerSample=(((bytes[20]&1)<<4)|(bytes[21]>>4))+1;
+      const totalSamples=BigInt(bytes[21]&15)*BigInt("4294967296")+BigInt(u32be(22)??0);
+      metadata.sampleRate=sampleRate;metadata.channels=channels;metadata.bitsPerSample=bitsPerSample;metadata.totalSamples=totalSamples.toString();
+      if(sampleRate>0)metadata.durationSeconds=Number((Number(totalSamples)/sampleRate).toFixed(3));
+    }else if(blockType===0)notes.push("The FLAC STREAMINFO block is truncated or shorter than 34 bytes.");
+    notes.push("FLAC stream metadata only; audio frames are not decoded.");
+  } else if(ascii(0,4)==="OggS"&&bytes.length>=27){
+    metadata.format="Ogg page candidate";metadata.version=bytes[4];
+    const headerType=bytes[5],flags:string[]=[];
+    if(headerType&1)flags.push("continued packet");if(headerType&2)flags.push("beginning of stream");if(headerType&4)flags.push("end of stream");
+    metadata.headerFlags=flags;metadata.serialNumber=u32le(14);metadata.pageSequence=u32le(18);metadata.checksum="0x"+(u32le(22)??0).toString(16).padStart(8,"0").toUpperCase();
+    let granule=BigInt(0);for(let i=13;i>=6;i--)granule=(granule<<BigInt(8))|BigInt(bytes[i]);
+    metadata.granulePosition=granule===BigInt("18446744073709551615")?null:granule.toString();
+    const segmentCount=bytes[26];metadata.segmentCount=segmentCount;
+    if(bytes.length<27+segmentCount)notes.push("The Ogg segment table is truncated.");
+    else{let bodyBytes=0;for(let i=27;i<27+segmentCount;i++)bodyBytes+=bytes[i];metadata.declaredPageBodyBytes=bodyBytes;if(27+segmentCount+bodyBytes>bytes.length)notes.push("The Ogg page body extends beyond the supplied bytes.");}
+    if(bytes[4]!==0)notes.push("The Ogg page version is not the currently defined version 0.");
+    notes.push("Ogg page headers only; codec identification and packet contents are not decoded.");
+  } else if(bytes.length>=4&&["feedface","cefaedfe","feedfacf","cffaedfe","cafebabe","bebafeca","cafebabf","bfbafeca"].includes(Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join(""))){
+    const magic=Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join("");
+    const fat=["cafebabe","bebafeca","cafebabf","bfbafeca"].includes(magic);
+    const little=["cefaedfe","cffaedfe","bebafeca","bfbafeca"].includes(magic);
+    const is64=["feedfacf","cffaedfe","cafebabf","bfbafeca"].includes(magic);
+    const read32=(offset:number)=>offset+4<=bytes.length?(little?(bytes[offset]|(bytes[offset+1]<<8)|(bytes[offset+2]<<16)|(bytes[offset+3]<<24))>>>0:u32be(offset)):null;
+    const read64=(offset:number):string|null=>{if(offset+8>bytes.length)return null;let value=BigInt(0);for(let index=0;index<8;index++)value=(value<<BigInt(8))|BigInt(bytes[offset+(little?7-index:index)]);return "0x"+value.toString(16);};
+    const cpuNames:Record<number,string>={7:"x86",0x01000007:"x86-64",12:"ARM",0x0100000c:"ARM64",18:"PowerPC",0x01000012:"PowerPC64"};
+    const fileTypes:Record<number,string>={1:"Object",2:"Executable",3:"Fixed VM library",4:"Core",5:"Preloaded executable",6:"Dynamic library",8:"Bundle",9:"Dynamic library stub",10:"Debug symbols",11:"Dynamic library stub"};
+    metadata.format=fat?"Mach-O universal binary candidate":"Mach-O thin binary candidate";
+    metadata.headerByteOrder=little?"little-endian":"big-endian";metadata.headerWidth=is64?64:32;
+    if(fat){
+      if(bytes.length<8)notes.push("The universal-binary header is truncated before its architecture count.");
+      else{
+        const count=read32(4)??0,entrySize=is64?32:20,available=Math.floor((bytes.length-8)/entrySize),shown=Math.min(count,available,32);
+        metadata.declaredArchitectureCount=count;metadata.architectureEntriesShown=shown;
+        const architectures:Record<string,unknown>[]=[];
+        for(let index=0;index<shown;index++){
+          const entry=8+index*entrySize,cpu=read32(entry),subtype=read32(entry+4),offset=is64?read64(entry+8):read32(entry+8)?.toString(),size=is64?read64(entry+16):read32(entry+12)?.toString(),align=read32(entry+(is64?24:16));
+          architectures.push({cpuType:cpu,cpu:cpuNames[cpu??-1]??"Unknown",cpuSubtype:subtype,offset,size,alignmentExponent:align});
+        }
+        metadata.architectures=architectures;
+        if(count>available)notes.push("The declared architecture table extends beyond the supplied bytes.");
+        if(count>32)notes.push("Architecture listing capped at 32 entries.");
+        for(const arch of architectures){const offset=Number(BigInt(arch.offset as string)),size=Number(BigInt(arch.size as string));if(Number.isFinite(offset)&&Number.isFinite(size)&&offset+size>bytes.length)notes.push("One or more declared architecture slices extend beyond the supplied bytes.");}
+      }
+    }else if(bytes.length<(is64?32:28))notes.push("The thin Mach-O header is truncated.");
+    else{
+      const cpu=read32(4),subtype=read32(8),fileType=read32(12),commands=read32(16),commandBytes=read32(20),flags=read32(24);
+      metadata.cpuType=cpu;metadata.cpu=cpuNames[cpu??-1]??"Unknown";metadata.cpuSubtype=subtype;metadata.fileType=fileTypes[fileType??-1]??"Unknown";metadata.fileTypeCode=fileType;metadata.loadCommandCount=commands;metadata.loadCommandBytes=commandBytes;metadata.flags=flags===null?null:"0x"+flags.toString(16).toUpperCase();
+      if(is64)metadata.reserved=read32(28);
+      if((is64?32:28)+(commandBytes??0)>bytes.length)notes.push("The declared load-command region extends beyond the supplied bytes.");
+      notes.push("Load commands are not parsed; header metadata is informational and does not validate or execute the binary.");
+    }
+  } else if(ascii(0,2)==="MZ"&&bytes.length>=64){
+    metadata.format="Windows PE executable candidate";
+    const peOffset=u32le(0x3c)!;
+    if(peOffset>bytes.length-24||ascii(peOffset,4)!=="PE\u0000\u0000"){
+      notes.push("The DOS header is present, but a complete PE signature and COFF header were not found at the declared offset.");
+    }else{
+      const coff=peOffset+4,optional=coff+20,optionalSize=u16le(coff+16)!;
+      const machine=u16le(coff),sectionCount=u16le(coff+2),timestamp=u32le(coff+4),characteristics=u16le(coff+18);
+      const machineNames:Record<number,string>={0x014c:"x86",0x8664:"x86-64",0x01c0:"ARM",0x01c4:"ARMv7",0xaa64:"ARM64",0x0200:"IA-64",0x5032:"RISC-V 32-bit",0x5064:"RISC-V 64-bit",0x5128:"RISC-V 128-bit"};
+      metadata.peOffset=peOffset;metadata.machineCode="0x"+machine!.toString(16).padStart(4,"0").toUpperCase();metadata.machine=machineNames[machine!]??"Unknown machine";metadata.sectionCount=sectionCount;metadata.coffTimestampSecondsSinceUnixEpoch=timestamp;metadata.characteristics="0x"+characteristics!.toString(16).padStart(4,"0").toUpperCase();metadata.optionalHeaderBytes=optionalSize;
+      if(optionalSize>0&&optional+optionalSize<=bytes.length){
+        const magic=u16le(optional);
+        if(magic===0x10b||magic===0x20b){
+          metadata.optionalHeaderFormat=magic===0x10b?"PE32":"PE32+";
+          if(optionalSize>=20)metadata.entryPointRva=u32le(optional+16);
+          else notes.push("The optional header is too short to contain the entry-point field.");
+          if(optionalSize>=70){
+            metadata.subsystem=u16le(optional+68);
+            const subsystemNames:Record<number,string>={1:"Native",2:"Windows GUI",3:"Windows console",5:"OS/2 console",7:"POSIX console",9:"Windows CE GUI",10:"EFI application",11:"EFI boot service driver",12:"EFI runtime driver",13:"EFI ROM image",14:"Xbox"};
+            metadata.subsystemName=subsystemNames[metadata.subsystem as number]??"Unknown";
+          }else notes.push("The declared optional header is too short to contain the subsystem field.");
+        }else notes.push("The optional-header magic is unsupported; only the DOS/COFF subset is reported.");
+      }else notes.push("The optional header is truncated or its declared length exceeds the supplied bytes.");
+      notes.push("PE header fields are best-effort metadata; no code is executed and no malware or safety verdict is produced.");
+    }
+  } else if(ascii(0,4)==="\x7fELF"&&bytes.length>=16){
+    metadata.format="ELF executable/object candidate";
+    const elfClass=bytes[4],encoding=bytes[5],version=bytes[6];
+    metadata.class=elfClass===1?"ELF32":elfClass===2?"ELF64":"Unknown";
+    metadata.byteOrder=encoding===1?"little-endian":encoding===2?"big-endian":"Unknown";
+    metadata.identificationVersion=version;
+    if((elfClass===1||elfClass===2)&&(encoding===1||encoding===2)&&bytes.length>=(elfClass===1?52:64)){
+      const little=encoding===1;
+      const read16=(offset:number)=>little?u16le(offset):offset+2<=bytes.length?(bytes[offset]<<8)|bytes[offset+1]:null;
+      const read32=(offset:number)=>little?u32le(offset):u32be(offset);
+      const read64=(offset:number):string|null=>{
+        if(offset+8>bytes.length)return null;
+        let value=BigInt(0);
+        for(let index=0;index<8;index++)value=(value<<BigInt(8))|BigInt(bytes[offset+(little?7-index:index)]);
+        return "0x"+value.toString(16).padStart(16,"0");
+      };
+      const type=read16(16),machine=read16(18);
+      const types:Record<number,string>={0:"None",1:"Relocatable object",2:"Executable",3:"Shared object",4:"Core file"};
+      const machines:Record<number,string>={3:"x86",8:"MIPS",20:"PowerPC",21:"PowerPC64",22:"S390",40:"ARM",62:"x86-64",183:"AArch64",243:"RISC-V",258:"LoongArch"};
+      metadata.objectType=types[type as number]??"Unknown";metadata.objectTypeCode=type;
+      metadata.machine=machines[machine as number]??"Unknown";metadata.machineCode=machine;
+      metadata.entryPoint=elfClass===1?"0x"+(read32(24)??0).toString(16):read64(24);
+      metadata.headerBytes=read16(elfClass===1?40:52);
+      metadata.programHeaderCount=read16(elfClass===1?44:56);
+      metadata.sectionHeaderCount=read16(elfClass===1?48:60);
+      notes.push("ELF identification/header fields only; program segments and sections are not loaded or executed.");
+    }else notes.push("The ELF identification is truncated or uses an unsupported class/byte order.");
   } else {
     metadata.format="No supported metadata parser matched";
     notes.push("The file may be unsupported, truncated, or contain a format variant not handled by this inspector.");
@@ -352,6 +705,35 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   return JSON.stringify({inputBytes:bytes.length,metadata,notes,processing:"Local byte parsing only; no file execution, extraction, or network access.",caveat:"Metadata fields are best-effort indicators, not proof of file validity or safety."},null,2);
 }
 
+
+
+/** Inspect a single OpenSSH public-key line. Fingerprinting is not trust validation. */
+export async function inspectSshPublicKey(input: string): Promise<string> {
+  guardText(input);
+  const parts = input.trim().split(/\s+/);
+  if (parts.length < 2 || !parts[0]) throw new Error("Expected an OpenSSH key type followed by Base64 key data.");
+  const type = parts[0], encoded = parts[1];
+  if (!new Set(["ssh-rsa","ssh-ed25519","ecdsa-sha2-nistp256","ecdsa-sha2-nistp384","ecdsa-sha2-nistp521","sk-ssh-ed25519@openssh.com","sk-ecdsa-sha2-nistp256@openssh.com"]).has(type)) throw new Error("Unsupported OpenSSH public-key type.");
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded) || encoded.length % 4 === 1 || (encoded.includes("=") && encoded.length % 4 !== 0)) throw new Error("OpenSSH key data is not valid Base64.");
+  const unpadded=encoded.replace(/=+$/,"");
+  let binary:string; try { binary=atob(unpadded+"=".repeat((4-unpadded.length%4)%4)); } catch { throw new Error("OpenSSH key data is not valid Base64."); }
+  const blob=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  if(blob.length>16_384) throw new Error("OpenSSH public-key blobs are limited to 16,384 bytes.");
+  let offset=0;
+  const field=(name:string):Uint8Array=>{if(offset+4>blob.length)throw new Error("OpenSSH key blob is truncated before "+name+".");const n=blob[offset]*0x1000000+(blob[offset+1]*0x10000)+(blob[offset+2]*0x100)+blob[offset+3];offset+=4;if(n>blob.length-offset)throw new Error("OpenSSH key blob has an invalid length for "+name+".");const out=blob.slice(offset,offset+n);offset+=n;return out;};
+  const text=(name:string):string=>{const v=field(name);if(v.some(b=>b<0x20||b>0x7e))throw new Error("OpenSSH "+name+" must be ASCII.");return new TextDecoder().decode(v);};
+  if(text("key type")!==type)throw new Error("The OpenSSH line type does not match the embedded key type.");
+  const meta:Record<string,string|number|boolean>={};
+  const mpintBits=(name:string)=>{const v=field(name);if(!v.length||(v[0]&0x80)!==0)throw new Error("OpenSSH RSA "+name+" must be a non-empty positive mpint.");let i=v[0]===0?1:0;while(i<v.length&&v[i]===0)i++;if(i===v.length)throw new Error("OpenSSH RSA "+name+" must be non-zero.");let leading=0,b=v[i];while((b&0x80)===0){leading++;b<<=1;}return (v.length-i)*8-leading;};
+  if(type==="ssh-rsa"){const exponentBits=mpintBits("public exponent"),modulusBits=mpintBits("modulus");meta.algorithm="RSA";meta.modulusBits=modulusBits;meta.exponentBits=exponentBits;if(modulusBits<1024)meta.warning="RSA modulus is smaller than 1024 bits; metadata only, not a security verdict.";}
+  else if(type.startsWith("ecdsa-sha2-")||type==="sk-ecdsa-sha2-nistp256@openssh.com"){const curve=text("ECDSA curve"),point=field("ECDSA public point"),expected=type.includes("nistp521")?"nistp521":type.includes("nistp384")?"nistp384":"nistp256",pointLength=expected==="nistp521"?133:expected==="nistp384"?97:65;if(curve!==expected||point.length!==pointLength||point[0]!==4)throw new Error("ECDSA curve or uncompressed public-point length does not match the declared key type.");meta.algorithm=type.startsWith("sk-")?"ECDSA security key":"ECDSA";meta.curve=curve;meta.publicPointBytes=point.length;if(type.startsWith("sk-"))meta.application=text("security-key application");}
+  else{const key=field("Ed25519 public key");if(key.length!==32)throw new Error("Ed25519 public keys must contain exactly 32 bytes.");meta.algorithm=type.startsWith("sk-")?"Ed25519 security key":"Ed25519";meta.publicKeyBytes=key.length;if(type.startsWith("sk-"))meta.application=text("security-key application");}
+  if(offset!==blob.length)throw new Error("OpenSSH key blob contains unexpected trailing bytes.");
+  const subtle=globalThis.crypto?.subtle;if(!subtle)throw new Error("Web Crypto is unavailable; the key structure was not fingerprinted.");
+  const digest=new Uint8Array(await subtle.digest("SHA-256",blob.buffer.slice(blob.byteOffset,blob.byteOffset+blob.byteLength) as ArrayBuffer));
+  let raw="";for(const byte of digest)raw+=String.fromCharCode(byte);
+  return JSON.stringify({format:"OpenSSH public key",type,blobBytes:blob.length,keyMetadata:meta,fingerprint:"SHA256:"+btoa(raw).replace(/=+$/,""),commentPresent:parts.length>2,commentReturned:false,trustValidated:false,networkRequestsMade:false,note:"Only the supplied public-key blob was parsed. The comment is not returned. This does not prove key ownership, private-key possession, authorization, or trust."},null,2);
+}
 
 /** Inspect PEM labels or the outer DER container and fingerprint exact bytes. This does not validate certificate trust. */
 export async function inspectCertificateContainer(input: string, bytes: Uint8Array): Promise<string> {
@@ -371,7 +753,9 @@ export async function inspectCertificateContainer(input: string, bytes: Uint8Arr
     if(der.length>MAX_INSPECT_BYTES)throw new Error("Decoded PEM content is limited to 2,000,000 bytes.");
     blocks.push({label:match[1],bytes:der});
   }
-  if(source.includes("-----BEGIN ")&&blocks.length===0)throw new Error("PEM block is malformed or has mismatched BEGIN/END labels.");
+  const beginCount=(source.match(/-----BEGIN /g)||[]).length;
+  const endCount=(source.match(/-----END /g)||[]).length;
+  if(beginCount!==blocks.length||endCount!==blocks.length)throw new Error("PEM input contains an unmatched or malformed BEGIN/END block.");
   const fingerprint=async(data:Uint8Array)=>{
     const copy=data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength) as ArrayBuffer;
     const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",copy));
@@ -400,6 +784,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  guardText(input);
  switch(operation){
  case "query-parse":return parseQueryString(input);
+ case "data-uri":return parseDataUri(input);
  case "url-parse":return parseUrlComponents(input);
  case "query-build":return buildQueryString(input);
  case "key-value":return parseKeyValue(input);
@@ -427,6 +812,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "file-signatures":return inspectFileSignatures(bytes);
  case "file-metadata":return inspectFileMetadata(bytes);
  case "certificate-container":return inspectCertificateContainer(input,bytes);
+ case "ssh-public-key":return inspectSshPublicKey(input);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }

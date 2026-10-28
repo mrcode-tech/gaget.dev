@@ -155,3 +155,5 @@ test("JSON comparison ignores object key order and reports structural changes", 
   assert.deepEqual(changes.map(({path,kind}) => [path,kind]), [["$.items[1]","changed"],["$.items[2]","removed"],["$.new","added"],["$.old","removed"],["$.version","changed"]]);
   assert.throws(() => compareJsonDocuments('{"valid":true}', "{bad json"));
 });
+
+test("UUID generation is an operation in Data Generator, not a standalone registry entry",()=>{const generator=tools.find(tool=>tool.id==="sample-data-generator");assert.ok(generator);assert.equal(generator.name,"Data Generator");assert.equal(generator.href,"/generators/sample-data");assert.ok(generator.keywords.includes("uuid"));assert.ok(!tools.some(tool=>tool.id==="uuid-generator"||tool.href==="/generators/uuid"));});

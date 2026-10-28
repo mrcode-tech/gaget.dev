@@ -13,7 +13,7 @@ const routes = [
   { name: "url-encoder", path: "/encoding/url" },
   { name: "base64", path: "/encoding/base64" },
   { name: "jwt-decoder", path: "/security/jwt-decoder" },
-  { name: "uuid-generator", path: "/generators/uuid" },
+  { name: "data-generator", path: "/generators/sample-data" },
   { name: "hash-generator", path: "/security/hash" },
   { name: "regex-tester", path: "/text/regex" },
   { name: "xml-formatter", path: "/xml/formatter" },

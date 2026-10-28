@@ -1,5 +1,16 @@
 export type DeveloperOperation = "regex" | "xml" | "sql" | "csv-json" | "html" | "curl" | "hash";
 export const MAX_TEXT_LENGTH = 200_000;
+const CURL_SENSITIVE_QUERY_NAME=/(?:^|[-_.])(?:access[-_.]?token|auth[-_.]?token|refresh[-_.]?token|id[-_.]?token|security[-_.]?token|token|api[-_.]?key|client[-_.]?secret|authorization[-_.]?code|code|ticket|key|password|passwd|secret|credential|session|signature|sig)(?:$|[-_.])/i;
+const CURL_SENSITIVE_HEADERS=/^(authorization|proxy-authorization|www-authenticate|proxy-authenticate|cookie|set-cookie)$/i;
+const CURL_SENSITIVE_HEADER_NAME=/(?:^|[-_])(?:api[-_]?key|access[-_]?token|auth[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?token|security[-_]?token|csrf[-_]?token|password|passwd|secret|credential|private[-_]?key|signature)(?:$|[-_])/i;
+function redactCurlPairs(source:string):string {
+ return source.split("&").map(pair=>{
+  if(!pair)return pair;
+  const equals=pair.indexOf("="),rawKey=equals<0?pair:pair.slice(0,equals);
+  let key=rawKey;try{key=decodeURIComponent(rawKey.replace(/\+/g," "));}catch{}
+  return CURL_SENSITIVE_QUERY_NAME.test(key)?(equals<0?rawKey:rawKey+"=[REDACTED]"):pair;
+ }).join("&");
+}
 const guard = (s:string) => { if (s.length > MAX_TEXT_LENGTH) throw new Error("Input exceeds the 200,000 character safety limit."); };
 export function parseCsv(s:string, d=","):string[][] {
  guard(s); if(d.length!==1 || /["\r\n]/.test(d)) throw new Error("Delimiter must be one non-quote character.");
@@ -30,7 +41,7 @@ export function parseCsv(s:string, d=","):string[][] {
  if(cell||row.length||afterQuote||!s.length||!/[\r\n]$/.test(s)){row.push(cell);rows.push(row);}
  if(rows[0]?.[0]?.charCodeAt(0)===0xfeff)rows[0][0]=rows[0][0].slice(1);return rows;
 }
-function csvCell(v:unknown,d:string){let s=v==null?"":typeof v==="string"?v:JSON.stringify(v);if(typeof v==="string"&&/^[=+@\-\t\r]/.test(s))s="'"+s;return /["\r\n]/.test(s)||s.includes(d)?'"'+s.replace(/"/g,'""')+'"':s;}
+function csvCell(v:unknown,d:string){let s=v==null?"":typeof v==="string"?v:JSON.stringify(v);if(typeof v==="string"&&(/^[\u0000-\u0020\u00a0\u1680\u2000-\u200b\u2028\u2029\u202f\u205f\u3000\ufeff]*[=+\-@]/u.test(s)||/^[\t\r]/.test(s)))s="'"+s;return /["\r\n]/.test(s)||s.includes(d)?'"'+s.replace(/"/g,'""')+'"':s;}
 export function csvToJson(s:string,d=","){
  const rows=parseCsv(s,d);if(!rows.length)return "[]";
  const headers=rows[0].map((h,i)=>h.trim()||"column_"+(i+1)), used=new Set<string>();
@@ -67,29 +78,189 @@ function tokenizeXml(source:string):XmlToken[]{
  }
  return tokens;
 }
+type XmlTreeNode = { kind: "element"; open: string; close: string; selfClosing: boolean; children: Array<XmlTreeNode | XmlToken> };
 export function formatXml(s:string,minify=false){
- guard(s);const tokens=tokenizeXml(s);if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
- const stack:string[]=[],lines:string[]=[];let depth=0,roots=0,doctypeSeen=false,rootClosed=false;
- for(const token of tokens){const {kind,value,name}=token;const v=value.trim();if(!v)continue;
-  if(kind==="text"){if(stack.length===0)throw new Error("Text is not allowed outside the XML root element.");lines.push("  ".repeat(depth)+v);continue;}
-  if(kind==="doctype"){if(doctypeSeen||roots>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");doctypeSeen=true;lines.push(v);continue;}
-  if(kind==="comment"||kind==="pi"){lines.push("  ".repeat(depth)+v);continue;}
-  if(kind==="cdata"){if(!stack.length)throw new Error("CDATA is only allowed inside the XML root element.");lines.push("  ".repeat(depth)+v);continue;}
-  if(kind==="end"){if(stack.pop()!==name)throw new Error("Unexpected or mismatched closing tag: "+v);depth--;if(stack.length===0)rootClosed=true;lines.push("  ".repeat(depth)+v);continue;}
-  if(stack.length===0){if(rootClosed||roots>0)throw new Error("XML must contain exactly one root element.");roots++;}
-  lines.push("  ".repeat(depth)+v);
-  if(kind==="start"){stack.push(name!);depth++;}else if(stack.length===0)rootClosed=true;
+ guard(s);
+ const tokens=tokenizeXml(s);
+ const validXmlChar=(cp:number)=>cp===0x9||cp===0xa||cp===0xd||(cp>=0x20&&cp<=0xd7ff)||(cp>=0xe000&&cp<=0xfffd)||(cp>=0x10000&&cp<=0x10ffff);
+ for(let offset=0;offset<s.length;){const cp=s.codePointAt(offset)!;if(!validXmlChar(cp))throw new Error("XML contains a character that is not allowed by XML 1.0.");offset+=cp>0xffff?2:1;}
+ if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
+ const internalEntities=new Set<string>();
+ for(const token of tokens)if(token.kind==="doctype"){
+  for(const match of token.value.matchAll(/<!ENTITY\s+([A-Za-z_:][\w:.-]*)\s+(['"])[\s\S]*?\2\s*>/g))internalEntities.add(match[1]);
  }
- if(stack.length)throw new Error("Unclosed XML element: "+stack[stack.length-1]);
- if(roots!==1)throw new Error("XML must contain exactly one root element.");
- return minify?lines.join("").replace(/>\s*</g,"><"):lines.join("\n");
+ const validateReferences=(value:string,context:string)=>{
+  for(let index=0;index<value.length;index++){
+   if(value[index]!=="&")continue;
+   const end=value.indexOf(";",index+1);
+   if(end<0||/[\s<&]/.test(value.slice(index+1,end)))throw new Error("Malformed XML entity reference in "+context+".");
+   const ref=value.slice(index+1,end);
+   if(ref.startsWith("#x")||ref.startsWith("#X")||ref.startsWith("#")){
+    const numeric=ref[1]==="x"||ref[1]==="X"?Number.parseInt(ref.slice(2),16):Number.parseInt(ref.slice(1),10);
+    if(!Number.isInteger(numeric)||!validXmlChar(numeric))throw new Error("Invalid numeric XML character reference in "+context+".");
+   }else if(!["amp","lt","gt","apos","quot"].includes(ref)&&!internalEntities.has(ref)){
+    throw new Error("Unknown or external XML entity reference &"+ref+"; in "+context+".");
+   }
+   index=end;
+  }
+ };
+ for(const token of tokens){
+  if(token.kind==="text")validateReferences(token.value,"character data");
+  if(token.kind==="start"||token.kind==="empty"){
+   for(const attr of token.value.matchAll(/=\s*("[^"]*"|'[^']*')/g)){
+    const value=attr[1].slice(1,-1);
+    if(value.includes("<"))throw new Error("XML attribute values cannot contain <.");
+    validateReferences(value,"attribute value");
+   }
+  }
+ }
+ const roots:Array<XmlTreeNode|XmlToken>=[];
+ const stack:XmlTreeNode[]=[];
+ let doctypeSeen=false,rootClosed=false,rootCount=0;
+ for(const token of tokens){
+  const {kind,value,name}=token;
+  if(kind==="cdata"&&stack.length===0)throw new Error("CDATA is only allowed inside the XML root element.");
+  if(kind==="text"){
+   if(stack.length===0){if(value.trim())throw new Error("Text is not allowed outside the XML root element.");continue;}
+   stack[stack.length-1].children.push(token);
+   continue;
+  }
+  if(kind==="doctype"){
+   if(doctypeSeen||rootCount>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");
+   doctypeSeen=true;
+   (stack.length?stack[stack.length-1].children:roots).push(token);
+   continue;
+  }
+  if(kind==="end"){
+   const current=stack.pop();
+   if(!current||current.open.match(/^<([^\s/>]+)/)?.[1]!==name)throw new Error("Unexpected or mismatched closing tag: "+value);
+   current.close=value;
+   if(stack.length===0)rootClosed=true;
+   continue;
+  }
+  if(kind==="start"||kind==="empty"){
+   if(stack.length===0){
+    if(rootClosed||rootCount>0)throw new Error("XML must contain exactly one root element.");
+    rootCount++;
+   }
+   const node:XmlTreeNode={kind:"element",open:value,close:"",selfClosing:kind==="empty",children:[]};
+   if(stack.length)stack[stack.length-1].children.push(node);
+   else roots.push(node);
+   if(kind==="start")stack.push(node);else if(stack.length===0)rootClosed=true;
+   continue;
+  }
+  if(stack.length)stack[stack.length-1].children.push(token);
+  else roots.push(token);
+ }
+ if(stack.length)throw new Error("Unclosed XML element: "+stack[stack.length-1].open.match(/^<([^\s/>]+)/)?.[1]);
+ const elements=roots.filter((node)=>node.kind==="element");
+ if(elements.length!==1)throw new Error("XML must contain exactly one root element.");
+ const isElement=(node:XmlTreeNode|XmlToken):node is XmlTreeNode=>"kind" in node&&node.kind==="element";
+ const raw=(node:XmlTreeNode|XmlToken):string=>{
+  if(!isElement(node))return node.value;
+  if(node.selfClosing)return node.open;
+  return node.open+node.children.map(raw).join("")+node.close;
+ };
+ const hasCharacterData=(node:XmlTreeNode):boolean=>node.children.some(child=>!isElement(child)&&(child.kind==="text"||child.kind==="cdata"));
+ const render=(node:XmlTreeNode|XmlToken,depth:number):string=>{
+  if(!isElement(node))return "  ".repeat(depth)+node.value;
+  if(node.selfClosing)return "  ".repeat(depth)+node.open;
+  // Formatting mixed content or any existing character data can change XML text semantics.
+  // Preserve that entire element byte-for-byte rather than injecting or deleting whitespace.
+  if(hasCharacterData(node))return "  ".repeat(depth)+raw(node);
+  const children=node.children;
+  if(children.length===0)return "  ".repeat(depth)+node.open+node.close;
+  if(minify)return node.open+children.map(raw).join("")+node.close;
+  return "  ".repeat(depth)+node.open+"\n"+children.map(child=>render(child,depth+1)).join("\n")+"\n"+"  ".repeat(depth)+node.close;
+ };
+ if(minify){
+  // Never strip character data, even when it looks like indentation whitespace.
+  return roots.map(node=>isElement(node)?raw(node):node.value).join("");
+ }
+ return roots.map(node=>render(node,0)).join("\n");
+}
+type HtmlToken={kind:"text"|"misc"|"tag";value:string;name?:string;closing?:boolean;selfClosing?:boolean};
+type HtmlTreeNode={kind:"element";name:string;open:string;close:string;void:boolean;selfClosing:boolean;children:Array<HtmlTreeNode|HtmlToken>};
+const HTML_VOID_TAGS=new Set(["area","base","br","col","embed","hr","img","input","link","meta","param","source","track","wbr"]);
+const HTML_BLOCK_TAGS=new Set(["html","head","body","main","header","footer","nav","section","article","aside","div","p","h1","h2","h3","h4","h5","h6","ul","ol","li","dl","dt","dd","table","thead","tbody","tfoot","tr","td","th","form","fieldset","figure","figcaption","blockquote","pre","hr"]);
+const HTML_RAW_TEXT_TAGS=new Set(["script","style","textarea","title","xmp","iframe","noembed","noframes"]);
+function tokenizeHtml(source:string):HtmlToken[]{
+ const tokens:HtmlToken[]=[];let i=0;
+ while(i<source.length){
+  if(source[i]!=="<"){const end=source.indexOf("<",i),stop=end<0?source.length:end;tokens.push({kind:"text",value:source.slice(i,stop)});i=stop;continue;}
+  if(source.startsWith("<!--",i)){const end=source.indexOf("-->",i+4);if(end<0){tokens.push({kind:"misc",value:source.slice(i)});break;}tokens.push({kind:"misc",value:source.slice(i,end+3)});i=end+3;continue;}
+  let quote="",end=-1;
+  for(let j=i+1;j<source.length;j++){const ch=source[j];if(quote){if(ch===quote)quote="";continue;}if(ch==="'"||ch==='"'){quote=ch;continue;}if(ch===">"){end=j;break;}}
+  if(end<0){tokens.push({kind:"text",value:source.slice(i)});break;}
+  const value=source.slice(i,end+1);
+  if(/^<!|^<\?/.test(value)){tokens.push({kind:"misc",value});i=end+1;continue;}
+  const match=value.match(/^<\s*(\/?)\s*([A-Za-z][\w:.-]*)/);
+  if(!match){tokens.push({kind:"text",value});i=end+1;continue;}
+  const closing=match[1]==="/",name=match[2].toLowerCase(),selfClosing=/\/\s*>$/.test(value);
+  tokens.push({kind:"tag",value,name,closing,selfClosing});
+  i=end+1;
+  if(!closing&&!selfClosing&&HTML_RAW_TEXT_TAGS.has(name)){
+   const closingTag=new RegExp("</\\s*"+name+"\\s*>","ig");closingTag.lastIndex=i;const closeMatch=closingTag.exec(source);
+   if(!closeMatch){if(i<source.length)tokens.push({kind:"text",value:source.slice(i)});break;}
+   if(closeMatch.index>i)tokens.push({kind:"text",value:source.slice(i,closeMatch.index)});
+   tokens.push({kind:"tag",value:closeMatch[0],name,closing:true,selfClosing:false});i=closeMatch.index+closeMatch[0].length;
+  }
+ }
+ return tokens;
+}
+const isHtmlNode=(node:HtmlTreeNode|HtmlToken):node is HtmlTreeNode=>node.kind==="element";
+function rawHtml(node:HtmlTreeNode|HtmlToken):string{return isHtmlNode(node)?node.open+node.children.map(rawHtml).join("")+node.close:node.value;}
+function buildHtmlTree(tokens:HtmlToken[]):Array<HtmlTreeNode|HtmlToken>{
+ const roots:Array<HtmlTreeNode|HtmlToken>=[],stack:HtmlTreeNode[]=[];
+ const append=(node:HtmlTreeNode|HtmlToken)=>{if(stack.length)stack[stack.length-1].children.push(node);else roots.push(node);};
+ for(const token of tokens){
+  if(token.kind!=="tag"){append(token);continue;}
+  if(token.closing){
+   let found=-1;for(let i=stack.length-1;i>=0;i--)if(stack[i].name===token.name){found=i;break;}
+   if(found<0){append(token);continue;}
+   while(stack.length-1>found)stack.pop();
+   stack.pop()!.close=token.value;continue;
+  }
+  const isVoid=HTML_VOID_TAGS.has(token.name??"");
+  const node:HtmlTreeNode={kind:"element",name:token.name??"",open:token.value,close:"",void:isVoid,selfClosing:!!token.selfClosing,children:[]};
+  append(node);if(!isVoid&&!node.selfClosing)stack.push(node);
+ }
+ return roots;
 }
 export function formatHtml(s:string,minify=false){
- guard(s);const tokens=s.match(/<!--[\s\S]*?-->|<![^>]*>|<[^>]+>|[^<]+/g)||[];
- if(minify)return tokens.map(t=>t.trim()).filter(Boolean).join("").replace(/>\s+</g,"><");
- const lines:string[]=[];let depth=0;const voids=new Set(["area","base","br","col","embed","hr","img","input","link","meta","param","source","track","wbr"]);
- for(const t of tokens){const v=t.trim();if(!v)continue;if(/^<\/\s*[a-z0-9-]+/i.test(v))depth=Math.max(0,depth-1);lines.push("  ".repeat(depth)+v);const m=v.match(/^<([a-z][a-z0-9-]*)\b/i);if(m&&!/^<\//.test(v)&&!/^<!/.test(v)&&! /\/\s*>$/.test(v)&&!voids.has(m[1].toLowerCase()))depth++;}
- return lines.join("\n");
+ guard(s);
+ const roots=buildHtmlTree(tokenizeHtml(s));
+ const directText=(node:HtmlTreeNode)=>node.children.some(child=>!isHtmlNode(child)&&child.kind==="text"&&child.value.trim().length>0);
+ const removableWhitespace=(node:HtmlTreeNode,index:number):boolean=>{
+  if(!HTML_BLOCK_TAGS.has(node.name)||["pre","textarea","script","style"].includes(node.name))return false;
+  const child=node.children[index];if(isHtmlNode(child)||child.kind!=="text"||child.value.trim())return false;
+  const previous=node.children.slice(0,index).reverse().find(item=>isHtmlNode(item)||item.kind!=="text"||item.value.trim());
+  const next=node.children.slice(index+1).find(item=>isHtmlNode(item)||item.kind!=="text"||item.value.trim());
+  const block=(item:HtmlTreeNode|HtmlToken|undefined)=>item===undefined||isHtmlNode(item)&&HTML_BLOCK_TAGS.has(item.name);
+  return block(previous)&&block(next)&&(previous!==undefined||next!==undefined);
+ };
+ const safeChildren=(node:HtmlTreeNode)=>node.children.filter((child,index)=>!removableWhitespace(node,index));
+ const renderMinified=(node:HtmlTreeNode|HtmlToken):string=>{
+  if(!isHtmlNode(node))return node.value;
+  if(node.void||node.selfClosing)return node.open;
+  if(directText(node))return rawHtml(node);
+  const children=safeChildren(node);
+  if(children.some(child=>!isHtmlNode(child)&&child.kind==="text"))return rawHtml(node);
+  return node.open+children.map(renderMinified).join("")+node.close;
+ };
+ const renderPretty=(node:HtmlTreeNode|HtmlToken,depth:number):string=>{
+  if(!isHtmlNode(node))return "  ".repeat(depth)+node.value;
+  if(node.void||node.selfClosing)return "  ".repeat(depth)+node.open;
+  if(directText(node))return "  ".repeat(depth)+rawHtml(node);
+  const children=safeChildren(node);
+  if(children.some(child=>!isHtmlNode(child)&&child.kind==="text"))return "  ".repeat(depth)+rawHtml(node);
+  if(children.length===0)return "  ".repeat(depth)+node.open+node.close;
+  if(!HTML_BLOCK_TAGS.has(node.name)||children.some(child=>isHtmlNode(child)?!HTML_BLOCK_TAGS.has(child.name):child.kind!=="misc"))return "  ".repeat(depth)+rawHtml(node);
+  return "  ".repeat(depth)+node.open+"\n"+children.map(child=>renderPretty(child,depth+1)).join("\n")+"\n"+"  ".repeat(depth)+node.close;
+ };
+ if(roots.some(node=>!isHtmlNode(node)&&node.kind==="text"&&node.value.trim()))return s;
+ if(minify)return roots.map(renderMinified).join("");
+ return roots.map(node=>renderPretty(node,0)).join("\n");
 }
 export function formatSql(s:string,minify=false){
  guard(s);const tokens=s.match(/'(?:''|\\.|[^'])*'|"(?:\\.|[^"])*"|\[(?:[^\]])*\]|--[^\n]*|\/\*[\s\S]*?\*\/|\b(?:SELECT|FROM|WHERE|AND|OR|JOIN|LEFT|RIGHT|INNER|OUTER|ON|GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT|OFFSET|INSERT\s+INTO|VALUES|UPDATE|SET|DELETE\s+FROM|UNION\s+ALL|UNION|AS|CASE|WHEN|THEN|ELSE|END|WITH|DISTINCT|CREATE\s+TABLE|ALTER\s+TABLE)\b|[,();]|[^\s,();]+/gi)||[];
@@ -104,15 +275,18 @@ export type CurlRequest={method:string;url:string;headers:string[][];body?:strin
 export function parseCurl(s:string):CurlRequest{
  guard(s);const w=s.trim().replace(/\\\r?\n/g," ");const a=shellWords(w);if(!a.length||!/^curl(?:\.exe)?$/i.test(a[0]))throw new Error("Start with curl and provide a URL.");
  const r:CurlRequest={method:"GET",url:"",headers:[],unsupported:[]};
+ const data:string[]=[];let getMode=false,methodExplicit=false;
+ const dataFlags=["-d","--data","--data-ascii","--data-raw","--data-binary","--data-urlencode","--json"];
+ const encodeUrlData=(value:string):string|null=>{if(value.startsWith("@")||/^[^=]+@/.test(value))return null;const equals=value.indexOf("=");return equals<0?encodeURIComponent(value):value.slice(0,equals)+"="+encodeURIComponent(value.slice(equals+1));};
  for(let i=1;i<a.length;i++){const k=a[i],take=()=>{if(i+1>=a.length)throw new Error("Missing value for "+k);return a[++i];};
- if(k==="-X"||k==="--request")r.method=take().toUpperCase();else if(k==="-u"||k==="--user"||k==="-b"||k==="--cookie"){take();r.unsupported.push(k+" (credential/cookie value redacted and not represented)");}else if(k==="-H"||k==="--header"){const h=take(),n=h.indexOf(":");if(n<1)throw new Error("Headers must use the Name: value form.");r.headers.push([h.slice(0,n).trim(),h.slice(n+1).trim()]);}
- else if(["-d","--data","--data-raw","--data-binary","--data-urlencode"].includes(k)){r.body=take();if(r.method==="GET")r.method="POST";}else if(k==="-I"||k==="--head")r.method="HEAD";else if(k==="--url")r.url=take();
- else if(["-s","-S","-sS","-L","--location","-k","--insecure","-i","--include","--compressed"].includes(k))r.unsupported.push(k+" (not represented in generated snippets)");else if(k.startsWith("-"))r.unsupported.push(k);else if(!r.url)r.url=k;else r.unsupported.push("additional positional argument: "+k);}
- if(!r.url)throw new Error("No request URL was found.");try{new URL(r.url);}catch{throw new Error("The request URL must be absolute (for example, https://example.com/api).");}return r;
+ if(k==="-X"||k==="--request"){r.method=take().toUpperCase();methodExplicit=true;}else if(k==="-u"||k==="--user"||k==="-b"||k==="--cookie"){take();r.unsupported.push(k+" (credential/cookie value redacted and not represented)");}else if(k==="-A"||k==="--user-agent"){const value=take();if(/[\r\n]/.test(value))throw new Error("User-Agent values cannot contain line breaks.");r.headers.push(["User-Agent",value]);}else if(k==="-H"||k==="--header"){const h=take(),n=h.indexOf(":");if(n<1)throw new Error("Headers must use the Name: value form.");r.headers.push([h.slice(0,n).trim(),h.slice(n+1).trim()]);}
+ else if(dataFlags.includes(k)){const value=take();if(k==="--json"){if(value.startsWith("@")){r.unsupported.push(k+" (file-backed data is not read)");continue;}data.push(value);if(!r.headers.some(([name])=>name.toLowerCase()==="content-type"))r.headers.push(["Content-Type","application/json"]);if(!r.headers.some(([name])=>name.toLowerCase()==="accept"))r.headers.push(["Accept","application/json"]);}else if(k==="--data-urlencode"){const encoded=encodeUrlData(value);if(encoded===null){r.unsupported.push(k+" (file-based data is not read)");continue;}data.push(encoded);}else if(k!=="--data-raw"&&value.startsWith("@")){r.unsupported.push(k+" (file-backed data is not read)");continue;}else data.push(value);}else if(k==="-G"||k==="--get")getMode=true;else if(k==="-I"||k==="--head"){r.method="HEAD";methodExplicit=true;}else if(k==="--url")r.url=take();
+ else if(["-s","-S","-sS","-L","--location","-k","--insecure","-i","--include","--compressed"].includes(k))r.unsupported.push(k+" (not represented in generated snippets)");else if(["-F","--form","--form-string","--proxy","-x","--connect-timeout","--max-time","--retry","--cacert","--cert","--key","--resolve","--limit-rate","--max-filesize"].includes(k)){take();r.unsupported.push(k+" (value is not represented in generated snippets)");}else if(k.startsWith("-"))r.unsupported.push(k);else if(!r.url)r.url=k;else r.unsupported.push("additional positional argument: "+k);}
+ if(!r.url)throw new Error("No request URL was found.");try{new URL(r.url);}catch{throw new Error("The request URL must be absolute (for example, https://example.com/api).");}if(data.length){if(getMode){const parsedUrl=new URL(r.url),existing=parsedUrl.search?parsedUrl.search.slice(1):"";parsedUrl.search=[existing,...data].filter(Boolean).join("&");r.url=parsedUrl.toString();}else{r.body=data.join("&");if(!methodExplicit&&r.method==="GET")r.method="POST";}}return r;
 }
 export function transformDeveloperTool(op:DeveloperOperation,s:string,o:{mode?:string;pattern?:string;flags?:string;delimiter?:string}={}):string{
  guard(s);switch(op){case "regex":{if(!o.pattern)throw new Error("Enter a regular expression.");if(s.length>50000)throw new Error("Regex input is limited to 50,000 characters.");const flags=[...new Set((o.flags||"g").split(""))].join("");if(/[^dgimsuvy]/.test(flags)||(flags.includes("u")&&flags.includes("v")))throw new Error("One or more regular-expression flags are unsupported or incompatible.");const re=new RegExp(o.pattern,flags),matches:{match:string;index:number;groups:string[]}[]=[];let m:RegExpExecArray|null;while((m=re.exec(s))&&matches.length<500){matches.push({match:m[0],index:m.index,groups:m.slice(1)});if(!re.global&&!re.sticky)break;if(m[0]==="")re.lastIndex++;}return JSON.stringify({count:matches.length,truncated:matches.length===500,matches},null,2);}
  case "xml":return formatXml(s,o.mode==="minify");case "sql":return formatSql(s,o.mode==="minify");case "html":return formatHtml(s,o.mode==="minify");case "csv-json":return o.mode==="json-to-csv"?jsonToCsv(s,o.delimiter||","):csvToJson(s,o.delimiter||",");
- case "curl":{const r=parseCurl(s);const safeUrl=new URL(r.url);for(const key of [...safeUrl.searchParams.keys()])if(/token|secret|password|api[-_]?key|auth|signature/i.test(key))safeUrl.searchParams.set(key,"[REDACTED]");const url=safeUrl.toString();const headers:[string,string][]=r.headers.map(([k,v])=>[k,/authorization|cookie|token|secret|api[-_]?key/i.test(k)?"[REDACTED]":v]);const body=r.body&&/token|secret|password|api[-_]?key/i.test(r.body)?"[REDACTED]":r.body;const options={method:r.method,headers:Object.fromEntries(headers),...(body?{body}:{})};return JSON.stringify({request:{...r,url,headers,body},javascriptFetch:"fetch("+JSON.stringify(url)+", "+JSON.stringify(options,null,2)+");",note:"Generated text only. This tool never sends the request. Review redacted values and unsupported flags before use."},null,2);}
+ case "curl":{const r=parseCurl(s);const safeUrl=new URL(r.url);if(safeUrl.username||safeUrl.password){if(safeUrl.username)safeUrl.username="[REDACTED]";if(safeUrl.password)safeUrl.password="[REDACTED]";}for(const key of [...safeUrl.searchParams.keys()])if(CURL_SENSITIVE_QUERY_NAME.test(key))safeUrl.searchParams.set(key,"[REDACTED]");if(safeUrl.hash)safeUrl.hash=redactCurlPairs(safeUrl.hash.slice(1));const url=safeUrl.toString();const headers:[string,string][]=r.headers.map(([k,v])=>[k,CURL_SENSITIVE_HEADERS.test(k)||CURL_SENSITIVE_HEADER_NAME.test(k)?"[REDACTED]":v]);const body=r.body&&/(?:token|secret|password|passwd|api[-_]?key|client[-_]?secret|credential|private[-_]?key|authorization|signature)/i.test(r.body)?"[REDACTED]":r.body;const options={method:r.method,headers:Object.fromEntries(headers),...(body?{body}:{})};return JSON.stringify({request:{...r,url,headers,body},javascriptFetch:"fetch("+JSON.stringify(url)+", "+JSON.stringify(options,null,2)+");",note:"Generated text only. This tool never sends the request. Review redacted values and unsupported flags before use."},null,2);}
  case "hash":throw new Error("Use the browser cryptography API for hash generation.");}
 }

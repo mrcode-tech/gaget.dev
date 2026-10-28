@@ -1,11 +1,11 @@
 # Developer Tools Expansion — Implementation Roadmap
 
-**Status:** Active implementation. Seven formerly planned standalone tools, consolidated data/inspection workbenches, a bounded sample-data generator and a constrained workflow pipeline have browser-local implementations with operation tests and direct-route coverage. Phases 0–7 remain in progress or partial until the latest exact-revision CI evidence and remaining scoped gaps are resolved; use the operation-level inventory as the remaining-work source of truth.
+**Status:** Phases 0–5 are complete for their approved, bounded subsets. Phase 6 is complete for the approved bounded MVP: typed text/encoding/JSON/query pipelines, byte-preserving raw-hex workflows, local files up to 100 KB, byte transforms/checksums/statistics, worker deadline/cancellation, batch processing, import/export and opt-in local-only recipe saving are implemented. Parallel batches, arbitrary code and broader file workflows remain deferred. Broader parser/crypto/archive capabilities remain conditional. Wireframe approval remains a separate design sign-off. Phase 7 is evidence-gated and must be updated only from the latest exact-revision CI manifest.
 
 ## 1. Scope and baseline
 Primary source: [developer-tools capability proposal](../product/developer-tools-capability-proposal.md). Inspected sources include lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory, design-token contract, quality/accessibility contract, AI instructions and command.md.
 
-The registry has 14 relevant standalone entries. Encoding & Decoding consolidates URL and Base64 operations while preserving `/encoding/base64` as a compatibility redirect; JWT and UUID remain standalone. Hash, Regex, XML, SQL, CSV ↔ JSON, HTML and cURL now have implemented subsets. Do not expand their claims beyond the acceptance limits documented in the feature inventory. JSON Workspace is excluded from this initiative's implementation scope. Photo/Image, Audio, Video and Date & Time remain independent and excluded.
+The registry has 13 relevant standalone entries. Encoding & Decoding consolidates URL and Base64 operations while preserving `/encoding/base64` as a compatibility redirect; JWT remains standalone; UUID v4 generation is an operation inside Data Generator. Hash, Regex, XML, SQL, CSV ↔ JSON, HTML and cURL now have implemented subsets. Do not expand their claims beyond the acceptance limits documented in the feature inventory. JSON Workspace is excluded from this initiative's implementation scope. Photo/Image, Audio, Video and Date & Time remain independent and excluded.
 
 The initial planning pass did not run the app or CI. A later implementation run now verifies the seven new routes and operation helpers; re-check exact-revision CI artifacts for each subsequent change.
 
@@ -13,7 +13,7 @@ The initial planning pass did not run the app or CI. A later implementation run 
 - **P0 — prerequisite/safety:** source and route truth, operation contracts, reusable UI, privacy/security and tests.
 - **P1 — high value:** URL/Base64 compatibility, seven planned tools, common text/data/binary transformations.
 - **P2 — extended:** compression, network parsing, certificate/file inspection, extra generators and formats.
-- **P3 — conditional/deferred:** ASN.1/TLV, archive extraction, advanced cryptography, JWT signature verification and workflow/batch engine.
+- **P3 — conditional/deferred:** ASN.1/TLV, archive extraction, advanced cryptography, JWT signature verification, parallel batches, arbitrary code and broader binary workflow operations.
 
 Prioritize user value, correctness, reuse, feasibility, maintenance and risk, not raw operation count.
 
@@ -30,7 +30,7 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Scope:** Define input/output/error/resource contracts; audit existing components; decide whether new reusable patterns are necessary.  
 **Read:** design-system-and-reuse.md, shared-components/, wireframes/, design-token and quality/accessibility foundations.  
 **Tests:** labels, focus, disabled/error states, keyboard behavior, file lifecycle and accessibility where relevant.  
-**Exit:** reusable patterns have documented APIs/states; no duplicate primitives; responsive/theme/RTL behavior specified. File-input decision follows source audit.
+**Exit:** reusable patterns have documented APIs/states; no duplicate primitives; responsive/theme/RTL behavior specified. Source audit found no generic reusable file-input/dropzone component; optional file selection uses the existing shadcn-style Input, while file-only media workspaces retain their workspace-specific dropzones.
 
 ### Phase 2 — Registry, routes and encoding compatibility (P1)
 **Scope:** Improve encoding operation model while preserving URL/Base64 canonical routes and prepare registry integration.  
@@ -38,7 +38,7 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Exit:** stable IDs/routes, explicit text/byte semantics, tested errors and no broken bookmarks.
 
 ### Phase 3 — Planned foundational tools and common transformations (P1)
-**Scope:** Regex, Hash, XML, SQL, CSV ↔ JSON, HTML and cURL; common text transforms, data parsing, numeric conversion and core compression only after contracts are approved.  
+**Scope:** Regex, Hash, XML, SQL, CSV ↔ JSON, HTML and cURL; common text transforms, data parsing, numeric conversion and core compression only after contracts are approved. Regex execution is isolated in a worker with a bounded timeout.  
 **Read:** planned-tools.md and relevant category specs.  
 **Tests:** fixtures, malformed/boundary input, security/resource limits, copy/download, responsive/accessibility and route status.  
 **Exit:** each accepted tool works beyond a shell; supported syntax is explicit; unsupported cases visible; tests pass; registry status changes only after verification.
@@ -49,15 +49,15 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Exit:** security review complete, unsupported algorithms absent, claims match behavior. Unresolved primitive/trust/dependency questions block only dependent operations.
 
 ### Phase 5 — Extended formats, generators and conditional operations (P2/P3)
-**Scope:** Bitcoin Base58 and a synthetic sample-data generator for strings, bounded integers, timestamps, UUID batches and JSON records are implemented. YAML, ASN.1/TLV, archives and other parser/crypto extensions remain conditional on dependency, license, maintenance and safety review.  
+**Scope:** Bitcoin Base58 and the Data Generator for strings, bounded integers, timestamps, UUID batches and JSON records is implemented. YAML, ASN.1/TLV, archives and other parser/crypto extensions remain conditional on dependency, license, maintenance and safety review.  
 **Tests:** format vectors, malformed data, dependency license/maintenance review, resource limits and regression.  
 **Exit:** implemented generator and Base58 operations have unit tests and explicit limits. Conditional formats stay non-launchable until a maintained parser/primitive and adversarial test plan are approved.
 
 ### Phase 6 — Workflow and batch engine (P3)
-**Prerequisite:** stable typed operation contracts, errors and resource limits across multiple real tools. A constrained MVP is implemented for pure text/encoding/JSON/query operations only.  
-**Scope:** typed chains, reorder/configure, bounded intermediate previews, sequential line batch processing, cooperative cancellation between steps/records, and versioned recipe import/export are implemented for a fixed allowlist. Persistence, parallel batches, worker isolation for individual operations, binary-file steps and arbitrary custom code remain deferred.  
+**Prerequisite:** stable typed operation contracts, errors and resource limits across multiple real tools. A constrained MVP is implemented for pure text/encoding/JSON/query operations, now including typed Base64url, Base32, Bitcoin Base58, Adobe ASCII85, ZeroMQ Z85 and HTML-entity encode/decode and explicit UTF-16LE/BE and Windows-1252 charset conversions round-trips.  
+**Scope:** typed chains, reorder/configure, bounded intermediate previews, sequential line batch processing, versioned recipe import/export, and opt-in local-only recipe saving are implemented for a fixed allowlist. Selected raw-byte conversions and transforms use a raw-hex transport and support a local file up to 100 KB; invalid UTF-8 remains byte-preserving until explicit text decoding. Workflow runs execute in a dedicated worker with a 15-second deadline; cancellation terminates the worker and discards partial results. Saved recipes are capped at 10/320 KB and contain operation definitions, names and timestamps only—never input, output, file bytes or secrets. Parallel batches, arbitrary custom code and broader binary/file workflows remain deferred.  
 **Tests:** type compatibility, cancellation, bounded concurrency/memory, recipe validation, malicious input and secret redaction.  
-**Exit:** MVP enforces an operation allowlist, blocks incompatible steps, caps recipes/steps/input/output/batch size, and exports recipes without source data or secrets. Full phase remains partial until worker isolation review, broader typed file operations, and additional adversarial UI tests are complete.
+**Exit:** The approved bounded MVP enforces an operation allowlist, blocks incompatible steps, caps recipes/steps/input/output/batch size, validates imported and saved recipes, excludes source data/secrets from recipe files and local storage, runs in a deadline-bound worker, terminates on cancellation/timeout, and discards partial results. Unit, component and browser tests cover typed compatibility, raw-byte round-trips, local file input/download, batch processing, cancellation, timeout, recipe tampering and local recipe save/load/delete. This completes Phase 6 for its approved scope; parallel batches, arbitrary custom code and broader file workflows remain deferred.
 
 ### Phase 7 — Cross-tool quality and release gates (P0, continuous)
 Run throughout every phase. Applicable package scripts include npm run test:unit, npm run test:component, npm run test:e2e, npm run lint, npm run typecheck and npm run build. Inspect CI workflow and required jobs before claiming verification. Never claim unrun checks passed.
@@ -87,16 +87,32 @@ At each future invocation:
 
 | Phase | Baseline status | Evidence required |
 |---|---|---|
-| 0 — Audit | In progress; route and operation subset reconciled | Remaining proposal families, localization and edge-case coverage |
-| 1 — Contracts/shared design | In progress; shared text workbench contract synchronized | Responsive, RTL, keyboard and active error-state review |
-| 2 — Registry/encoding | Partial; unified text workbench implements URL/Base64/Base64url/Base32/hex/binary/basic HTML entities/Unicode escapes/quoted-printable, charset conversion and Bitcoin Base58; Base64 route redirects compatibly; bounded file-byte encode/decode/download supported for Base64/Base64url/hex/binary/Base58/ASCII85 | Charset conversion (UTF-8, UTF-16LE/BE, Windows-1252 via hex bytes and local file decoding) and Bitcoin Base58 are implemented; file-byte encoding/download is implemented for Base64/Base64url/Base32/hex/binary/Base58/ASCII85/quoted-printable with a 2 MB input and 1,000,000-character output limit; URL, HTML entity and Unicode-escape modes remain text-only |
-| 3 — Planned tools | Partial; standalone text/regex, XML/SQL/HTML/CSV/cURL, sample generator, data/binary/math and network/file workbenches are implemented with operation tests; URL component/query/key-value conversion, BigInt math, numeric views, byte-range inspection, file comparison, signed/unsigned bitwise AND/OR/XOR/NOT, character-frequency analysis and gzip/zlib support are available | Full XML grammar/schema validation, YAML/SQL parsers, archive support and expanded regression/visual evidence remain |
-| 4 — Security/inspection | Partial; SHA-2/HMAC/CRC32/CRC-16/Adler-32 over text and local file bytes plus offline IP/CIDR/MAC, HTTP-header/cookie/DNS parsing, redacted HTTP message inspection and local byte-range/string/entropy plus selected image/audio/PDF/ZIP/ID3 metadata inspection implemented | Full X.509 field/key parsing, signature/trust validation, broader metadata formats and deeper security review remain; PEM/DER container/fingerprint subset implemented |
-| 5 — Extended/conditional | Partial; gzip/zlib wrapper support, Bitcoin Base58 and Adobe ASCII85, charset conversion and bounded synthetic sample-data generators implemented; YAML, archive, ASN.1/TLV, certificate parsing and advanced crypto remain conditional | Decide additional encodings/formats only after dependency/license and safety review; no archive extraction or unsupported crypto is exposed |
-| 6 — Workflow/batch | Partial; `/workflow/pipeline` supports typed allowlisted text/encoding/JSON/query chains, reordering, bounded previews, sequential line batches and versioned recipe import/export | Worker/cancellation review, binary/file steps, additional adversarial recipe tests and any persistence decision remain deferred |
+| 0 — Audit | Complete for the current registry and all 13 mapped proposal workspace families; deferred gaps are tracked in the inventory | Reopen only when scope changes or a new proposal family is added |
+| 1 — Contracts/shared design | Shared implementation contracts and component reuse are applied; wireframe artifacts remain proposals pending explicit design sign-off | Future visual/interaction changes require the continuous Phase 7 evidence gate; do not infer wireframe approval from implementation authorization |
+| 2 — Registry/encoding | Complete for the approved encoding subset; the unified text workbench implements URL/Base64/Base64url/Base32/hex/binary/basic HTML entities/Unicode escapes/quoted-printable, charset conversion, Base58, ASCII85 and Z85; Base64 route redirects compatibly; bounded file-byte encode/decode/download is supported for the listed byte modes | Charset conversion (UTF-8, UTF-16LE/BE, Windows-1252 via hex bytes and local file decoding) and Bitcoin Base58 and ZeroMQ Z85 are implemented; file-byte encoding/download is implemented for Base64/Base64url/Base32/hex/binary/Base58/ASCII85/Z85/quoted-printable with a 2 MB input and 1,000,000-character output limit; URL, HTML entity and Unicode-escape modes accept selected files as strict UTF-8 text; raw-byte processing remains limited to byte-oriented modes |
+| 3 — Planned tools | Complete for the approved subsets: standalone text/regex, XML/SQL/HTML/CSV/cURL, sample generator, data/binary/math and network/file workbenches; query/key-value conversion, BigInt math, numeric views, byte-range inspection, file comparison, bitwise operations, character frequency and gzip/zlib are available | Full XML grammar/schema validation, full HTML/SQL parsers, YAML parsing and archive support are explicitly deferred pending parser/dependency review and adversarial fixtures; supported subsets remain clearly labeled |
+| 4 — Security/inspection | Complete for the approved subset: SHA-2/HMAC/checksums over text and local file bytes; JWT exp/iat/nbf NumericDate interpretation; offline network parsers; redacted HTTP message inspection; selected file metadata; PEM/DER fingerprints; OpenSSH RSA/Ed25519/ECDSA public-key metadata/fingerprints | Full X.509 fields, SSH certificates, signature/trust validation, SHA-3/legacy digests and additional metadata formats remain explicitly deferred; decoding and fingerprinting are not verification |
+| 5 — Extended/conditional | Complete for the approved formats: gzip/zlib wrappers, Base58/ASCII85/Z85, charset conversion, selected metadata parsers and bounded synthetic sample-data generation | YAML, ASN.1/TLV, archive extraction and advanced crypto are explicitly deferred pending dependency/license and safety review; no archive extraction or unsupported crypto is exposed |
+| 6 — Workflow/batch | Complete for approved bounded MVP: typed allowlisted text/encoding/JSON/query chains, raw-byte conversions/transforms/checksums/statistics and local files up to 100 KB; reorderable steps, bounded previews, sequential line batches, versioned recipe import/export, opt-in local-only saved recipes, 15-second worker deadline and termination cancellation | Parallel batches, arbitrary custom code and broader file workflows remain deferred; exact-revision worker, file-input, timeout/cancellation and adversarial-recipe tests gate further expansion |
 | 7 — Quality | Continuous | Exact-revision test and visual evidence |
 
-## 6. Definition of done
+## 6. Conditional scope decisions
+
+The following proposal items are deliberately **not exposed as available tools** until their prerequisites are approved. These are explicit safety/maintenance deferrals, not claims that the proposed capability is implemented.
+
+- **YAML parsing/formatting:** defer until a maintained parser is selected and its license, security history, scalar typing, aliases/anchors, depth limits and multi-document policy are reviewed. Do not implement a home-grown partial parser and label it YAML-compatible.
+- **ASN.1/TLV and full X.509 fields/public-key parsing:** defer until a maintained parser and bounded-depth/length policy are approved. The existing PEM/DER container inspection and SHA-256 fingerprint do not establish certificate validity or trust.
+- **Archive listing/extraction:** defer until path traversal, symlink, entry-count, nesting, decompressed-size and archive-bomb defenses are specified and adversarial fixtures exist. No archive extraction operation is exposed.
+- **Encryption/decryption, JWT signature verification, certificate chain/hostname/revocation trust, and advanced cryptography:** defer until supported algorithms, key formats, nonce/tag handling, trust inputs and independent security review are explicit. Decoding/fingerprinting must not be presented as verification.
+- **Raw DEFLATE and broader binary/file workflow steps:** remain deferred until cross-browser compression support, expanded byte-oriented contracts and bounded-memory limits are tested. The current raw-hex path is a constrained byte-preserving subset, not a general binary workflow engine.
+- **Full XML grammar/schema validation, full HTML parsing, dialect-complete SQL parsing and broad cURL flag/language coverage:** remain partial/deferred. Do not label heuristic formatters or the supported cURL subset as complete language parsers; expand only after syntax contracts, maintained parser/dependency review, license review and adversarial fixtures are approved.
+- **Full HTML5 named-entity catalog and additional statistical modes:** remain deferred until a maintained data source and exact semantics/fixtures are selected; the current basic entity and statistics subsets are explicit.
+- **SHA-3 and legacy digest families:** remain deferred until a maintained implementation is approved and known-answer vectors/security messaging are reviewed.
+- **Additional file metadata formats:** implement only with format fixtures, strict input/output limits and clear distinction between metadata hints and safety verdicts.
+
+A deferred item may be unblocked only by updating its operation contract, dependency/license review, adversarial tests, route/registry status and the matching feature inventory. Deferred items remain excluded from the available-tool count.
+
+## 7. Definition of done
 All scoped capabilities are implemented or explicitly deferred by documented decision; every available operation has working behavior and tests; registry/routes/localization agree; planned entries remain non-launchable until verified; shared components/tokens are reused; responsive, short-height, RTL, theme, keyboard and accessibility states are checked; privacy/security/resource limits match behavior; applicable tests, lint, typecheck, build and E2E pass on the exact revision; CI artifacts are inspected where required; existing workspaces do not regress; documentation is synchronized.
 
 See [feature inventory](./feature-inventory.md) for operation-level traceability.

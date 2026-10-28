@@ -31,7 +31,7 @@ The `/data/binary-math` workbench implements browser-native gzip and zlib-wrappe
 
 | ID | Operation | Contract |
 |---|---|---|
-| math.statistics | Min/max/mean/median/variance where supported | Empty data, non-numeric values, precision and sample/population formulas explicit |
+| math.statistics | Descriptive statistics and distribution summary | Min/max/range/sum/mean/median/quartiles/IQR/modes/mean and median absolute deviation/population and sample variance and standard deviation; empty data and numeric overflow are explicit |
 | math.frequency | Character/byte frequency | Character vs byte mode explicit |
 | math.entropy | Shannon entropy estimate | Formula/units documented; not proof of encryption or malware |
 | math.arithmetic | Basic arithmetic | Precision and divide-by-zero behavior defined |
