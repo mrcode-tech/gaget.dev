@@ -83,7 +83,7 @@ export function parseDataUri(input:string):string {
   },null,2);
 }
 export function parseQueryString(input:string):string {
-  guardText(input); const source=input.startsWith("?")?input.slice(1):input; const result:Record<string,string|string[]>={};
+  guardText(input); const source=input.startsWith("?")?input.slice(1):input; const result:Record<string,string|string[]>=Object.create(null) as Record<string,string|string[]>;
   for(const part of source.split("&")) { if(!part)continue; const i=part.indexOf("="); const rawKey=i<0?part:part.slice(0,i),rawValue=i<0?"":part.slice(i+1);
     let key:string,value:string; try { key=decodeURIComponent(rawKey.replace(/\+/g," ")); value=decodeURIComponent(rawValue.replace(/\+/g," ")); } catch { throw new Error("Query string contains an invalid percent escape."); }
     if(Object.hasOwn(result,key)){const previous=result[key];result[key]=Array.isArray(previous)?[...previous,value]:[previous,value];}else result[key]=value;
@@ -97,7 +97,7 @@ export function buildQueryString(input:string):string {
   return pairs.join("&");
 }
 export function parseKeyValue(input:string):string {
-  guardText(input);const result:Record<string,string|string[]>={};
+  guardText(input);const result:Record<string,string|string[]>=Object.create(null) as Record<string,string|string[]>;
   for(const [index,line] of input.split(/\r?\n/).entries()){if(!line.trim()||/^\s*[#;]/.test(line))continue;const i=line.indexOf("=");if(i<0)throw new Error("Line "+(index+1)+" must contain key=value.");const key=line.slice(0,i).trim(),value=line.slice(i+1).trim();if(!key)throw new Error("Line "+(index+1)+" has an empty key.");if(Object.hasOwn(result,key)){const prev=result[key];result[key]=Array.isArray(prev)?[...prev,value]:[prev,value];}else result[key]=value;}
   return JSON.stringify(result,null,2);
 }
@@ -216,11 +216,11 @@ export function normalizeMac(input:string):string {
 }
 export function parseHttpHeaders(input:string):string {
  guardText(input);const headers:{name:string;value:string}[]=[];for(const [i,line] of input.replace(/\r\n/g,"\n").split("\n").entries()){if(!line.trim())continue;if(/^\s/.test(line))throw new Error("Obsolete folded header at line "+(i+1)+" is not supported.");const p=line.indexOf(":");if(p<1)throw new Error("Header line "+(i+1)+" must use Name: value.");const name=line.slice(0,p).trim(),value=line.slice(p+1).trim();if(!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(name))throw new Error("Invalid header name at line "+(i+1)+".");headers.push({name,value});}
- const grouped:Record<string,string[]>={};for(const h of headers){const k=h.name.toLowerCase();(grouped[k]??=[]).push(h.value);}
+ const grouped:Record<string,string[]>=Object.create(null) as Record<string,string[]>;for(const h of headers){const k=h.name.toLowerCase();(grouped[k]??=[]).push(h.value);}
  return JSON.stringify({count:headers.length,headers,duplicates:Object.fromEntries(Object.entries(grouped).filter(([,v])=>v.length>1)),securityNote:"Parses supplied text only; no network request is made."},null,2);
 }
 export function parseCookies(input:string):string {
- guardText(input);const result:Record<string,string|string[]>={};for(const part of input.split(";")){const p=part.trim();if(!p)continue;const i=p.indexOf("=");if(i<1)throw new Error("Cookie entries must use name=value.");const key=p.slice(0,i).trim(),value=p.slice(i+1).trim();if(Object.hasOwn(result,key)){const prev=result[key];result[key]=Array.isArray(prev)?[...prev,value]:[prev,value];}else result[key]=value;}
+ guardText(input);const result:Record<string,string|string[]>=Object.create(null) as Record<string,string|string[]>;for(const part of input.split(";")){const p=part.trim();if(!p)continue;const i=p.indexOf("=");if(i<1)throw new Error("Cookie entries must use name=value.");const key=p.slice(0,i).trim(),value=p.slice(i+1).trim();if(Object.hasOwn(result,key)){const prev=result[key];result[key]=Array.isArray(prev)?[...prev,value]:[prev,value];}else result[key]=value;}
  return JSON.stringify(result,null,2);
 }
 export function numericStatistics(input:string):string {
