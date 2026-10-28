@@ -14,10 +14,10 @@
 | sec.inspection | Security-oriented data inspection | Parsing, validation and verification are distinct |
 
 ## Hash & Checksum Generator contract
-Registry ID hash-generator; canonical route `/security/hash`. Supports SHA-256/384/512 digests and HMAC-SHA-256/384/512 with an explicit UTF-8 text key, plus CRC32/IEEE, CRC-16/CCITT-FALSE and Adler-32. Text input is capped at 200,000 characters; local file input is capped at 2 MB. Raw file bytes are hashed without text decoding. The key remains in component memory only and is cleared by Clear. CRC32 is not cryptographic security. CRC32 is an error-detection checksum, not cryptographic security. Web Crypto availability errors are shown without clearing source text.
+Registry ID hash-generator; canonical route `/security/hash`. Supports SHA-256/384/512 digests and HMAC-SHA-256/384/512 with an explicit UTF-8 text key, plus CRC32/IEEE, CRC-16/CCITT-FALSE and Adler-32. Text input is capped at 200,000 characters; local file input is capped at 2 MB. Raw file bytes are hashed without text decoding. The key remains in component memory only and is cleared by Clear or when leaving HMAC mode. CRC32 is an error-detection checksum, not cryptographic security. Web Crypto availability errors are shown without clearing source text.
 
 ## UI and privacy
-See [wireframes](../wireframes/workspace-layouts.md#security--cryptography). Visually distinguish digest, HMAC, checksum and approved encryption workflows. Never persist secrets/plaintext or transmit input. Do not include secrets in errors. Review cryptographic primitives and parameters before release.
+See [wireframes](../wireframes/workspace-layouts.md#security--cryptography). Visually distinguish digest, HMAC and checksum modes. Do not imply encryption or signature verification is available. Never persist secrets/plaintext or transmit input. Do not include secrets in errors. Review cryptographic primitives and parameters before release.
 
 ## Acceptance
 Tests cover known vectors and malformed keys/nonces/ciphertext. Wrong authentication tags fail safely. Unsupported algorithms are not launchable. UI never describes encoding as encryption, checksums as secure hashes, or local execution as a security guarantee.

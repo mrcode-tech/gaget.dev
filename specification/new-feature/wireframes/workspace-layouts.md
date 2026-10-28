@@ -19,7 +19,7 @@ Desktop: operation/input mode above side-by-side input/output panels. Convert/cl
 Mobile: operation selector, direction, editor, convert action, output and copy/download. Text and bytes remain explicit. Charset encoding returns hex bytes; charset decoding accepts hex bytes.
 
 ## Security & Cryptography
-Selector distinguishes Hash, HMAC, Checksum and only approved Encrypt/Decrypt. Algorithm/input type remain visible. Text or a local file up to 2 MB may be selected; file hashing consumes raw bytes. Key fields are separate from ordinary input. Result shows algorithm and representation. No risky default encryption configuration.
+Selector distinguishes digest, HMAC and checksum modes; this workbench does not expose encryption. Algorithm and input type remain visible. Text or a local file up to 2 MB may be selected; file hashing consumes raw bytes. Key fields are separate from ordinary input. Result shows algorithm and representation. No risky default encryption configuration.
 
 ## Data Parsing & Conversion
 Direction/format and relevant options above source/result editors. Desktop may use columns; mobile stacks. Parse errors include useful line/row context. Advanced options use an accessible disclosure where useful.
@@ -34,7 +34,7 @@ Operation/format/width/endianness above text or file input. Summary shows input 
 Inspector selection above text/byte/file input. Structured result distinguishes parse, decode, signature verification and trust. Pasted headers never trigger a request.
 
 ## Workflow, Generators & API Helpers
-API helper: pasted command/request → parsed structured preview → generated output with unsupported-syntax warnings. `/workflow/pipeline` provides typed allowlisted text/encoding/JSON/query steps, including Base64url, Base32, Bitcoin Base58 and HTML-entity encode/decode, reorder controls, bounded intermediate output, sequential line batches and versioned recipe import/export. `/generators/sample-data` uses a single operation selector with bounded fields for random strings, integers, timestamps, synthetic JSON records and UUID batches. Binary/file operations, parallel batches, cancellation and persistence remain deferred pending separate safety review.
+API helper: pasted command/request → parsed structured preview → generated output with unsupported-syntax warnings. `/workflow/pipeline` provides typed allowlisted text/encoding/JSON/query steps, including Base64url, Base32, Bitcoin Base58 and HTML-entity encode/decode, reorder controls, bounded intermediate output, sequential line batches and versioned recipe import/export. `/generators/sample-data` uses a single operation selector with bounded fields for random strings, integers, timestamps, synthetic JSON records and UUID batches. Binary/file operations, parallel batches and persistence remain deferred pending typed-byte contracts and safety review. Cancellation is implemented by terminating the dedicated worker.
 
 ## Responsive contract
 

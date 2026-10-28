@@ -354,6 +354,7 @@ export function inspectFileSignatures(bytes:Uint8Array):string {
  if(starts([0xff,0xd8,0xff]))add("JPEG image","image/jpeg","jpg",0,hex(0,3));
  if(ascii(0,6)==="GIF87a"||ascii(0,6)==="GIF89a")add("GIF image","image/gif","gif",0,ascii(0,6));
  if(ascii(0,2)==="BM")add("BMP image","image/bmp","bmp",0,ascii(0,2));
+ if(bytes.length>=4&&((bytes[0]===0x49&&bytes[1]===0x49&&bytes[2]===0x2a&&bytes[3]===0)||(bytes[0]===0x4d&&bytes[1]===0x4d&&bytes[2]===0&&bytes[3]===0x2a)))add("TIFF image","image/tiff","tif",0,ascii(0,4));
  if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP")add("WebP image","image/webp","webp",0,ascii(0,4)+"…"+ascii(8,4));
  if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE")add("WAVE audio","audio/wav","wav",0,ascii(0,4)+"…"+ascii(8,4));
  if(ascii(0,5)==="%PDF-")add("PDF document","application/pdf","pdf",0,ascii(0,5));
