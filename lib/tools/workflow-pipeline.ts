@@ -58,6 +58,9 @@ export const PIPELINE_OPERATIONS = [
  {id:"raw-bytes-not",label:"Bitwise NOT each byte",input:"raw-hex",output:"raw-hex"},
  {id:"raw-bytes-rotate-left",label:"Rotate each byte left by one bit",input:"raw-hex",output:"raw-hex"},
  {id:"raw-bytes-rotate-right",label:"Rotate each byte right by one bit",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-crc32",label:"CRC-32/IEEE checksum",input:"raw-hex",output:"text"},
+ {id:"raw-bytes-adler32",label:"Adler-32 checksum",input:"raw-hex",output:"text"},
+ {id:"raw-bytes-summary",label:"Byte statistics summary",input:"raw-hex",output:"json"},
  {id:"json-format",label:"Format JSON",input:"json",output:"json"},
  {id:"json-minify",label:"Minify JSON",input:"json",output:"json"},
  {id:"query-parse",label:"Parse query string to JSON",input:"query",output:"json"},
@@ -151,6 +154,9 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "raw-bytes-not":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>byte^0xff));
   case "raw-bytes-rotate-left":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte<<1)|(byte>>>7))&0xff));
   case "raw-bytes-rotate-right":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte>>>1)|(byte<<7))&0xff));
+  case "raw-bytes-crc32":{const bytes=decodeByteRepresentation("hex",input);let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return ((crc^0xffffffff)>>>0).toString(16).padStart(8,"0").toUpperCase();}
+  case "raw-bytes-adler32":{const bytes=decodeByteRepresentation("hex",input);let a=1,b=0;for(const byte of bytes){a=(a+byte)%65521;b=(b+a)%65521;}return (((b<<16)|a)>>>0).toString(16).padStart(8,"0").toUpperCase();}
+  case "raw-bytes-summary":{const bytes=decodeByteRepresentation("hex",input);const counts=new Uint32Array(256);let printable=0;for(const byte of bytes){counts[byte]++;if(byte===9||byte===10||byte===13||(byte>=32&&byte<=126))printable++;}let entropy=0,unique=0;for(const count of counts){if(count){unique++;const probability=count/Math.max(1,bytes.length);entropy-=probability*Math.log2(probability);}}return JSON.stringify({byteLength:bytes.length,uniqueByteValues:unique,printableAsciiRatio:bytes.length?Number((printable/bytes.length).toFixed(6)):0,shannonEntropyBitsPerByte:Number(entropy.toFixed(6)),crc32:((()=>{let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;})()).toString(16).padStart(8,"0").toUpperCase()});}
   case "json-format":return JSON.stringify(JSON.parse(input),null,2);
   case "json-minify":return JSON.stringify(JSON.parse(input));
   case "query-parse":return parseQueryString(input);

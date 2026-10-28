@@ -101,3 +101,12 @@ test("raw-byte pipeline operations reverse bytes and apply invert/bit rotations 
  assert.equal(roundTrip.output,"00117f80ff");
  assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"raw-bytes-not"}]}),/Incompatible/i);
 });
+
+test("raw-byte workflow computes known checksums and bounded byte statistics",()=>{
+ const recipe=(operation)=>({version:1,inputType:"raw-hex",steps:[{operation}]});
+ assert.equal(executePipeline("313233343536373839",recipe("raw-bytes-crc32")).output,"CBF43926");
+ assert.equal(executePipeline("313233343536373839",recipe("raw-bytes-adler32")).output,"091E01DE");
+ const summary=JSON.parse(executePipeline("41414200",recipe("raw-bytes-summary")).output);
+ assert.equal(summary.byteLength,4);assert.equal(summary.uniqueByteValues,3);assert.equal(summary.printableAsciiRatio,0.75);assert.equal(summary.crc32,"D3D99E8B");
+ assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"raw-bytes-crc32"}]}),/Incompatible/i);
+});
