@@ -259,3 +259,12 @@ test("PEM inspector rejects unmatched markers even when another block is valid",
  await assert.rejects(()=>inspectCertificateContainer(malformed,new TextEncoder().encode(malformed)),/unmatched or malformed BEGIN\/END block/i);
  await assert.rejects(()=>inspectCertificateContainer("-----END CERTIFICATE-----",new TextEncoder().encode("-----END CERTIFICATE-----")),/unmatched or malformed BEGIN\/END block/i);
 });
+
+test("numeric statistics include quartiles, range, modes and robust absolute-deviation measures",()=>{
+ const result=JSON.parse(numericStatistics("1, 2, 2, 3, 4, 10"));
+ assert.equal(result.range,9);assert.equal(result.q1,2);assert.equal(result.q3,4);assert.equal(result.interquartileRange,2);
+ assert.deepEqual(result.modes,[2]);assert.equal(result.modeFrequency,2);assert.equal(result.meanAbsoluteDeviation,2.2222222222222223);assert.equal(result.medianAbsoluteDeviationFromMedian,1);
+ assert.equal(result.sampleStandardDeviation,Math.sqrt(10.666666666666666));assert.match(result.quartileMethod,/excludes the overall median/i);
+ const noMode=JSON.parse(numericStatistics("1 2 3 4 5"));assert.deepEqual(noMode.modes,[]);assert.equal(noMode.modeFrequency,null);assert.equal(noMode.q1,1.5);assert.equal(noMode.q3,4.5);
+ const singleton=JSON.parse(numericStatistics("7"));assert.equal(singleton.q1,null);assert.equal(singleton.q3,null);assert.equal(singleton.sampleStandardDeviation,null);
+});

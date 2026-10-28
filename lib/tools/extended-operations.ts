@@ -236,11 +236,22 @@ export function numericStatistics(input:string):string {
  guardText(input);const values=input.trim().split(/[\s,;]+/).filter(Boolean).map(Number);if(!values.length||values.some(n=>!Number.isFinite(n)))throw new Error("Enter a non-empty list of finite numbers separated by spaces, commas, or semicolons.");
  const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0);
  if(!Number.isFinite(sum))throw new Error("Statistics exceed the finite numeric range; use smaller-magnitude values.");
- const mean=sum/values.length,median=sorted.length%2?sorted[(sorted.length-1)/2]:sorted[sorted.length/2-1]/2+sorted[sorted.length/2]/2;
+ const medianOf=(items:number[]):number|null=>!items.length?null:items.length%2?items[(items.length-1)/2]:items[items.length/2-1]/2+items[items.length/2]/2;
+ const mean=sum/values.length,median=medianOf(sorted)!;
+ const min=sorted[0],max=sorted[sorted.length-1],range=max-min;
+ if(!Number.isFinite(range))throw new Error("Numeric range exceeds the finite numeric range; use smaller-magnitude values.");
+ const lowerHalf=sorted.slice(0,Math.floor(sorted.length/2)),upperHalf=sorted.slice(Math.ceil(sorted.length/2));
+ const q1=medianOf(lowerHalf),q3=medianOf(upperHalf),interquartileRange=q1===null||q3===null?null:q3-q1;
+ const absoluteDeviations=values.map(n=>Math.abs(n-median)).sort((a,b)=>a-b),medianAbsoluteDeviation=medianOf(absoluteDeviations);
+ const absoluteDeviationSum=values.reduce((total,n)=>total+Math.abs(n-mean),0),meanAbsoluteDeviation=absoluteDeviationSum/values.length;
+ if(!Number.isFinite(absoluteDeviationSum)||!Number.isFinite(interquartileRange??0)||!Number.isFinite(medianAbsoluteDeviation??0))throw new Error("Deviation statistics exceed the finite numeric range; use smaller-magnitude values.");
  const squaredDeviationSum=values.reduce((total,n)=>total+(n-mean)**2,0);
  if(!Number.isFinite(squaredDeviationSum))throw new Error("Variance exceeds the finite numeric range; use smaller-magnitude values.");
  const variance=squaredDeviationSum/values.length,sampleVariance=values.length>1?squaredDeviationSum/(values.length-1):null;
- return JSON.stringify({count:values.length,min:sorted[0],max:sorted[sorted.length-1],sum,mean,median,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance},null,2);
+ const counts=new Map<number,number>();for(const value of values)counts.set(value,(counts.get(value)??0)+1);
+ let modeFrequency=0;for(const count of counts.values())if(count>modeFrequency)modeFrequency=count;
+ const modes=modeFrequency>1?[...counts.entries()].filter(([,count])=>count===modeFrequency).map(([value])=>value).sort((a,b)=>a-b):[];
+ return JSON.stringify({count:values.length,min,max,range,sum,mean,median,q1,q3,quartileMethod:"Median of lower and upper halves; excludes the overall median when count is odd.",interquartileRange,modes,modeFrequency:modeFrequency>1?modeFrequency:null,meanAbsoluteDeviation,medianAbsoluteDeviationFromMedian:medianAbsoluteDeviation,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance,sampleStandardDeviation:sampleVariance===null?null:Math.sqrt(sampleVariance)},null,2);
 }
 export function characterStatistics(input:string):string {
  guardText(input);

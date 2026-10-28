@@ -29,4 +29,10 @@ it("loads a local binary file as raw hex and converts bytes without UTF-8 decodi
  fireEvent.click(await screen.findByRole("option",{name:/Raw bytes → Base64/i}));
  fireEvent.click(screen.getByRole("button",{name:/Run workflow/i}));
  await waitFor(()=>expect((screen.getByRole("textbox",{name:"Workflow final output"}) as HTMLTextAreaElement).value).toBe("AP8B"));
+ fireEvent.click(screen.getByRole("button",{name:/Add step/i}));
+ fireEvent.click(screen.getByRole("combobox",{name:"Step 2 operation"}));
+ fireEvent.click(await screen.findByRole("option",{name:/Base64 → raw bytes \(hex\)/i}));
+ fireEvent.click(screen.getByRole("button",{name:/Run workflow/i}));
+ await waitFor(()=>expect((screen.getByRole("textbox",{name:"Workflow final output"}) as HTMLTextAreaElement).value).toBe("00ff01"));
+ expect(screen.getByRole("button",{name:/Download raw bytes/i})).toBeTruthy();
 });
