@@ -3,7 +3,7 @@
 **Status:** Implemented; target layout remains a proposal.
 
 ## Purpose and boundary
-`DeveloperToolWorkbench` composes existing design-system primitives into a shared text-first workbench for the Hash Generator, Regex Tester, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter. It does not own navigation, server processing, persistence, or file-byte workflows.
+`DeveloperToolWorkbench` composes existing design-system primitives into a shared text-first workbench for the Hash & Checksum Generator, Text & Regex Workbench, XML Formatter, SQL Formatter, CSV ↔ JSON, HTML Formatter, and cURL Converter. It does not own navigation, server processing, or persistence. File-byte workflows are limited to the explicitly bounded hash and encoding controls.
 
 ## API
 - `operation`: one of `hash | regex | xml | sql | csv-json | html | curl`.

@@ -1,3 +1,4 @@
+import { JwtWorkbench } from "@/components/tool-workbenches";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { DeveloperToolWorkbench } from "@/components/developer-tool-workbench";
@@ -24,9 +25,9 @@ describe("DeveloperToolWorkbench", () => {
     const bytes = Uint8Array.from([0xba,0x78,0x16,0xbf,0x8f,0x01,0xcf,0xea,0x41,0x41,0x40,0xde,0x5d,0xae,0x22,0x23,0xb0,0x03,0x61,0xa3,0x96,0x17,0x7a,0x9c,0xb4,0x10,0xff,0x61,0xf2,0x00,0x15,0xad]);
     vi.stubGlobal("crypto", { subtle: { digest: vi.fn(async () => bytes.buffer) } });
     render(<DeveloperToolWorkbench operation="hash" />);
-    fireEvent.change(screen.getByRole("textbox", { name: "Hash generator input" }), { target: { value: "abc" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Hash & Checksum Generator input" }), { target: { value: "abc" } });
     fireEvent.click(screen.getByRole("button", { name: "Generate digest" }));
-    const output = screen.getByRole("textbox", { name: "Hash generator output" }) as HTMLTextAreaElement;
+    const output = screen.getByRole("textbox", { name: "Hash & Checksum Generator output" }) as HTMLTextAreaElement;
     await waitFor(() => expect(output.value).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
   });
   it("shows a redacted cURL preview without executing the request", async () => {
@@ -38,4 +39,38 @@ describe("DeveloperToolWorkbench", () => {
     expect(output.value).not.toContain("Bearer secret");
     expect(output.value).not.toContain("access_token=topsecret");
   });
+});
+
+it("hashes selected file bytes through the styled file control",async()=>{
+ const bytes=Uint8Array.from([0xba,0x78,0x16,0xbf,0x8f,0x01,0xcf,0xea,0x41,0x41,0x40,0xde,0x5d,0xae,0x22,0x23,0xb0,0x03,0x61,0xa3,0x96,0x17,0x7a,0x9c,0xb4,0x10,0xff,0x61,0xf2,0x00,0x15,0xad]);
+ vi.stubGlobal("crypto",{subtle:{digest:vi.fn(async()=>bytes.buffer)}});
+ const file=new File(["abc"],"sample.bin",{type:"application/octet-stream"});
+ Object.defineProperty(file,"arrayBuffer",{value:async()=>new TextEncoder().encode("abc").buffer});
+ render(<DeveloperToolWorkbench operation="hash"/>);
+ fireEvent.change(screen.getByLabelText("Choose a file to hash"),{target:{files:[file]}});
+ expect(await screen.findByText(/Hashing raw bytes from sample.bin/)).toBeTruthy();
+ fireEvent.click(screen.getByRole("button",{name:"Generate digest"}));
+ const output=screen.getByRole("textbox",{name:"Hash & Checksum Generator output"}) as HTMLTextAreaElement;
+ await waitFor(()=>expect(output.value).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
+});
+
+describe("JWT time-claim interpretation",()=>{
+ it("handles exp=0 and reports iat/nbf relative to the local clock without verifying signatures",async()=>{
+  const base64url=(value:unknown)=>btoa(Array.from(new TextEncoder().encode(JSON.stringify(value)),b=>String.fromCharCode(b)).join("")).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  render(<JwtWorkbench/>);
+  fireEvent.change(screen.getByRole("textbox",{name:"JWT token input"}),{target:{value:base64url({alg:"none",typ:"JWT"})+"."+base64url({exp:0,iat:4102444800,nbf:4102444800})+".unverified"}});
+  fireEvent.click(screen.getByRole("button",{name:/Decode token/i}));
+  expect(await screen.findByText(/Decoded only\. The signature has not been verified/i)).toBeTruthy();
+  expect(screen.getByText("Expiration (exp)")).toBeTruthy();expect(screen.getByText(/Expired according to the local clock/i)).toBeTruthy();
+  expect(screen.getByText("Issued at (iat)")).toBeTruthy();expect(screen.getByText(/Issued in the future/i)).toBeTruthy();
+  expect(screen.getByText("Not before (nbf)")).toBeTruthy();expect(screen.getByText(/Not yet valid/i)).toBeTruthy();
+ });
+ it("shows missing and invalid NumericDate claims explicitly",async()=>{
+  const base64url=(value:unknown)=>btoa(Array.from(new TextEncoder().encode(JSON.stringify(value)),b=>String.fromCharCode(b)).join("")).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  render(<JwtWorkbench/>);
+  fireEvent.change(screen.getByRole("textbox",{name:"JWT token input"}),{target:{value:base64url({alg:"none"})+"."+base64url({exp:"tomorrow"})+".unverified"}});
+  fireEvent.click(screen.getByRole("button",{name:/Decode token/i}));
+  expect(await screen.findAllByText("Not provided")).toHaveLength(2);
+  expect(screen.getAllByText("Invalid NumericDate").length).toBeGreaterThan(0);
+ });
 });

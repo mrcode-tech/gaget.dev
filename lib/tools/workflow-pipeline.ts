@@ -1,8 +1,9 @@
-import { transformEncoding, convertCharset } from "./encoding-operations.ts";
+import { transformEncoding, convertCharset, encodeByteRepresentation, decodeByteRepresentation } from "./encoding-operations.ts";
 import { parseQueryString, buildQueryString } from "./extended-operations.ts";
-export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "hex" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
+import { crc16CcittBytes } from "./security-operations.ts";
+export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "ascii85" | "z85" | "hex" | "raw-hex" | "binary" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
 export const PIPELINE_INPUT_TYPES: {value:PipelineDataType;label:string}[] = [
- {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
+ {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"ascii85",label:"Adobe ASCII85 encoded"},{value:"z85",label:"ZeroMQ Z85 encoded"},{value:"hex",label:"Hexadecimal UTF-8 text bytes"},{value:"raw-hex",label:"Raw bytes (hex; byte-preserving)"},{value:"binary",label:"Binary byte representation"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
 ];
 export const PIPELINE_OPERATIONS = [
  {id:"trim",label:"Trim whitespace",input:"text",output:"text"},
@@ -18,8 +19,30 @@ export const PIPELINE_OPERATIONS = [
  {id:"base32-decode",label:"Base32 decode",input:"base32",output:"text"},
  {id:"base58-encode",label:"Bitcoin Base58 encode",input:"text",output:"base58"},
  {id:"base58-decode",label:"Bitcoin Base58 decode",input:"base58",output:"text"},
+ {id:"ascii85-encode",label:"Adobe ASCII85 encode",input:"text",output:"ascii85"},
+ {id:"ascii85-decode",label:"Adobe ASCII85 decode",input:"ascii85",output:"text"},
+ {id:"z85-encode",label:"ZeroMQ Z85 encode",input:"text",output:"z85"},
+ {id:"z85-decode",label:"ZeroMQ Z85 decode",input:"z85",output:"text"},
  {id:"hex-encode",label:"Hex encode UTF-8 bytes",input:"text",output:"hex"},
  {id:"hex-decode",label:"Hex decode UTF-8 bytes",input:"hex",output:"text"},
+ {id:"text-to-raw-hex",label:"UTF-8 text to raw bytes (hex)",input:"text",output:"raw-hex"},
+ {id:"raw-hex-to-text",label:"Raw bytes (hex) to UTF-8 text",input:"raw-hex",output:"text"},
+ {id:"bytes-base64-encode",label:"Raw bytes → Base64",input:"raw-hex",output:"base64"},
+ {id:"base64-bytes-decode",label:"Base64 → raw bytes (hex)",input:"base64",output:"raw-hex"},
+ {id:"bytes-base64url-encode",label:"Raw bytes → Base64url",input:"raw-hex",output:"base64url"},
+ {id:"base64url-bytes-decode",label:"Base64url → raw bytes (hex)",input:"base64url",output:"raw-hex"},
+ {id:"bytes-base32-encode",label:"Raw bytes → Base32",input:"raw-hex",output:"base32"},
+ {id:"base32-bytes-decode",label:"Base32 → raw bytes (hex)",input:"base32",output:"raw-hex"},
+ {id:"bytes-base58-encode",label:"Raw bytes → Bitcoin Base58",input:"raw-hex",output:"base58"},
+ {id:"base58-bytes-decode",label:"Bitcoin Base58 → raw bytes (hex)",input:"base58",output:"raw-hex"},
+ {id:"bytes-ascii85-encode",label:"Raw bytes → Adobe ASCII85",input:"raw-hex",output:"ascii85"},
+ {id:"ascii85-bytes-decode",label:"Adobe ASCII85 → raw bytes (hex)",input:"ascii85",output:"raw-hex"},
+ {id:"bytes-z85-encode",label:"Raw bytes → ZeroMQ Z85",input:"raw-hex",output:"z85"},
+ {id:"z85-bytes-decode",label:"ZeroMQ Z85 → raw bytes (hex)",input:"z85",output:"raw-hex"},
+ {id:"bytes-binary-encode",label:"Raw bytes → binary bits",input:"raw-hex",output:"binary"},
+ {id:"binary-bytes-decode",label:"Binary bits → raw bytes (hex)",input:"binary",output:"raw-hex"},
+ {id:"bytes-quoted-printable-encode",label:"Raw bytes → quoted-printable",input:"raw-hex",output:"quoted-printable"},
+ {id:"quoted-printable-bytes-decode",label:"Quoted-printable → raw bytes (hex)",input:"quoted-printable",output:"raw-hex"},
  {id:"unicode-escape",label:"Unicode escape",input:"text",output:"unicode"},
  {id:"unicode-unescape",label:"Unicode unescape",input:"unicode",output:"text"},
  {id:"quoted-printable-encode",label:"Quoted-printable encode",input:"text",output:"quoted-printable"},
@@ -32,6 +55,14 @@ export const PIPELINE_OPERATIONS = [
  {id:"utf16be-decode",label:"UTF-16BE decode from hex",input:"hex",output:"text"},
  {id:"windows1252-encode",label:"Windows-1252 encode to hex",input:"text",output:"hex"},
  {id:"windows1252-decode",label:"Windows-1252 decode from hex",input:"hex",output:"text"},
+ {id:"raw-bytes-reverse",label:"Reverse raw byte order",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-not",label:"Bitwise NOT each byte",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-rotate-left",label:"Rotate each byte left by one bit",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-rotate-right",label:"Rotate each byte right by one bit",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-crc32",label:"CRC-32/IEEE checksum",input:"raw-hex",output:"text"},
+ {id:"raw-bytes-crc16-ccitt",label:"CRC-16/CCITT-FALSE checksum",input:"raw-hex",output:"text"},
+ {id:"raw-bytes-adler32",label:"Adler-32 checksum",input:"raw-hex",output:"text"},
+ {id:"raw-bytes-summary",label:"Byte statistics summary",input:"raw-hex",output:"json"},
  {id:"json-format",label:"Format JSON",input:"json",output:"json"},
  {id:"json-minify",label:"Minify JSON",input:"json",output:"json"},
  {id:"query-parse",label:"Parse query string to JSON",input:"query",output:"json"},
@@ -42,6 +73,36 @@ export type PipelineStep = {operation:PipelineOperation};
 export type PipelineRecipe = {version:1;inputType:PipelineDataType;steps:PipelineStep[]};
 export type PipelineStepResult = {index:number;operation:PipelineOperation;outputType:PipelineDataType;outputLength:number;preview:string};
 export const MAX_PIPELINE_INPUT=200_000,MAX_PIPELINE_OUTPUT=1_000_000,MAX_PIPELINE_STEPS=20,MAX_BATCH_RECORDS=100,MAX_RECIPE_BYTES=32_000;
+export const SAVED_PIPELINE_RECIPES_KEY="gaget.workflow-recipes.v1";
+export const MAX_SAVED_PIPELINE_RECIPES=10;
+export const MAX_SAVED_PIPELINE_RECIPES_BYTES=320_000;
+export type SavedPipelineRecipe={id:string;name:string;recipe:PipelineRecipe;savedAt:number};
+export function parseSavedPipelineRecipes(source:string):SavedPipelineRecipe[]{
+ if(source.length>MAX_SAVED_PIPELINE_RECIPES_BYTES)throw new Error("Saved workflow recipes exceed the 320 KB limit.");
+ let value:unknown;try{value=JSON.parse(source);}catch{throw new Error("Saved workflow recipes are not valid JSON.");}
+ if(!value||typeof value!=="object"||Array.isArray(value))throw new Error("Saved workflow recipes must be an object.");
+ const envelope=value as Record<string,unknown>;
+ if(Object.keys(envelope).some(key=>!["version","recipes"].includes(key))||envelope.version!==1||!Array.isArray(envelope.recipes))throw new Error("Saved workflow recipe storage has an unsupported version or shape.");
+ if(envelope.recipes.length>MAX_SAVED_PIPELINE_RECIPES)throw new Error("At most 10 workflow recipes can be saved in this browser.");
+ const ids=new Set<string>(),names=new Set<string>();
+ return envelope.recipes.map((raw,index)=>{
+  if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error("Saved workflow recipe "+(index+1)+" is invalid.");
+  const item=raw as Record<string,unknown>;
+  if(Object.keys(item).some(key=>!["id","name","recipe","savedAt"].includes(key))||typeof item.id!=="string"||!/^[a-zA-Z0-9_-]{1,80}$/.test(item.id)||typeof item.name!=="string"||item.name.trim().length<1||item.name.trim().length>80||typeof item.savedAt!=="number"||!Number.isFinite(item.savedAt)||item.savedAt<0)throw new Error("Saved workflow recipe "+(index+1)+" has invalid metadata.");
+  const normalizedName=item.name.trim(),nameKey=normalizedName.toLocaleLowerCase("en-US");
+  if(ids.has(item.id)||names.has(nameKey))throw new Error("Saved workflow recipe IDs and names must be unique.");
+  ids.add(item.id);names.add(nameKey);
+  return {id:item.id,name:normalizedName,recipe:validatePipelineRecipe(item.recipe),savedAt:item.savedAt};
+ });
+}
+export function serializeSavedPipelineRecipes(recipes:SavedPipelineRecipe[]):string{
+ if(recipes.length>MAX_SAVED_PIPELINE_RECIPES)throw new Error("At most 10 workflow recipes can be saved in this browser.");
+ const serialized=JSON.stringify({version:1,recipes});
+ const parsed=parseSavedPipelineRecipes(serialized);
+ const output=JSON.stringify({version:1,recipes:parsed});
+ if(output.length>MAX_SAVED_PIPELINE_RECIPES_BYTES)throw new Error("Saved workflow recipes exceed the 320 KB limit.");
+ return output;
+}
 const typeSet=new Set<string>(PIPELINE_INPUT_TYPES.map(x=>x.value));
 const operationMap=new Map<string,typeof PIPELINE_OPERATIONS[number]>(PIPELINE_OPERATIONS.map(x=>[x.id,x] as const));
 export function getPipelineOperation(id:string){const operation=operationMap.get(id);if(!operation)throw new Error("Recipe contains an unsupported operation: "+id+".");return operation;}
@@ -70,7 +131,7 @@ export function parsePipelineRecipe(text:string):PipelineRecipe{
  return validatePipelineRecipe(value);
 }
 function applyOperation(id:PipelineOperation,input:string):string{
- const enc=(mode:"url"|"base64"|"base64url"|"base32"|"base58"|"hex"|"html-entities"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
+ const enc=(mode:"url"|"base64"|"base64url"|"base32"|"base58"|"base85"|"z85"|"hex"|"html-entities"|"unicode-escapes"|"quoted-printable",direction:"encode"|"decode")=>transformEncoding(mode,direction,input);
  switch(id){
   case "trim":return input.trim();
   case "uppercase":return input.toLocaleUpperCase("en-US");
@@ -85,8 +146,30 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "base32-decode":return enc("base32","decode");
   case "base58-encode":return enc("base58","encode");
   case "base58-decode":return enc("base58","decode");
+  case "ascii85-encode":return enc("base85","encode");
+  case "ascii85-decode":return enc("base85","decode");
+  case "z85-encode":return enc("z85","encode");
+  case "z85-decode":return enc("z85","decode");
   case "hex-encode":return enc("hex","encode");
   case "hex-decode":return enc("hex","decode");
+  case "text-to-raw-hex":return encodeByteRepresentation("hex",new TextEncoder().encode(input));
+  case "raw-hex-to-text":return new TextDecoder("utf-8",{fatal:true}).decode(decodeByteRepresentation("hex",input));
+  case "bytes-base64-encode":return encodeByteRepresentation("base64",decodeByteRepresentation("hex",input));
+  case "base64-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base64",input));
+  case "bytes-base64url-encode":return encodeByteRepresentation("base64url",decodeByteRepresentation("hex",input));
+  case "base64url-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base64url",input));
+  case "bytes-base32-encode":return encodeByteRepresentation("base32",decodeByteRepresentation("hex",input));
+  case "base32-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base32",input));
+  case "bytes-base58-encode":return encodeByteRepresentation("base58",decodeByteRepresentation("hex",input));
+  case "base58-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base58",input));
+  case "bytes-ascii85-encode":return encodeByteRepresentation("base85",decodeByteRepresentation("hex",input));
+  case "ascii85-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base85",input));
+  case "bytes-z85-encode":return encodeByteRepresentation("z85",decodeByteRepresentation("hex",input));
+  case "z85-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("z85",input));
+  case "bytes-binary-encode":return encodeByteRepresentation("binary",decodeByteRepresentation("hex",input));
+  case "binary-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("binary",input));
+  case "bytes-quoted-printable-encode":return encodeByteRepresentation("quoted-printable",decodeByteRepresentation("hex",input));
+  case "quoted-printable-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("quoted-printable",input));
   case "unicode-escape":return enc("unicode-escapes","encode");
   case "unicode-unescape":return enc("unicode-escapes","decode");
   case "quoted-printable-encode":return enc("quoted-printable","encode");
@@ -99,6 +182,14 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "utf16be-decode":return convertCharset("decode",input,"utf-16be");
   case "windows1252-encode":return convertCharset("encode",input,"windows-1252");
   case "windows1252-decode":return convertCharset("decode",input,"windows-1252");
+  case "raw-bytes-reverse":return encodeByteRepresentation("hex",decodeByteRepresentation("hex",input).reverse());
+  case "raw-bytes-not":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>byte^0xff));
+  case "raw-bytes-rotate-left":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte<<1)|(byte>>>7))&0xff));
+  case "raw-bytes-rotate-right":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte>>>1)|(byte<<7))&0xff));
+  case "raw-bytes-crc32":{const bytes=decodeByteRepresentation("hex",input);let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return ((crc^0xffffffff)>>>0).toString(16).padStart(8,"0").toUpperCase();}
+  case "raw-bytes-crc16-ccitt":return crc16CcittBytes(decodeByteRepresentation("hex",input));
+  case "raw-bytes-adler32":{const bytes=decodeByteRepresentation("hex",input);let a=1,b=0;for(const byte of bytes){a=(a+byte)%65521;b=(b+a)%65521;}return (((b<<16)|a)>>>0).toString(16).padStart(8,"0").toUpperCase();}
+  case "raw-bytes-summary":{const bytes=decodeByteRepresentation("hex",input);const counts=new Uint32Array(256);let printable=0;for(const byte of bytes){counts[byte]++;if(byte===9||byte===10||byte===13||(byte>=32&&byte<=126))printable++;}let entropy=0,unique=0;for(const count of counts){if(count){unique++;const probability=count/Math.max(1,bytes.length);entropy-=probability*Math.log2(probability);}}return JSON.stringify({byteLength:bytes.length,uniqueByteValues:unique,printableAsciiRatio:bytes.length?Number((printable/bytes.length).toFixed(6)):0,shannonEntropyBitsPerByte:Number(entropy.toFixed(6)),crc32:((()=>{let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;})()).toString(16).padStart(8,"0").toUpperCase()});}
   case "json-format":return JSON.stringify(JSON.parse(input),null,2);
   case "json-minify":return JSON.stringify(JSON.parse(input));
   case "query-parse":return parseQueryString(input);

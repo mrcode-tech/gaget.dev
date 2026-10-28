@@ -31,7 +31,7 @@ The catalog must render available tools as launchable links and planned tools as
 | JSON Workspace | `/json/formatter` | Workspace | Format, minify, validate, compare, sort keys, tree, find, and escape/unescape are operations inside one workspace; `/json/diff` remains a compatibility entry point into Compare mode. See [JSON Workspace Contract](./json-workspace.md). |
 | Encoding & Decoding | `/encoding/url` | Unified standalone workbench | URL components, Base64/Base64url/Base32, hex, binary, basic HTML entities and Unicode escapes share explicit text/byte representation behavior. `/encoding/base64` remains a tested compatibility redirect into Base64 mode. |
 | JWT Decoder | `/security/jwt-decoder` | Standalone | Token inspection differs from hashing and does not verify a signature. |
-| UUID Generator | `/generators/uuid` | Standalone | Focused generation workflow. |
+| Data Generator | `/generators/sample-data` | Standalone | One generator workspace for synthetic JSON records, random strings and integers, timestamps, and UUID v4 batches. The legacy `/generators/uuid` URL redirects here. |
 | Hash & Checksum Generator | `/security/hash` | Available with documented limits | SHA-2 digests, HMAC-SHA-2 and CRC32 are distinct operations; checksum is not cryptographic security. |
 | Text & Regex Workbench | `/text/regex` | Available with documented limits | Related text transforms share one text input/output workflow; regex replacement is preview-only. |
 | XML Formatter | `/xml/formatter` | Available with documented limits | Standalone formatting workflow. |
@@ -51,7 +51,7 @@ Prefer a small taxonomy grounded in user intent:
 | Data & Formats | Read, validate, format or transform structured data | JSON Formatter; XML Formatter; CSV ↔ JSON | Keep different document models as separate tools unless a shared workflow is proven. |
 | Encoding & Conversion | Transform representations of text/data | URL Encoder / Decoder; Base64 Encoder / Decoder | Share category discovery, not necessarily an editor or state. |
 | Security | Inspect token structure or compute digests | JWT Decoder; Hash Generator | Category only; independent workflows. |
-| Generators | Create identifiers and similar values | UUID Generator | Group by generation intent. |
+| Generators | Create synthetic records, strings, numbers, timestamps and identifiers | Data Generator | Keep UUID generation as one operation in the broader generator workspace. |
 | Code & Text | Inspect or format text/code patterns | Regex Tester; HTML Formatter | Do not combine unrelated editing models. |
 | Database & SQL | Work with SQL statements | SQL Formatter | Keep focused. |
 | Web & API | Inspect HTTP requests and related representations | cURL Converter | Keep focused. |
