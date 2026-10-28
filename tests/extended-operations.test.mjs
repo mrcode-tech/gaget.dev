@@ -156,7 +156,7 @@ test("MP4-family ftyp inspection reports bounded brand metadata and truncation",
 test("FLAC STREAMINFO extracts sample format without decoding audio",()=>{
  const bytes=new Uint8Array(42);bytes.set([...new TextEncoder().encode("fLaC")],0);bytes[4]=0x80;bytes[7]=34;
  const sampleRate=44100,channels=2,bits=16,total=441000;
- bytes[18]=(sampleRate>>12)&255;bytes[19]=(sampleRate>>4)&255;bytes[20]=((sampleRate&15)<<4)|((channels-1)<<1)|((bits-1)>>4);bytes[21]=(((bits-1)&15)<<4)|((total/0x100000000)&15);bytes.set([0,0,0,total&255],22);
+ bytes[18]=(sampleRate>>12)&255;bytes[19]=(sampleRate>>4)&255;bytes[20]=((sampleRate&15)<<4)|((channels-1)<<1)|((bits-1)>>4);bytes[21]=(((bits-1)&15)<<4)|((total/0x100000000)&15);bytes.set([0,6,0xba,0x68],22);
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"FLAC audio candidate");assert.equal(result.metadata.sampleRate,44100);assert.equal(result.metadata.channels,2);assert.equal(result.metadata.bitsPerSample,16);assert.equal(result.metadata.durationSeconds,10);
 });
 test("Ogg inspection bounds the segment table and identifies truncated pages",()=>{

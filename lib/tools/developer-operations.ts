@@ -78,25 +78,25 @@ function tokenizeXml(source:string):XmlToken[]{
  }
  return tokens;
 }
-type XmlTreeNode = { kind: "element"; open: string; close: string; selfClosing: boolean; children: XmlTreeNode[] | XmlToken[] };
+type XmlTreeNode = { kind: "element"; open: string; close: string; selfClosing: boolean; children: Array<XmlTreeNode | XmlToken> };
 export function formatXml(s:string,minify=false){
  guard(s);
  const tokens=tokenizeXml(s);
  if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
- const roots:XmlTreeNode[]=[];
+ const roots:Array<XmlTreeNode|XmlToken>=[];
  const stack:XmlTreeNode[]=[];
  let doctypeSeen=false,rootClosed=false,rootCount=0;
  for(const token of tokens){
   const {kind,value,name}=token;
   if(kind==="text"){
    if(stack.length===0){if(value.trim())throw new Error("Text is not allowed outside the XML root element.");continue;}
-   (stack[stack.length-1].children as XmlTreeNode[]).push(token);
+   stack[stack.length-1].children.push(token);
    continue;
   }
   if(kind==="doctype"){
    if(doctypeSeen||rootCount>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");
    doctypeSeen=true;
-   (stack.length?stack[stack.length-1].children as XmlTreeNode[]:roots as unknown as XmlTreeNode[]).push(token as unknown as XmlTreeNode);
+   (stack.length?stack[stack.length-1].children:roots).push(token);
    continue;
   }
   if(kind==="end"){
@@ -112,14 +112,13 @@ export function formatXml(s:string,minify=false){
     rootCount++;
    }
    const node:XmlTreeNode={kind:"element",open:value,close:"",selfClosing:kind==="empty",children:[]};
-   if(stack.length)(stack[stack.length-1].children as XmlTreeNode[]).push(node);
+   if(stack.length)stack[stack.length-1].children.push(node);
    else roots.push(node);
    if(kind==="start")stack.push(node);else if(stack.length===0)rootClosed=true;
    continue;
   }
-  const misc=token as unknown as XmlTreeNode;
-  if(stack.length)(stack[stack.length-1].children as XmlTreeNode[]).push(misc);
-  else roots.push(misc);
+  if(stack.length)stack[stack.length-1].children.push(token);
+  else roots.push(token);
  }
  if(stack.length)throw new Error("Unclosed XML element: "+stack[stack.length-1].open.match(/^<([^\s/>]+)/)?.[1]);
  const elements=roots.filter((node)=>node.kind==="element");
