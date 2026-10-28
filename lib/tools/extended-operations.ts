@@ -3,7 +3,7 @@ export type ExtendedOperation =
   | "query-parse" | "url-parse" | "data-uri" | "query-build" | "key-value" | "key-value-build" | "number-base" | "numeric-view" | "float-view"
   | "hexdump" | "byte-range" | "strings" | "byte-stats" | "network" | "cidr"
   | "mac" | "headers" | "cookies" | "network-extract" | "statistics" | "character-stats" | "arithmetic" | "compression-detect"
-  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container";
+  | "compression" | "byte-compare" | "dns-records" | "http-message" | "file-signatures" | "file-metadata" | "certificate-container" | "ssh-public-key";
 export type ExtendedOptions = { radix?: number; width?: number; offset?: number; length?: number; minLength?: number; format?: string; signed?: boolean; bits?: number; endian?: "big" | "little"; a?: string; b?: string; modulus?: string; action?: "compress" | "decompress" };
 const guardText=(s:string)=>{if(s.length>200_000)throw new Error("Input exceeds the 200,000 character safety limit.");};
 const guardBytes=(b:Uint8Array)=>{if(b.byteLength>MAX_INSPECT_BYTES)throw new Error("Binary inspection is limited to 2,000,000 bytes.");};
@@ -668,6 +668,34 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
 }
 
 
+
+/** Inspect a single OpenSSH public-key line. Fingerprinting is not trust validation. */
+export async function inspectSshPublicKey(input: string): Promise<string> {
+  guardText(input);
+  const parts = input.trim().split(/\\s+/);
+  if (parts.length < 2 || !parts[0]) throw new Error("Expected an OpenSSH key type followed by Base64 key data.");
+  const type = parts[0], encoded = parts[1];
+  if (!new Set(["ssh-rsa","ssh-ed25519","ecdsa-sha2-nistp256","ecdsa-sha2-nistp384","ecdsa-sha2-nistp521","sk-ssh-ed25519@openssh.com","sk-ecdsa-sha2-nistp256@openssh.com"]).has(type)) throw new Error("Unsupported OpenSSH public-key type.");
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded) || encoded.length % 4 === 1 || (encoded.includes("=") && encoded.length % 4 !== 0)) throw new Error("OpenSSH key data is not valid Base64.");
+  const unpadded=encoded.replace(/=+$/,"");
+  let binary:string; try { binary=atob(unpadded+"=".repeat((4-unpadded.length%4)%4)); } catch { throw new Error("OpenSSH key data is not valid Base64."); }
+  const blob=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  if(blob.length>MAX_INSPECT_BYTES) throw new Error("OpenSSH key data exceeds the 2,000,000 byte safety limit.");
+  let offset=0;
+  const field=(name:string):Uint8Array=>{if(offset+4>blob.length)throw new Error("OpenSSH key blob is truncated before "+name+".");const n=blob[offset]*0x1000000+(blob[offset+1]<<16)+(blob[offset+2]<<8)+blob[offset+3];offset+=4;if(n>blob.length-offset)throw new Error("OpenSSH key blob has an invalid length for "+name+".");const out=blob.slice(offset,offset+n);offset+=n;return out;};
+  const text=(name:string):string=>{const v=field(name);if(v.some(b=>b<0x20||b>0x7e))throw new Error("OpenSSH "+name+" must be ASCII.");return new TextDecoder().decode(v);};
+  if(text("key type")!==type)throw new Error("The OpenSSH line type does not match the embedded key type.");
+  const meta:Record<string,string|number|boolean>={};
+  const mpintBits=(name:string)=>{const v=field(name);if(!v.length||(v[0]&0x80)!==0)throw new Error("OpenSSH RSA "+name+" must be a non-empty positive mpint.");let i=v[0]===0?1:0;while(i<v.length&&v[i]===0)i++;if(i===v.length)throw new Error("OpenSSH RSA "+name+" must be non-zero.");let leading=0,b=v[i];while((b&0x80)===0){leading++;b<<=1;}return (v.length-i)*8-leading;};
+  if(type==="ssh-rsa"){const exponentBits=mpintBits("public exponent"),modulusBits=mpintBits("modulus");meta.algorithm="RSA";meta.modulusBits=modulusBits;meta.exponentBits=exponentBits;if(modulusBits<1024)meta.warning="RSA modulus is smaller than 1024 bits; metadata only, not a security verdict.";}
+  else if(type.startsWith("ecdsa-sha2-")||type==="sk-ecdsa-sha2-nistp256@openssh.com"){const curve=text("ECDSA curve"),point=field("ECDSA public point"),expected=type.includes("nistp521")?"nistp521":type.includes("nistp384")?"nistp384":"nistp256",pointLength=expected==="nistp521"?133:expected==="nistp384"?97:65;if(curve!==expected||point.length!==pointLength||point[0]!==4)throw new Error("ECDSA curve or uncompressed public-point length does not match the declared key type.");meta.algorithm=type.startsWith("sk-")?"ECDSA security key":"ECDSA";meta.curve=curve;meta.publicPointBytes=point.length;if(type.startsWith("sk-"))meta.application=text("security-key application");}
+  else{const key=field("Ed25519 public key");if(key.length!==32)throw new Error("Ed25519 public keys must contain exactly 32 bytes.");meta.algorithm=type.startsWith("sk-")?"Ed25519 security key":"Ed25519";meta.publicKeyBytes=key.length;if(type.startsWith("sk-"))meta.application=text("security-key application");}
+  if(offset!==blob.length)throw new Error("OpenSSH key blob contains unexpected trailing bytes.");
+  const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",blob.buffer.slice(blob.byteOffset,blob.byteOffset+blob.byteLength) as ArrayBuffer));
+  let raw="";for(const byte of digest)raw+=String.fromCharCode(byte);
+  return JSON.stringify({format:"OpenSSH public key",type,blobBytes:blob.length,keyMetadata:meta,fingerprint:"SHA256:"+btoa(raw).replace(/=+$/,""),commentPresent:parts.length>2,commentReturned:false,trustValidated:false,networkRequestsMade:false,note:"Only the supplied public-key blob was parsed. The comment is not returned. This does not prove key ownership, private-key possession, authorization, or trust."},null,2);
+}
+
 /** Inspect PEM labels or the outer DER container and fingerprint exact bytes. This does not validate certificate trust. */
 export async function inspectCertificateContainer(input: string, bytes: Uint8Array): Promise<string> {
   guardText(input); guardBytes(bytes);
@@ -743,6 +771,7 @@ export async function runExtendedOperation(operation:ExtendedOperation,input:str
  case "file-signatures":return inspectFileSignatures(bytes);
  case "file-metadata":return inspectFileMetadata(bytes);
  case "certificate-container":return inspectCertificateContainer(input,bytes);
+ case "ssh-public-key":return inspectSshPublicKey(input);
  case "compression":{const action=options.action??"compress";const format=options.format==="deflate"?"deflate":"gzip";const out=await compressBytes(bytes,format,action);let textPreview:string|null=null;try{textPreview=new TextDecoder("utf-8",{fatal:true}).decode(out);}catch{}return JSON.stringify({format,action,inputBytes:bytes.length,outputBytes:out.length,ratio:bytes.length?Number((out.length/bytes.length).toFixed(4)):null,base64:typeof btoa==="function"?btoa(Array.from(out,b=>String.fromCharCode(b)).join("")):"",textPreview:textPreview?.slice(0,20000)??null,hexPreview:Array.from(out.slice(0,128),b=>b.toString(16).padStart(2,"0")).join(" "),note:"Use the full base64 field as input to decompress or download the result as bytes."},null,2);}
  }
 }
