@@ -247,3 +247,8 @@ test("OpenSSH RSA public-key inspection reports bounded modulus metadata without
  assert.equal(result.keyMetadata.exponentBits,17);assert.equal(result.keyMetadata.modulusBits,2048);
  assert.equal(Object.hasOwn(result.keyMetadata,"modulus"),false);assert.equal(result.trustValidated,false);
 });
+
+test("OpenSSH parser rejects oversized unsigned field lengths without signed integer wraparound",async()=>{
+ const malformed=Uint8Array.from([0,0x80,0,0,0,0,0,0]);
+ await assert.rejects(()=>inspectSshPublicKey("ssh-ed25519 "+btoa(String.fromCharCode(...malformed))),/invalid length/i);
+});
