@@ -115,3 +115,17 @@ test("XML pretty formatting indents element-only parents while preserving inline
  assert.throws(()=>formatXml("<![CDATA[outside]]><root/>"),/CDATA is only allowed/i);
  assert.throws(()=>formatXml("<!DOCTYPE root><!DOCTYPE root><root/>"),/DOCTYPE must appear at most once/i);
 });
+
+test("HTML formatting preserves mixed inline text and quoted greater-than attributes",()=>{
+ const mixed='<p>Hello <b>world</b> again</p>';
+ assert.equal(formatHtml(mixed,true),mixed);
+ assert.equal(formatHtml(mixed),mixed);
+ const quoted='<main data-note="a > b"><p>Hello</p><p>World</p></main>';
+ assert.equal(formatHtml(quoted),'<main data-note="a > b">\n  <p>Hello</p>\n  <p>World</p>\n</main>');
+ assert.equal(formatHtml('<main> <p>Hello</p> </main>',true),'<main><p>Hello</p></main>');
+});
+test("HTML script/style bodies are treated as inert raw text during formatting",()=>{
+ const source='<script>if (a < b) console.log(">");</script>';
+ assert.equal(formatHtml(source,true),source);
+ assert.equal(formatHtml(source),source);
+});
