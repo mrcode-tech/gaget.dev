@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseUrlComponents, parseDataUri, parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata, inspectCertificateContainer } from "../lib/tools/extended-operations.ts";
+import { parseUrlComponents, parseDataUri, parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata, inspectCertificateContainer, inspectSshPublicKey } from "../lib/tools/extended-operations.ts";
 test("query strings preserve repeated keys, plus spaces, and empty values",()=>{assert.deepEqual(JSON.parse(parseQueryString("?tag=a&tag=b&empty=&space=hello+world")),{tag:["a","b"],empty:"",space:"hello world"});assert.equal(buildQueryString('{"tag":["a","b"],"space":"hello world"}'),"tag=a&tag=b&space=hello%20world");assert.throws(()=>parseQueryString("bad=%Q"),/percent escape/i);});
 test("key-value parsing preserves duplicate values and rejects malformed lines",()=>{assert.deepEqual(JSON.parse(parseKeyValue("# comment\na=1\na=2\nempty=")),{a:["1","2"],empty:""});assert.throws(()=>parseKeyValue("missing delimiter"),/key=value/i);});
 test("base conversion uses BigInt for large values and validates radix",()=>{assert.equal(JSON.parse(convertNumberBase("18446744073709551615")).hexadecimal,"FFFFFFFFFFFFFFFF");assert.equal(JSON.parse(convertNumberBase("FF",16)).decimal,"255");assert.throws(()=>convertNumberBase("2",2),/digit/i);});
@@ -222,4 +222,17 @@ test("numeric statistics reject aggregate overflow rather than emitting invalid 
  assert.throws(()=>numericStatistics("-1e308 1e308"),/variance exceeds the finite numeric range/i);
  const stable=JSON.parse(numericStatistics("1e100 1e100"));
  assert.ok(Number.isFinite(stable.count));
+});
+
+test("OpenSSH Ed25519 public keys are parsed and fingerprinted without exposing comments or claiming trust", async () => {
+ const put32=n=>[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255],field=value=>Uint8Array.from([...put32(value.length),...value]),text=value=>field(new TextEncoder().encode(value));
+ const blob=Uint8Array.from([...text("ssh-ed25519"),...field(new Uint8Array(32).fill(7))]),encoded=btoa(String.fromCharCode(...blob));
+ const result=JSON.parse(await inspectSshPublicKey("ssh-ed25519 "+encoded+" private-looking-comment"));
+ assert.equal(result.type,"ssh-ed25519");assert.equal(result.keyMetadata.algorithm,"Ed25519");assert.equal(result.keyMetadata.publicKeyBytes,32);assert.match(result.fingerprint,/^SHA256:[A-Za-z0-9+/]+$/);assert.equal(result.commentPresent,true);assert.equal(result.commentReturned,false);assert.equal(result.trustValidated,false);assert.equal(JSON.stringify(result).includes("private-looking-comment"),false);
+});
+test("OpenSSH parser rejects mismatched embedded key types, malformed blobs, and unsupported algorithms", async () => {
+ const field=value=>Uint8Array.from([0,0,0,value.length,...value]),blob=Uint8Array.from([...field(new TextEncoder().encode("ssh-rsa")),...field(new Uint8Array(32).fill(1))]);
+ await assert.rejects(()=>inspectSshPublicKey("ssh-ed25519 "+btoa(String.fromCharCode(...blob))),/does not match/i);
+ await assert.rejects(()=>inspectSshPublicKey("ssh-ed25519 AAAA"),/truncated|invalid length/i);
+ await assert.rejects(()=>inspectSshPublicKey("ssh-dss AAAA"),/Unsupported OpenSSH/i);
 });
