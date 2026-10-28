@@ -26,6 +26,7 @@ export function executeWorkflowInWorker(input:string,recipe:PipelineRecipe,batch
   };
   worker.onerror=()=>finish(new Error("Workflow worker failed; simplify the input or recipe and try again."));
   worker.onmessageerror=()=>finish(new Error("Workflow worker returned data that could not be read."));
+  if(signal?.aborted){onAbort();return;}
   try{worker.postMessage({input,recipe,batch});}catch{finish(new Error("Unable to send input to the workflow worker."));}
  });
 }
