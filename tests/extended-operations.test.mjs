@@ -168,3 +168,8 @@ test("AVI inspection bounds RIFF and main-header metadata",()=>{
  const bytes=new Uint8Array(64);bytes.set([...new TextEncoder().encode("RIFF")],0);bytes.set([56,0,0,0],4);bytes.set([...new TextEncoder().encode("AVI ")],8);bytes.set([...new TextEncoder().encode("LIST")],12);bytes.set([...new TextEncoder().encode("avih")],24);bytes.set([40,0,0,0],28);bytes.set([0x40,0x42,0x0f,0],32);bytes.set([100,0,0,0],48);bytes.set([1,0,0,0],56);bytes.set([2,0,0,0],60);
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"AVI container candidate");assert.equal(result.metadata.microsecondsPerFrame,1_000_000);assert.equal(result.metadata.frameCount,100);assert.equal(result.metadata.durationSeconds,100);
 });
+
+test("MP4 extended-size truncation does not expose brand fields from an invalid header",()=>{
+ const bytes=new Uint8Array(20);bytes.set([0,0,0,1]);bytes.set([...new TextEncoder().encode("ftypisom")],4);
+ const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.majorBrand,undefined);assert.match(result.notes.join(" "),/extended ftyp box size is truncated/i);
+});

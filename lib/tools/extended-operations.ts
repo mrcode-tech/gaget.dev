@@ -416,7 +416,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="AVI "&&bytes.length>=12){
     metadata.format="AVI container candidate";metadata.declaredRiffBytes=(u32le(4)??0)+8;
     if((metadata.declaredRiffBytes as number)>bytes.length)notes.push("The declared RIFF size extends beyond the supplied bytes.");
-    const avih=Array.from(bytes.slice(12),(_,index)=>index).find(index=>index+8<=bytes.length&&ascii(12+index,4)==="avih");
+    let avih:number|undefined;for(let offset=12;offset+8<=bytes.length;offset++){if(ascii(offset,4)==="avih"){avih=offset-12;break;}}
     if(avih!==undefined){
       const size=u32le(12+avih+4)??0,body=12+avih+8;
       if(size>=40&&body+40<=bytes.length){
@@ -429,15 +429,15 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
     notes.push("AVI metadata is a bounded header hint; streams and codecs are not decoded.");
   } else if(bytes.length>=16&&ascii(4,4)==="ftyp"){
     metadata.format="ISO Base Media File Format (MP4-family) candidate";
-    const size32=u32be(0)??0;let boxSize=BigInt(size32),brandOffset=8;
+    const size32=u32be(0)??0;let boxSize=BigInt(size32),brandOffset=8,headerValid=true;
     if(size32===1&&bytes.length>=24){boxSize=0n;for(let i=8;i<16;i++)boxSize=(boxSize<<8n)|BigInt(bytes[i]);brandOffset=16;metadata.extendedBoxSize=boxSize.toString();}
-    else if(size32===1)notes.push("The extended ftyp box size is truncated.");
+    else if(size32===1){headerValid=false;notes.push("The extended ftyp box size is truncated.");}
     else if(size32===0)boxSize=BigInt(bytes.length);
     metadata.ftypBoxBytes=boxSize.toString();
     if(boxSize<BigInt(brandOffset+8))notes.push("The ftyp box declares a size too small to contain brand metadata.");
     if(boxSize>BigInt(bytes.length))notes.push("The ftyp box extends beyond the supplied bytes.");
-    if(bytes.length>=brandOffset+8){metadata.majorBrand=ascii(brandOffset,4);metadata.minorVersion=u32be(brandOffset+4);}
-    const limit=Math.min(bytes.length,Number(boxSize>BigInt(bytes.length)?BigInt(bytes.length):boxSize),brandOffset+8+32*4);
+    if(headerValid&&boxSize>=BigInt(brandOffset+8)&&bytes.length>=brandOffset+8){metadata.majorBrand=ascii(brandOffset,4);metadata.minorVersion=u32be(brandOffset+4);}
+    const limit=headerValid&&boxSize>=BigInt(brandOffset+8)?Math.min(bytes.length,Number(boxSize>BigInt(bytes.length)?BigInt(bytes.length):boxSize),brandOffset+8+32*4):brandOffset+8;
     const brands:string[]=[];
     for(let offset=brandOffset+8;offset+4<=limit;offset+=4)brands.push(ascii(offset,4));
     if(brands.length)metadata.compatibleBrands=brands;
