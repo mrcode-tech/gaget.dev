@@ -1,6 +1,6 @@
 # Feature Inventory and Traceability
 
-**Evidence inspected:** capability proposal, registry, route tree, operation tests, production smoke/E2E checks, and matching CI evidence for the initial workbench implementation. This inventory distinguishes implemented subsets from broader proposed operations.
+**Evidence sources:** capability proposal, registry, route tree, operation/component/E2E tests, and the latest exact-revision CI manifest when available. This inventory distinguishes implemented subsets from broader proposed operations; a run is not considered successful until its final status and manifest agree on the same commit.
 
 ## Existing developer utilities
 
