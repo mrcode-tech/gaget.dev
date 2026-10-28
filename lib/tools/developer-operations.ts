@@ -85,7 +85,7 @@ export function formatXml(s:string,minify=false){
  if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
  const roots:XmlTreeNode[]=[];
  const stack:XmlTreeNode[]=[];
- let doctypeSeen=false,rootClosed=false;
+ let doctypeSeen=false,rootClosed=false,rootCount=0;
  for(const token of tokens){
   const {kind,value,name}=token;
   if(kind==="text"){
@@ -94,7 +94,7 @@ export function formatXml(s:string,minify=false){
    continue;
   }
   if(kind==="doctype"){
-   if(doctypeSeen||roots.length>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");
+   if(doctypeSeen||rootCount>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");
    doctypeSeen=true;
    (stack.length?stack[stack.length-1].children as XmlTreeNode[]:roots as unknown as XmlTreeNode[]).push(token as unknown as XmlTreeNode);
    continue;
@@ -108,7 +108,8 @@ export function formatXml(s:string,minify=false){
   }
   if(kind==="start"||kind==="empty"){
    if(stack.length===0){
-    if(rootClosed||roots.length>0)throw new Error("XML must contain exactly one root element.");
+    if(rootClosed||rootCount>0)throw new Error("XML must contain exactly one root element.");
+    rootCount++;
    }
    const node:XmlTreeNode={kind:"element",open:value,close:"",selfClosing:kind==="empty",children:[]};
    if(stack.length)(stack[stack.length-1].children as XmlTreeNode[]).push(node);
