@@ -682,7 +682,7 @@ export async function inspectSshPublicKey(input: string): Promise<string> {
   const blob=Uint8Array.from(binary,c=>c.charCodeAt(0));
   if(blob.length>16_384) throw new Error("OpenSSH public-key blobs are limited to 16,384 bytes.");
   let offset=0;
-  const field=(name:string):Uint8Array=>{if(offset+4>blob.length)throw new Error("OpenSSH key blob is truncated before "+name+".");const n=blob[offset]*0x1000000+(blob[offset+1]<<16)+(blob[offset+2]<<8)+blob[offset+3];offset+=4;if(n>blob.length-offset)throw new Error("OpenSSH key blob has an invalid length for "+name+".");const out=blob.slice(offset,offset+n);offset+=n;return out;};
+  const field=(name:string):Uint8Array=>{if(offset+4>blob.length)throw new Error("OpenSSH key blob is truncated before "+name+".");const n=blob[offset]*0x1000000+(blob[offset+1]*0x10000)+(blob[offset+2]*0x100)+blob[offset+3];offset+=4;if(n>blob.length-offset)throw new Error("OpenSSH key blob has an invalid length for "+name+".");const out=blob.slice(offset,offset+n);offset+=n;return out;};
   const text=(name:string):string=>{const v=field(name);if(v.some(b=>b<0x20||b>0x7e))throw new Error("OpenSSH "+name+" must be ASCII.");return new TextDecoder().decode(v);};
   if(text("key type")!==type)throw new Error("The OpenSSH line type does not match the embedded key type.");
   const meta:Record<string,string|number|boolean>={};
