@@ -5,7 +5,7 @@
 ## 1. Scope and baseline
 Primary source: [developer-tools capability proposal](../product/developer-tools-capability-proposal.md). Inspected sources include lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory, design-token contract, quality/accessibility contract, AI instructions and command.md.
 
-The registry has 14 relevant standalone entries. Encoding & Decoding consolidates URL and Base64 operations while preserving `/encoding/base64` as a compatibility redirect; JWT and UUID remain standalone. Hash, Regex, XML, SQL, CSV ↔ JSON, HTML and cURL now have implemented subsets. Do not expand their claims beyond the acceptance limits documented in the feature inventory. JSON Workspace is excluded from this initiative's implementation scope. Photo/Image, Audio, Video and Date & Time remain independent and excluded.
+The registry has 13 relevant standalone entries. Encoding & Decoding consolidates URL and Base64 operations while preserving `/encoding/base64` as a compatibility redirect; JWT remains standalone; UUID v4 generation is an operation inside Data Generator. Hash, Regex, XML, SQL, CSV ↔ JSON, HTML and cURL now have implemented subsets. Do not expand their claims beyond the acceptance limits documented in the feature inventory. JSON Workspace is excluded from this initiative's implementation scope. Photo/Image, Audio, Video and Date & Time remain independent and excluded.
 
 The initial planning pass did not run the app or CI. A later implementation run now verifies the seven new routes and operation helpers; re-check exact-revision CI artifacts for each subsequent change.
 
@@ -49,7 +49,7 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Exit:** security review complete, unsupported algorithms absent, claims match behavior. Unresolved primitive/trust/dependency questions block only dependent operations.
 
 ### Phase 5 — Extended formats, generators and conditional operations (P2/P3)
-**Scope:** Bitcoin Base58 and a synthetic sample-data generator for strings, bounded integers, timestamps, UUID batches and JSON records are implemented. YAML, ASN.1/TLV, archives and other parser/crypto extensions remain conditional on dependency, license, maintenance and safety review.  
+**Scope:** Bitcoin Base58 and the Data Generator for strings, bounded integers, timestamps, UUID batches and JSON records is implemented. YAML, ASN.1/TLV, archives and other parser/crypto extensions remain conditional on dependency, license, maintenance and safety review.  
 **Tests:** format vectors, malformed data, dependency license/maintenance review, resource limits and regression.  
 **Exit:** implemented generator and Base58 operations have unit tests and explicit limits. Conditional formats stay non-launchable until a maintained parser/primitive and adversarial test plan are approved.
 

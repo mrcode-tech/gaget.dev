@@ -10,7 +10,7 @@
 
 | jwt-decoder | JWT Decoder | /security/jwt-decoder | available |
 | uuid-generator | UUID Generator | /generators/uuid | available |
-| sample-data-generator | Sample Data Generator | /generators/sample-data | available with documented limits |
+| sample-data-generator | Data Generator | /generators/sample-data | available with documented limits |
 | hash-generator | Hash & Checksum Generator | /security/hash | available with documented limits |
 | regex-tester | Text & Regex Workbench | /text/regex | available with documented limits |
 | xml-formatter | XML Formatter | /xml/formatter | available with documented limits |
@@ -22,7 +22,7 @@
 | network-file-inspector | Network & File Inspector | /inspection/network-file | available with documented limits |
 | workflow-pipeline | Workflow & Batch Workbench | /workflow/pipeline | available with documented limits |
 
-There are now 14 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
+There are now 13 relevant standalone registry entries. Encoding & Decoding consolidates the URL/Base64 category and preserves `/encoding/base64` as a compatibility redirect. All seven formerly planned routes now have source implementations, operation tests and direct-route CI coverage; availability is limited to the implemented subsets described in the product inventory. JSON Workspace remains excluded from new-feature implementation. Photo, Audio, Video and Date & Time remain independent and excluded.
 
 ## Proposed capability traceability
 
@@ -54,7 +54,7 @@ There are now 14 relevant standalone registry entries. Encoding & Decoding conso
 | math.numeric | Base conversion, arithmetic and modular arithmetic | BigInt base conversion, arithmetic, modular integer operations, numeric statistics, fixed-width signed/unsigned views, endian byte order and IEEE-754 float views implemented / 3 | [Binary & math](./categories/compression-binary-math.md) |
 | math.stats | Statistics, character/byte frequency and entropy | Numeric statistics include quartiles/IQR, range, modes, mean/median absolute deviation, population/sample variance and standard deviation; byte frequency/entropy and Unicode code-point frequency implemented | [Binary & math](./categories/compression-binary-math.md) |
 | workflow.pipeline | Typed chains, reorder/configure, bounded previews, sequential line batches, versioned recipe import/export | Implemented safe subset / 6; includes typed ASCII85/Z85 and raw-byte conversions through hex with local files up to 100 KB and exact-byte downloads for raw-hex results; dedicated worker execution with timeout/termination cancellation; broader binary operations and persistence deferred | [Workflow/API](./categories/workflow-generators-api.md) |
-| gen.uuid | UUID v4 | Existing available / 3 | [Workflow/API](./categories/workflow-generators-api.md) |
+
 | gen.samples | Random test data, timestamps, identifiers and structured samples | Implemented at `/generators/sample-data`: bounded random strings/integers, synthetic JSON records, timestamps and UUID batches / 5 | [Workflow/API](./categories/workflow-generators-api.md) |
 | api.curl | Parse supported cURL subset and generate a redacted JavaScript fetch preview | Implemented subset / 3; GET/query mode, literal --data-urlencode, URL credential/query/header/body redaction and explicit unsupported value-taking flags; file-backed data and broad flag/language coverage pending | [Workflow/API](./categories/workflow-generators-api.md) |
 | api.http | Inspect supplied HTTP request/response | Implemented offline parser for request/status lines and headers; sensitive header redaction, recognizable secret query values and credentials in request targets and URL-bearing Location/Referer headers redacted, body omitted from parsed output / 4 | [Workflow/API](./categories/workflow-generators-api.md) |

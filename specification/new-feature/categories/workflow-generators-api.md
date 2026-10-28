@@ -13,14 +13,14 @@
 
 Do not build a pipeline engine until several operation contracts, errors and resource limits are stable.
 
-## Generators\n\n`/generators/sample-data` implements bounded random alphanumeric strings, inclusive integer ranges, device-clock timestamps, synthetic JSON records and UUID v4 batches. Output counts and lengths are capped; randomness is browser-local and is not presented as a password-strength recommendation.
+## Generators\n\n`/generators/sample-data` (Data Generator) implements bounded random alphanumeric strings, inclusive integer ranges, device-clock timestamps, synthetic JSON records and UUID v4 batches. Output counts and lengths are capped; randomness is browser-local and is not presented as a password-strength recommendation.
 
 | ID | Operation | Contract |
 |---|---|---|
 | gen.uuid-v4 | Existing UUID v4 | Registry ID uuid-generator, route /generators/uuid; verify randomness and output |
 | gen.random-data | Sample strings/numbers/records | Implemented random alphanumeric strings, inclusive bounded integers, and synthetic JSON records; uses browser crypto randomness and clearly labels values as test data |
 | gen.timestamps | Timestamp forms | Implemented ISO UTC, Unix seconds/milliseconds and detected browser time zone; device clock is explicitly not trusted |
-| gen.identifiers | Selected identifiers | UUID v4 batch generation implemented with cryptographic randomness when available; collision probability is not zero |
+| gen.identifiers | Selected identifiers | UUID v4 batch generation is available as an operation inside Data Generator, with cryptographic randomness when available; collision probability is not zero |
 | gen.payloads | Structured sample payloads | Synthetic examples only; no real user data |
 
 ## API & Developer Helpers
