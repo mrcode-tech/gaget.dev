@@ -1,3 +1,4 @@
+import { JwtWorkbench } from "@/components/tool-workbenches";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { DeveloperToolWorkbench } from "@/components/developer-tool-workbench";
@@ -51,4 +52,25 @@ it("hashes selected file bytes through the styled file control",async()=>{
  fireEvent.click(screen.getByRole("button",{name:"Generate digest"}));
  const output=screen.getByRole("textbox",{name:"Hash & Checksum Generator output"}) as HTMLTextAreaElement;
  await waitFor(()=>expect(output.value).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
+});
+
+describe("JWT time-claim interpretation",()=>{
+ it("handles exp=0 and reports iat/nbf relative to the local clock without verifying signatures",async()=>{
+  const base64url=(value:unknown)=>btoa(Array.from(new TextEncoder().encode(JSON.stringify(value)),b=>String.fromCharCode(b)).join("")).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  render(<JwtWorkbench/>);
+  fireEvent.change(screen.getByRole("textbox",{name:"JWT token input"}),{target:{value:base64url({alg:"none",typ:"JWT"})+"."+base64url({exp:0,iat:4102444800,nbf:4102444800})+".unverified"}});
+  fireEvent.click(screen.getByRole("button",{name:/Decode token/i}));
+  expect(await screen.findByText(/Decoded only\. The signature has not been verified/i)).toBeTruthy();
+  expect(screen.getByText("Expiration (exp)")).toBeTruthy();expect(screen.getByText(/Expired according to the local clock/i)).toBeTruthy();
+  expect(screen.getByText("Issued at (iat)")).toBeTruthy();expect(screen.getByText(/Issued in the future/i)).toBeTruthy();
+  expect(screen.getByText("Not before (nbf)")).toBeTruthy();expect(screen.getByText(/Not yet valid/i)).toBeTruthy();
+ });
+ it("shows missing and invalid NumericDate claims explicitly",async()=>{
+  const base64url=(value:unknown)=>btoa(Array.from(new TextEncoder().encode(JSON.stringify(value)),b=>String.fromCharCode(b)).join("")).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  render(<JwtWorkbench/>);
+  fireEvent.change(screen.getByRole("textbox",{name:"JWT token input"}),{target:{value:base64url({alg:"none"})+"."+base64url({exp:"tomorrow"})+".unverified"}});
+  fireEvent.click(screen.getByRole("button",{name:/Decode token/i}));
+  expect(await screen.findByText("Invalid NumericDate")).toBeTruthy();
+  expect(screen.getByText("Not provided")).toBeTruthy();
+ });
 });

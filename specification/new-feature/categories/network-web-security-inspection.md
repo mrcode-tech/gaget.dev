@@ -21,7 +21,7 @@ The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv
 | ID | Operation | Acceptance criteria |
 |---|---|---|
 | token.jwt-decode | Decode JWT header/claims | Malformed segments error; never imply signature validation |
-| token.jwt-time | Interpret exp/iat/nbf | Missing/invalid claims explicit; clock assumptions documented |
+| token.jwt-time | Interpret exp/iat/nbf | Implemented for NumericDate values; missing/invalid claims explicit and compared with local clock, without implying signature verification |
 | token.jwt-verify | Optional signature verification | Conditional on reviewed algorithm/key support; separate action/status |
 | token.header-cookie | Inspect supplied headers/cookies | Parse supplied text only; no implied live browser access |
 

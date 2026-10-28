@@ -61,7 +61,42 @@ export function Base64Workbench() {
   </div>;
 }
 
-type JwtResult = { header: unknown; payload: unknown; expiration?: string; expired?: boolean; warning?: string };
+type JwtTimeStatus = "missing" | "invalid" | "valid" | "expired" | "future" | "not-yet-valid";
+type JwtTimeClaim = { name: "exp" | "iat" | "nbf"; label: string; value: string; status: JwtTimeStatus };
+type JwtResult = { header: unknown; payload: unknown; timeClaims: JwtTimeClaim[]; warning?: string };
+function interpretJwtTimeClaims(payload: unknown, now: number): JwtTimeClaim[] {
+  const claims = payload && typeof payload === "object" && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
+  const definitions: { name: JwtTimeClaim["name"]; label: string }[] = [
+    { name: "exp", label: "Expiration (exp)" },
+    { name: "iat", label: "Issued at (iat)" },
+    { name: "nbf", label: "Not before (nbf)" }
+  ];
+  return definitions.map(({ name, label }) => {
+    if (!Object.hasOwn(claims, name)) return { name, label, value: "Not present", status: "missing" };
+    const raw = claims[name];
+    if (typeof raw !== "number" || !Number.isFinite(raw) || Math.abs(raw) > 8.64e12)
+      return { name, label, value: "Invalid NumericDate", status: "invalid" };
+    const milliseconds = raw * 1000;
+    const date = new Date(milliseconds);
+    if (Number.isNaN(date.getTime())) return { name, label, value: "Invalid NumericDate", status: "invalid" };
+    const status: JwtTimeStatus = name === "exp"
+      ? (milliseconds <= now ? "expired" : "valid")
+      : name === "iat"
+        ? (milliseconds > now ? "future" : "valid")
+        : (milliseconds > now ? "not-yet-valid" : "valid");
+    return { name, label, value: date.toLocaleString(), status };
+  });
+}
+function jwtTimeStatusLabel(status: JwtTimeStatus): string {
+  switch (status) {
+    case "missing": return "Not provided";
+    case "invalid": return "Invalid NumericDate";
+    case "expired": return "Expired according to the local clock";
+    case "future": return "Issued in the future according to the local clock";
+    case "not-yet-valid": return "Not yet valid according to the local clock";
+    default: return "Valid time relative to the local clock";
+  }
+}
 function decodeBase64Url(part: string) {
   const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
   const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
@@ -75,12 +110,12 @@ export function JwtWorkbench() {
   const [error, setError] = useState("");
   function decode() {
     try {
+      if (token.length > 200_000) throw new Error("JWT input is limited to 200,000 characters.");
       const parts = token.trim().split(".");
       if (parts.length !== 3 || !parts[0] || !parts[1]) throw new Error("A compact JWT should contain three dot-separated segments.");
       const header = JSON.parse(decodeBase64Url(parts[0]));
       const payload = JSON.parse(decodeBase64Url(parts[1]));
-      const exp = typeof payload.exp === "number" ? payload.exp : undefined;
-      setResult({ header, payload, expiration: exp ? new Date(exp * 1000).toLocaleString() : undefined, expired: exp ? exp * 1000 <= Date.now() : undefined, warning: "Decoded only. The signature has not been verified." });
+      setResult({ header, payload, timeClaims: interpretJwtTimeClaims(payload, Date.now()), warning: "Decoded only. The signature has not been verified." });
       setError("");
     } catch (e) { setResult(null); setError(e instanceof Error ? e.message : "Unable to decode token."); }
   }
@@ -89,7 +124,19 @@ export function JwtWorkbench() {
     {error && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
     {result && <div className="space-y-4">
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700 dark:text-amber-300"><AlertCircle className="mr-2 inline h-4 w-4" />{result.warning}</div>
-      {result.expiration && <div className={`rounded-lg border p-3 text-sm ${result.expired ? "border-destructive/30 bg-destructive/5" : "border-emerald-500/30 bg-emerald-500/5"}`}>Expiration: <strong>{result.expiration}</strong> — {result.expired ? "expired" : "not expired (based on local clock)"}</div>}
+      <section aria-label="Registered JWT time claims" className="space-y-2">
+        <h3 className="text-sm font-semibold">Registered time claims</h3>
+        <div className="grid gap-2 sm:grid-cols-3">{result.timeClaims.map(claim => {
+          const tone = claim.status === "expired" || claim.status === "invalid" ? "border-destructive/30 bg-destructive/5" :
+            claim.status === "future" || claim.status === "not-yet-valid" ? "border-amber-500/30 bg-amber-500/5" :
+            claim.status === "valid" ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-muted/40";
+          return <div key={claim.name} className={`min-w-0 rounded-lg border p-3 text-sm ${tone}`}>
+            <p className="font-medium">{claim.label}</p><p className="mt-1 break-words">{claim.value}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{jwtTimeStatusLabel(claim.status)}</p>
+          </div>;
+        })}</div>
+        <p className="text-xs text-muted-foreground">NumericDate values are compared with this device’s local clock. Missing and malformed claims are shown explicitly.</p>
+      </section>
       <div className="grid gap-4 xl:grid-cols-2">{[{title:"Header", data:result.header},{title:"Payload / claims",data:result.payload}].map(({title,data}) => <Card key={title}><CardHeader className="flex-row items-center justify-between"><CardTitle className="text-sm">{title}</CardTitle><Button variant="ghost" size="icon" aria-label={`Copy ${title}`} onClick={() => copyText(JSON.stringify(data,null,2))}><Copy className="h-4 w-4" /></Button></CardHeader><CardContent><pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted/50 p-4 font-mono text-xs leading-6">{JSON.stringify(data,null,2)}</pre></CardContent></Card>)}</div>
     </div>}
     <p className="text-xs text-muted-foreground">The token is decoded locally. This tool does not validate the signature or establish that the token is authentic.</p>
