@@ -7,7 +7,7 @@ Reuse the existing JSON Workspace as the canonical JSON experience; do not dupli
 | data.csv-json | CSV ↔ JSON | Quoted delimiters/newlines, escaped quotes, invalid quote placement, characters after closing quotes, duplicate headers, uneven rows, empty cells, BOM, Unicode, nested JSON and type policy tested |
 | data.xml | XML parse/format/minify | Namespaces, comments, CDATA, declarations and malformed nesting; external entities/network resolution disabled |
 | data.yaml | YAML parse/format, optional JSON conversion | Scalar typing, indentation, multi-document policy and alias/anchor limits documented |
-| data.data-uri | Parse data URI metadata and percent/Base64 payloads | Implemented offline with a 200,000-character input and 2 MB decoded-byte limit; accepts valid padded/unpadded Base64, returns byte metadata and bounded previews, never executes payloads |
+| data.data-uri | Parse data URI metadata and percent/Base64 payloads | Implemented offline with a 200,000-character input and 2 MB decoded-byte limit; accepts valid padded/unpadded Base64, applies the RFC default media type/charset, rejects duplicate parameters and misplaced Base64 flags, and returns byte metadata and bounded previews, never executes payloads |
 | data.query-string | Query-string parse/build | Repeated keys, empty values, plus vs encoded space, malformed escapes and ordering policy |
 | data.key-value | Key-value parse/build | Parse and JSON-to-key=value builder implemented; repeated array values become repeated lines; multiline values and delimiter-containing keys rejected |
 | data.asn1-tlv | Selected ASN.1/TLV inspection | Conditional; maintained parser, bounded recursion and demand review |

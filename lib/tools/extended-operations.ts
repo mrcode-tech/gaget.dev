@@ -35,13 +35,22 @@ export function parseDataUri(input:string):string {
   const metadata=source.slice(5,comma);
   const payload=source.slice(comma+1);
   const parts=metadata.split(";");
-  const mediaType=parts[0]||"text/plain";
+  const declaredMediaType=parts[0];
+  const mediaType=declaredMediaType||"text/plain";
   if(mediaType&&!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(mediaType))
     throw new Error("Data URI media type must be a valid type/subtype token.");
-  const base64=parts.slice(1).some(part=>part.toLowerCase()==="base64");
-  const parameters=parts.slice(1).filter(part=>part&&part.toLowerCase()!=="base64");
+  const metadataParts=parts.slice(1);
+  if(metadataParts.some(part=>part===""))throw new Error("Data URI contains an empty media-type parameter.");
+  const base64Flags=metadataParts.filter(part=>part.toLowerCase()==="base64");
+  if(base64Flags.length>1||(base64Flags.length===1&&metadataParts[metadataParts.length-1]?.toLowerCase()!=="base64"))
+    throw new Error("The data URI base64 flag must appear once, at the end of its metadata.");
+  const base64=base64Flags.length===1;
+  const parameters=metadataParts.filter(part=>part.toLowerCase()!=="base64");
   if(parameters.some(part=>!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+=[^;]*$/.test(part)))
     throw new Error("Data URI contains a malformed media-type parameter.");
+  const parameterNames=parameters.map(part=>part.slice(0,part.indexOf("=")).toLowerCase());
+  if(new Set(parameterNames).size!==parameterNames.length)throw new Error("Data URI contains duplicate media-type parameters.");
+  if(!declaredMediaType&&!parameterNames.includes("charset"))parameters.unshift("charset=US-ASCII");
   let bytes:Uint8Array;
   if(base64){
     // Data URLs commonly omit Base64 padding; accept valid unpadded lengths

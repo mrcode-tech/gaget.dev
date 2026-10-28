@@ -99,6 +99,12 @@ test("data URI parser handles percent and Base64 payloads as bounded bytes witho
  assert.equal(JSON.parse(parseDataUri("data:text/plain;base64,SGVsbG8")).textPreview,"Hello");
  assert.equal(JSON.parse(parseDataUri("data:text/plain;base64,SGVsbG8=")).textPreview,"Hello");
  assert.equal(JSON.parse(parseDataUri("data:," )).byteLength,0);
+ const defaulted=JSON.parse(parseDataUri("data:,Hello"));
+ assert.equal(defaulted.mediaType,"text/plain");assert.deepEqual(defaulted.parameters,["charset=US-ASCII"]);
+ assert.throws(()=>parseDataUri("data:text/plain;base64;charset=utf-8,SGVsbG8="),/base64 flag must appear once/i);
+ assert.throws(()=>parseDataUri("data:text/plain;base64;base64,SGVsbG8="),/base64 flag must appear once/i);
+ assert.throws(()=>parseDataUri("data:text/plain;charset=utf-8;charset=latin1,Hello"),/duplicate media-type parameters/i);
+ assert.throws(()=>parseDataUri("data:text/plain;;base64,SGVsbG8="),/empty media-type parameter/i);
  assert.throws(()=>parseDataUri("data:text/plain;base64,SGVsbG8!"),/Base64 data or padding/i);
  assert.throws(()=>parseDataUri("data:text/plain;base64,A"),/Base64 data or padding/i);
  assert.throws(()=>parseDataUri("data:text/plain;base64,AA="),/Base64 data or padding/i);
