@@ -429,7 +429,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
         if(cursor+2>bytes.length){notes.push("The GZIP extra-field length is truncated.");optionalFieldsValid=false;}
         else{const length=u16le(cursor)!;cursor+=2;if(cursor+length>bytes.length){notes.push("The GZIP extra field extends beyond the supplied bytes.");optionalFieldsValid=false;}else{metadata.extraFieldBytes=length;cursor+=length;}}
       }
-      const readOptionalField=(name:string)=>{if(cursor>=bytes.length){notes.push("The GZIP "+name+" field is truncated.");optionalFieldsValid=false;return;}const end=bytes.indexOf(0,cursor);if(end<0){notes.push("The GZIP "+name+" field has no NUL terminator in the supplied bytes.");optionalFieldsValid=false;cursor=bytes.length;return;}metadata[name+"Bytes"]=end-cursor;cursor=end+1;};
+      const readOptionalField=(name:string)=>{if(cursor>=bytes.length){notes.push("The GZIP "+name+" field is truncated.");optionalFieldsValid=false;return;}const end=bytes.indexOf(0,cursor);if(end<0){notes.push("The GZIP "+name+" field has no NUL terminator in the supplied bytes.");optionalFieldsValid=false;cursor=bytes.length;return;}if(end-cursor>4096){notes.push("The GZIP "+name+" field exceeds the 4,096-byte metadata inspection limit.");optionalFieldsValid=false;cursor=end+1;return;}metadata[name+"Bytes"]=end-cursor;cursor=end+1;};
       if(optionalFieldsValid&&(flags&8))readOptionalField("originalFilename");
       if(optionalFieldsValid&&(flags&16))readOptionalField("comment");
       if(optionalFieldsValid&&(flags&2)){if(cursor+2>bytes.length){notes.push("The GZIP header CRC field is truncated.");optionalFieldsValid=false;}else{metadata.headerCrc16Present=true;cursor+=2;}}

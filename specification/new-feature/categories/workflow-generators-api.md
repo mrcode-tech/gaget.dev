@@ -4,7 +4,7 @@
 
 | ID | Operation | Contract |
 |---|---|---|
-| flow.pipeline | Chain compatible operations | Implemented allowlisted typed text/encoding/JSON/query and byte-preserving Base64/Base64url/Base32/Base58/ASCII85/Z85/binary/quoted-printable operations through raw-hex; local file input up to 100 KB; incompatible steps blocked before run; 20-step cap |
+| flow.pipeline | Chain compatible operations | Implemented allowlisted typed text/encoding/JSON/query and byte-preserving Base64/Base64url/Base32/Base58/ASCII85/Z85/binary/quoted-printable operations through raw-hex; local file input up to 100 KB; final raw-hex output can be downloaded as exact bytes; incompatible steps blocked before run; 20-step cap |
 | flow.reorder | Reorder/configure steps | Implemented up/down reordering; failures identify step index and operation |
 | flow.intermediate | Inspect intermediate output | Implemented previews capped at 2,000 characters per step; only allowlisted non-secret operations |
 | flow.batch | Process records | Implemented sequential line batches capped at 100 records and 200,000 total input characters with per-line errors; each run executes in a dedicated worker and cancellation terminates the worker |

@@ -8,9 +8,10 @@ vi.mock("@/lib/tools/workflow-worker-client",async()=>{
   return pipeline.executePipelineAsync(input,recipe,signal);
  }};
 });
-const originalScrollIntoView=Element.prototype.scrollIntoView;
-beforeEach(()=>{Object.defineProperty(Element.prototype,"scrollIntoView",{configurable:true,value:vi.fn()});});
-afterEach(()=>{cleanup();vi.unstubAllGlobals();if(originalScrollIntoView)Object.defineProperty(Element.prototype,"scrollIntoView",{configurable:true,value:originalScrollIntoView});else delete (Element.prototype as unknown as {scrollIntoView?:()=>void}).scrollIntoView;});
+const originalElementScrollIntoView=Element.prototype.scrollIntoView;
+const originalHtmlScrollIntoView=HTMLElement.prototype.scrollIntoView;
+beforeEach(()=>{Object.defineProperty(Element.prototype,"scrollIntoView",{configurable:true,value:vi.fn()});Object.defineProperty(HTMLElement.prototype,"scrollIntoView",{configurable:true,value:vi.fn()});});
+afterEach(()=>{cleanup();vi.unstubAllGlobals();if(originalElementScrollIntoView)Object.defineProperty(Element.prototype,"scrollIntoView",{configurable:true,value:originalElementScrollIntoView});else delete (Element.prototype as unknown as {scrollIntoView?:()=>void}).scrollIntoView;if(originalHtmlScrollIntoView)Object.defineProperty(HTMLElement.prototype,"scrollIntoView",{configurable:true,value:originalHtmlScrollIntoView});else delete (HTMLElement.prototype as unknown as {scrollIntoView?:()=>void}).scrollIntoView;});
 it("runs the default typed workflow and shows final output",async()=>{render(<WorkflowPipelineWorkbench/>);fireEvent.click(screen.getByRole("button",{name:/Run workflow/i}));const output=screen.getByRole("textbox",{name:"Workflow final output"}) as HTMLTextAreaElement;await waitFor(()=>expect(output.value).toBe("Hello%20GaGet.dev!"));});
 it("shows intermediate results after a successful run",async()=>{render(<WorkflowPipelineWorkbench/>);fireEvent.click(screen.getByRole("button",{name:/Run workflow/i}));await waitFor(()=>expect(screen.getByText(/Intermediate results/i)).toBeTruthy());});
 

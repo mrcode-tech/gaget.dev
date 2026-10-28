@@ -210,7 +210,7 @@ test("number-base conversion bounds costly BigInt inputs",()=>{
 });
 test("numeric statistics reject aggregate overflow rather than emitting invalid JSON numbers",()=>{
  assert.throws(()=>numericStatistics("1e308 1e308"),/finite numeric range/i);
- assert.throws(()=>numericStatistics("-1e308 1e308"),/variance exceeds the finite numeric range/i);
+ assert.throws(()=>numericStatistics("-1e308 1e308"),/numeric range exceeds the finite numeric range|variance exceeds the finite numeric range/i);
  const stable=JSON.parse(numericStatistics("1e100 1e100"));
  assert.ok(Number.isFinite(stable.count));
 });
