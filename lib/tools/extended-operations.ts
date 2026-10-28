@@ -680,7 +680,7 @@ export async function inspectSshPublicKey(input: string): Promise<string> {
   const unpadded=encoded.replace(/=+$/,"");
   let binary:string; try { binary=atob(unpadded+"=".repeat((4-unpadded.length%4)%4)); } catch { throw new Error("OpenSSH key data is not valid Base64."); }
   const blob=Uint8Array.from(binary,c=>c.charCodeAt(0));
-  if(blob.length>MAX_INSPECT_BYTES) throw new Error("OpenSSH key data exceeds the 2,000,000 byte safety limit.");
+  if(blob.length>16_384) throw new Error("OpenSSH public-key blobs are limited to 16,384 bytes.");
   let offset=0;
   const field=(name:string):Uint8Array=>{if(offset+4>blob.length)throw new Error("OpenSSH key blob is truncated before "+name+".");const n=blob[offset]*0x1000000+(blob[offset+1]<<16)+(blob[offset+2]<<8)+blob[offset+3];offset+=4;if(n>blob.length-offset)throw new Error("OpenSSH key blob has an invalid length for "+name+".");const out=blob.slice(offset,offset+n);offset+=n;return out;};
   const text=(name:string):string=>{const v=field(name);if(v.some(b=>b<0x20||b>0x7e))throw new Error("OpenSSH "+name+" must be ASCII.");return new TextDecoder().decode(v);};
@@ -691,7 +691,7 @@ export async function inspectSshPublicKey(input: string): Promise<string> {
   else if(type.startsWith("ecdsa-sha2-")||type==="sk-ecdsa-sha2-nistp256@openssh.com"){const curve=text("ECDSA curve"),point=field("ECDSA public point"),expected=type.includes("nistp521")?"nistp521":type.includes("nistp384")?"nistp384":"nistp256",pointLength=expected==="nistp521"?133:expected==="nistp384"?97:65;if(curve!==expected||point.length!==pointLength||point[0]!==4)throw new Error("ECDSA curve or uncompressed public-point length does not match the declared key type.");meta.algorithm=type.startsWith("sk-")?"ECDSA security key":"ECDSA";meta.curve=curve;meta.publicPointBytes=point.length;if(type.startsWith("sk-"))meta.application=text("security-key application");}
   else{const key=field("Ed25519 public key");if(key.length!==32)throw new Error("Ed25519 public keys must contain exactly 32 bytes.");meta.algorithm=type.startsWith("sk-")?"Ed25519 security key":"Ed25519";meta.publicKeyBytes=key.length;if(type.startsWith("sk-"))meta.application=text("security-key application");}
   if(offset!==blob.length)throw new Error("OpenSSH key blob contains unexpected trailing bytes.");
-  const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",blob.buffer.slice(blob.byteOffset,blob.byteOffset+blob.byteLength) as ArrayBuffer));
+  const subtle=globalThis.crypto?.subtle;if(!subtle)throw new Error("Web Crypto is unavailable; the key structure was not fingerprinted.");\n  const digest=new Uint8Array(await subtle.digest("SHA-256",blob.buffer.slice(blob.byteOffset,blob.byteOffset+blob.byteLength) as ArrayBuffer));
   let raw="";for(const byte of digest)raw+=String.fromCharCode(byte);
   return JSON.stringify({format:"OpenSSH public key",type,blobBytes:blob.length,keyMetadata:meta,fingerprint:"SHA256:"+btoa(raw).replace(/=+$/,""),commentPresent:parts.length>2,commentReturned:false,trustValidated:false,networkRequestsMade:false,note:"Only the supplied public-key blob was parsed. The comment is not returned. This does not prove key ownership, private-key possession, authorization, or trust."},null,2);
 }

@@ -25,3 +25,21 @@ test("HTML formatter preserves mixed inline text in the browser",async({page})=>
  await page.getByRole("button",{name:"Process"}).click();
  await expect(page.getByRole("textbox",{name:"HTML formatter output"})).toHaveValue("<p>Hello <b>world</b> again</p>");
 });
+
+test("OpenSSH public-key inspector parses a supplied Ed25519 key without exposing its comment",async({page})=>{
+ await page.goto("/inspection/network-file");
+ await page.getByRole("combobox",{name:"Extended operation"}).click();
+ await page.getByRole("option",{name:"Inspect OpenSSH public key"}).click();
+ const encoded=await page.evaluate(()=>{
+  const field=(value:Uint8Array)=>{const n=value.length;return [n>>>24,(n>>>16)&255,(n>>>8)&255,n&255,...value];};
+  const type=new TextEncoder().encode("ssh-ed25519"),key=Uint8Array.from({length:32},(_,i)=>i);
+  const blob=Uint8Array.from([...field(type),...field(key)]);
+  return btoa(Array.from(blob,b=>String.fromCharCode(b)).join(""));
+ });
+ await page.getByRole("textbox",{name:"Extended tool input"}).fill("ssh-ed25519 "+encoded+" private-looking-comment");
+ await page.getByRole("button",{name:"Process"}).click();
+ const output=page.getByRole("textbox",{name:"Extended tool output"});
+ await expect(output).toHaveValue(/"fingerprint"/);
+ await expect(output).toHaveValue(/"trustValidated": false/);
+ await expect(output).not.toHaveValue(/private-looking-comment/);
+});
