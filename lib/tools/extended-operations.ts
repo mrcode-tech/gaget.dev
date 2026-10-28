@@ -430,7 +430,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   } else if(bytes.length>=16&&ascii(4,4)==="ftyp"){
     metadata.format="ISO Base Media File Format (MP4-family) candidate";
     const size32=u32be(0)??0;let boxSize=BigInt(size32),brandOffset=8,headerValid=true;
-    if(size32===1&&bytes.length>=24){boxSize=0n;for(let i=8;i<16;i++)boxSize=(boxSize<<8n)|BigInt(bytes[i]);brandOffset=16;metadata.extendedBoxSize=boxSize.toString();}
+    if(size32===1&&bytes.length>=24){boxSize=BigInt(0);for(let i=8;i<16;i++)boxSize=(boxSize<<BigInt(8))|BigInt(bytes[i]);brandOffset=16;metadata.extendedBoxSize=boxSize.toString();}
     else if(size32===1){headerValid=false;notes.push("The extended ftyp box size is truncated.");}
     else if(size32===0)boxSize=BigInt(bytes.length);
     metadata.ftypBoxBytes=boxSize.toString();
@@ -441,7 +441,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
     const brands:string[]=[];
     for(let offset=brandOffset+8;offset+4<=limit;offset+=4)brands.push(ascii(offset,4));
     if(brands.length)metadata.compatibleBrands=brands;
-    if(boxSize>BigInt(brandOffset+8)&&((boxSize-BigInt(brandOffset+8))%4n)!==0n)notes.push("The ftyp compatible-brand region has an incomplete trailing entry.");
+    if(boxSize>BigInt(brandOffset+8)&&((boxSize-BigInt(brandOffset+8))%BigInt(4))!==BigInt(0))notes.push("The ftyp compatible-brand region has an incomplete trailing entry.");
     notes.push("Only the bounded ftyp header is inspected; media samples, tracks and codecs are not decoded.");
   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE"&&bytes.length>=12){
     metadata.format="WAVE";let offset=12;let byteRate:number|null=null;let dataSize:number|null=null;
@@ -485,7 +485,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
     if(blockSize>bytes.length-8)notes.push("The first FLAC metadata block extends beyond the supplied bytes.");
     if(blockType===0&&blockSize>=34&&bytes.length>=42){
       const sampleRate=(bytes[18]<<12)|(bytes[19]<<4)|(bytes[20]>>4),channels=((bytes[20]>>1)&7)+1,bitsPerSample=(((bytes[20]&1)<<4)|(bytes[21]>>4))+1;
-      const totalSamples=BigInt(bytes[21]&15)*0x100000000n+BigInt(u32be(22)??0);
+      const totalSamples=BigInt(bytes[21]&15)*BigInt("4294967296")+BigInt(u32be(22)??0);
       metadata.sampleRate=sampleRate;metadata.channels=channels;metadata.bitsPerSample=bitsPerSample;metadata.totalSamples=totalSamples.toString();
       if(sampleRate>0)metadata.durationSeconds=Number((Number(totalSamples)/sampleRate).toFixed(3));
     }else if(blockType===0)notes.push("The FLAC STREAMINFO block is truncated or shorter than 34 bytes.");
@@ -495,8 +495,8 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
     const headerType=bytes[5],flags:string[]=[];
     if(headerType&1)flags.push("continued packet");if(headerType&2)flags.push("beginning of stream");if(headerType&4)flags.push("end of stream");
     metadata.headerFlags=flags;metadata.serialNumber=u32le(14);metadata.pageSequence=u32le(18);metadata.checksum="0x"+(u32le(22)??0).toString(16).padStart(8,"0").toUpperCase();
-    let granule=0n;for(let i=13;i>=6;i--)granule=(granule<<8n)|BigInt(bytes[i]);
-    metadata.granulePosition=granule===0xffffffffffffffffn?null:granule.toString();
+    let granule=BigInt(0);for(let i=13;i>=6;i--)granule=(granule<<BigInt(8))|BigInt(bytes[i]);
+    metadata.granulePosition=granule===BigInt("18446744073709551615")?null:granule.toString();
     const segmentCount=bytes[26];metadata.segmentCount=segmentCount;
     if(bytes.length<27+segmentCount)notes.push("The Ogg segment table is truncated.");
     else{let bodyBytes=0;for(let i=27;i<27+segmentCount;i++)bodyBytes+=bytes[i];metadata.declaredPageBodyBytes=bodyBytes;if(27+segmentCount+bodyBytes>bytes.length)notes.push("The Ogg page body extends beyond the supplied bytes.");}

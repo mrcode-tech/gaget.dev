@@ -50,5 +50,5 @@ it("hashes selected file bytes through the styled file control",async()=>{
  expect(await screen.findByText(/Hashing raw bytes from sample.bin/)).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:"Generate digest"}));
  const output=screen.getByRole("textbox",{name:"Hash & Checksum Generator output"}) as HTMLTextAreaElement;
- await waitFor(()=>expect(output.value).toBe("ba7816bf8f01cfea414140de5dae2223b00361a3961777a9cb410ff61f20015ad"));
+ await waitFor(()=>expect(output.value).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
 });

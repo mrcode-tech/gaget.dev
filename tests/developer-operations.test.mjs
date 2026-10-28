@@ -105,7 +105,7 @@ test("XML rejects malformed, undeclared and external entity references without r
  assert.throws(()=>formatXml('<root a="left < right"/>'),/attribute values cannot contain/i);
  assert.throws(()=>formatXml("<root>\u0000</root>"),/not allowed by XML 1.0/i);
  const internal='<!DOCTYPE root [<!ENTITY local "inert">]><root>&local;</root>';
- assert.equal(formatXml(internal),internal);
+ assert.equal(formatXml(internal,true),internal);
  const external='<!DOCTYPE root [<!ENTITY ext SYSTEM "file:///not-read">]><root>&ext;</root>';
  assert.throws(()=>formatXml(external),/Unknown or external XML entity/i);
 });

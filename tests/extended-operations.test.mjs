@@ -156,7 +156,7 @@ test("MP4-family ftyp inspection reports bounded brand metadata and truncation",
 test("FLAC STREAMINFO extracts sample format without decoding audio",()=>{
  const bytes=new Uint8Array(42);bytes.set([...new TextEncoder().encode("fLaC")],0);bytes[4]=0x80;bytes[7]=34;
  const sampleRate=44100,channels=2,bits=16,total=441000;
- bytes[18]=(sampleRate>>12)&255;bytes[19]=(sampleRate>>4)&255;bytes[20]=((sampleRate&15)<<4)|((channels-1)<<1)|((bits-1)>>4);bytes[21]=(((bits-1)&15)<<4)|((total/0x100000000)&15);bytes.set([0,6,0xba,0x68],22);
+ bytes[18]=(sampleRate>>12)&255;bytes[19]=(sampleRate>>4)&255;bytes[20]=((sampleRate&15)<<4)|((channels-1)<<1)|((bits-1)>>4);bytes[21]=(((bits-1)&15)<<4)|((total/0x100000000)&15);bytes.set([0,6,0xba,0xa8],22);
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"FLAC audio candidate");assert.equal(result.metadata.sampleRate,44100);assert.equal(result.metadata.channels,2);assert.equal(result.metadata.bitsPerSample,16);assert.equal(result.metadata.durationSeconds,10);
 });
 test("Ogg inspection bounds the segment table and identifies truncated pages",()=>{
@@ -165,7 +165,7 @@ test("Ogg inspection bounds the segment table and identifies truncated pages",()
  const complete=new Uint8Array(29);complete.set([...new TextEncoder().encode("OggS")],0);complete[26]=1;complete[27]=2;assert.match(JSON.parse(inspectFileMetadata(complete)).notes.join(" "),/body extends/i);
 });
 test("AVI inspection bounds RIFF and main-header metadata",()=>{
- const bytes=new Uint8Array(64);bytes.set([...new TextEncoder().encode("RIFF")],0);bytes.set([56,0,0,0],4);bytes.set([...new TextEncoder().encode("AVI ")],8);bytes.set([...new TextEncoder().encode("LIST")],12);bytes.set([...new TextEncoder().encode("avih")],24);bytes.set([40,0,0,0],28);bytes.set([0x40,0x42,0x0f,0],32);bytes.set([100,0,0,0],48);bytes.set([1,0,0,0],56);bytes.set([2,0,0,0],60);
+ const bytes=new Uint8Array(72);bytes.set([...new TextEncoder().encode("RIFF")],0);bytes.set([64,0,0,0],4);bytes.set([...new TextEncoder().encode("AVI ")],8);bytes.set([...new TextEncoder().encode("LIST")],12);bytes.set([...new TextEncoder().encode("avih")],24);bytes.set([40,0,0,0],28);bytes.set([0x40,0x42,0x0f,0],32);bytes.set([100,0,0,0],48);bytes.set([1,0,0,0],56);bytes.set([2,0,0,0],60);
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"AVI container candidate");assert.equal(result.metadata.microsecondsPerFrame,1_000_000);assert.equal(result.metadata.frameCount,100);assert.equal(result.metadata.durationSeconds,100);
 });
 
