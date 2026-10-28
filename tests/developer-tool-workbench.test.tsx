@@ -24,9 +24,9 @@ describe("DeveloperToolWorkbench", () => {
     const bytes = Uint8Array.from([0xba,0x78,0x16,0xbf,0x8f,0x01,0xcf,0xea,0x41,0x41,0x40,0xde,0x5d,0xae,0x22,0x23,0xb0,0x03,0x61,0xa3,0x96,0x17,0x7a,0x9c,0xb4,0x10,0xff,0x61,0xf2,0x00,0x15,0xad]);
     vi.stubGlobal("crypto", { subtle: { digest: vi.fn(async () => bytes.buffer) } });
     render(<DeveloperToolWorkbench operation="hash" />);
-    fireEvent.change(screen.getByRole("textbox", { name: "Hash generator input" }), { target: { value: "abc" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Hash & Checksum Generator input" }), { target: { value: "abc" } });
     fireEvent.click(screen.getByRole("button", { name: "Generate digest" }));
-    const output = screen.getByRole("textbox", { name: "Hash generator output" }) as HTMLTextAreaElement;
+    const output = screen.getByRole("textbox", { name: "Hash & Checksum Generator output" }) as HTMLTextAreaElement;
     await waitFor(() => expect(output.value).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
   });
   it("shows a redacted cURL preview without executing the request", async () => {
@@ -49,6 +49,6 @@ it("hashes selected file bytes through the styled file control",async()=>{
  fireEvent.change(screen.getByLabelText("Choose a file to hash"),{target:{files:[file]}});
  expect(await screen.findByText(/Hashing raw bytes from sample.bin/)).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:"Generate digest"}));
- const output=screen.getByRole("textbox",{name:"Hash generator output"}) as HTMLTextAreaElement;
+ const output=screen.getByRole("textbox",{name:"Hash & Checksum Generator output"}) as HTMLTextAreaElement;
  await waitFor(()=>expect(output.value).toBe("ba7816bf8f01cfea414140de5dae2223b00361a3961777a9cb410ff61f20015ad"));
 });

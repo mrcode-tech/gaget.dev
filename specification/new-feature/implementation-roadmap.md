@@ -30,7 +30,7 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Scope:** Define input/output/error/resource contracts; audit existing components; decide whether new reusable patterns are necessary.  
 **Read:** design-system-and-reuse.md, shared-components/, wireframes/, design-token and quality/accessibility foundations.  
 **Tests:** labels, focus, disabled/error states, keyboard behavior, file lifecycle and accessibility where relevant.  
-**Exit:** reusable patterns have documented APIs/states; no duplicate primitives; responsive/theme/RTL behavior specified. File-input decision follows source audit.
+**Exit:** reusable patterns have documented APIs/states; no duplicate primitives; responsive/theme/RTL behavior specified. Source audit found no generic reusable file-input/dropzone component; optional file selection uses the existing shadcn-style Input, while file-only media workspaces retain their workspace-specific dropzones.
 
 ### Phase 2 — Registry, routes and encoding compatibility (P1)
 **Scope:** Improve encoding operation model while preserving URL/Base64 canonical routes and prepare registry integration.  
