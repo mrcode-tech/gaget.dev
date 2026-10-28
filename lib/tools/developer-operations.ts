@@ -82,7 +82,38 @@ type XmlTreeNode = { kind: "element"; open: string; close: string; selfClosing: 
 export function formatXml(s:string,minify=false){
  guard(s);
  const tokens=tokenizeXml(s);
+ const validXmlChar=(cp:number)=>cp===0x9||cp===0xa||cp===0xd||(cp>=0x20&&cp<=0xd7ff)||(cp>=0xe000&&cp<=0xfffd)||(cp>=0x10000&&cp<=0x10ffff);
+ for(let offset=0;offset<s.length;){const cp=s.codePointAt(offset)!;if(!validXmlChar(cp))throw new Error("XML contains a character that is not allowed by XML 1.0.");offset+=cp>0xffff?2:1;}
  if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
+ const internalEntities=new Set<string>();
+ for(const token of tokens)if(token.kind==="doctype"){
+  for(const match of token.value.matchAll(/<!ENTITY\\s+([A-Za-z_:][\\w:.-]*)\\s+(['"])[\\s\\S]*?\\2\\s*>/g))internalEntities.add(match[1]);
+ }
+ const validateReferences=(value:string,context:string)=>{
+  for(let index=0;index<value.length;index++){
+   if(value[index]!=="&")continue;
+   const end=value.indexOf(";",index+1);
+   if(end<0||/[\\s<&]/.test(value.slice(index+1,end)))throw new Error("Malformed XML entity reference in "+context+".");
+   const ref=value.slice(index+1,end);
+   if(ref.startsWith("#x")||ref.startsWith("#X")||ref.startsWith("#")){
+    const numeric=ref[1]==="x"||ref[1]==="X"?Number.parseInt(ref.slice(2),16):Number.parseInt(ref.slice(1),10);
+    if(!Number.isInteger(numeric)||!validXmlChar(numeric))throw new Error("Invalid numeric XML character reference in "+context+".");
+   }else if(!["amp","lt","gt","apos","quot"].includes(ref)&&!internalEntities.has(ref)){
+    throw new Error("Unknown or external XML entity reference &"+ref+"; in "+context+".");
+   }
+   index=end;
+  }
+ };
+ for(const token of tokens){
+  if(token.kind==="text")validateReferences(token.value,"character data");
+  if(token.kind==="start"||token.kind==="empty"){
+   for(const attr of token.value.matchAll(/=\\s*("[^"]*"|'[^']*')/g)){
+    const value=attr[1].slice(1,-1);
+    if(value.includes("<"))throw new Error("XML attribute values cannot contain <.");
+    validateReferences(value,"attribute value");
+   }
+  }
+ }
  const roots:Array<XmlTreeNode|XmlToken>=[];
  const stack:XmlTreeNode[]=[];
  let doctypeSeen=false,rootClosed=false,rootCount=0;

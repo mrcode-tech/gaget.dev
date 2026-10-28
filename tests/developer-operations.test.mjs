@@ -97,3 +97,15 @@ test("XML formatting preserves text and mixed-content whitespace instead of chan
  assert.equal(formatXml('<root><item/><other/></root>'),'<root>\n  <item/>\n  <other/>\n</root>');
  assert.equal(formatXml('<root>\n  <item/>\n</root>'),'<root>\n  <item/>\n</root>');
 });
+
+test("XML rejects malformed, undeclared and external entity references without resolving them",()=>{
+ assert.equal(formatXml('<root a="&amp;&#x41;">&lt;&#65;</root>'),'<root a="&amp;&#x41;">&lt;&#65;</root>');
+ assert.throws(()=>formatXml("<root>&broken</root>"),/Malformed XML entity reference/i);
+ assert.throws(()=>formatXml("<root>&unknown;</root>"),/Unknown or external XML entity/i);
+ assert.throws(()=>formatXml('<root a="left < right"/>'),/attribute values cannot contain/i);
+ assert.throws(()=>formatXml("<root>\u0000</root>"),/not allowed by XML 1.0/i);
+ const internal='<!DOCTYPE root [<!ENTITY local "inert">]><root>&local;</root>';
+ assert.equal(formatXml(internal),internal);
+ const external='<!DOCTYPE root [<!ENTITY ext SYSTEM "file:///not-read">]><root>&ext;</root>';
+ assert.throws(()=>formatXml(external),/Unknown or external XML entity/i);
+});
