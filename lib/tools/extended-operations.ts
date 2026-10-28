@@ -413,6 +413,36 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
     metadata.format="BMP";metadata.width=width>0x7fffffff?width-0x100000000:width;metadata.height=Math.abs(heightRaw>0x7fffffff?heightRaw-0x100000000:heightRaw);metadata.bitsPerPixel=u16le(28);
   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP"&&ascii(12,4)==="VP8X"&&bytes.length>=30){
     metadata.format="WebP";metadata.width=1+bytes[24]+(bytes[25]<<8)+(bytes[26]<<16);metadata.height=1+bytes[27]+(bytes[28]<<8)+(bytes[29]<<16);
+  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="AVI "&&bytes.length>=12){
+    metadata.format="AVI container candidate";metadata.declaredRiffBytes=(u32le(4)??0)+8;
+    if((metadata.declaredRiffBytes as number)>bytes.length)notes.push("The declared RIFF size extends beyond the supplied bytes.");
+    const avih=Array.from(bytes.slice(12),(_,index)=>index).find(index=>index+8<=bytes.length&&ascii(12+index,4)==="avih");
+    if(avih!==undefined){
+      const size=u32le(12+avih+4)??0,body=12+avih+8;
+      if(size>=40&&body+40<=bytes.length){
+        const micros=u32le(body)??0,frames=u32le(body+16)??0;
+        metadata.microsecondsPerFrame=micros;metadata.frameCount=frames;metadata.streamCount=u32le(body+24);
+        metadata.width=u32le(body+32);metadata.height=u32le(body+36);
+        if(micros>0&&frames>0)metadata.durationSeconds=Number((micros*frames/1_000_000).toFixed(3));
+      }else notes.push("The AVI main-header chunk is absent, truncated, or shorter than its required fixed fields.");
+    }else notes.push("No AVI main-header chunk was found in the supplied bytes.");
+    notes.push("AVI metadata is a bounded header hint; streams and codecs are not decoded.");
+  } else if(bytes.length>=16&&ascii(4,4)==="ftyp"){
+    metadata.format="ISO Base Media File Format (MP4-family) candidate";
+    const size32=u32be(0)??0;let boxSize=BigInt(size32),brandOffset=8;
+    if(size32===1&&bytes.length>=24){boxSize=0n;for(let i=8;i<16;i++)boxSize=(boxSize<<8n)|BigInt(bytes[i]);brandOffset=16;metadata.extendedBoxSize=boxSize.toString();}
+    else if(size32===1)notes.push("The extended ftyp box size is truncated.");
+    else if(size32===0)boxSize=BigInt(bytes.length);
+    metadata.ftypBoxBytes=boxSize.toString();
+    if(boxSize<BigInt(brandOffset+8))notes.push("The ftyp box declares a size too small to contain brand metadata.");
+    if(boxSize>BigInt(bytes.length))notes.push("The ftyp box extends beyond the supplied bytes.");
+    if(bytes.length>=brandOffset+8){metadata.majorBrand=ascii(brandOffset,4);metadata.minorVersion=u32be(brandOffset+4);}
+    const limit=Math.min(bytes.length,Number(boxSize>BigInt(bytes.length)?BigInt(bytes.length):boxSize),brandOffset+8+32*4);
+    const brands:string[]=[];
+    for(let offset=brandOffset+8;offset+4<=limit;offset+=4)brands.push(ascii(offset,4));
+    if(brands.length)metadata.compatibleBrands=brands;
+    if(boxSize>BigInt(brandOffset+8)&&((boxSize-BigInt(brandOffset+8))%4n)!==0n)notes.push("The ftyp compatible-brand region has an incomplete trailing entry.");
+    notes.push("Only the bounded ftyp header is inspected; media samples, tracks and codecs are not decoded.");
   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WAVE"&&bytes.length>=12){
     metadata.format="WAVE";let offset=12;let byteRate:number|null=null;let dataSize:number|null=null;
     while(offset+8<=bytes.length){
@@ -447,6 +477,31 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       metadata.format="MP3 with ID3 tag";metadata.id3Version="2."+bytes[3]+"."+bytes[4];metadata.id3TagBytes=(sizeBytes[0]<<21)|(sizeBytes[1]<<14)|(sizeBytes[2]<<7)|sizeBytes[3];metadata.id3Flags=bytes[5];
       if(10+(metadata.id3TagBytes as number)>bytes.length)notes.push("The declared ID3 tag extends beyond the supplied bytes.");
     } else notes.push("ID3 tag size uses invalid synchsafe bytes.");
+  } else if(ascii(0,4)==="fLaC"&&bytes.length>=8){
+    metadata.format="FLAC audio candidate";
+    const header=bytes[4],blockType=header&0x7f,blockSize=(bytes[5]<<16)|(bytes[6]<<8)|bytes[7];
+    const blockNames:Record<number,string>={0:"STREAMINFO",1:"PADDING",2:"APPLICATION",3:"SEEKTABLE",4:"VORBIS_COMMENT",5:"CUESHEET",6:"PICTURE"};
+    metadata.firstMetadataBlock={type:blockNames[blockType]??"Reserved/unknown",typeCode:blockType,isLast:(header&0x80)!==0,declaredBytes:blockSize};
+    if(blockSize>bytes.length-8)notes.push("The first FLAC metadata block extends beyond the supplied bytes.");
+    if(blockType===0&&blockSize>=34&&bytes.length>=42){
+      const sampleRate=(bytes[18]<<12)|(bytes[19]<<4)|(bytes[20]>>4),channels=((bytes[20]>>1)&7)+1,bitsPerSample=(((bytes[20]&1)<<4)|(bytes[21]>>4))+1;
+      const totalSamples=BigInt(bytes[21]&15)*0x100000000n+BigInt(u32be(22)??0);
+      metadata.sampleRate=sampleRate;metadata.channels=channels;metadata.bitsPerSample=bitsPerSample;metadata.totalSamples=totalSamples.toString();
+      if(sampleRate>0)metadata.durationSeconds=Number((Number(totalSamples)/sampleRate).toFixed(3));
+    }else if(blockType===0)notes.push("The FLAC STREAMINFO block is truncated or shorter than 34 bytes.");
+    notes.push("FLAC stream metadata only; audio frames are not decoded.");
+  } else if(ascii(0,4)==="OggS"&&bytes.length>=27){
+    metadata.format="Ogg page candidate";metadata.version=bytes[4];
+    const headerType=bytes[5],flags:string[]=[];
+    if(headerType&1)flags.push("continued packet");if(headerType&2)flags.push("beginning of stream");if(headerType&4)flags.push("end of stream");
+    metadata.headerFlags=flags;metadata.serialNumber=u32le(14);metadata.pageSequence=u32le(18);metadata.checksum="0x"+(u32le(22)??0).toString(16).padStart(8,"0").toUpperCase();
+    let granule=0n;for(let i=13;i>=6;i--)granule=(granule<<8n)|BigInt(bytes[i]);
+    metadata.granulePosition=granule===0xffffffffffffffffn?null:granule.toString();
+    const segmentCount=bytes[26];metadata.segmentCount=segmentCount;
+    if(bytes.length<27+segmentCount)notes.push("The Ogg segment table is truncated.");
+    else{let bodyBytes=0;for(let i=27;i<27+segmentCount;i++)bodyBytes+=bytes[i];metadata.declaredPageBodyBytes=bodyBytes;if(27+segmentCount+bodyBytes>bytes.length)notes.push("The Ogg page body extends beyond the supplied bytes.");}
+    if(bytes[4]!==0)notes.push("The Ogg page version is not the currently defined version 0.");
+    notes.push("Ogg page headers only; codec identification and packet contents are not decoded.");
   } else if(bytes.length>=4&&["feedface","cefaedfe","feedfacf","cffaedfe","cafebabe","bebafeca","cafebabf","bfbafeca"].includes(Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join(""))){
     const magic=Array.from(bytes.slice(0,4),b=>b.toString(16).padStart(2,"0")).join("");
     const fat=["cafebabe","bebafeca","cafebabf","bfbafeca"].includes(magic);
