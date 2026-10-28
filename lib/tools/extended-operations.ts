@@ -279,11 +279,14 @@ export function arithmetic(input:string,options:ExtendedOptions={}):string {
  }
  if(input==="divide"&&b===0)throw new Error("Cannot divide by zero.");const result=input==="add"?a+b:input==="subtract"?a-b:input==="multiply"?a*b:a/b;if(!Number.isFinite(result))throw new Error("Result is outside the finite numeric range.");return String(result);
 }
-export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
+export async function compressBytes(bytes:Uint8Array,format:"gzip"|"deflate"|"deflate-raw",action:"compress"|"decompress"="compress"):Promise<Uint8Array> {
  guardBytes(bytes);
  const Stream=action==="compress"?globalThis.CompressionStream:globalThis.DecompressionStream;
  if(!Stream)throw new Error("Browser compression streams are unavailable in this environment.");
- const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(new Stream(format));
+ let transformer:CompressionStream|DecompressionStream;
+ try { transformer=new Stream(format); }
+ catch { if(format==="deflate-raw")throw new Error("Raw DEFLATE is not supported by this browser. Try gzip or zlib-wrapped DEFLATE."); throw new Error("This browser does not support the selected compression format."); }
+ const stream=new Blob([bytes.slice().buffer as ArrayBuffer]).stream().pipeThrough(transformer);
  const reader=stream.getReader(),chunks:Uint8Array[]=[];let total=0;
  try {
   while(true){
