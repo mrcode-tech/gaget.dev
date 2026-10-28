@@ -109,3 +109,9 @@ test("XML rejects malformed, undeclared and external entity references without r
  const external='<!DOCTYPE root [<!ENTITY ext SYSTEM "file:///not-read">]><root>&ext;</root>';
  assert.throws(()=>formatXml(external),/Unknown or external XML entity/i);
 });
+
+test("XML pretty formatting indents element-only parents while preserving inline text nodes",()=>{
+ assert.equal(formatXml("<catalog><item>one</item><item>two &amp; three</item></catalog>"),"<catalog>\n  <item>one</item>\n  <item>two &amp; three</item>\n</catalog>");
+ assert.throws(()=>formatXml("<![CDATA[outside]]><root/>"),/CDATA is only allowed/i);
+ assert.throws(()=>formatXml("<!DOCTYPE root><!DOCTYPE root><root/>"),/DOCTYPE must appear at most once/i);
+});

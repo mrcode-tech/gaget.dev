@@ -119,6 +119,7 @@ export function formatXml(s:string,minify=false){
  let doctypeSeen=false,rootClosed=false,rootCount=0;
  for(const token of tokens){
   const {kind,value,name}=token;
+  if(kind==="cdata"&&stack.length===0)throw new Error("CDATA is only allowed inside the XML root element.");
   if(kind==="text"){
    if(stack.length===0){if(value.trim())throw new Error("Text is not allowed outside the XML root element.");continue;}
    stack[stack.length-1].children.push(token);
@@ -160,7 +161,7 @@ export function formatXml(s:string,minify=false){
   if(node.selfClosing)return node.open;
   return node.open+node.children.map(raw).join("")+node.close;
  };
- const hasCharacterData=(node:XmlTreeNode):boolean=>node.children.some(child=>!isElement(child)&&(child.kind==="text"||child.kind==="cdata") || isElement(child)&&hasCharacterData(child));
+ const hasCharacterData=(node:XmlTreeNode):boolean=>node.children.some(child=>!isElement(child)&&(child.kind==="text"||child.kind==="cdata"));
  const render=(node:XmlTreeNode|XmlToken,depth:number):string=>{
   if(!isElement(node))return "  ".repeat(depth)+node.value;
   if(node.selfClosing)return "  ".repeat(depth)+node.open;
