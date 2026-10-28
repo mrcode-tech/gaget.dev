@@ -149,3 +149,12 @@ test("cURL --data-ascii aliases --data and file-backed values remain unread",()=
  const file=parseCurl("curl --data-ascii @private.txt https://example.test/upload");
  assert.equal(file.body,undefined);assert.match(file.unsupported.join(" "),/file-backed data is not read/i);
 });
+
+test("cURL -A and --user-agent become a User-Agent header without executing requests",()=>{
+ const short=parseCurl("curl -A 'GaGet test client' https://example.test");
+ assert.deepEqual(short.headers,[["User-Agent","GaGet test client"]]);
+ const long=JSON.parse(transformDeveloperTool("curl","curl --user-agent 'GaGet/1.0' https://example.test"));
+ assert.equal(long.request.headers[0][0],"User-Agent");assert.equal(long.request.headers[0][1],"GaGet/1.0");
+ assert.match(long.note,/never sends the request/i);
+ assert.throws(()=>parseCurl("curl -A 'bad\\nheader' https://example.test"),/cannot contain line breaks/i);
+});
