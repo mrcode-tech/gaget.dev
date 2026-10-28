@@ -70,7 +70,8 @@ describe("JWT time-claim interpretation",()=>{
   render(<JwtWorkbench/>);
   fireEvent.change(screen.getByRole("textbox",{name:"JWT token input"}),{target:{value:base64url({alg:"none"})+"."+base64url({exp:"tomorrow"})+".unverified"}});
   fireEvent.click(screen.getByRole("button",{name:/Decode token/i}));
-  expect(await screen.findByText("Not provided")).toBeTruthy();\n  expect(screen.getAllByText("Invalid NumericDate").length).toBeGreaterThan(0);
+  expect(await screen.findByText("Not provided")).toBeTruthy();
+  expect(screen.getAllByText("Invalid NumericDate").length).toBeGreaterThan(0);
   expect(screen.getByText("Not provided")).toBeTruthy();
  });
 });
