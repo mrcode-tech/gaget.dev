@@ -90,3 +90,14 @@ test("recipe import stays data-only and rejects prototype keys, custom propertie
  ])assert.throws(()=>parsePipelineRecipe(source),/unsupported fields|only an operation ID/i);
  assert.equal(Object.prototype.polluted,undefined);
 });
+
+test("raw-byte pipeline operations reverse bytes and apply invert/bit rotations without text decoding",()=>{
+ const recipe=(operation)=>({version:1,inputType:"raw-hex",steps:[{operation}]});
+ assert.equal(executePipeline("00ff017f",recipe("raw-bytes-reverse")).output,"7f01ff00");
+ assert.equal(executePipeline("00ff017f",recipe("raw-bytes-not")).output,"ff00fe80");
+ assert.equal(executePipeline("0180",recipe("raw-bytes-rotate-left")).output,"0301");
+ assert.equal(executePipeline("0180",recipe("raw-bytes-rotate-right")).output,"80c0");
+ const roundTrip=executePipeline("00117f80ff",{version:1,inputType:"raw-hex",steps:[{operation:"raw-bytes-rotate-left"},{operation:"raw-bytes-rotate-right"}]});
+ assert.equal(roundTrip.output,"00117f80ff");
+ assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"raw-bytes-not"}]}),/Incompatible/i);
+});

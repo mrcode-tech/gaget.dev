@@ -17,7 +17,7 @@ it("cancels a running batch and discards partial results",async()=>{render(<Work
 
 it("loads a local binary file as raw hex, preserves bytes, and offers a binary download",async()=>{
  render(<WorkflowPipelineWorkbench/>);
- const encodeRecipe=new File([JSON.stringify({version:1,inputType:"raw-hex",steps:[{operation:"bytes-base64-encode"}]})],"encode.json",{type:"application/json"});
+ const encodeRecipe=new File([JSON.stringify({version:1,inputType:"raw-hex",steps:[{operation:"bytes-base64-encode"}]})],"encode.json",{type:"application/json"}); Object.defineProperty(encodeRecipe,"text",{value:async()=>JSON.stringify({version:1,inputType:"raw-hex",steps:[{operation:"bytes-base64-encode"}]})});
  fireEvent.change(screen.getByLabelText("Import workflow recipe"),{target:{files:[encodeRecipe]}});
  await waitFor(()=>expect(screen.getByLabelText("Choose a workflow input file")).toBeTruthy());
  const file=new File([new Uint8Array([0,255,1])],"binary.bin");
@@ -28,7 +28,7 @@ it("loads a local binary file as raw hex, preserves bytes, and offers a binary d
  expect(screen.getByText(/Loaded binary\.bin as raw bytes \(3 bytes\)/i)).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:/Run workflow/i}));
  await waitFor(()=>expect((screen.getByRole("textbox",{name:"Workflow final output"}) as HTMLTextAreaElement).value).toBe("AP8B"));
- const decodeRecipe=new File([JSON.stringify({version:1,inputType:"base64",steps:[{operation:"base64-bytes-decode"}]})],"decode.json",{type:"application/json"});
+ const decodeRecipe=new File([JSON.stringify({version:1,inputType:"base64",steps:[{operation:"base64-bytes-decode"}]})],"decode.json",{type:"application/json"}); Object.defineProperty(decodeRecipe,"text",{value:async()=>JSON.stringify({version:1,inputType:"base64",steps:[{operation:"base64-bytes-decode"}]})});
  fireEvent.change(screen.getByLabelText("Import workflow recipe"),{target:{files:[decodeRecipe]}});
  await waitFor(()=>expect(screen.getByRole("combobox",{name:"Workflow input type"}).textContent).toMatch(/Base64/i));
  fireEvent.change(input,{target:{value:"AP8B"}});

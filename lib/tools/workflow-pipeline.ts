@@ -54,6 +54,10 @@ export const PIPELINE_OPERATIONS = [
  {id:"utf16be-decode",label:"UTF-16BE decode from hex",input:"hex",output:"text"},
  {id:"windows1252-encode",label:"Windows-1252 encode to hex",input:"text",output:"hex"},
  {id:"windows1252-decode",label:"Windows-1252 decode from hex",input:"hex",output:"text"},
+ {id:"raw-bytes-reverse",label:"Reverse raw byte order",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-not",label:"Bitwise NOT each byte",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-rotate-left",label:"Rotate each byte left by one bit",input:"raw-hex",output:"raw-hex"},
+ {id:"raw-bytes-rotate-right",label:"Rotate each byte right by one bit",input:"raw-hex",output:"raw-hex"},
  {id:"json-format",label:"Format JSON",input:"json",output:"json"},
  {id:"json-minify",label:"Minify JSON",input:"json",output:"json"},
  {id:"query-parse",label:"Parse query string to JSON",input:"query",output:"json"},
@@ -143,6 +147,10 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "utf16be-decode":return convertCharset("decode",input,"utf-16be");
   case "windows1252-encode":return convertCharset("encode",input,"windows-1252");
   case "windows1252-decode":return convertCharset("decode",input,"windows-1252");
+  case "raw-bytes-reverse":return encodeByteRepresentation("hex",decodeByteRepresentation("hex",input).reverse());
+  case "raw-bytes-not":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>byte^0xff));
+  case "raw-bytes-rotate-left":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte<<1)|(byte>>>7))&0xff));
+  case "raw-bytes-rotate-right":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte>>>1)|(byte<<7))&0xff));
   case "json-format":return JSON.stringify(JSON.parse(input),null,2);
   case "json-minify":return JSON.stringify(JSON.parse(input));
   case "query-parse":return parseQueryString(input);
