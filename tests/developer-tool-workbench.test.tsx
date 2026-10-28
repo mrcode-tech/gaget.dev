@@ -72,6 +72,5 @@ describe("JWT time-claim interpretation",()=>{
   fireEvent.click(screen.getByRole("button",{name:/Decode token/i}));
   expect(await screen.findAllByText("Not provided")).toHaveLength(2);
   expect(screen.getAllByText("Invalid NumericDate").length).toBeGreaterThan(0);
-  expect(screen.getByText("Not provided")).toBeTruthy();
  });
 });
