@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCompatiblePipelineOperations, getPipelineOperation, parsePipelineRecipe, validatePipelineRecipe, PIPELINE_INPUT_TYPES, MAX_RECIPE_BYTES, type PipelineDataType, type PipelineOperation, type PipelineRecipe } from "@/lib/tools/workflow-pipeline";
 import { executeWorkflowInWorker } from "@/lib/tools/workflow-worker-client";
+import { encodeByteRepresentation } from "@/lib/tools/encoding-operations";
 type StepRow={id:number;operation:PipelineOperation};
 const SAMPLE="Hello GaGet.dev!";
 export function WorkflowPipelineWorkbench(){

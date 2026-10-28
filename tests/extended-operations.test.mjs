@@ -252,3 +252,10 @@ test("OpenSSH parser rejects oversized unsigned field lengths without signed int
  const malformed=Uint8Array.from([0,0x80,0,0,0,0,0,0]);
  await assert.rejects(()=>inspectSshPublicKey("ssh-ed25519 "+btoa(String.fromCharCode(...malformed))),/invalid length/i);
 });
+
+test("PEM inspector rejects unmatched markers even when another block is valid",async()=>{
+ const valid="-----BEGIN CERTIFICATE-----\nMAA=\n-----END CERTIFICATE-----";
+ const malformed=valid+"\n-----BEGIN PRIVATE KEY-----\n!!!!\n-----END OTHER KEY-----";
+ await assert.rejects(()=>inspectCertificateContainer(malformed,new TextEncoder().encode(malformed)),/unmatched or malformed BEGIN\/END block/i);
+ await assert.rejects(()=>inspectCertificateContainer("-----END CERTIFICATE-----",new TextEncoder().encode("-----END CERTIFICATE-----")),/unmatched or malformed BEGIN\/END block/i);
+});

@@ -715,7 +715,9 @@ export async function inspectCertificateContainer(input: string, bytes: Uint8Arr
     if(der.length>MAX_INSPECT_BYTES)throw new Error("Decoded PEM content is limited to 2,000,000 bytes.");
     blocks.push({label:match[1],bytes:der});
   }
-  if(source.includes("-----BEGIN ")&&blocks.length===0)throw new Error("PEM block is malformed or has mismatched BEGIN/END labels.");
+  const beginCount=(source.match(/-----BEGIN /g)||[]).length;
+  const endCount=(source.match(/-----END /g)||[]).length;
+  if(beginCount!==blocks.length||endCount!==blocks.length)throw new Error("PEM input contains an unmatched or malformed BEGIN/END block.");
   const fingerprint=async(data:Uint8Array)=>{
     const copy=data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength) as ArrayBuffer;
     const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",copy));
