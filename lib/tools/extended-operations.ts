@@ -411,7 +411,64 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   } else if(ascii(0,2)==="BM"&&bytes.length>=30){
     const width=u32le(18)!,heightRaw=u32le(22)!;
     metadata.format="BMP";metadata.width=width>0x7fffffff?width-0x100000000:width;metadata.height=Math.abs(heightRaw>0x7fffffff?heightRaw-0x100000000:heightRaw);metadata.bitsPerPixel=u16le(28);
-  } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP"&&ascii(12,4)==="VP8X"&&bytes.length>=30){
+  } else if(bytes.length>=8&&((bytes[0]===0x49&&bytes[1]===0x49&&bytes[2]===0x2a&&bytes[3]===0)||(bytes[0]===0x4d&&bytes[1]===0x4d&&bytes[2]===0&&bytes[3]===0x2a))){
+    const little=bytes[0]===0x49;
+    const u16be=(offset:number)=>offset+2<=bytes.length?(bytes[offset]<<8)|bytes[offset+1]:null;
+    const read16=(offset:number)=>little?u16le(offset):u16be(offset);
+    const read32=(offset:number)=>little?u32le(offset):u32be(offset);
+    metadata.format="TIFF image (classic TIFF)";metadata.byteOrder=little?"little-endian":"big-endian";
+    const ifdOffset=read32(4);metadata.firstIfdOffset=ifdOffset;
+    if(ifdOffset===null||ifdOffset===0||ifdOffset+2>bytes.length)notes.push("The first TIFF image-directory offset is invalid or outside the supplied bytes.");
+    else{
+      const entryCount=read16(ifdOffset);
+      if(entryCount===null)notes.push("The TIFF image-directory entry count is truncated.");
+      else{
+        metadata.firstIfdEntryCount=entryCount;
+        const names:Record<number,string>={256:"width",257:"height",258:"bitsPerSample",259:"compression",262:"photometricInterpretation",273:"stripOffsetsCount",274:"orientation",277:"samplesPerPixel",278:"rowsPerStrip",279:"stripByteCountsCount",282:"xResolution",283:"yResolution",284:"planarConfiguration",296:"resolutionUnit",305:"software",306:"dateTime",315:"artist",33432:"copyright",339:"sampleFormat"};
+        const sizes:Record<number,number>={1:1,2:1,3:2,4:4,5:8,6:1,7:1,8:2,9:4,10:8,11:4,12:8};
+        const inspected=Math.min(entryCount,256);
+        if(entryCount>inspected)notes.push("Only the first 256 TIFF directory entries were inspected.");
+        for(let index=0;index<inspected;index++){
+          const entry=ifdOffset+2+index*12;
+          if(entry+12>bytes.length){notes.push("The TIFF image-directory table is truncated.");break;}
+          const tag=read16(entry)??0,name=names[tag];if(!name)continue;
+          const type=read16(entry+2)??0,count=read32(entry+4)??0;
+          if(name==="stripOffsetsCount"||name==="stripByteCountsCount"){metadata[name]=count;continue;}
+          if(!sizes[type]||count===0){notes.push("TIFF tag "+name+" has an unsupported type or empty value.");continue;}
+          if(name==="bitsPerSample"&&count>8){notes.push("The TIFF BitsPerSample array exceeds the inspection limit.");continue;}
+          if(["software","dateTime","artist","copyright"].includes(name)&&count>256){notes.push("TIFF text tag "+name+" exceeds the inspection limit.");continue;}
+          const valueBytes=count*sizes[type],valueOffset=valueBytes<=4?entry+8:read32(entry+8);
+          if(valueOffset===null||valueOffset>bytes.length||valueBytes>bytes.length-valueOffset){notes.push("TIFF tag "+name+" points beyond the supplied bytes.");continue;}
+          const valueAt=(position:number):number|null=>{
+            if(type===1||type===6||type===7)return bytes[position]??null;
+            if(type===3||type===8){const value=read16(position);return value===null?null:type===8&&value>0x7fff?value-0x10000:value;}
+            if(type===4||type===9){const value=read32(position);return value===null?null:type===9&&value>0x7fffffff?value-0x100000000:value;}
+            return null;
+          };
+          if(name==="bitsPerSample"){
+            if(type!==3&&type!==4){notes.push("TIFF BitsPerSample uses an unsupported numeric type.");continue;}
+            const values:number[]=[];for(let n=0;n<count;n++){const value=valueAt(valueOffset+n*sizes[type]);if(value!==null)values.push(value);}
+            metadata.bitsPerSample=values;continue;
+          }
+          if(name==="xResolution"||name==="yResolution"){
+            if(type===5&&count===1){const numerator=read32(valueOffset),denominator=read32(valueOffset+4);if(numerator!==null&&denominator!==null&&denominator>0)metadata[name]=Number((numerator/denominator).toFixed(4));else notes.push("TIFF "+name+" has an invalid rational value.");}
+            else notes.push("TIFF "+name+" is not a single unsigned rational value.");
+            continue;
+          }
+          if(["software","dateTime","artist","copyright"].includes(name)){
+            if(type!==2){notes.push("TIFF text tag "+name+" is not ASCII text.");continue;}
+            metadata[name]=ascii(valueOffset,count).replace(/\0+$/,"");continue;
+          }
+          const value=valueAt(valueOffset);
+          if(value!==null)metadata[name]=value;else notes.push("TIFF tag "+name+" uses an unsupported value type.");
+        }
+        const nextOffset=ifdOffset+2+entryCount*12;
+        if(nextOffset+4<=bytes.length){const next=read32(nextOffset);if(next!==null&&next!==0){metadata.hasAdditionalImageDirectories=true;if(next+2>bytes.length)notes.push("A later TIFF image directory points beyond the supplied bytes.");}}
+        else notes.push("The TIFF image-directory table or next-directory pointer is truncated.");
+      }
+    }
+    notes.push("TIFF directory metadata only; image pixels are not decoded.");
+   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="WEBP"&&ascii(12,4)==="VP8X"&&bytes.length>=30){
     metadata.format="WebP";metadata.width=1+bytes[24]+(bytes[25]<<8)+(bytes[26]<<16);metadata.height=1+bytes[27]+(bytes[28]<<8)+(bytes[29]<<16);
   } else if(ascii(0,4)==="RIFF"&&ascii(8,4)==="AVI "&&bytes.length>=12){
     metadata.format="AVI container candidate";metadata.declaredRiffBytes=(u32le(4)??0)+8;

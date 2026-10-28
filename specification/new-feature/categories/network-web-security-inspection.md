@@ -2,7 +2,7 @@
 
 ## Network & Web Data
 
-The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header/cookie parsing, pattern-only IPv4/IPv6 candidate extraction, offline DNS record parsing, redacted HTTP request/response inspection, common file-signature matching, selected PNG/GIF/BMP/JPEG/WebP/WAV/AVI/MP4-family/FLAC/Ogg/PDF/ZIP/ID3/PE/ELF/Mach-O metadata inspection, local byte-range inspection and two-file comparison. It performs no network requests. Certificate/key inspection and full X.509 field/key parsing, signature verification, trust validation and additional metadata parsers remain conditional/pending.
+The `/inspection/network-file` workbench implements IPv4/IPv6 normalization, IPv4/IPv6 CIDR range calculations, MAC normalization, supplied HTTP-header/cookie parsing, pattern-only IPv4/IPv6 candidate extraction, offline DNS record parsing, redacted HTTP request/response inspection, common file-signature matching, selected PNG/GIF/BMP/JPEG/TIFF/WebP/WAV/AVI/MP4-family/FLAC/Ogg/PDF/ZIP/ID3/PE/ELF/Mach-O metadata inspection, local byte-range inspection and two-file comparison. It performs no network requests. Certificate/key inspection and full X.509 field/key parsing, signature verification, trust validation and additional metadata parsers remain conditional/pending.
 
 | ID | Operation | Acceptance criteria |
 |---|---|---|
@@ -45,7 +45,7 @@ JWT registry entry jwt-decoder at /security/jwt-decoder is marked available, but
 | ID | Operation | Acceptance criteria |
 |---|---|---|
 | file.magic | Inspect signature/magic bytes | Indicator, not proof of type or safety |
-| file.metadata | Parse selected local metadata | PNG/GIF/BMP/JPEG/WebP dimensions; WAV audio format/duration; PDF lexical page candidates; ZIP central-directory summary; ID3 tag header; 2 MB cap and explicit limitations |
+| file.metadata | Parse selected local metadata | PNG/GIF/BMP/JPEG/TIFF/WebP dimensions; WAV audio format/duration; bounded AVI/MP4-family/FLAC/Ogg headers; PDF lexical page candidates; ZIP central-directory summary; ID3 tag header; 2 MB cap and explicit limitations |
 | file.header | Hex/header preview | Bounded output and offsets |
 | file.strings | Extract printable strings | Minimum length and character policy |
 | file.frequency | Byte distribution | Counts sum to input length; empty-file behavior |

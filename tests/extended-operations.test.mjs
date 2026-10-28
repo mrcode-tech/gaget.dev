@@ -173,3 +173,14 @@ test("MP4 extended-size truncation does not expose brand fields from an invalid 
  const bytes=new Uint8Array(20);bytes.set([0,0,0,1]);bytes.set([...new TextEncoder().encode("ftypisom")],4);
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.majorBrand,undefined);assert.match(result.notes.join(" "),/extended ftyp box size is truncated/i);
 });
+
+test("classic TIFF metadata supports both byte orders and bounds IFD offsets",()=>{
+ const little=new Uint8Array(56);little.set([0x49,0x49,0x2a,0,8,0,0,0],0);little.set([3,0],8);
+ little.set([0,1,3,0,1,0,0,0,0x80,0x02,0,0],10);
+ little.set([1,1,3,0,1,0,0,0,0xe0,0x01,0,0],22);
+ little.set([2,1,3,0,3,0,0,0,50,0,0,0],34);little.set([0,0,0,0],46);little.set([8,0,8,0,8,0],50);
+ const le=JSON.parse(inspectFileMetadata(little));assert.equal(le.metadata.format,"TIFF image (classic TIFF)");assert.equal(le.metadata.byteOrder,"little-endian");assert.equal(le.metadata.width,640);assert.equal(le.metadata.height,480);assert.deepEqual(le.metadata.bitsPerSample,[8,8,8]);
+ const big=new Uint8Array(26);big.set([0x4d,0x4d,0,42,0,0,0,8],0);big.set([0,1],8);big.set([1,0,0,4,0,0,0,1,0,0,4,0],10);big.set([0,0,0,0],22);
+ const be=JSON.parse(inspectFileMetadata(big));assert.equal(be.metadata.byteOrder,"big-endian");assert.equal(be.metadata.width,1024);
+ const malformed=new Uint8Array(8);malformed.set([0x49,0x49,0x2a,0,0xff,0xff,0xff,0xf0]);assert.match(JSON.parse(inspectFileMetadata(malformed)).notes.join(" "),/directory offset is invalid/i);
+});

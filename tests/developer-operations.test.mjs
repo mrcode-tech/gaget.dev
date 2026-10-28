@@ -136,3 +136,9 @@ test("HTML RCDATA and legacy raw-text elements are preserved as text",()=>{
   assert.equal(formatHtml(source),source);
  }
 });
+
+test("CSV export protects formula triggers after leading whitespace and control characters",()=>{
+ const csv=jsonToCsv(JSON.stringify([{value:"  =1+1"},{value:"\u00a0+cmd"},{value:"\t@SUM(1,1)"},{value:"safe"}]));
+ const rows=JSON.parse(csvToJson(csv));
+ assert.deepEqual(rows.map(row=>row.value),["'  =1+1","'\u00a0+cmd","'\t@SUM(1,1)","safe"]);
+});

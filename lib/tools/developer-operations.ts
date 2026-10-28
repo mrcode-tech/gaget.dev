@@ -41,7 +41,7 @@ export function parseCsv(s:string, d=","):string[][] {
  if(cell||row.length||afterQuote||!s.length||!/[\r\n]$/.test(s)){row.push(cell);rows.push(row);}
  if(rows[0]?.[0]?.charCodeAt(0)===0xfeff)rows[0][0]=rows[0][0].slice(1);return rows;
 }
-function csvCell(v:unknown,d:string){let s=v==null?"":typeof v==="string"?v:JSON.stringify(v);if(typeof v==="string"&&/^[=+@\-\t\r]/.test(s))s="'"+s;return /["\r\n]/.test(s)||s.includes(d)?'"'+s.replace(/"/g,'""')+'"':s;}
+function csvCell(v:unknown,d:string){let s=v==null?"":typeof v==="string"?v:JSON.stringify(v);if(typeof v==="string"&&(/^[\u0000-\u0020\u00a0\u1680\u2000-\u200b\u2028\u2029\u202f\u205f\u3000\ufeff]*[=+\-@]/u.test(s)||/^[\t\r]/.test(s)))s="'"+s;return /["\r\n]/.test(s)||s.includes(d)?'"'+s.replace(/"/g,'""')+'"':s;}
 export function csvToJson(s:string,d=","){
  const rows=parseCsv(s,d);if(!rows.length)return "[]";
  const headers=rows[0].map((h,i)=>h.trim()||"column_"+(i+1)), used=new Set<string>();
