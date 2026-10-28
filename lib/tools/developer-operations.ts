@@ -276,7 +276,7 @@ export function parseCurl(s:string):CurlRequest{
  guard(s);const w=s.trim().replace(/\\\r?\n/g," ");const a=shellWords(w);if(!a.length||!/^curl(?:\.exe)?$/i.test(a[0]))throw new Error("Start with curl and provide a URL.");
  const r:CurlRequest={method:"GET",url:"",headers:[],unsupported:[]};
  const data:string[]=[];let getMode=false,methodExplicit=false;
- const dataFlags=["-d","--data","--data-raw","--data-binary","--data-urlencode","--json"];
+ const dataFlags=["-d","--data","--data-ascii","--data-raw","--data-binary","--data-urlencode","--json"];
  const encodeUrlData=(value:string):string|null=>{if(value.startsWith("@")||/^[^=]+@/.test(value))return null;const equals=value.indexOf("=");return equals<0?encodeURIComponent(value):value.slice(0,equals)+"="+encodeURIComponent(value.slice(equals+1));};
  for(let i=1;i<a.length;i++){const k=a[i],take=()=>{if(i+1>=a.length)throw new Error("Missing value for "+k);return a[++i];};
  if(k==="-X"||k==="--request"){r.method=take().toUpperCase();methodExplicit=true;}else if(k==="-u"||k==="--user"||k==="-b"||k==="--cookie"){take();r.unsupported.push(k+" (credential/cookie value redacted and not represented)");}else if(k==="-H"||k==="--header"){const h=take(),n=h.indexOf(":");if(n<1)throw new Error("Headers must use the Name: value form.");r.headers.push([h.slice(0,n).trim(),h.slice(n+1).trim()]);}
