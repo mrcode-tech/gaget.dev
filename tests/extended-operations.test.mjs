@@ -197,11 +197,11 @@ test("classic TIFF metadata supports both byte orders and bounds IFD offsets",()
 test("query, key-value and cookie parsers safely preserve prototype-shaped names",()=>{
  const query=JSON.parse(parseQueryString("__proto__=query&constructor=ctor&prototype=proto"));
  assert.equal(query["__proto__"],"query");assert.equal(query.constructor,"ctor");assert.equal(query.prototype,"proto");
- const keyValue=JSON.parse(parseKeyValue("__proto__=kv\\nconstructor=ctor\\nprototype=proto"));
+ const keyValue=JSON.parse(parseKeyValue("__proto__=kv\nconstructor=ctor\nprototype=proto"));
  assert.equal(keyValue["__proto__"],"kv");assert.equal(keyValue.constructor,"ctor");assert.equal(keyValue.prototype,"proto");
  const cookies=JSON.parse(parseCookies("__proto__=cookie; constructor=ctor; prototype=proto"));
  assert.equal(cookies["__proto__"],"cookie");assert.equal(cookies.constructor,"ctor");assert.equal(cookies.prototype,"proto");
- const headers=JSON.parse(parseHttpHeaders("__proto__: one\\nconstructor: two"));
+ const headers=JSON.parse(parseHttpHeaders("__proto__: one\nconstructor: two"));
  assert.deepEqual(headers.duplicates,{});assert.equal(headers.count,2);
  assert.equal(Object.prototype.polluted,undefined);
 });
