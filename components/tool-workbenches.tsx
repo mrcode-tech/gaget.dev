@@ -71,7 +71,7 @@ function interpretJwtTimeClaims(payload: unknown, now: number): JwtTimeClaim[] {
     { name: "iat", label: "Issued at (iat)" },
     { name: "nbf", label: "Not before (nbf)" }
   ];
-  return definitions.map(({ name, label }) => {
+  return definitions.map(({ name, label }): JwtTimeClaim => {
     if (!Object.hasOwn(claims, name)) return { name, label, value: "Not present", status: "missing" };
     const raw = claims[name];
     if (typeof raw !== "number" || !Number.isFinite(raw) || Math.abs(raw) > 8.64e12)
