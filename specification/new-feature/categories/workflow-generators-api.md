@@ -7,7 +7,7 @@
 | flow.pipeline | Chain compatible operations | Implemented allowlisted typed text/encoding/JSON/query operations; incompatible steps blocked before run; 20-step cap |
 | flow.reorder | Reorder/configure steps | Implemented up/down reordering; failures identify step index and operation |
 | flow.intermediate | Inspect intermediate output | Implemented previews capped at 2,000 characters per step; only allowlisted non-secret operations |
-| flow.batch | Process records | Implemented sequential line batches capped at 100 records and 200,000 total input characters with per-line errors; workers/cancellation remain deferred |
+| flow.batch | Process records | Implemented sequential line batches capped at 100 records and 200,000 total input characters with per-line errors; each run executes in a dedicated worker and cancellation terminates the worker |
 | flow.recipe | Import/export versioned recipes | Implemented version 1 JSON import/export, 32 KB cap, strict field/operation/compatibility validation; recipes contain no input or secret values |
 | flow.persistence | Save recipes | Defer persistence decision; do not store inputs/secrets by default |
 
