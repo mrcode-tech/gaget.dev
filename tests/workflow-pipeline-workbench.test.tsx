@@ -36,3 +36,21 @@ it("loads a local binary file as raw hex, preserves bytes, and offers a binary d
  await waitFor(()=>expect((screen.getByRole("textbox",{name:"Workflow final output"}) as HTMLTextAreaElement).value).toBe("00ff01"));
  expect(screen.getByRole("button",{name:/Download raw bytes/i})).toBeTruthy();
 });
+
+it("saves only the typed recipe in local browser storage and can load or delete it",async()=>{
+ localStorage.removeItem("gaget.workflow-recipes.v1");
+ const {unmount}=render(<WorkflowPipelineWorkbench/>);
+ fireEvent.change(screen.getByLabelText("Saved recipe name"),{target:{value:"Text chain"}});
+ fireEvent.click(screen.getByRole("button",{name:"Save recipe"}));
+ await waitFor(()=>expect(screen.getByText(/Text chain/)).toBeTruthy());
+ const stored=localStorage.getItem("gaget.workflow-recipes.v1")||"";
+ expect(stored).toContain("url-encode");expect(stored).not.toContain("Hello GaGet.dev!");
+ expect(stored).not.toContain('"input"');expect(stored).not.toContain('"output"');
+ unmount();
+ render(<WorkflowPipelineWorkbench/>);
+ await waitFor(()=>expect(screen.getByText(/Text chain/)).toBeTruthy());
+ fireEvent.click(screen.getByRole("button",{name:"Load",exact:true}));
+ expect((screen.getByRole("textbox",{name:"Workflow input"}) as HTMLTextAreaElement).value).toBe("");
+ fireEvent.click(screen.getByRole("button",{name:"Delete saved recipe Text chain"}));
+ await waitFor(()=>expect(localStorage.getItem("gaget.workflow-recipes.v1")).toBe('{"version":1,"recipes":[]}'));
+});

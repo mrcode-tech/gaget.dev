@@ -1,6 +1,6 @@
 # Developer Tools Expansion — Implementation Roadmap
 
-**Status:** Phases 0–5 are complete for their approved, bounded subsets. Phase 6 has a tested text/encoding pipeline plus byte-preserving raw-hex workflows and local file input up to 100 KB; broader binary operations and persistence remain incomplete. Broader parser/crypto/archive capabilities remain conditional. Wireframe approval remains a separate design sign-off. Phase 7 is evidence-gated and must be updated only from the latest exact-revision CI manifest.
+**Status:** Phases 0–5 are complete for their approved, bounded subsets. Phase 6 is complete for the approved bounded MVP: typed text/encoding/JSON/query pipelines, byte-preserving raw-hex workflows, local files up to 100 KB, byte transforms/checksums/statistics, worker deadline/cancellation, batch processing, import/export and opt-in local-only recipe saving are implemented. Parallel batches, arbitrary code and broader file workflows remain deferred. Broader parser/crypto/archive capabilities remain conditional. Wireframe approval remains a separate design sign-off. Phase 7 is evidence-gated and must be updated only from the latest exact-revision CI manifest.
 
 ## 1. Scope and baseline
 Primary source: [developer-tools capability proposal](../product/developer-tools-capability-proposal.md). Inspected sources include lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory, design-token contract, quality/accessibility contract, AI instructions and command.md.
@@ -13,7 +13,7 @@ The initial planning pass did not run the app or CI. A later implementation run 
 - **P0 — prerequisite/safety:** source and route truth, operation contracts, reusable UI, privacy/security and tests.
 - **P1 — high value:** URL/Base64 compatibility, seven planned tools, common text/data/binary transformations.
 - **P2 — extended:** compression, network parsing, certificate/file inspection, extra generators and formats.
-- **P3 — conditional/deferred:** ASN.1/TLV, archive extraction, advanced cryptography, JWT signature verification, broader binary workflow operations and recipe persistence.
+- **P3 — conditional/deferred:** ASN.1/TLV, archive extraction, advanced cryptography, JWT signature verification, parallel batches, arbitrary code and broader binary workflow operations.
 
 Prioritize user value, correctness, reuse, feasibility, maintenance and risk, not raw operation count.
 
@@ -93,7 +93,7 @@ At each future invocation:
 | 3 — Planned tools | Complete for the approved subsets: standalone text/regex, XML/SQL/HTML/CSV/cURL, sample generator, data/binary/math and network/file workbenches; query/key-value conversion, BigInt math, numeric views, byte-range inspection, file comparison, bitwise operations, character frequency and gzip/zlib are available | Full XML grammar/schema validation, full HTML/SQL parsers, YAML parsing and archive support are explicitly deferred pending parser/dependency review and adversarial fixtures; supported subsets remain clearly labeled |
 | 4 — Security/inspection | Complete for the approved subset: SHA-2/HMAC/checksums over text and local file bytes; JWT exp/iat/nbf NumericDate interpretation; offline network parsers; redacted HTTP message inspection; selected file metadata; PEM/DER fingerprints; OpenSSH RSA/Ed25519/ECDSA public-key metadata/fingerprints | Full X.509 fields, SSH certificates, signature/trust validation, SHA-3/legacy digests and additional metadata formats remain explicitly deferred; decoding and fingerprinting are not verification |
 | 5 — Extended/conditional | Complete for the approved formats: gzip/zlib wrappers, Base58/ASCII85/Z85, charset conversion, selected metadata parsers and bounded synthetic sample-data generation | YAML, ASN.1/TLV, archive extraction and advanced crypto are explicitly deferred pending dependency/license and safety review; no archive extraction or unsupported crypto is exposed |
-| 6 — Workflow/batch | In progress: typed allowlisted text/encoding/JSON/query chains plus byte-preserving raw-hex conversions and local files up to 100 KB; reorderable steps, bounded previews, sequential line batches, versioned recipes, 15-second worker deadline and termination cancellation | Broader binary/file operations, persistence, parallel batches and arbitrary custom code remain deferred; exact-revision worker, file-input, timeout/cancellation and adversarial-recipe tests gate further expansion |
+| 6 — Workflow/batch | Complete for approved bounded MVP: typed allowlisted text/encoding/JSON/query chains, raw-byte conversions/transforms/checksums/statistics and local files up to 100 KB; reorderable steps, bounded previews, sequential line batches, versioned recipe import/export, opt-in local-only saved recipes, 15-second worker deadline and termination cancellation | Parallel batches, arbitrary custom code and broader file workflows remain deferred; exact-revision worker, file-input, timeout/cancellation and adversarial-recipe tests gate further expansion |
 | 7 — Quality | Continuous | Exact-revision test and visual evidence |
 
 ## 6. Conditional scope decisions

@@ -71,6 +71,36 @@ export type PipelineStep = {operation:PipelineOperation};
 export type PipelineRecipe = {version:1;inputType:PipelineDataType;steps:PipelineStep[]};
 export type PipelineStepResult = {index:number;operation:PipelineOperation;outputType:PipelineDataType;outputLength:number;preview:string};
 export const MAX_PIPELINE_INPUT=200_000,MAX_PIPELINE_OUTPUT=1_000_000,MAX_PIPELINE_STEPS=20,MAX_BATCH_RECORDS=100,MAX_RECIPE_BYTES=32_000;
+export const SAVED_PIPELINE_RECIPES_KEY="gaget.workflow-recipes.v1";
+export const MAX_SAVED_PIPELINE_RECIPES=10;
+export const MAX_SAVED_PIPELINE_RECIPES_BYTES=320_000;
+export type SavedPipelineRecipe={id:string;name:string;recipe:PipelineRecipe;savedAt:number};
+export function parseSavedPipelineRecipes(source:string):SavedPipelineRecipe[]{
+ if(source.length>MAX_SAVED_PIPELINE_RECIPES_BYTES)throw new Error("Saved workflow recipes exceed the 320 KB limit.");
+ let value:unknown;try{value=JSON.parse(source);}catch{throw new Error("Saved workflow recipes are not valid JSON.");}
+ if(!value||typeof value!=="object"||Array.isArray(value))throw new Error("Saved workflow recipes must be an object.");
+ const envelope=value as Record<string,unknown>;
+ if(Object.keys(envelope).some(key=>!["version","recipes"].includes(key))||envelope.version!==1||!Array.isArray(envelope.recipes))throw new Error("Saved workflow recipe storage has an unsupported version or shape.");
+ if(envelope.recipes.length>MAX_SAVED_PIPELINE_RECIPES)throw new Error("At most 10 workflow recipes can be saved in this browser.");
+ const ids=new Set<string>(),names=new Set<string>();
+ return envelope.recipes.map((raw,index)=>{
+  if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error("Saved workflow recipe "+(index+1)+" is invalid.");
+  const item=raw as Record<string,unknown>;
+  if(Object.keys(item).some(key=>!["id","name","recipe","savedAt"].includes(key))||typeof item.id!=="string"||!/^[a-zA-Z0-9_-]{1,80}$/.test(item.id)||typeof item.name!=="string"||item.name.trim().length<1||item.name.trim().length>80||typeof item.savedAt!=="number"||!Number.isFinite(item.savedAt)||item.savedAt<0)throw new Error("Saved workflow recipe "+(index+1)+" has invalid metadata.");
+  const normalizedName=item.name.trim(),nameKey=normalizedName.toLocaleLowerCase("en-US");
+  if(ids.has(item.id)||names.has(nameKey))throw new Error("Saved workflow recipe IDs and names must be unique.");
+  ids.add(item.id);names.add(nameKey);
+  return {id:item.id,name:normalizedName,recipe:validatePipelineRecipe(item.recipe),savedAt:item.savedAt};
+ });
+}
+export function serializeSavedPipelineRecipes(recipes:SavedPipelineRecipe[]):string{
+ if(recipes.length>MAX_SAVED_PIPELINE_RECIPES)throw new Error("At most 10 workflow recipes can be saved in this browser.");
+ const serialized=JSON.stringify({version:1,recipes});
+ const parsed=parseSavedPipelineRecipes(serialized);
+ const output=JSON.stringify({version:1,recipes:parsed});
+ if(output.length>MAX_SAVED_PIPELINE_RECIPES_BYTES)throw new Error("Saved workflow recipes exceed the 320 KB limit.");
+ return output;
+}
 const typeSet=new Set<string>(PIPELINE_INPUT_TYPES.map(x=>x.value));
 const operationMap=new Map<string,typeof PIPELINE_OPERATIONS[number]>(PIPELINE_OPERATIONS.map(x=>[x.id,x] as const));
 export function getPipelineOperation(id:string){const operation=operationMap.get(id);if(!operation)throw new Error("Recipe contains an unsupported operation: "+id+".");return operation;}

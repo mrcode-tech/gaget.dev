@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { executePipeline, executeBatch, executeBatchAsync, executePipelineAsync, parsePipelineRecipe, validatePipelineRecipe, MAX_PIPELINE_STEPS } from "../lib/tools/workflow-pipeline.ts";
+import { executePipeline, executeBatch, executeBatchAsync, executePipelineAsync, parsePipelineRecipe, validatePipelineRecipe, parseSavedPipelineRecipes, serializeSavedPipelineRecipes, MAX_PIPELINE_STEPS, MAX_SAVED_PIPELINE_RECIPES } from "../lib/tools/workflow-pipeline.ts";
 test("typed pipelines transform data through compatible operations and report intermediate values",()=>{const recipe={version:1,inputType:"text",steps:[{operation:"trim"},{operation:"uppercase"},{operation:"url-encode"}]};const result=executePipeline("  Hello world  ",recipe);assert.equal(result.output,"HELLO%20WORLD");assert.equal(result.steps.length,3);assert.equal(result.steps[2].outputType,"url");});
 test("incompatible steps and unsupported operation IDs are rejected before execution",()=>{assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"base64-decode"}]}),/Incompatible/i);assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"arbitrary-code"}]}),/unsupported operation/i);assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",input:"secret",steps:[]}),/unsupported fields/i);});
 test("versioned recipe import rejects malformed, oversized, and excessive-step recipes",()=>{assert.equal(parsePipelineRecipe('{"version":1,"inputType":"text","steps":[]}').version,1);assert.throws(()=>parsePipelineRecipe("{"),/valid JSON/i);assert.throws(()=>parsePipelineRecipe("x".repeat(32001)),/32,000/i);assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:Array.from({length:MAX_PIPELINE_STEPS+1},()=>({operation:"trim"}))}),/at most 20/i);});
@@ -109,4 +109,16 @@ test("raw-byte workflow computes known checksums and bounded byte statistics",()
  const summary=JSON.parse(executePipeline("41414200",recipe("raw-bytes-summary")).output);
  assert.equal(summary.byteLength,4);assert.equal(summary.uniqueByteValues,3);assert.equal(summary.printableAsciiRatio,0.75);assert.equal(summary.crc32,"B1FB2A34");
  assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"raw-bytes-crc32"}]}),/Incompatible/i);
+});
+
+test("saved workflow recipes are versioned, bounded, and exclude source input by contract",()=>{
+ const recipe={version:1,inputType:"text",steps:[{operation:"trim"}]};
+ const saved=[{id:"recipe-1",name:"Trim text",recipe,savedAt:1000}];
+ const source=serializeSavedPipelineRecipes(saved);
+ assert.deepEqual(parseSavedPipelineRecipes(source),saved);
+ assert.equal(source.includes("secret input"),false);
+ assert.throws(()=>parseSavedPipelineRecipes('{"version":2,"recipes":[]}'),/unsupported version/i);
+ assert.throws(()=>parseSavedPipelineRecipes(JSON.stringify({version:1,recipes:[{...saved[0],input:"private"}]})),/invalid metadata/i);
+ assert.throws(()=>serializeSavedPipelineRecipes(Array.from({length:MAX_SAVED_PIPELINE_RECIPES+1},(_,i)=>({...saved[0],id:"recipe-"+i,name:"Recipe "+i}))),/At most 10/i);
+ assert.throws(()=>parseSavedPipelineRecipes("x".repeat(320001)),/320 KB/i);
 });
