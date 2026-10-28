@@ -227,7 +227,7 @@ function buildHtmlTree(tokens:HtmlToken[]):Array<HtmlTreeNode|HtmlToken>{
  }
  return roots;
 }
-function formatHtml(s:string,minify=false){
+export function formatHtml(s:string,minify=false){
  guard(s);
  const roots=buildHtmlTree(tokenizeHtml(s));
  const directText=(node:HtmlTreeNode)=>node.children.some(child=>!isHtmlNode(child)&&child.kind==="text"&&child.value.trim().length>0);
