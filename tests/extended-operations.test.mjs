@@ -162,7 +162,7 @@ test("FLAC STREAMINFO extracts sample format without decoding audio",()=>{
 test("Ogg inspection bounds the segment table and identifies truncated pages",()=>{
  const bytes=new Uint8Array(28);bytes.set([...new TextEncoder().encode("OggS")],0);bytes[4]=0;bytes[26]=2;
  const result=JSON.parse(inspectFileMetadata(bytes));assert.equal(result.metadata.format,"Ogg page candidate");assert.match(result.notes.join(" "),/segment table is truncated/i);
- const complete=new Uint8Array(30);complete.set([...new TextEncoder().encode("OggS")],0);complete[26]=1;complete[27]=2;assert.match(JSON.parse(inspectFileMetadata(complete)).notes.join(" "),/body extends/i);
+ const complete=new Uint8Array(29);complete.set([...new TextEncoder().encode("OggS")],0);complete[26]=1;complete[27]=2;assert.match(JSON.parse(inspectFileMetadata(complete)).notes.join(" "),/body extends/i);
 });
 test("AVI inspection bounds RIFF and main-header metadata",()=>{
  const bytes=new Uint8Array(64);bytes.set([...new TextEncoder().encode("RIFF")],0);bytes.set([56,0,0,0],4);bytes.set([...new TextEncoder().encode("AVI ")],8);bytes.set([...new TextEncoder().encode("LIST")],12);bytes.set([...new TextEncoder().encode("avih")],24);bytes.set([40,0,0,0],28);bytes.set([0x40,0x42,0x0f,0],32);bytes.set([100,0,0,0],48);bytes.set([1,0,0,0],56);bytes.set([2,0,0,0],60);
