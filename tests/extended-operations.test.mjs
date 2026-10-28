@@ -1,4 +1,5 @@
-import { createHash } from "node:crypto";\nimport test from "node:test";
+import { createHash } from "node:crypto";
+import test from "node:test";
 import assert from "node:assert/strict";
 import { parseUrlComponents, parseDataUri, parseQueryString, buildQueryString, parseKeyValue, buildKeyValue, convertNumberBase, numericView, floatView, extractNetworkCandidates, detectCompression, hexDump, extractPrintableStrings, byteStatistics, inspectNetwork, normalizeMac, parseHttpHeaders, parseCookies, numericStatistics, arithmetic, characterStatistics, compressBytes, compareByteArrays, inspectByteRange, parseDnsRecords, parseHttpMessage, inspectFileSignatures, inspectFileMetadata, inspectCertificateContainer, inspectSshPublicKey } from "../lib/tools/extended-operations.ts";
 test("query strings preserve repeated keys, plus spaces, and empty values",()=>{assert.deepEqual(JSON.parse(parseQueryString("?tag=a&tag=b&empty=&space=hello+world")),{tag:["a","b"],empty:"",space:"hello world"});assert.equal(buildQueryString('{"tag":["a","b"],"space":"hello world"}'),"tag=a&tag=b&space=hello%20world");assert.throws(()=>parseQueryString("bad=%Q"),/percent escape/i);});
