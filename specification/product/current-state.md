@@ -40,7 +40,7 @@
 - `/xml/formatter` — lightweight XML text formatting/minifying with element-nesting checks; not a complete XML parser or schema validator.
 - `/sql/formatter` — heuristic SQL formatting/minifying only; no dialect-complete parser or query execution.
 - `/data/csv-json` — CSV and JSON-array-of-objects conversion; CSV cells remain strings and formula-like exported cells are prefixed.
-- `/web/html-formatter` — heuristic HTML text formatting/minifying; markup is never rendered as active HTML.
+- `/web/html-formatter` — heuristic HTML text formatting/minifying that preserves mixed inline text, respects quoted tag delimiters, and treats script/style bodies as raw text; markup is never rendered as active HTML and full HTML validation is not claimed.
 - `/api/curl-converter` — parses a supported cURL subset including GET query mode, literal URL-encoded data and --json body shorthand, produces a redacted request preview (URL credentials, recognizable query/fragment values, sensitive headers and secret-like bodies), never executes requests, and reports unsupported flags.
 - `/workflow/pipeline` — typed allowlisted text/encoding/JSON/query pipeline (including ASCII85 and Z85) with reorderable steps, bounded intermediate previews, sequential line batches and versioned recipe import/export; each run executes in a dedicated worker and cancellation terminates it; no arbitrary code execution or input persistence.
 

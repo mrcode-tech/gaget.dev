@@ -31,7 +31,7 @@ Do not build a pipeline engine until several operation contracts, errors and res
 | api.snippets | Generate client snippets | Supported languages explicit; preserve request semantics; redact likely secrets by default |
 | api.http-inspect | Inspect supplied HTTP request/response | Header/body boundaries documented; no implicit request |
 | format.sql | SQL formatting | Supported dialects explicit; never execute SQL |
-| format.html | HTML formatting/minifying | Output displayed as escaped text, never active markup |
+| format.html | HTML formatting/minifying | Output displayed as escaped text, never active markup; preserves mixed inline text, respects quoted tag delimiters, and keeps script/style bodies raw; full parser/validation remains out of scope |
 
 ## Planned tool details
 
