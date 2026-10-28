@@ -43,3 +43,5 @@ test("OpenSSH public-key inspector parses a supplied Ed25519 key without exposin
  await expect(output).toHaveValue(/"trustValidated": false/);
  await expect(output).not.toHaveValue(/private-looking-comment/);
 });
+
+test("legacy UUID URL redirects to the unified Data Generator",async({page})=>{await page.goto("/generators/uuid");await expect(page).toHaveURL(/\/generators\/sample-data$/);await expect(page.getByRole("heading",{name:"Data Generator"})).toBeVisible();await expect(page.getByRole("combobox",{name:"Data generator operation"})).toBeVisible();});
