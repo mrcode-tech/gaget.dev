@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Download, WandSparkles, AlertCircle, ArrowLeftRight, Trash2, KeyRound, Fingerprint } from "lucide-react";
+import { Copy, Download, WandSparkles, AlertCircle, ArrowLeftRight, Trash2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -144,17 +144,3 @@ export function JwtWorkbench() {
 }
 function KeyRoundIcon() { return <span aria-hidden="true"><KeyRound className="h-4 w-4" /></span>; }
 
-export function UuidWorkbench() {
-  const [items, setItems] = useState<string[]>([]);
-  const [count, setCount] = useState("5");
-  function generate() {
-    const n = Math.min(100, Math.max(1, Number.parseInt(count, 10) || 1));
-    if (!globalThis.crypto?.randomUUID) return;
-    setItems(Array.from({length:n}, () => crypto.randomUUID()));
-  }
-  return <div className="space-y-4">
-    <Card><CardHeader><CardTitle className="text-sm">UUID v4 generator</CardTitle></CardHeader><CardContent><label htmlFor="uuid-count" className="mb-2 block text-sm font-medium">Number of UUIDs (1–100)</label><Input id="uuid-count" type="number" min="1" max="100" value={count} onChange={(e) => setCount(e.target.value)} className="max-w-xs" /><div className="mt-3 flex gap-2"><Button onClick={generate}><Fingerprint className="h-4 w-4" /> Generate UUIDs</Button><Button variant="outline" disabled={!items.length} onClick={() => copyText(items.join("\\n"))}><Copy className="h-4 w-4" /> Copy all</Button></div></CardContent></Card>
-    {items.length > 0 && <Card><CardHeader className="flex-row items-center justify-between"><CardTitle className="text-sm">Generated values ({items.length})</CardTitle><Button variant="ghost" size="sm" onClick={() => saveText("uuids.txt", items.join("\\n"))}><Download className="mr-2 h-4 w-4" /> Download</Button></CardHeader><CardContent><div className="space-y-2">{items.map((id) => <div key={id} className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2"><code className="min-w-0 flex-1 break-all text-xs sm:text-sm">{id}</code><Button variant="ghost" size="icon" aria-label={`Copy ${id}`} onClick={() => copyText(id)}><Copy className="h-4 w-4" /></Button></div>)}</div></CardContent></Card>}
-    <p className="text-xs text-muted-foreground">UUIDs are generated using the browsers cryptographic randomUUID API.</p>
-  </div>;
-}
