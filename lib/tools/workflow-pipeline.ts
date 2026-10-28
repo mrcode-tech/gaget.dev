@@ -1,8 +1,8 @@
-import { transformEncoding, convertCharset } from "./encoding-operations.ts";
+import { transformEncoding, convertCharset, encodeByteRepresentation, decodeByteRepresentation } from "./encoding-operations.ts";
 import { parseQueryString, buildQueryString } from "./extended-operations.ts";
-export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "ascii85" | "z85" | "hex" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
+export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "ascii85" | "z85" | "hex" | "raw-hex" | "binary" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
 export const PIPELINE_INPUT_TYPES: {value:PipelineDataType;label:string}[] = [
- {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"ascii85",label:"Adobe ASCII85 encoded"},{value:"z85",label:"ZeroMQ Z85 encoded"},{value:"hex",label:"Hexadecimal bytes"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
+ {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"ascii85",label:"Adobe ASCII85 encoded"},{value:"z85",label:"ZeroMQ Z85 encoded"},{value:"hex",label:"Hexadecimal UTF-8 text bytes"},{value:"raw-hex",label:"Raw bytes (hex; byte-preserving)"},{value:"binary",label:"Binary byte representation"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
 ];
 export const PIPELINE_OPERATIONS = [
  {id:"trim",label:"Trim whitespace",input:"text",output:"text"},
@@ -24,6 +24,24 @@ export const PIPELINE_OPERATIONS = [
  {id:"z85-decode",label:"ZeroMQ Z85 decode",input:"z85",output:"text"},
  {id:"hex-encode",label:"Hex encode UTF-8 bytes",input:"text",output:"hex"},
  {id:"hex-decode",label:"Hex decode UTF-8 bytes",input:"hex",output:"text"},
+ {id:"text-to-raw-hex",label:"UTF-8 text to raw bytes (hex)",input:"text",output:"raw-hex"},
+ {id:"raw-hex-to-text",label:"Raw bytes (hex) to UTF-8 text",input:"raw-hex",output:"text"},
+ {id:"bytes-base64-encode",label:"Raw bytes → Base64",input:"raw-hex",output:"base64"},
+ {id:"base64-bytes-decode",label:"Base64 → raw bytes (hex)",input:"base64",output:"raw-hex"},
+ {id:"bytes-base64url-encode",label:"Raw bytes → Base64url",input:"raw-hex",output:"base64url"},
+ {id:"base64url-bytes-decode",label:"Base64url → raw bytes (hex)",input:"base64url",output:"raw-hex"},
+ {id:"bytes-base32-encode",label:"Raw bytes → Base32",input:"raw-hex",output:"base32"},
+ {id:"base32-bytes-decode",label:"Base32 → raw bytes (hex)",input:"base32",output:"raw-hex"},
+ {id:"bytes-base58-encode",label:"Raw bytes → Bitcoin Base58",input:"raw-hex",output:"base58"},
+ {id:"base58-bytes-decode",label:"Bitcoin Base58 → raw bytes (hex)",input:"base58",output:"raw-hex"},
+ {id:"bytes-ascii85-encode",label:"Raw bytes → Adobe ASCII85",input:"raw-hex",output:"ascii85"},
+ {id:"ascii85-bytes-decode",label:"Adobe ASCII85 → raw bytes (hex)",input:"ascii85",output:"raw-hex"},
+ {id:"bytes-z85-encode",label:"Raw bytes → ZeroMQ Z85",input:"raw-hex",output:"z85"},
+ {id:"z85-bytes-decode",label:"ZeroMQ Z85 → raw bytes (hex)",input:"z85",output:"raw-hex"},
+ {id:"bytes-binary-encode",label:"Raw bytes → binary bits",input:"raw-hex",output:"binary"},
+ {id:"binary-bytes-decode",label:"Binary bits → raw bytes (hex)",input:"binary",output:"raw-hex"},
+ {id:"bytes-quoted-printable-encode",label:"Raw bytes → quoted-printable",input:"raw-hex",output:"quoted-printable"},
+ {id:"quoted-printable-bytes-decode",label:"Quoted-printable → raw bytes (hex)",input:"quoted-printable",output:"raw-hex"},
  {id:"unicode-escape",label:"Unicode escape",input:"text",output:"unicode"},
  {id:"unicode-unescape",label:"Unicode unescape",input:"unicode",output:"text"},
  {id:"quoted-printable-encode",label:"Quoted-printable encode",input:"text",output:"quoted-printable"},
@@ -95,6 +113,24 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "z85-decode":return enc("z85","decode");
   case "hex-encode":return enc("hex","encode");
   case "hex-decode":return enc("hex","decode");
+  case "text-to-raw-hex":return encodeByteRepresentation("hex",new TextEncoder().encode(input));
+  case "raw-hex-to-text":return new TextDecoder("utf-8",{fatal:true}).decode(decodeByteRepresentation("hex",input));
+  case "bytes-base64-encode":return encodeByteRepresentation("base64",decodeByteRepresentation("hex",input));
+  case "base64-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base64",input));
+  case "bytes-base64url-encode":return encodeByteRepresentation("base64url",decodeByteRepresentation("hex",input));
+  case "base64url-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base64url",input));
+  case "bytes-base32-encode":return encodeByteRepresentation("base32",decodeByteRepresentation("hex",input));
+  case "base32-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base32",input));
+  case "bytes-base58-encode":return encodeByteRepresentation("base58",decodeByteRepresentation("hex",input));
+  case "base58-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base58",input));
+  case "bytes-ascii85-encode":return encodeByteRepresentation("base85",decodeByteRepresentation("hex",input));
+  case "ascii85-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("base85",input));
+  case "bytes-z85-encode":return encodeByteRepresentation("z85",decodeByteRepresentation("hex",input));
+  case "z85-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("z85",input));
+  case "bytes-binary-encode":return encodeByteRepresentation("binary",decodeByteRepresentation("hex",input));
+  case "binary-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("binary",input));
+  case "bytes-quoted-printable-encode":return encodeByteRepresentation("quoted-printable",decodeByteRepresentation("hex",input));
+  case "quoted-printable-bytes-decode":return encodeByteRepresentation("hex",decodeByteRepresentation("quoted-printable",input));
   case "unicode-escape":return enc("unicode-escapes","encode");
   case "unicode-unescape":return enc("unicode-escapes","decode");
   case "quoted-printable-encode":return enc("quoted-printable","encode");

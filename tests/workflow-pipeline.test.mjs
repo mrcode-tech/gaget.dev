@@ -61,3 +61,32 @@ test("typed workflow supports Adobe ASCII85 and ZeroMQ Z85 with explicit compati
  assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"z85-decode"}]}),/Incompatible/i);
  assert.throws(()=>executePipeline("abc",{version:1,inputType:"text",steps:[{operation:"z85-encode"}]}),/divisible by four/i);
 });
+
+
+test("byte-oriented workflows preserve arbitrary binary bytes across encoded representations",()=>{
+ const source="00ff010d0a";
+ const cases=[
+  {encode:"bytes-base64-encode",decode:"base64-bytes-decode",expected:"AP8BDQo="},
+  {encode:"bytes-base64url-encode",decode:"base64url-bytes-decode",expected:"AP8BDQo"},
+  {encode:"bytes-base32-encode",decode:"base32-bytes-decode"},
+  {encode:"bytes-base58-encode",decode:"base58-bytes-decode"},
+  {encode:"bytes-ascii85-encode",decode:"ascii85-bytes-decode"},
+  {encode:"bytes-quoted-printable-encode",decode:"quoted-printable-bytes-decode"},
+  {encode:"bytes-binary-encode",decode:"binary-bytes-decode"}
+ ];
+ for(const item of cases){const encoded=executePipeline(source,{version:1,inputType:"raw-hex",steps:[{operation:item.encode}]});if(item.expected)assert.equal(encoded.output,item.expected,item.encode);const decoded=executePipeline(encoded.output,{version:1,inputType:encoded.steps[0].outputType,steps:[{operation:item.decode}]});assert.equal(decoded.output,source,item.encode+" round trip");}
+});
+test("byte-oriented workflow preserves invalid UTF-8 until an explicit text decode and supports Z85 blocks",()=>{
+ const source="00010203";const encoded=executePipeline(source,{version:1,inputType:"raw-hex",steps:[{operation:"bytes-z85-encode"}]});assert.equal(encoded.output,"009c6");
+ assert.equal(executePipeline(encoded.output,{version:1,inputType:"z85",steps:[{operation:"z85-bytes-decode"}]}).output,source);
+ assert.throws(()=>executePipeline("ff",{version:1,inputType:"raw-hex",steps:[{operation:"raw-hex-to-text"}]}),/UTF-8/i);
+ assert.throws(()=>validatePipelineRecipe({version:1,inputType:"text",steps:[{operation:"base64-bytes-decode"}]}),/Incompatible/i);
+});
+test("recipe import stays data-only and rejects prototype keys, custom properties and unsupported operation fields",()=>{
+ for(const source of [
+  '{"version":1,"inputType":"raw-hex","steps":[],"__proto__":{"polluted":true}}',
+  '{"version":1,"inputType":"raw-hex","steps":[{"operation":"bytes-base64-encode","script":"alert(1)"}]}',
+  '{"version":1,"inputType":"raw-hex","steps":[{"operation":"bytes-base64-encode","options":{"key":"secret"}}]}'
+ ])assert.throws(()=>parsePipelineRecipe(source),/unsupported fields|only an operation ID/i);
+ assert.equal(Object.prototype.polluted,undefined);
+});
