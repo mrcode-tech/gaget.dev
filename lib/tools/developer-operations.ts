@@ -183,6 +183,7 @@ type HtmlToken={kind:"text"|"misc"|"tag";value:string;name?:string;closing?:bool
 type HtmlTreeNode={kind:"element";name:string;open:string;close:string;void:boolean;selfClosing:boolean;children:Array<HtmlTreeNode|HtmlToken>};
 const HTML_VOID_TAGS=new Set(["area","base","br","col","embed","hr","img","input","link","meta","param","source","track","wbr"]);
 const HTML_BLOCK_TAGS=new Set(["html","head","body","main","header","footer","nav","section","article","aside","div","p","h1","h2","h3","h4","h5","h6","ul","ol","li","dl","dt","dd","table","thead","tbody","tfoot","tr","td","th","form","fieldset","figure","figcaption","blockquote","pre","hr"]);
+const HTML_RAW_TEXT_TAGS=new Set(["script","style","textarea","title","xmp","iframe","noembed","noframes"]);
 function tokenizeHtml(source:string):HtmlToken[]{
  const tokens:HtmlToken[]=[];let i=0;
  while(i<source.length){
@@ -198,7 +199,7 @@ function tokenizeHtml(source:string):HtmlToken[]{
   const closing=match[1]==="/",name=match[2].toLowerCase(),selfClosing=/\/\s*>$/.test(value);
   tokens.push({kind:"tag",value,name,closing,selfClosing});
   i=end+1;
-  if(!closing&&!selfClosing&&(name==="script"||name==="style")){
+  if(!closing&&!selfClosing&&HTML_RAW_TEXT_TAGS.has(name)){
    const closingTag=new RegExp("</\\s*"+name+"\\s*>","ig");closingTag.lastIndex=i;const closeMatch=closingTag.exec(source);
    if(!closeMatch){if(i<source.length)tokens.push({kind:"text",value:source.slice(i)});break;}
    if(closeMatch.index>i)tokens.push({kind:"text",value:source.slice(i,closeMatch.index)});

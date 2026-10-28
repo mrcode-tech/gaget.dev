@@ -129,3 +129,10 @@ test("HTML script/style bodies are treated as inert raw text during formatting",
  assert.equal(formatHtml(source,true),source);
  assert.equal(formatHtml(source),source);
 });
+
+test("HTML RCDATA and legacy raw-text elements are preserved as text",()=>{
+ for(const source of ['<textarea><b>& value</textarea>','<title>1 < 2 & title</title>','<style>.x::after{content:">"}</style>']){
+  assert.equal(formatHtml(source,true),source);
+  assert.equal(formatHtml(source),source);
+ }
+});

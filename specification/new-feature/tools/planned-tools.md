@@ -18,7 +18,7 @@ Route candidate /sql/formatter; SQL; phase 3. Formatter only; no SQL execution/d
 Route candidate /data/csv-json; Data Formats; phase 3. Explicit direction, delimiter/quote/header/empty-cell/type policy. Test quoted newlines, duplicate headers, uneven rows, BOM, Unicode, nulls and nested JSON. Define safe CSV export behavior for formula-like cells.
 
 ## HTML Formatter — html-formatter
-Route candidate /web/html-formatter; Web & API; phase 3. Format/minify as text without executing markup; preserve mixed inline text and raw script/style bodies, and respect quoted tag delimiters. This remains a heuristic formatter, not an HTML validator. Test malformed markup, comments, script/style content, Unicode and large inputs.
+Route candidate /web/html-formatter; Web & API; phase 3. Format/minify as text without executing markup; preserve mixed inline text and raw script/style bodies, and respect quoted tag delimiters. This remains a heuristic formatter, not an HTML validator. Test malformed markup, comments, mixed inline content, quoted tag delimiters, raw-text elements, Unicode and large inputs.
 
 ## cURL Converter — curl-converter
 Route candidate /api/curl-converter; Web & API; phase 3. Parse supported command into request model and generate selected client snippets. Never execute; report unsupported flags rather than dropping semantics; redact likely secrets by default. Test quoting, multiline commands, headers, body variants, unknown flags and malformed input.
