@@ -237,3 +237,13 @@ test("OpenSSH Ed25519 public-key inspection accepts whitespace and never returns
  assert.match(result.fingerprint,/^SHA256:[A-Za-z0-9+/]+$/);
  assert.equal(result.trustValidated,false);assert.equal(result.networkRequestsMade,false);
 });
+
+test("OpenSSH RSA public-key inspection reports bounded modulus metadata without exposing key bytes",async()=>{
+ const field=value=>{const header=Buffer.alloc(4);header.writeUInt32BE(value.length);return Buffer.concat([header,value]);};
+ const exponent=Buffer.from([1,0,1]),modulus=Buffer.concat([Buffer.from([0]),Buffer.alloc(256,0x80)]);
+ const blob=Buffer.concat([field(Buffer.from("ssh-rsa")),field(exponent),field(modulus)]);
+ const result=JSON.parse(await inspectSshPublicKey("ssh-rsa "+blob.toString("base64")+" demo"));
+ assert.equal(result.type,"ssh-rsa");assert.equal(result.keyMetadata.algorithm,"RSA");
+ assert.equal(result.keyMetadata.exponentBits,17);assert.equal(result.keyMetadata.modulusBits,2048);
+ assert.equal(Object.hasOwn(result.keyMetadata,"modulus"),false);assert.equal(result.trustValidated,false);
+});

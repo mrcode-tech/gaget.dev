@@ -30,7 +30,7 @@
 - `/json/diff` — compatibility route opening Compare mode in the JSON Workspace.
 - `/encoding/url` — unified text-representation workbench for URL components, Base64/Base64url, Base32, hex, binary bytes, basic HTML entities, Unicode escapes, quoted-printable, Bitcoin Base58, Adobe ASCII85, ZeroMQ Z85, and UTF-8/UTF-16LE/BE/Windows-1252 conversion via hex bytes or local-file decoding; URL, HTML-entity and Unicode-escape modes accept selected files as strict UTF-8 text. Base64/Base64url/Base32/hex/binary/Base58/ASCII85/Z85/quoted-printable support local raw-byte encode/decode and byte downloads within explicit limits.
 - `/encoding/base64` — compatibility redirect to `/encoding/url?mode=base64`; it is not a separate catalog tool.
-- `/security/jwt-decoder` — decodes JWT contents but does not verify signatures.
+- `/security/jwt-decoder` — decodes JWT contents and interprets `exp`, `iat` and `nbf` NumericDate claims against the local clock; missing/invalid claims are explicit and signatures are not verified.
 - `/generators/uuid` — generates UUID v4 values using the browser cryptographic API.
 - `/generators/sample-data` — generates synthetic JSON records, random strings and integers, timestamps, and UUID batches with bounded counts and lengths.
 - `/security/hash` — SHA-256/384/512 digests and HMAC-SHA-2 over text or local file bytes (2 MB file limit), plus CRC32/IEEE, CRC-16/CCITT-FALSE and Adler-32 text/file checksums; uses Web Crypto for cryptographic algorithms and does not encrypt. The shared workbench label is Hash & Checksum Generator.
