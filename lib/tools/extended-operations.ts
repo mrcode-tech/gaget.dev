@@ -411,7 +411,34 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
   const ascii=(offset:number,length:number)=>Array.from(bytes.slice(offset,offset+length),b=>String.fromCharCode(b)).join("");
   const metadata:Record<string,unknown>={};
   const notes:string[]=[];
-  if(ascii(0,8)==="\x89PNG\r\n\x1a\n" && bytes.length>=26){
+  if(bytes.length>=2&&bytes[0]===0x1f&&bytes[1]===0x8b){
+    metadata.format="GZIP stream";
+    if(bytes.length<10)notes.push("The GZIP fixed header is truncated.");
+    else{
+      const method=bytes[2],flags=bytes[3],mtime=u32le(4)!;
+      metadata.compressionMethod=method===8?"DEFLATE":`Unknown (${method})`;
+      metadata.modificationTimeSeconds=mtime===0?null:mtime;
+      metadata.modificationTimeIso=mtime===0?null:new Date(mtime*1000).toISOString();
+      metadata.extraFlags=bytes[8];
+      metadata.operatingSystem=({0:"FAT",3:"Unix",7:"Macintosh",11:"NTFS",255:"Unknown"} as Record<number,string>)[bytes[9]]??`Unknown (${bytes[9]})`;
+      metadata.flags={textHint:!!(flags&1),headerCrcPresent:!!(flags&2),extraFieldPresent:!!(flags&4),originalFilenamePresent:!!(flags&8),commentPresent:!!(flags&16),reservedBits:flags&0xe0};
+      if(method!==8)notes.push("The GZIP compression method is not DEFLATE (8).");
+      if(flags&0xe0)notes.push("Reserved GZIP flag bits are set.");
+      let cursor=10,optionalFieldsValid=true;
+      if(flags&4){
+        if(cursor+2>bytes.length){notes.push("The GZIP extra-field length is truncated.");optionalFieldsValid=false;}
+        else{const length=u16le(cursor)!;cursor+=2;if(cursor+length>bytes.length){notes.push("The GZIP extra field extends beyond the supplied bytes.");optionalFieldsValid=false;}else{metadata.extraFieldBytes=length;cursor+=length;}}
+      }
+      const readOptionalField=(name:string)=>{if(cursor>=bytes.length){notes.push("The GZIP "+name+" field is truncated.");optionalFieldsValid=false;return;}const end=bytes.indexOf(0,cursor);if(end<0){notes.push("The GZIP "+name+" field has no NUL terminator in the supplied bytes.");optionalFieldsValid=false;cursor=bytes.length;return;}metadata[name+"Bytes"]=end-cursor;cursor=end+1;};
+      if(optionalFieldsValid&&(flags&8))readOptionalField("originalFilename");
+      if(optionalFieldsValid&&(flags&16))readOptionalField("comment");
+      if(optionalFieldsValid&&(flags&2)){if(cursor+2>bytes.length){notes.push("The GZIP header CRC field is truncated.");optionalFieldsValid=false;}else{metadata.headerCrc16Present=true;cursor+=2;}}
+      metadata.headerBytesAvailable=cursor;
+      metadata.trailerPresent=bytes.length>=cursor+8;
+      if(!metadata.trailerPresent)notes.push("The GZIP trailer is not fully present in the supplied bytes; header fields are not stream validation.");
+      notes.push("GZIP header CRC, compressed payload and trailer checksums are not validated by this metadata inspector.");
+    }
+  } else if(ascii(0,8)==="\x89PNG\r\n\x1a\n" && bytes.length>=26){
     metadata.format="PNG";metadata.width=u32be(16);metadata.height=u32be(20);metadata.bitDepth=bytes[24];metadata.colorType=bytes[25];
   } else if(bytes.length>=4&&bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff){
     metadata.format="JPEG";let offset=2,found=false;

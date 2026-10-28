@@ -263,8 +263,23 @@ test("PEM inspector rejects unmatched markers even when another block is valid",
 test("numeric statistics include quartiles, range, modes and robust absolute-deviation measures",()=>{
  const result=JSON.parse(numericStatistics("1, 2, 2, 3, 4, 10"));
  assert.equal(result.range,9);assert.equal(result.q1,2);assert.equal(result.q3,4);assert.equal(result.interquartileRange,2);
- assert.deepEqual(result.modes,[2]);assert.equal(result.modeFrequency,2);assert.equal(result.meanAbsoluteDeviation,2.2222222222222223);assert.equal(result.medianAbsoluteDeviationFromMedian,1);
- assert.equal(result.sampleStandardDeviation,Math.sqrt(10.666666666666666));assert.match(result.quartileMethod,/excludes the overall median/i);
+ assert.deepEqual(result.modes,[2]);assert.equal(result.modeFrequency,2);assert.ok(Math.abs(result.meanAbsoluteDeviation-2.222222222222222)<1e-12);assert.equal(result.medianAbsoluteDeviationFromMedian,1);
+ assert.ok(Math.abs(result.sampleStandardDeviation-Math.sqrt(10.666666666666666))<1e-12);assert.match(result.quartileMethod,/excludes the overall median/i);
  const noMode=JSON.parse(numericStatistics("1 2 3 4 5"));assert.deepEqual(noMode.modes,[]);assert.equal(noMode.modeFrequency,null);assert.equal(noMode.q1,1.5);assert.equal(noMode.q3,4.5);
  const singleton=JSON.parse(numericStatistics("7"));assert.equal(singleton.q1,null);assert.equal(singleton.q3,null);assert.equal(singleton.sampleStandardDeviation,null);
+});
+
+test("GZIP metadata reads optional header fields without exposing embedded filename or comment",()=>{
+ const text=value=>Array.from(new TextEncoder().encode(value));
+ const bytes=Uint8Array.from([0x1f,0x8b,8,0x18,1,0,0,0,0,3,...text("sample.bin"),0,...text("note"),0,0,0,0,0,0,0,0]);
+ const result=JSON.parse(inspectFileMetadata(bytes));
+ assert.equal(result.metadata.format,"GZIP stream");assert.equal(result.metadata.compressionMethod,"DEFLATE");
+ assert.equal(result.metadata.modificationTimeSeconds,1);assert.equal(result.metadata.modificationTimeIso,"1970-01-01T00:00:01.000Z");
+ assert.equal(result.metadata.originalFilenameBytes,10);assert.equal(result.metadata.commentBytes,4);assert.equal(result.metadata.trailerPresent,true);
+ assert.equal(JSON.stringify(result).includes("sample.bin"),false);assert.equal(JSON.stringify(result).includes('"note"'),false);
+});
+test("GZIP metadata flags truncated headers and reserved flag bits without trusting the stream",()=>{
+ const short=JSON.parse(inspectFileMetadata(Uint8Array.from([0x1f,0x8b,8])));assert.match(short.notes.join(" "),/fixed header is truncated/i);
+ const extra=JSON.parse(inspectFileMetadata(Uint8Array.from([0x1f,0x8b,8,4,0,0,0,0,0,3,0xff])));assert.match(extra.notes.join(" "),/extra-field length is truncated/i);
+ const reserved=JSON.parse(inspectFileMetadata(Uint8Array.from([0x1f,0x8b,8,0xe0,0,0,0,0,0,3])));assert.match(reserved.notes.join(" "),/Reserved GZIP flag bits/i);
 });
