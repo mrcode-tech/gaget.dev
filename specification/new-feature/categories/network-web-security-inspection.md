@@ -34,10 +34,8 @@ JWT registry entry jwt-decoder at /security/jwt-decoder is marked available, but
 | cert.pem-der | Inspect PEM labels and DER outer container | Implemented for bounded PEM blocks and DER SEQUENCE length; malformed labels/lengths rejected |
 | cert.fingerprint | SHA-256 fingerprint of exact PEM-decoded DER or selected DER bytes | Known digest algorithm, exact-byte semantics and no trust claim |
 | cert.x509-fields | Inspect subject, issuer, validity, extensions and serial | Pending complete ASN.1/X.509 parsing; do not infer fields from string search |
-| cert.x509-fields | Inspect subject, issuer, validity, extensions and serial | Parsing only unless trust validation actually exists |
-| cert.fingerprint | Calculate selected digest fingerprint | Known vectors and exact input bytes documented |
 | cert.public-key | Inspect supported public-key metadata | Show only reliably parsed fields |
-| cert.ssh-key | Parse selected SSH public-key formats | Supported types/comment policy explicit |
+| cert.ssh-key | Parse selected SSH public-key formats | Implemented for RSA, Ed25519, NIST P-256/P-384/P-521 ECDSA and selected security-key variants; validates embedded type/field lengths, returns SHA-256 fingerprint and omits comments; SSH certificates and trust remain deferred |
 | cert.trust | Chain/hostname/revocation status | Deferred until real validation and trustworthy sources are specified |
 
 ## File & Binary Analysis
