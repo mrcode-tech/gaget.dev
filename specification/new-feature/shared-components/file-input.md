@@ -1,6 +1,6 @@
 # Reusable File Input / Dropzone Contract
 
-**Status:** Proposal pending full source audit. The component inventory does not confirm a generic shared file zone; search the complete source tree before implementation.
+**Status:** Source-audited contract. The repository has no generic reusable file-input/dropzone component; file-only media workspaces use workspace-specific dropzones. Mixed text/file developer tools use the existing shadcn-style `Input` control for optional local file selection.
 
 ## Selection rules
 - **File-only:** prominent dropzone when suitable, browse button always available, accepted-type guidance and validation.
