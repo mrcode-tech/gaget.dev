@@ -105,6 +105,7 @@ test("raw-byte pipeline operations reverse bytes and apply invert/bit rotations 
 test("raw-byte workflow computes known checksums and bounded byte statistics",()=>{
  const recipe=(operation)=>({version:1,inputType:"raw-hex",steps:[{operation}]});
  assert.equal(executePipeline("313233343536373839",recipe("raw-bytes-crc32")).output,"CBF43926");
+ assert.equal(executePipeline("313233343536373839",recipe("raw-bytes-crc16-ccitt")).output,"29B1");
  assert.equal(executePipeline("313233343536373839",recipe("raw-bytes-adler32")).output,"091E01DE");
  const summary=JSON.parse(executePipeline("41414200",recipe("raw-bytes-summary")).output);
  assert.equal(summary.byteLength,4);assert.equal(summary.uniqueByteValues,3);assert.equal(summary.printableAsciiRatio,0.75);assert.equal(summary.crc32,"B1FB2A34");

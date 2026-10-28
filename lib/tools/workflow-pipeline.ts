@@ -1,5 +1,6 @@
 import { transformEncoding, convertCharset, encodeByteRepresentation, decodeByteRepresentation } from "./encoding-operations.ts";
 import { parseQueryString, buildQueryString } from "./extended-operations.ts";
+import { crc16CcittBytes } from "./security-operations.ts";
 export type PipelineDataType = "text" | "url" | "base64" | "base64url" | "base32" | "base58" | "ascii85" | "z85" | "hex" | "raw-hex" | "binary" | "unicode" | "quoted-printable" | "entities" | "json" | "query";
 export const PIPELINE_INPUT_TYPES: {value:PipelineDataType;label:string}[] = [
  {value:"text",label:"Plain text"},{value:"url",label:"URL-component encoded"},{value:"base64",label:"Base64 encoded"},{value:"base64url",label:"Base64url encoded"},{value:"base32",label:"Base32 encoded"},{value:"base58",label:"Bitcoin Base58 encoded"},{value:"ascii85",label:"Adobe ASCII85 encoded"},{value:"z85",label:"ZeroMQ Z85 encoded"},{value:"hex",label:"Hexadecimal UTF-8 text bytes"},{value:"raw-hex",label:"Raw bytes (hex; byte-preserving)"},{value:"binary",label:"Binary byte representation"},{value:"unicode",label:"Unicode escapes"},{value:"quoted-printable",label:"Quoted-printable"},{value:"entities",label:"HTML entities"},{value:"json",label:"JSON text"},{value:"query",label:"Query string"}
@@ -59,6 +60,7 @@ export const PIPELINE_OPERATIONS = [
  {id:"raw-bytes-rotate-left",label:"Rotate each byte left by one bit",input:"raw-hex",output:"raw-hex"},
  {id:"raw-bytes-rotate-right",label:"Rotate each byte right by one bit",input:"raw-hex",output:"raw-hex"},
  {id:"raw-bytes-crc32",label:"CRC-32/IEEE checksum",input:"raw-hex",output:"text"},
+ {id:"raw-bytes-crc16-ccitt",label:"CRC-16/CCITT-FALSE checksum",input:"raw-hex",output:"text"},
  {id:"raw-bytes-adler32",label:"Adler-32 checksum",input:"raw-hex",output:"text"},
  {id:"raw-bytes-summary",label:"Byte statistics summary",input:"raw-hex",output:"json"},
  {id:"json-format",label:"Format JSON",input:"json",output:"json"},
@@ -185,6 +187,7 @@ function applyOperation(id:PipelineOperation,input:string):string{
   case "raw-bytes-rotate-left":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte<<1)|(byte>>>7))&0xff));
   case "raw-bytes-rotate-right":return encodeByteRepresentation("hex",Uint8Array.from(decodeByteRepresentation("hex",input),byte=>((byte>>>1)|(byte<<7))&0xff));
   case "raw-bytes-crc32":{const bytes=decodeByteRepresentation("hex",input);let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return ((crc^0xffffffff)>>>0).toString(16).padStart(8,"0").toUpperCase();}
+  case "raw-bytes-crc16-ccitt":return crc16CcittBytes(decodeByteRepresentation("hex",input));
   case "raw-bytes-adler32":{const bytes=decodeByteRepresentation("hex",input);let a=1,b=0;for(const byte of bytes){a=(a+byte)%65521;b=(b+a)%65521;}return (((b<<16)|a)>>>0).toString(16).padStart(8,"0").toUpperCase();}
   case "raw-bytes-summary":{const bytes=decodeByteRepresentation("hex",input);const counts=new Uint32Array(256);let printable=0;for(const byte of bytes){counts[byte]++;if(byte===9||byte===10||byte===13||(byte>=32&&byte<=126))printable++;}let entropy=0,unique=0;for(const count of counts){if(count){unique++;const probability=count/Math.max(1,bytes.length);entropy-=probability*Math.log2(probability);}}return JSON.stringify({byteLength:bytes.length,uniqueByteValues:unique,printableAsciiRatio:bytes.length?Number((printable/bytes.length).toFixed(6)):0,shannonEntropyBitsPerByte:Number(entropy.toFixed(6)),crc32:((()=>{let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;})()).toString(16).padStart(8,"0").toUpperCase()});}
   case "json-format":return JSON.stringify(JSON.parse(input),null,2);

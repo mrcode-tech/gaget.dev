@@ -1,6 +1,6 @@
 # Workflow, Generators & API Developer Helpers
 
-## Workflow & Batch Processing — implemented safe subset; advanced execution/persistence deferred
+## Workflow & Batch Processing — bounded MVP implemented; advanced execution deferred
 
 | ID | Operation | Contract |
 |---|---|---|
@@ -9,9 +9,9 @@
 | flow.intermediate | Inspect intermediate output | Implemented previews capped at 2,000 characters per step; only allowlisted non-secret operations |
 | flow.batch | Process records | Implemented sequential line batches capped at 100 records and 200,000 total input characters with per-line errors; each run executes in a dedicated worker and cancellation terminates the worker |
 | flow.recipe | Import/export versioned recipes | Implemented version 1 JSON import/export, 32 KB cap, strict field/operation/compatibility validation; recipes contain no input or secret values |
-| flow.persistence | Save recipes | Defer persistence decision; do not store inputs/secrets by default |
+| flow.persistence | Save recipes | Implemented opt-in browser-local recipe saving; at most 10 recipes and 320 KB total. Stores validated recipe steps, name and timestamp only—never input text, file bytes, intermediate/final outputs or secrets. Individual recipes can be deleted; no account or cross-device sync. |
 
-Do not build a pipeline engine until several operation contracts, errors and resource limits are stable.
+Keep the engine allowlisted and typed. Do not add arbitrary custom code, dynamic imports, network execution or unbounded file operations. Every new operation must declare input/output types, limits, deterministic failure behavior and regression fixtures before entering the registry.
 
 ## Generators\n\n`/generators/sample-data` (Data Generator) implements bounded random alphanumeric strings, inclusive integer ranges, device-clock timestamps, synthetic JSON records and UUID v4 batches. Output counts and lengths are capped; randomness is browser-local and is not presented as a password-strength recommendation.
 
