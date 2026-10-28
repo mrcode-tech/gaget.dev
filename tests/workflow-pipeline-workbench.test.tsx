@@ -49,7 +49,7 @@ it("saves only the typed recipe in local browser storage and can load or delete 
  unmount();
  render(<WorkflowPipelineWorkbench/>);
  await waitFor(()=>expect(screen.getByText(/Text chain/)).toBeTruthy());
- fireEvent.click(screen.getByRole("button",{name:"Load",exact:true}));
+ fireEvent.click(screen.getByRole("button",{name:/^Load$/i}));
  expect((screen.getByRole("textbox",{name:"Workflow input"}) as HTMLTextAreaElement).value).toBe("");
  fireEvent.click(screen.getByRole("button",{name:"Delete saved recipe Text chain"}));
  await waitFor(()=>expect(localStorage.getItem("gaget.workflow-recipes.v1")).toBe('{"version":1,"recipes":[]}'));
