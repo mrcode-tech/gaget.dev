@@ -87,13 +87,13 @@ export function formatXml(s:string,minify=false){
  if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
  const internalEntities=new Set<string>();
  for(const token of tokens)if(token.kind==="doctype"){
-  for(const match of token.value.matchAll(/<!ENTITY\\s+([A-Za-z_:][\\w:.-]*)\\s+(['"])[\\s\\S]*?\\2\\s*>/g))internalEntities.add(match[1]);
+  for(const match of token.value.matchAll(/<!ENTITY\s+([A-Za-z_:][\w:.-]*)\s+(['"])[\s\S]*?\2\s*>/g))internalEntities.add(match[1]);
  }
  const validateReferences=(value:string,context:string)=>{
   for(let index=0;index<value.length;index++){
    if(value[index]!=="&")continue;
    const end=value.indexOf(";",index+1);
-   if(end<0||/[\\s<&]/.test(value.slice(index+1,end)))throw new Error("Malformed XML entity reference in "+context+".");
+   if(end<0||/[\s<&]/.test(value.slice(index+1,end)))throw new Error("Malformed XML entity reference in "+context+".");
    const ref=value.slice(index+1,end);
    if(ref.startsWith("#x")||ref.startsWith("#X")||ref.startsWith("#")){
     const numeric=ref[1]==="x"||ref[1]==="X"?Number.parseInt(ref.slice(2),16):Number.parseInt(ref.slice(1),10);
@@ -107,7 +107,7 @@ export function formatXml(s:string,minify=false){
  for(const token of tokens){
   if(token.kind==="text")validateReferences(token.value,"character data");
   if(token.kind==="start"||token.kind==="empty"){
-   for(const attr of token.value.matchAll(/=\\s*("[^"]*"|'[^']*')/g)){
+   for(const attr of token.value.matchAll(/=\s*("[^"]*"|'[^']*')/g)){
     const value=attr[1].slice(1,-1);
     if(value.includes("<"))throw new Error("XML attribute values cannot contain <.");
     validateReferences(value,"attribute value");
