@@ -156,7 +156,7 @@ export function detectCompression(bytes:Uint8Array):string {
   return JSON.stringify({bytes:bytes.length,detected:gzip?"gzip":zlib?"zlib-wrapped DEFLATE":"unknown",confidence:gzip||zlib?"wrapper signature matches":"no supported wrapper signature; raw DEFLATE and other formats cannot be distinguished from arbitrary bytes by this check",magicBytes:Array.from(bytes.slice(0,16),b=>b.toString(16).padStart(2,"0")).join(" ")},null,2);
 }
 export function convertNumberBase(input:string,radix=10):string {
-  const s=input.trim().replace(/_/g,"");if(!s)throw new Error("Enter an integer.");if(!Number.isInteger(radix)||radix<2||radix>36)throw new Error("Base must be between 2 and 36.");
+  const s=input.trim().replace(/_/g,"");if(!s)throw new Error("Enter an integer.");if(s.replace(/^[+-]/,"").length>10_000)throw new Error("Integer input is limited to 10,000 digits.");if(!Number.isInteger(radix)||radix<2||radix>36)throw new Error("Base must be between 2 and 36.");
   const sign=s.startsWith("-")?"-":"";const raw=sign?s.slice(1):s;let value:bigint;
   try{if(/^0[xob]/i.test(raw))value=BigInt(raw)*(sign?-BigInt(1):BigInt(1));else{const chars="0123456789abcdefghijklmnopqrstuvwxyz";const r=BigInt(radix);let n=BigInt(0);for(const c of raw.toLowerCase()){const digit=chars.indexOf(c);if(digit<0||digit>=radix)throw new Error("Digit is not valid for base "+radix+".");n=n*r+BigInt(digit);}value=n*(sign?-BigInt(1):BigInt(1));}}
   catch(e){if(e instanceof Error&&e.message.startsWith("Digit"))throw e;throw new Error("Enter a valid integer (decimal or prefixed 0x/0o/0b).");}
@@ -225,8 +225,13 @@ export function parseCookies(input:string):string {
 }
 export function numericStatistics(input:string):string {
  guardText(input);const values=input.trim().split(/[\s,;]+/).filter(Boolean).map(Number);if(!values.length||values.some(n=>!Number.isFinite(n)))throw new Error("Enter a non-empty list of finite numbers separated by spaces, commas, or semicolons.");
- const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0),mean=sum/values.length,median=sorted.length%2?sorted[(sorted.length-1)/2]:(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2;const variance=values.reduce((s,n)=>s+(n-mean)**2,0)/values.length;
- return JSON.stringify({count:values.length,min:sorted[0],max:sorted[sorted.length-1],sum,mean,median,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance:values.length>1?values.reduce((s,n)=>s+(n-mean)**2,0)/(values.length-1):null},null,2);
+ const sorted=[...values].sort((a,b)=>a-b),sum=values.reduce((a,b)=>a+b,0);
+ if(!Number.isFinite(sum))throw new Error("Statistics exceed the finite numeric range; use smaller-magnitude values.");
+ const mean=sum/values.length,median=sorted.length%2?sorted[(sorted.length-1)/2]:sorted[sorted.length/2-1]/2+sorted[sorted.length/2]/2;
+ const squaredDeviationSum=values.reduce((total,n)=>total+(n-mean)**2,0);
+ if(!Number.isFinite(squaredDeviationSum))throw new Error("Variance exceeds the finite numeric range; use smaller-magnitude values.");
+ const variance=squaredDeviationSum/values.length,sampleVariance=values.length>1?squaredDeviationSum/(values.length-1):null;
+ return JSON.stringify({count:values.length,min:sorted[0],max:sorted[sorted.length-1],sum,mean,median,populationVariance:variance,populationStandardDeviation:Math.sqrt(variance),sampleVariance},null,2);
 }
 export function characterStatistics(input:string):string {
  guardText(input);
@@ -337,7 +342,7 @@ export function parseHttpMessage(input:string):string {
   if(!/^[!#$%&'*+.^_|~0-9A-Za-z-]+$/.test(name))throw new Error("Invalid HTTP header name at line "+(index+2)+".");
   const redacted=SENSITIVE_HTTP_HEADERS.test(name)||SENSITIVE_HTTP_HEADER_NAME.test(name);const value=redacted?"[REDACTED]":SENSITIVE_HTTP_URL_HEADER.test(name)?redactHttpTarget(rawValue):rawValue;headers.push({name,value,redacted:redacted||value!==rawValue});
  }
- const grouped:Record<string,string[]>={};for(const header of headers)(grouped[header.name.toLowerCase()]??=[]).push(header.value);
+ const grouped:Record<string,string[]>=Object.create(null) as Record<string,string[]>;for(const header of headers)(grouped[header.name.toLowerCase()]??=[]).push(header.value);
  const contentType=headers.find(h=>h.name.toLowerCase()==="content-type")?.value??null;
  return JSON.stringify({messageType:response?"response":"request",startLine:safeStartLine,...(response?{httpVersion:response[1],statusCode:Number(response[2]),reason:response[3]??""}:{method:request![1],target:safeTarget!,httpVersion:request![3]}),headers,headerCount:headers.length,duplicateHeaders:Object.fromEntries(Object.entries(grouped).filter(([,values])=>values.length>1)),body:{utf8Bytes:new TextEncoder().encode(body).length,lineCount:body?body.split("\n").length:0,contentType,contentIncluded:false},networkRequestsMade:false,note:"Supplied HTTP text only. Sensitive header values and recognizable secret query parameters are redacted; the body is deliberately omitted from the parsed result."},null,2);
 }

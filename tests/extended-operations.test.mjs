@@ -196,3 +196,24 @@ test("query, key-value and cookie parsers safely preserve prototype-shaped names
  assert.deepEqual(headers.duplicates,{});assert.equal(headers.count,2);
  assert.equal(Object.prototype.polluted,undefined);
 });
+
+test("query, key-value and cookie parsers safely preserve prototype-shaped names",()=>{
+ const query=JSON.parse(parseQueryString("__proto__=query&constructor=ctor&prototype=proto"));
+ assert.equal(query["__proto__"],"query");assert.equal(query.constructor,"ctor");assert.equal(query.prototype,"proto");
+ const keyValue=JSON.parse(parseKeyValue("__proto__=kv\\nconstructor=ctor\\nprototype=proto"));
+ assert.equal(keyValue["__proto__"],"kv");assert.equal(keyValue.constructor,"ctor");assert.equal(keyValue.prototype,"proto");
+ const cookies=JSON.parse(parseCookies("__proto__=cookie; constructor=ctor; prototype=proto"));
+ assert.equal(cookies["__proto__"],"cookie");assert.equal(cookies.constructor,"ctor");assert.equal(cookies.prototype,"proto");
+ const headers=JSON.parse(parseHttpHeaders("__proto__: one\\nconstructor: two"));
+ assert.deepEqual(headers.duplicates,{});assert.equal(headers.count,2);
+ assert.equal(Object.prototype.polluted,undefined);
+});
+test("number-base conversion bounds costly BigInt inputs",()=>{
+ assert.throws(()=>convertNumberBase("1".repeat(10_001)),/10,000 digits/i);
+});
+test("numeric statistics reject aggregate overflow rather than emitting invalid JSON numbers",()=>{
+ assert.throws(()=>numericStatistics("1e308 1e308"),/finite numeric range/i);
+ assert.throws(()=>numericStatistics("-1e308 1e308"),/variance exceeds the finite numeric range/i);
+ const stable=JSON.parse(numericStatistics("1e308 1e308".replace("1e308 1e308","1e308 1e308")));
+ assert.ok(Number.isFinite(stable.count));
+});
