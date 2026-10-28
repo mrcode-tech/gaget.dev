@@ -17,7 +17,6 @@ Do not build a pipeline engine until several operation contracts, errors and res
 
 | ID | Operation | Contract |
 |---|---|---|
-| gen.uuid-v4 | Existing UUID v4 | Registry ID uuid-generator, route /generators/uuid; verify randomness and output |
 | gen.random-data | Sample strings/numbers/records | Implemented random alphanumeric strings, inclusive bounded integers, and synthetic JSON records; uses browser crypto randomness and clearly labels values as test data |
 | gen.timestamps | Timestamp forms | Implemented ISO UTC, Unix seconds/milliseconds and detected browser time zone; device clock is explicitly not trusted |
 | gen.identifiers | Selected identifiers | UUID v4 batch generation is available as an operation inside Data Generator, with cryptographic randomness when available; collision probability is not zero |

@@ -9,7 +9,6 @@
 | url-encoder-decoder | Encoding & Decoding | /encoding/url | available with documented limits |
 
 | jwt-decoder | JWT Decoder | /security/jwt-decoder | available |
-| uuid-generator | UUID Generator | /generators/uuid | available |
 | sample-data-generator | Data Generator | /generators/sample-data | available with documented limits |
 | hash-generator | Hash & Checksum Generator | /security/hash | available with documented limits |
 | regex-tester | Text & Regex Workbench | /text/regex | available with documented limits |

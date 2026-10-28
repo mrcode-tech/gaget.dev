@@ -51,7 +51,7 @@ Prefer a small taxonomy grounded in user intent:
 | Data & Formats | Read, validate, format or transform structured data | JSON Formatter; XML Formatter; CSV ↔ JSON | Keep different document models as separate tools unless a shared workflow is proven. |
 | Encoding & Conversion | Transform representations of text/data | URL Encoder / Decoder; Base64 Encoder / Decoder | Share category discovery, not necessarily an editor or state. |
 | Security | Inspect token structure or compute digests | JWT Decoder; Hash Generator | Category only; independent workflows. |
-| Generators | Create identifiers and similar values | UUID Generator | Group by generation intent. |
+| Generators | Create synthetic records, strings, numbers, timestamps and identifiers | Data Generator | Keep UUID generation as one operation in the broader generator workspace. |
 | Code & Text | Inspect or format text/code patterns | Regex Tester; HTML Formatter | Do not combine unrelated editing models. |
 | Database & SQL | Work with SQL statements | SQL Formatter | Keep focused. |
 | Web & API | Inspect HTTP requests and related representations | cURL Converter | Keep focused. |
