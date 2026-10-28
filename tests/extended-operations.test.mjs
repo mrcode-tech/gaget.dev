@@ -271,7 +271,7 @@ test("numeric statistics include quartiles, range, modes and robust absolute-dev
 
 test("GZIP metadata reads optional header fields without exposing embedded filename or comment",()=>{
  const text=value=>Array.from(new TextEncoder().encode(value));
- const bytes=Uint8Array.from([0x1f,0x8b,8,0x18,1,0,0,0,0,3,...text("sample.bin"),0,...text("note"),0,0,0,0,0,0,0,0]);
+ const bytes=Uint8Array.from([0x1f,0x8b,8,0x18,1,0,0,0,0,3,...text("sample.bin"),0,...text("note"),0,0,0,0,0,0,0,0,0]);
  const result=JSON.parse(inspectFileMetadata(bytes));
  assert.equal(result.metadata.format,"GZIP stream");assert.equal(result.metadata.compressionMethod,"DEFLATE");
  assert.equal(result.metadata.modificationTimeSeconds,1);assert.equal(result.metadata.modificationTimeIso,"1970-01-01T00:00:01.000Z");
