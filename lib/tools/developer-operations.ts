@@ -78,22 +78,74 @@ function tokenizeXml(source:string):XmlToken[]{
  }
  return tokens;
 }
+type XmlTreeNode = { kind: "element"; open: string; close: string; selfClosing: boolean; children: XmlTreeNode[] | XmlToken[] };
 export function formatXml(s:string,minify=false){
- guard(s);const tokens=tokenizeXml(s);if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
- const stack:string[]=[],lines:string[]=[];let depth=0,roots=0,doctypeSeen=false,rootClosed=false;
- for(const token of tokens){const {kind,value,name}=token;const v=value.trim();if(!v)continue;
-  if(kind==="text"){if(stack.length===0)throw new Error("Text is not allowed outside the XML root element.");lines.push("  ".repeat(depth)+v);continue;}
-  if(kind==="doctype"){if(doctypeSeen||roots>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");doctypeSeen=true;lines.push(v);continue;}
-  if(kind==="comment"||kind==="pi"){lines.push("  ".repeat(depth)+v);continue;}
-  if(kind==="cdata"){if(!stack.length)throw new Error("CDATA is only allowed inside the XML root element.");lines.push("  ".repeat(depth)+v);continue;}
-  if(kind==="end"){if(stack.pop()!==name)throw new Error("Unexpected or mismatched closing tag: "+v);depth--;if(stack.length===0)rootClosed=true;lines.push("  ".repeat(depth)+v);continue;}
-  if(stack.length===0){if(rootClosed||roots>0)throw new Error("XML must contain exactly one root element.");roots++;}
-  lines.push("  ".repeat(depth)+v);
-  if(kind==="start"){stack.push(name!);depth++;}else if(stack.length===0)rootClosed=true;
+ guard(s);
+ const tokens=tokenizeXml(s);
+ if(!tokens.some(t=>t.kind!=="text"||t.value.trim()))throw new Error("Enter an XML document.");
+ const roots:XmlTreeNode[]=[];
+ const stack:XmlTreeNode[]=[];
+ let doctypeSeen=false,rootClosed=false;
+ for(const token of tokens){
+  const {kind,value,name}=token;
+  if(kind==="text"){
+   if(stack.length===0){if(value.trim())throw new Error("Text is not allowed outside the XML root element.");continue;}
+   (stack[stack.length-1].children as XmlTreeNode[]).push(token);
+   continue;
+  }
+  if(kind==="doctype"){
+   if(doctypeSeen||roots.length>0||stack.length)throw new Error("DOCTYPE must appear at most once before the root element.");
+   doctypeSeen=true;
+   (stack.length?stack[stack.length-1].children as XmlTreeNode[]:roots as unknown as XmlTreeNode[]).push(token as unknown as XmlTreeNode);
+   continue;
+  }
+  if(kind==="end"){
+   const current=stack.pop();
+   if(!current||current.open.match(/^<([^\s/>]+)/)?.[1]!==name)throw new Error("Unexpected or mismatched closing tag: "+value);
+   current.close=value;
+   if(stack.length===0)rootClosed=true;
+   continue;
+  }
+  if(kind==="start"||kind==="empty"){
+   if(stack.length===0){
+    if(rootClosed||roots.length>0)throw new Error("XML must contain exactly one root element.");
+   }
+   const node:XmlTreeNode={kind:"element",open:value,close:"",selfClosing:kind==="empty",children:[]};
+   if(stack.length)(stack[stack.length-1].children as XmlTreeNode[]).push(node);
+   else roots.push(node);
+   if(kind==="start")stack.push(node);else if(stack.length===0)rootClosed=true;
+   continue;
+  }
+  const misc=token as unknown as XmlTreeNode;
+  if(stack.length)(stack[stack.length-1].children as XmlTreeNode[]).push(misc);
+  else roots.push(misc);
  }
- if(stack.length)throw new Error("Unclosed XML element: "+stack[stack.length-1]);
- if(roots!==1)throw new Error("XML must contain exactly one root element.");
- return minify?lines.join("").replace(/>\s*</g,"><"):lines.join("\n");
+ if(stack.length)throw new Error("Unclosed XML element: "+stack[stack.length-1].open.match(/^<([^\s/>]+)/)?.[1]);
+ const elements=roots.filter((node)=>node.kind==="element");
+ if(elements.length!==1)throw new Error("XML must contain exactly one root element.");
+ const isElement=(node:XmlTreeNode|XmlToken):node is XmlTreeNode=>"kind" in node&&node.kind==="element";
+ const raw=(node:XmlTreeNode|XmlToken):string=>{
+  if(!isElement(node))return node.value;
+  if(node.selfClosing)return node.open;
+  return node.open+node.children.map(raw).join("")+node.close;
+ };
+ const hasCharacterData=(node:XmlTreeNode):boolean=>node.children.some(child=>!isElement(child)&&(child.kind==="text"||child.kind==="cdata") || isElement(child)&&hasCharacterData(child));
+ const render=(node:XmlTreeNode|XmlToken,depth:number):string=>{
+  if(!isElement(node))return "  ".repeat(depth)+node.value;
+  if(node.selfClosing)return "  ".repeat(depth)+node.open;
+  // Formatting mixed content or any existing character data can change XML text semantics.
+  // Preserve that entire element byte-for-byte rather than injecting or deleting whitespace.
+  if(hasCharacterData(node))return "  ".repeat(depth)+raw(node);
+  const children=node.children;
+  if(children.length===0)return "  ".repeat(depth)+node.open+node.close;
+  if(minify)return node.open+children.map(raw).join("")+node.close;
+  return "  ".repeat(depth)+node.open+"\n"+children.map(child=>render(child,depth+1)).join("\n")+"\n"+"  ".repeat(depth)+node.close;
+ };
+ if(minify){
+  // Never strip character data, even when it looks like indentation whitespace.
+  return roots.map(node=>isElement(node)?raw(node):node.value).join("");
+ }
+ return roots.map(node=>render(node,0)).join("\n");
 }
 export function formatHtml(s:string,minify=false){
  guard(s);const tokens=s.match(/<!--[\s\S]*?-->|<![^>]*>|<[^>]+>|[^<]+/g)||[];

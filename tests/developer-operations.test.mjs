@@ -88,3 +88,12 @@ test("cURL --json produces a JSON body and default JSON headers without reading 
  const file=parseCurl("curl --json @body.json https://example.test/api");
  assert.equal(file.body,undefined);assert.match(file.unsupported.join(" "),/file-backed data is not read/i);
 });
+
+test("XML formatting preserves text and mixed-content whitespace instead of changing document values",()=>{
+ const mixed='<p>Hello <b>GaGet</b> world</p>';
+ assert.equal(formatXml(mixed),mixed);
+ assert.equal(formatXml(mixed,true),mixed);
+ assert.equal(formatXml('<root>  meaningful text  </root>'),'<root>  meaningful text  </root>');
+ assert.equal(formatXml('<root><item/><other/></root>'),'<root>\n  <item/>\n  <other/>\n</root>');
+ assert.equal(formatXml('<root>\n  <item/>\n</root>'),'<root>\n  <item/>\n</root>');
+});
