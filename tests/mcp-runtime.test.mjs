@@ -328,6 +328,11 @@ test("image inspection and transformations use bounded raster bytes", async () =
   const angled = await executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 45, background: "#FFFFFF" });
   assert.ok(angled.width >= 3 && angled.height >= 3);
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 45, background: "url(javascript:alert(1))" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "resize", fit: "inside" }), { code: "INVALID_INPUT" });
+  const jpeg = await executeOperation("image.transform", { inputBase64, action: "convert", format: "jpeg", background: "#F0F0F0" });
+  assert.equal(jpeg.format, "jpeg");
+  assert.ok(Buffer.from(jpeg.dataBase64, "base64").byteLength > 0);
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "convert", format: "png", background: "#FFFFFF" }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "resize", width: 2, fit: "stretch" }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "grayscale", position: "centre" }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 90, width: 1 }), { code: "INVALID_INPUT" });

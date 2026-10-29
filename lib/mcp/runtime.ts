@@ -719,7 +719,8 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         if (action === "crop" && !hasPixelCrop && !hasRatioCrop) throw new McpRuntimeError("INVALID_INPUT", "Crop requires left/top/width/height pixels or leftRatio/topRatio/widthRatio/heightRatio.");
         if (action === "rotate" && (typeof degrees !== "number" || !Number.isFinite(degrees) || degrees < -180 || degrees > 180 || degrees === 0)) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires an angle greater than -180 and less than 180, excluding zero.");
         if (background !== undefined && (typeof background !== "string" || !/^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/.test(background))) throw new McpRuntimeError("INVALID_INPUT", "Background must be a six- or eight-digit hexadecimal color.");
-        if (background !== undefined && action !== "rotate") throw new McpRuntimeError("INVALID_INPUT", "Background is valid only for rotate.");
+        if (background !== undefined && action !== "rotate" && !(action === "convert" && format === "jpeg")) throw new McpRuntimeError("INVALID_INPUT", "Background is valid only for rotate or JPEG conversion.");
+        if (action === "convert" && background !== undefined && format !== "jpeg") throw new McpRuntimeError("INVALID_INPUT", "A conversion background is supported only for JPEG output.");
         if (action === "convert" && (typeof format !== "string" || !["jpeg","png","webp","avif"].includes(format))) throw new McpRuntimeError("INVALID_INPUT", "Convert requires a supported output format.");
         if (format !== undefined && !["jpeg","png","webp","avif"].includes(String(format))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported output format.");
         if (action !== "resize" && action !== "crop" && (width !== undefined || height !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Width and height are valid only for resize or crop.");
@@ -745,7 +746,10 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
             if (hasRatioCrop && ((leftRatio as number) + (widthRatio as number) > 1 || (topRatio as number) + (heightRatio as number) > 1)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop rectangle must fit within ratios 0 to 1.");
             if (cropLeft + cropWidth > metadata.width || cropTop + cropHeight > metadata.height) throw new McpRuntimeError("INVALID_INPUT", "Crop rectangle must fit entirely inside the source image.");
             pipeline = pipeline.extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight });
-          } else if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: (fit as "contain" | "cover" | "fill" | "inside" | "outside" | undefined) ?? "inside", position: (position as string | undefined) ?? "centre", withoutEnlargement: fit === undefined || fit === "inside" });
+          } else if (action === "resize") {
+            if (width === undefined && height === undefined) throw new McpRuntimeError("INVALID_INPUT", "Resize requires at least one of width or height.");
+            pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: (fit as "contain" | "cover" | "fill" | "inside" | "outside" | undefined) ?? "inside", position: (position as string | undefined) ?? "centre", withoutEnlargement: fit === undefined || fit === "inside" });
+          }
           else if (action === "rotate") pipeline = pipeline.rotate(degrees as number, background === undefined ? {} : { background: background as string });
           else if (action === "flip") pipeline = pipeline.flip();
           else if (action === "flop") pipeline = pipeline.flop();
@@ -756,7 +760,10 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
             if (brightness !== undefined || saturation !== undefined) pipeline = pipeline.modulate({ ...(brightness === undefined ? {} : { brightness: brightness as number }), ...(saturation === undefined ? {} : { saturation: saturation as number }) });
             if (contrast !== undefined) pipeline = pipeline.linear(contrast as number, 128 * (1 - (contrast as number)));
           }
-          else if (action === "convert") pipeline = pipeline.toFormat(format as "jpeg" | "png" | "webp" | "avif", quality === undefined ? {} : { quality: quality as number });
+          else if (action === "convert") {
+            if (format === "jpeg") pipeline = pipeline.flatten({ background: (background as string | undefined) ?? "#FFFFFF" });
+            pipeline = pipeline.toFormat(format as "jpeg" | "png" | "webp" | "avif", quality === undefined ? {} : { quality: quality as number });
+          }
           if (action !== "resize") pipeline = pipeline.resize({ width: 4096, height: 4096, fit: "inside", withoutEnlargement: true });
           const output = await pipeline.toBuffer({ resolveWithObject: true });
           if (output.info.width > 4096 || output.info.height > 4096) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Processed image dimensions exceed the 4,096-pixel limit.");
