@@ -5,6 +5,12 @@
 ## Objective
 Expose selected GaGet capabilities to compatible AI clients using MCP while preserving a first-class browser-local web app and supporting self-hosted server-side processing. The MCP server must not depend on the web UI being loaded. The web UI must not depend on MCP or a remote processing endpoint for local operations.
 
+## Workflow product experience
+
+The product has one general-purpose workflow editor: **Batch Workbench**, a primary sidebar destination immediately below Dev Tools. MCP & Integrations is an education/setup page with a curated demo, not a second workflow editor. See [MCP Workflow UX Architecture](./workflow-ux-architecture.md) for the navigation and acceptance contract.
+
+The workflow engine is a shared capability service. Batch Workbench's web adapter and the MCP adapter may reuse the same versioned pipeline schema, operation IDs, validation, execution budgets, and result-manifest contract where runtime-compatible. Keep UI state, MCP transport, authentication/authorization adapters, and browser/server runtime assumptions separate. The public demo uses a constrained recipe from this same pipeline model and links to Batch Workbench. Only operations verified for server execution can be presented as MCP-executable.
+
 ## Logical architecture
     Human -> Web UI -> Browser adapter -> Browser runtime -----+
                                                                +--> Capability registry
