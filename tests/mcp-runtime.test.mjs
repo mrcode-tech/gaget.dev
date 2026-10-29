@@ -12,6 +12,8 @@ test("capability registry contains stable IDs, versions and finite limits", () =
   for (const item of capabilities) {
     assert.match(item.version, /^\d+\.\d+\.\d+$/);
     assert.ok(Object.values(item.limits).every(limit => Number.isFinite(limit) && limit > 0));
+    assert.equal(item.inputSchema.type, "object");
+    assert.ok(item.outputSchema.type);
   }
 });
 

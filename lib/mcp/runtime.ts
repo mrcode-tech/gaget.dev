@@ -39,7 +39,23 @@ const capabilityList = [
   { id: "developer.format", version: "1.0.0", description: "Format/minify supported XML, SQL, HTML text, or convert CSV/JSON. Does not execute input.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } }
 ] as const;
 
-export function listCapabilities() { return capabilityList; }
+const outputSchemas = {
+  "encoding.transform": { type: "string" },
+  "text.transform": { type: "string" },
+  "json.validate": { type: "object", properties: { valid: { type: "boolean" }, diagnostics: { type: "array" } }, required: ["valid"], additionalProperties: false },
+  "json.format": { type: "string" },
+  "json.minify": { type: "string" },
+  "json.diff": { type: "array", items: { type: "object", properties: { path: { type: "string" }, kind: { type: "string", enum: ["added","removed","changed"] } }, required: ["path","kind"] } },
+  "developer.format": { type: "string" }
+} as const;
+
+export function listCapabilities() {
+  return capabilityList.map(capability => ({
+    ...capability,
+    inputSchema: schemas[capability.id],
+    outputSchema: outputSchemas[capability.id]
+  }));
+}
 export async function executeOperation(operationId: string, rawInput: unknown): Promise<unknown> {
   if (!isObject(rawInput)) throw new McpRuntimeError("INVALID_INPUT", "Operation arguments must be a JSON object.");
   let result: unknown;
