@@ -1,6 +1,6 @@
 # Developer Tools Expansion — Implementation Roadmap
 
-**Status:** Phases 0–5 are complete for their approved, bounded subsets. Phase 6 is complete for the approved bounded MVP: typed text/encoding/JSON/query pipelines, byte-preserving raw-hex workflows, local files up to 100 KB, byte transforms/checksums/statistics, worker deadline/cancellation, batch processing, import/export and opt-in local-only recipe saving are implemented. Parallel batches, arbitrary code and broader file workflows remain deferred. Broader parser/crypto/archive capabilities remain conditional. Wireframe approval remains a separate design sign-off. Phase 7 is evidence-gated and must be updated only from the latest exact-revision CI manifest.
+**Status:** Phases 0–5 are complete for their approved, bounded subsets, including optional strict-UTF-8 file input for the shared text-based developer tools with component and browser E2E coverage for success, malformed UTF-8 and size limits. Phase 6 is complete for the approved bounded MVP: typed text/encoding/JSON/query pipelines, byte-preserving raw-hex workflows, local files up to 100 KB, byte transforms/checksums/statistics, worker deadline/cancellation, batch processing, import/export and opt-in local-only recipe saving are implemented. Parallel batches, arbitrary code and broader file workflows remain deferred. Broader parser/crypto/archive capabilities remain conditional. Wireframe approval remains a separate design sign-off. Phase 7 is evidence-gated and must be updated only from the latest exact-revision CI manifest.
 
 ## 1. Scope and baseline
 Primary source: [developer-tools capability proposal](../product/developer-tools-capability-proposal.md). Inspected sources include lib/tools/registry.ts, product inventory, tool catalog/workspace architecture, component inventory, design-token contract, quality/accessibility contract, AI instructions and command.md.
@@ -30,7 +30,7 @@ Prioritize user value, correctness, reuse, feasibility, maintenance and risk, no
 **Scope:** Define input/output/error/resource contracts; audit existing components; decide whether new reusable patterns are necessary.  
 **Read:** design-system-and-reuse.md, shared-components/, wireframes/, design-token and quality/accessibility foundations.  
 **Tests:** labels, focus, disabled/error states, keyboard behavior, file lifecycle and accessibility where relevant.  
-**Exit:** reusable patterns have documented APIs/states; no duplicate primitives; responsive/theme/RTL behavior specified. Source audit found no generic reusable file-input/dropzone component; optional file selection uses the existing shadcn-style Input, while file-only media workspaces retain their workspace-specific dropzones.
+**Exit:** reusable patterns have documented APIs/states; no duplicate primitives; responsive/theme/RTL behavior specified. Source audit found no generic reusable file-input/dropzone component; optional text-file selection composes the existing shadcn-style Input with strict UTF-8 decoding and bounded size checks, while file-only media workspaces retain their workspace-specific dropzones.
 
 ### Phase 2 — Registry, routes and encoding compatibility (P1)
 **Scope:** Improve encoding operation model while preserving URL/Base64 canonical routes and prepare registry integration.  
