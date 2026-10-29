@@ -5,7 +5,7 @@ import { executeOperation, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTE
 const token = "test-only-secret-token";
 const parseProtocolResponse = async (response) => {
   const body = await response.text();
-  const eventData = body.split(/\\r?\\n/).filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).at(-1);
+  const eventData = body.split("\n").filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).at(-1);
   return JSON.parse(eventData ?? body);
 };
 const post = (body, authorization = `Bearer ${token}`, headers = {}) => handleMcpPost(new Request("http://localhost/api/mcp", { method: "POST", headers: { authorization, "content-type": "application/json", accept: "application/json, text/event-stream", ...headers }, body: typeof body === "string" ? body : JSON.stringify(body) }), token);

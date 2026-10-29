@@ -5,7 +5,7 @@ import { handleMcpPost } from "../lib/mcp/runtime.ts";
 const token = "regression-secret";
 const parseProtocolResponse = async (response) => {
   const body = await response.text();
-  const eventData = body.split(/\\r?\\n/).filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).at(-1);
+  const eventData = body.split("\n").filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).at(-1);
   return JSON.parse(eventData ?? body);
 };
 const request = (payload, auth = `Bearer ${token}`, extraHeaders = {}) => new Request("http://localhost/api/mcp", { method: "POST", headers: { authorization: auth, "content-type": "application/json", accept: "application/json, text/event-stream", ...extraHeaders }, body: typeof payload === "string" ? payload : JSON.stringify(payload) });
@@ -44,7 +44,8 @@ test("does not execute cURL text or treat HTML as active markup", async () => {
   assert.match(curlResult.structuredContent.result, /never sends the request/i);
   const html = await handleMcpPost(request(call("developer.format", { operation: "html", input: "<script>alert(1)</script>", mode: "format" })), token);
   assert.notEqual((await parseProtocolResponse(html)).result?.isError, true);
-  assert.equal(/application\\/json|text\\/event-stream/.test(html.headers.get("content-type") ?? ""), true);
+  const contentType = html.headers.get("content-type") ?? "";
+  assert.ok(contentType.includes("application/json") || contentType.includes("text/event-stream"));
 });
 
 test("request body limit is enforced while streaming when Content-Length is absent", async () => {
