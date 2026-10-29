@@ -24,6 +24,10 @@ For any MCP, shared-operation, workflow-engine, server-runtime, Docker, or per-t
 
 Do not couple the web UI to MCP transport or server endpoints. Preserve browser-local execution for local-capable operations; never silently upload a browser-selected file. Reuse schemas and operation logic where runtime-compatible, but maintain separate browser/server adapters and implementations where required. Expose only audited, allowlisted operations. Workflow definitions must be typed, bounded, and non-executable. Do not mark a phase or capability verified without tests and evidence from the exact commit in GitHub CI. This package is additive to the existing developer-tools expansion and does not silently change its scope.
 
+### Single workflow UX rule
+
+Batch Workbench is the **only general-purpose workflow/pipeline editor** in the product and must appear as a separate primary sidebar item immediately below Dev Tools. Do not add a second simple workflow feature/menu or an MCP-only workflow editor. The MCP landing page demonstrates a curated recipe using the same canonical pipeline model and links to Batch Workbench. Share operation IDs, schemas, validation, budgets, and result-manifest contracts where runtime-compatible; keep UI state, transport, and authorization adapters separate. MCP workflows may include only server-verified operations.
+
 ### MCP public product experience and Batch Workbench
 
 For MCP-facing web UX work, also follow the public landing-page and demo requirements in [web-ui-help-and-wireframes.md](specification/mcp/web-ui-help-and-wireframes.md) and its [landing-page wireframe](specification/mcp/wireframes/mcp-landing-page-and-workflow-demo.svg). Keep **Batch Workbench** as a distinct primary navigation destination immediately below **Dev Tools**, and keep **MCP & Integrations** as a distinct public education/setup destination. The landing page, individual tool routes, workbench, contextual help, and MCP transport endpoint are separate concepts.
