@@ -214,12 +214,14 @@ jobs:
             --env MCP_AUTH_TOKEN="$test_token" \
             "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$log_file"
           ready=0
-          for attempt in $(seq 1 60); do
-            if curl --connect-timeout 1 --max-time 3 --silent --fail http://127.0.0.1:3000/ >/dev/null; then ready=1; break; fi
-            sleep 2
+          for attempt in $(seq 1 30); do
+            status="$(curl --connect-timeout 1 --max-time 3 --silent --output /dev/null --write-out '%{http_code}' \
+              --header 'Content-Type: application/json' --data '{}' http://127.0.0.1:3000/api/mcp || true)"
+            if [[ "$status" == "401" ]]; then ready=1; break; fi
+            sleep 1
           done
           if [[ "$ready" != 1 ]]; then
-            echo "::error::Container did not become ready within 120 seconds."
+            echo "::error::MCP endpoint did not enforce authentication within 90 seconds."
             exit 1
           fi
           uid="$(docker exec "$container_name" node -p 'process.getuid()')"
