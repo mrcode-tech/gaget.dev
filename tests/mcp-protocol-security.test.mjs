@@ -33,7 +33,9 @@ test("malicious and unapproved operation IDs cannot access filesystem, shell or 
 
 test("does not execute cURL text or treat HTML as active markup", async () => {
   const curl = await handleMcpPost(request(call("developer.format", { operation: "curl", input: "curl https://example.invalid" })), token);
-  assert.equal((await curl.json()).result.isError, true);
+  const curlResult = (await curl.json()).result;
+  assert.equal(curlResult.isError, false);
+  assert.match(curlResult.structuredContent, /never sends the request/i);
   const html = await handleMcpPost(request(call("developer.format", { operation: "html", input: "<script>alert(1)</script>", mode: "format" })), token);
   assert.equal((await html.json()).result.isError, false);
   assert.equal(html.headers.get("content-type")?.includes("application/json"), true);
