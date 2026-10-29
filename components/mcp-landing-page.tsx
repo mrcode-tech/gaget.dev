@@ -48,6 +48,10 @@ const content = {
     privacyLabel: "Remote transfer is explicit",
     authLabel: "Server-side authentication",
     limitsLabel: "Allowlisted, bounded operations",
+    mediaRecipeTitle: "Media pipeline: crop → resize → Base64 text",
+    mediaRecipeDescription: "Supply a supported raster image as Base64, crop it, resize the result, then select the result dataBase64 field as the final text output. This is a guided recipe, not an executed request.",
+    mediaRecipeSteps: ["image.transform · crop", "image.transform · resize", "output: resize.result.dataBase64"],
+    mediaRecipeInput: "Input: image bytes in standard Base64 · maximum 600,000 decoded bytes",
   },
   fa: {
     eyebrow: "اتصال MCP و یکپارچه‌سازی‌ها",
@@ -88,6 +92,10 @@ const content = {
     privacyLabel: "انتقال راه دور با انتخاب صریح",
     authLabel: "احراز هویت سمت سرور",
     limitsLabel: "عملیات مجاز و محدود",
+    mediaRecipeTitle: "خط لوله رسانه: برش ← تغییر اندازه ← متن Base64",
+    mediaRecipeDescription: "تصویر رستری پشتیبانی‌شده را به‌صورت Base64 وارد کنید، برش دهید، اندازه را تغییر دهید و فیلد dataBase64 نتیجه را به‌عنوان خروجی متنی نهایی انتخاب کنید. این نمونه راهنماست و اجرا نمی‌شود.",
+    mediaRecipeSteps: ["image.transform · crop", "image.transform · resize", "output: resize.result.dataBase64"],
+    mediaRecipeInput: "ورودی: بایت‌های تصویر در Base64 استاندارد · حداکثر ۶۰۰٬۰۰۰ بایت رمزگشایی‌شده",
   },
   ar: {
     eyebrow: "MCP والتكاملات",
@@ -128,6 +136,10 @@ const content = {
     privacyLabel: "النقل البعيد باختيار صريح",
     authLabel: "مصادقة على الخادم",
     limitsLabel: "عمليات مسموح بها ومحدودة",
+    mediaRecipeTitle: "مسار الوسائط: قص ← تغيير الحجم ← نص Base64",
+    mediaRecipeDescription: "أرسل صورة نقطية مدعومة بترميز Base64، ثم قصّها وغيّر حجمها وحدد حقل dataBase64 الناتج كنص نهائي. هذا مثال إرشادي ولا يتم تنفيذه.",
+    mediaRecipeSteps: ["image.transform · crop", "image.transform · resize", "output: resize.result.dataBase64"],
+    mediaRecipeInput: "الإدخال: بايتات الصورة بترميز Base64 القياسي · بحد أقصى 600,000 بايت بعد فك الترميز",
   },
 } as const;
 
@@ -166,6 +178,7 @@ export function McpLandingPage({ capabilities }: { capabilities: PublicCapabilit
           <div className="space-y-5 border-b border-border p-4 sm:p-6 lg:border-b-0 lg:border-e"><div><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.task}</p><p className="mt-2 font-medium">{t.taskText}</p></div><div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.sampleInput}</p><pre dir="ltr" className="overflow-x-auto rounded-xl bg-muted p-4 text-sm"><code>eyJvayI6dHJ1ZX0=</code></pre></div><div className="space-y-3">{t.steps.map((step, index) => <div key={step} className="flex items-center gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-sm font-semibold">{index + 1}</span><span className="min-w-0 flex-1 text-sm font-medium">{step}</span>{index < t.steps.length - 1 && <ArrowDown className="h-4 w-4 text-muted-foreground" />}{index === t.steps.length - 1 && <CheckCircle2 className="h-4 w-4 text-muted-foreground" />}</div>)}</div><Button variant="outline" onClick={() => setShowOutput((value) => !value)} aria-expanded={showOutput}>{showOutput ? t.outputShown : t.outputHidden}</Button></div>
           <div className="min-w-0 p-4 sm:p-6"><div className="flex items-center gap-2"><FileCode2 className="h-4 w-4 text-primary" /><h3 className="font-semibold">{t.sampleOutput}</h3></div>{showOutput ? <pre dir="ltr" className="mt-4 overflow-x-auto rounded-xl border border-border bg-muted p-4 text-sm"><code>{'{\n  "ok": true\n}'}</code></pre> : <div className="mt-4 flex min-h-36 items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">{t.outputHidden}</div>}<p className="mt-3 text-xs leading-5 text-muted-foreground">{t.outputNote}</p></div>
         </div>
+        <article className="mt-5 rounded-2xl border border-border bg-card p-4 sm:p-6" data-testid="mcp-image-pipeline-recipe"><div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">{t.mediaRecipeTitle}</h3><span className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-xs font-medium">{t.status}</span></div><p className="mt-2 max-w-4xl text-sm leading-6 text-muted-foreground">{t.mediaRecipeDescription}</p><p className="mt-3 text-xs text-muted-foreground">{t.mediaRecipeInput}</p><ol className="mt-4 grid gap-2 sm:grid-cols-3">{t.mediaRecipeSteps.map((step, index) => <li key={step} className="flex min-w-0 items-center gap-3 rounded-lg border border-border p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold">{index + 1}</span><code dir="ltr" className="break-all text-xs">{step}</code></li>)}</ol></article>
         <div className="mt-5 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-start gap-3"><Workflow className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div><h3 className="font-semibold">{t.helpTitle}</h3><p className="mt-1 text-sm text-muted-foreground">{t.helpBody}</p></div></div><Button asChild className="shrink-0"><LocaleLink href="/workflow/pipeline">{t.workbenchCta}<ArrowRight className="ms-2 h-4 w-4" /></LocaleLink></Button></div>
       </section>
 

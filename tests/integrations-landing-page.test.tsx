@@ -11,6 +11,8 @@ describe("MCP landing page", () => {
     expect(screen.getByRole("heading", { name: "Bring GaGet.dev tools into your AI workflows" })).toBeTruthy();
     expect(screen.getByText("Guided example · not executed")).toBeTruthy();
     expect(screen.getByText(/does not send a request to the MCP server/)).toBeTruthy();
+    expect(screen.getByTestId("mcp-image-pipeline-recipe")).toBeTruthy();
+    expect(screen.getByText(/select the result dataBase64 field as the final text output/)).toBeTruthy();
   });
 
   it("shows a sample output only when requested and links to the canonical workbench", () => {
