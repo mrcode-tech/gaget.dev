@@ -309,6 +309,16 @@ test("audio.normalize adjusts integer PCM peak toward target dBFS without changi
   await assert.rejects(executeOperation("audio.normalize", { inputBase64: wav.toString("base64"), targetDbfs: -40 }), { code: "INVALID_INPUT" });
 });
 
+test("workflow preflight rejects invalid later-step arguments before executing earlier steps", async () => {
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "first", operationId: "generator.sample", arguments: { operation: "uuid" } },
+    { id: "later", operationId: "json.format", arguments: { input: "{}", unknownOption: true } }
+  ] }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "later", operationId: "image.print-size", arguments: { width: 0, height: 20, dpi: 300 } }
+  ] }), { code: "INVALID_INPUT" });
+});
+
 test("audio.normalize can be invoked through MCP and selected as a workflow binary output", async () => {
   const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 8;
   const pcm = Buffer.alloc(frames * 2);

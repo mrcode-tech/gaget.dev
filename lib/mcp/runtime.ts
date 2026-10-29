@@ -1259,6 +1259,45 @@ function assertWorkflowLiteral(value: unknown, depth = 0): void {
     for (const item of Object.values(value)) assertWorkflowLiteral(item, depth + 1);
   }
 }
+
+function validateAgainstOperationSchema(value: unknown, schema: unknown, path: string): void {
+  if (!isObject(schema)) return;
+  const matchesType = (expected: unknown, actual: unknown): boolean => {
+    if (Array.isArray(expected)) return expected.some(item => matchesType(item, actual));
+    switch (expected) {
+      case "object": return isObject(actual);
+      case "array": return Array.isArray(actual);
+      case "string": return typeof actual === "string";
+      case "number": return typeof actual === "number" && Number.isFinite(actual);
+      case "integer": return typeof actual === "number" && Number.isSafeInteger(actual);
+      case "boolean": return typeof actual === "boolean";
+      case "null": return actual === null;
+      default: return true;
+    }
+  };
+  if (!matchesType(schema.type, value)) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} must match the operation input schema type.`);
+  if (schema.const !== undefined && value !== schema.const) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} must equal the required constant.`);
+  if (Array.isArray(schema.enum) && !schema.enum.includes(value)) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} has an unsupported value.`);
+  if (typeof value === "string") {
+    if (typeof schema.maxLength === "number" && value.length > schema.maxLength) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", `Workflow ${path} exceeds the maximum character count.`);
+    if (typeof schema.minLength === "number" && value.length < schema.minLength) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} is shorter than allowed.`);
+    if (typeof schema.pattern === "string" && !(new RegExp(schema.pattern).test(value))) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} has an invalid format.`);
+  }
+  if (typeof value === "number") {
+    if (typeof schema.minimum === "number" && value < schema.minimum) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} is below the minimum.`);
+    if (typeof schema.maximum === "number" && value > schema.maximum) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} exceeds the maximum.`);
+    if (typeof schema.exclusiveMinimum === "number" && value <= schema.exclusiveMinimum) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} must be greater than the exclusive minimum.`);
+  }
+  if (Array.isArray(value) && isObject(schema.items)) value.forEach((item, index) => validateAgainstOperationSchema(item, schema.items, `${path}[${index}]`));
+  if (isObject(value) && isObject(schema.properties)) {
+    const properties = schema.properties;
+    for (const key of Object.keys(value)) {
+      if (!Object.hasOwn(properties, key) && schema.additionalProperties === false) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} contains unknown argument '${key}'.`);
+      if (Object.hasOwn(properties, key)) validateAgainstOperationSchema(value[key], properties[key], `${path}.${key}`);
+    }
+    if (Array.isArray(schema.required)) for (const key of schema.required) if (typeof key === "string" && !Object.hasOwn(value, key)) throw new McpRuntimeError("INVALID_INPUT", `Workflow ${path} is missing required argument '${key}'.`);
+  }
+}
 function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
   if (!isObject(raw)) throw new McpRuntimeError("INVALID_INPUT", "Workflow must be a JSON object.");
   let serialized: string;
@@ -1283,6 +1322,12 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
     if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
     const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.analyze", "audio.trim", "audio.normalize", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]);
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
+
+    const operationSchema = schemas[rawStep.operationId as keyof typeof schemas];
+    if (!operationSchema) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation has no input contract.");
+    const preflightArguments: JsonObject = { ...rawStep.arguments };
+    for (const [field, value] of Object.entries(preflightArguments)) if (isWorkflowReference(value)) preflightArguments[field] = "";
+    validateAgainstOperationSchema(preflightArguments, operationSchema, `step '${rawStep.id}' arguments`);
     for (const [field, value] of Object.entries(rawStep.arguments)) {
       if (isWorkflowReference(value)) {
         const match = /^([a-z][a-z0-9_-]{0,39})\.result(?:\.([A-Za-z][A-Za-z0-9]*))?$/.exec(value.$ref);
