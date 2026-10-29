@@ -2,7 +2,7 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { timingSafeEqual } from "node:crypto";
 import sharp from "sharp";
 import * as z from "zod/v4";
-import { transformEncoding, type EncodingMode, type EncodingDirection } from "../tools/encoding-operations.ts";
+import { transformEncoding, convertCharset, type EncodingMode, type EncodingDirection, type SupportedCharset } from "../tools/encoding-operations.ts";
 import { transformText, type TextOperation } from "../tools/text-operations.ts";
 import { diagnoseJson, compareJsonDocuments, sortJsonKeys, escapeJsonStringContents, unescapeJsonStringContents } from "../tools/json-workspace.ts";
 import { transformDeveloperTool, type DeveloperOperation } from "../tools/developer-operations.ts";
@@ -57,6 +57,7 @@ const enumField = <T extends string>(input: JsonObject, key: string, allowed: re
 };
 const schemas = {
   "encoding.transform": { type: "object", properties: { mode: { type: "string", enum: ["url","base64","base64url","base32","hex","binary","html-entities","unicode-escapes","quoted-printable","base58","base85","z85"] }, direction: { type: "string", enum: ["encode","decode"] }, input: { type: "string", maxLength: 1000000 } }, required: ["mode","direction","input"], additionalProperties: false },
+  "encoding.charset": { type: "object", properties: { direction: { type: "string", enum: ["encode","decode"] }, charset: { type: "string", enum: ["utf-8","utf-16le","utf-16be","windows-1252"] }, input: { type: "string", maxLength: 1000000 } }, required: ["direction","charset","input"], additionalProperties: false },
   "text.transform": { type: "object", properties: { operation: { type: "string", enum: ["trim","sort-dedupe","case","normalize","escape","statistics","diff","find-replace","split-join"] }, input: { type: "string", maxLength: 200000 }, options: { type: "object", properties: { pattern: { type: "string", maxLength: 200000 }, replacement: { type: "string", maxLength: 200000 }, delimiter: { type: "string", maxLength: 1000 }, caseMode: { type: "string", enum: ["upper","lower","title"] }, normalizeForm: { type: "string", enum: ["NFC","NFD","NFKC","NFKD"] }, trimMode: { type: "string", enum: ["both","start","end"] }, escapeMode: { type: "string", enum: ["html","json"] }, secondInput: { type: "string", maxLength: 200000 } }, additionalProperties: false } }, required: ["operation","input"], additionalProperties: false },
   "json.validate": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.format": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, indent: { type: "integer", minimum: 0, maximum: 8 } }, required: ["input"], additionalProperties: false },
@@ -80,6 +81,7 @@ const schemas = {
 
 const capabilityList = [
   { id: "encoding.transform", version: "1.0.0", description: "Encode or decode bounded text. Does not perform network requests.", limits: { maxInputCharacters: 1000000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
+  { id: "encoding.charset", version: "1.0.0", description: "Convert text to or from hexadecimal bytes using an explicit supported character set. Encoding returns hex; decoding accepts hex. No file or network access.", limits: { maxInputCharacters: 1000000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "text.transform", version: "1.0.0", description: "Run an allowlisted bounded text transformation.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.validate", version: "1.0.0", description: "Validate JSON syntax and return safe diagnostics.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.format", version: "1.0.0", description: "Format valid JSON.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
@@ -103,6 +105,7 @@ const capabilityList = [
 
 const outputSchemas = {
   "encoding.transform": { type: "string" },
+  "encoding.charset": { type: "string" },
   "text.transform": { type: "string" },
   "json.validate": { type: "object", properties: { valid: { type: "boolean" }, diagnostics: { type: "array" } }, required: ["valid"], additionalProperties: false },
   "json.format": { type: "string" },
@@ -135,6 +138,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
   if (!isObject(rawInput)) throw new McpRuntimeError("INVALID_INPUT", "Operation arguments must be a JSON object.");
   const allowedKeys: Record<string, readonly string[]> = {
     "encoding.transform": ["mode", "direction", "input"],
+    "encoding.charset": ["direction", "charset", "input"],
     "text.transform": ["operation", "input", "options"],
     "json.validate": ["input"],
     "json.format": ["input", "indent"],
@@ -166,6 +170,13 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const direction = enumField(rawInput, "direction", ["encode","decode"] as const) as EncodingDirection;
         const input = stringField(rawInput, "input", 1_000_000);
         result = transformEncoding(mode, direction, input);
+        break;
+      }
+      case "encoding.charset": {
+        const direction = enumField(rawInput, "direction", ["encode", "decode"] as const) as EncodingDirection;
+        const charset = enumField(rawInput, "charset", ["utf-8", "utf-16le", "utf-16be", "windows-1252"] as const) as SupportedCharset;
+        const input = stringField(rawInput, "input", 1_000_000);
+        result = convertCharset(direction, input, charset);
         break;
       }
       case "text.transform": {
@@ -454,6 +465,7 @@ type WorkflowStep = { id: string; operationId: string; arguments: Record<string,
 type WorkflowRecipe = { schemaVersion: 1; steps: WorkflowStep[] };
 const workflowStringInputs: Record<string, readonly string[]> = {
   "encoding.transform": ["input"],
+  "encoding.charset": ["input"],
   "text.transform": ["input"],
   "json.validate": ["input"],
   "json.format": ["input"],
@@ -472,7 +484,7 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "datetime.arithmetic": ["input"],
   "datetime.compare": ["left","right"]
 };
-const workflowStringOutputs = new Set(["encoding.transform", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
+const workflowStringOutputs = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
 function isWorkflowReference(value: unknown): value is WorkflowReference {
   return isObject(value) && Object.keys(value).length === 1 && typeof value.$ref === "string";
 }
@@ -510,7 +522,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
       throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow references an operation that is not enabled for MCP execution.");
     }
     if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
-    const allowed = new Set(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]);
+    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform",, "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]);
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
     for (const [field, value] of Object.entries(rawStep.arguments)) {
       if (isWorkflowReference(value)) {
@@ -619,7 +631,7 @@ const mcpHandler = createMcpHandler(() => {
       title: "Execute a GaGet operation",
       description: "Execute one approved, bounded operation. It never executes code, runs shell commands, or makes network requests.",
       inputSchema: z.object({
-        operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.transform"]),
+        operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform",, "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.transform"]),
         arguments: z.record(z.string(), z.unknown())
       }),
       outputSchema: z.object({
