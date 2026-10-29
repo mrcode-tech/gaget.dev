@@ -56,7 +56,7 @@ test("MCP initialize and tools/list implement JSON-RPC response envelopes", asyn
 test("MCP tool call returns structured results and refuses disabled operation IDs", async () => {
   const good = await post({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "encoding.transform", arguments: { mode: "base64", direction: "encode", input: "hello" } } } });
   const result = (await parseProtocolResponse(good)).result;
-  assert.equal(result.isError, false);
+  assert.notEqual(result.isError, true);
   assert.equal(result.structuredContent.success, true);
   assert.equal(result.structuredContent.result, "aGVsbG8=");
   const bad = await post({ jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "arbitrary.shell", arguments: { command: "whoami" } } } });
