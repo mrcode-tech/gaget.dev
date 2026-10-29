@@ -41,7 +41,7 @@ Every server operation must define applicable request, file, item, expanded/deco
 
 ## Binary image input boundary
 
-The limited `image.inspect` operation accepts explicit Base64 bytes, caps the encoded field at 750,000 characters and decoded data at 560,000 bytes, and only parses supported headers. It does not decode pixel data or write files. This size ceiling is intentionally much smaller than common image uploads; larger image operations require a separately designed binary/artifact transport and resource-isolated processing.
+The `image.inspect` and `image.transform` operations require explicit Base64 bytes. Decoded input is capped at 600,000 bytes and 16 million pixels; output is capped at 600,000 bytes and 4096 pixels per dimension. Sharp processing uses a five-second timeout and writes no files. Base64 remains an inefficient transfer format and this is not a large-file artifact transport. Only bounded resize, rotate, flip/flop, auto-orient, and JPEG/PNG/WebP/AVIF conversion are supported; metadata inspection is not a trust or malware verdict.
 
 ## Sensitive operation boundaries
 - JWT decoding is not signature verification or trust validation.

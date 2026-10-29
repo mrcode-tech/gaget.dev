@@ -30,9 +30,10 @@
 
 ## Latest implementation increment (pending CI)
 
-- Added `image.inspect` for bounded Base64 PNG/JPEG/GIF/WebP metadata parsing only; no pixel decode, transformation, persistence, or artifact output.
-- Added known-answer tests for PNG/GIF dimensions and unsupported/invalid input.
-- This increment remains pending exact-revision CI; it does not complete Phase 7.
+- Added bounded Sharp-backed `image.inspect` and `image.transform` operations for explicitly supplied Base64 raster data. Supported actions: resize, rotate, flip, flop, auto-orient, and conversion to JPEG/PNG/WebP/AVIF.
+- Caps: 600,000 input bytes, 16 million pixels, 4096-pixel output dimensions, 600,000 output bytes, five-second Sharp timeout; no persistence or artifact retrieval.
+- Known-answer tests create and resize a small PNG, validate metadata and output bounds, and reject malformed Base64/invalid rotation values.
+- This increment remains pending exact-revision CI; image artifacts and audio/video operations are not complete.
 
 ## Explicit release blockers
 

@@ -11,60 +11,6 @@ import { generateSampleData, type SampleGeneratorOperation } from "../tools/samp
 import { runExtendedOperation, type ExtendedOperation, type ExtendedOptions } from "../tools/extended-operations.ts";
 
 export const MCP_MAX_REQUEST_BYTES = 1_000_000;
-function inspectImageBase64(input: string): { format: "png" | "jpeg" | "gif" | "webp"; width: number; height: number; byteLength: number } {
-  if (input.length > 750_000 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(input) || input.length === 0) {
-    throw new McpRuntimeError("INVALID_INPUT", "Image data must be valid standard Base64 within the supported input limit.");
-  }
-  const bytes = Buffer.from(input, "base64");
-  if (bytes.length === 0 || bytes.length > 560_000) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Decoded image exceeds the 560,000 byte limit.");
-  const u32be = (i: number) => bytes.readUInt32BE(i);
-  const u16le = (i: number) => bytes.readUInt16LE(i);
-  let format: "png" | "jpeg" | "gif" | "webp" | undefined;
-  let width = 0, height = 0;
-  if (bytes.length >= 24 && bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && bytes.toString("ascii",12,16) === "IHDR") {
-    format = "png"; width = u32be(16); height = u32be(20);
-  } else if (bytes.length >= 10 && ["GIF87a","GIF89a"].includes(bytes.toString("ascii",0,6))) {
-    format = "gif"; width = u16le(6); height = u16le(8);
-  } else if (bytes.length >= 20 && bytes.toString("ascii",0,4) === "RIFF" && bytes.toString("ascii",8,12) === "WEBP") {
-    format = "webp";
-    const chunk = bytes.toString("ascii",12,16);
-    if (chunk === "VP8X" && bytes.length >= 30) {
-      width = 1 + bytes[24] + (bytes[25] << 8) + (bytes[26] << 16);
-      height = 1 + bytes[27] + (bytes[28] << 8) + (bytes[29] << 16);
-    } else if (chunk === "VP8 " && bytes.length >= 30) {
-      width = u16le(26) & 0x3fff; height = u16le(28) & 0x3fff;
-    } else if (chunk === "VP8L" && bytes.length >= 25 && bytes[20] === 0x2f) {
-      width = 1 + bytes[21] + ((bytes[22] & 0x3f) << 8);
-      height = 1 + (bytes[22] >> 6) + (bytes[23] << 2) + ((bytes[24] & 0x0f) << 10);
-    } else {
-      throw new McpRuntimeError("UNSUPPORTED_FORMAT", "This WebP bitstream variant is not supported by the metadata inspector.");
-    }
-  } else if (bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
-    format = "jpeg";
-    let offset = 2;
-    while (offset + 4 <= bytes.length) {
-      if (bytes[offset] !== 0xff) { offset++; continue; }
-      while (offset < bytes.length && bytes[offset] === 0xff) offset++;
-      if (offset >= bytes.length) break;
-      const marker = bytes[offset++];
-      if (marker === 0xd8 || marker === 0xd9 || (marker >= 0xd0 && marker <= 0xd7) || marker === 0x01) continue;
-      if (offset + 2 > bytes.length) break;
-      const segmentLength = bytes.readUInt16BE(offset);
-      if (segmentLength < 2 || offset + segmentLength > bytes.length) break;
-      if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
-        if (segmentLength < 7) break;
-        height = bytes.readUInt16BE(offset + 3); width = bytes.readUInt16BE(offset + 5); break;
-      }
-      offset += segmentLength;
-    }
-  }
-  if (!format) throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Only PNG, JPEG, GIF, and supported WebP images are recognized.");
-  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width < 1 || height < 1 || width > 100_000 || height > 100_000) {
-    throw new McpRuntimeError("INVALID_INPUT", "Image dimensions could not be read safely from the supplied bytes.");
-  }
-  return { format, width, height, byteLength: bytes.length };
-}
-
 export const MCP_MAX_OUTPUT_BYTES = 2_000_000;
 export const MCP_MAX_IMAGE_INPUT_BYTES = 600_000;
 export const MCP_MAX_IMAGE_OUTPUT_BYTES = 600_000;
@@ -110,7 +56,6 @@ const enumField = <T extends string>(input: JsonObject, key: string, allowed: re
   return value as T;
 };
 const schemas = {
-  "image.inspect": { type: "object", properties: { dataBase64: { type: "string", maxLength: 750000 } }, required: ["dataBase64"], additionalProperties: false },
   "encoding.transform": { type: "object", properties: { mode: { type: "string", enum: ["url","base64","base64url","base32","hex","binary","html-entities","unicode-escapes","quoted-printable","base58","base85","z85"] }, direction: { type: "string", enum: ["encode","decode"] }, input: { type: "string", maxLength: 1000000 } }, required: ["mode","direction","input"], additionalProperties: false },
   "text.transform": { type: "object", properties: { operation: { type: "string", enum: ["trim","sort-dedupe","case","normalize","escape","statistics","diff","find-replace","split-join"] }, input: { type: "string", maxLength: 200000 }, options: { type: "object", properties: { pattern: { type: "string", maxLength: 200000 }, replacement: { type: "string", maxLength: 200000 }, delimiter: { type: "string", maxLength: 1000 }, caseMode: { type: "string", enum: ["upper","lower","title"] }, normalizeForm: { type: "string", enum: ["NFC","NFD","NFKC","NFKD"] }, trimMode: { type: "string", enum: ["both","start","end"] }, escapeMode: { type: "string", enum: ["html","json"] }, secondInput: { type: "string", maxLength: 200000 } }, additionalProperties: false } }, required: ["operation","input"], additionalProperties: false },
   "json.validate": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
@@ -134,7 +79,6 @@ const schemas = {
 } as const;
 
 const capabilityList = [
-  { id: "image.inspect", version: "1.0.0", description: "Inspect dimensions and encoded size for supported PNG, JPEG, GIF, and WebP image bytes without decoding or modifying the image.", limits: { maxBase64Characters: 750000, maxDecodedBytes: 560000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES }, executionMode: "server", privacy: { receivesClientSuppliedData: true, persistsInput: false } },
   { id: "encoding.transform", version: "1.0.0", description: "Encode or decode bounded text. Does not perform network requests.", limits: { maxInputCharacters: 1000000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "text.transform", version: "1.0.0", description: "Run an allowlisted bounded text transformation.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.validate", version: "1.0.0", description: "Validate JSON syntax and return safe diagnostics.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
@@ -158,7 +102,6 @@ const capabilityList = [
 ] as const;
 
 const outputSchemas = {
-  "image.inspect": { type: "object", properties: { format: { type: "string", enum: ["png","jpeg","gif","webp"] }, width: { type: "integer", minimum: 1 }, height: { type: "integer", minimum: 1 }, byteLength: { type: "integer", minimum: 1 } }, required: ["format","width","height","byteLength"], additionalProperties: false },
   "encoding.transform": { type: "string" },
   "text.transform": { type: "string" },
   "json.validate": { type: "object", properties: { valid: { type: "boolean" }, diagnostics: { type: "array" } }, required: ["valid"], additionalProperties: false },
@@ -191,7 +134,6 @@ export function listCapabilities() {
 export async function executeOperation(operationId: string, rawInput: unknown): Promise<unknown> {
   if (!isObject(rawInput)) throw new McpRuntimeError("INVALID_INPUT", "Operation arguments must be a JSON object.");
   const allowedKeys: Record<string, readonly string[]> = {
-    "image.inspect": ["dataBase64"],
     "encoding.transform": ["mode", "direction", "input"],
     "text.transform": ["operation", "input", "options"],
     "json.validate": ["input"],
@@ -260,10 +202,6 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           if (!Number.isInteger(indent) || indent < 0 || indent > 8) throw new McpRuntimeError("INVALID_INPUT", "'indent' must be an integer from 0 to 8.");
         }
         result = JSON.stringify(parsed.value, null, indent);
-        break;
-      }
-      case "image.inspect": {
-        result = inspectImageBase64(stringField(rawInput, "dataBase64", 750_000));
         break;
       }
       case "json.sort-keys": {
@@ -676,7 +614,7 @@ const mcpHandler = createMcpHandler(() => {
       title: "Execute a GaGet operation",
       description: "Execute one approved, bounded operation. It never executes code, runs shell commands, or makes network requests.",
       inputSchema: z.object({
-        operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect"]),
+        operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.transform"]),
         arguments: z.record(z.string(), z.unknown())
       }),
       outputSchema: z.object({
@@ -715,7 +653,7 @@ const mcpHandler = createMcpHandler(() => {
         schemaVersion: z.literal(1),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
-          operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "image.inspect", "image.transform", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
+          operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
           arguments: z.record(z.string(), z.unknown())
         }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
       }).strict(),

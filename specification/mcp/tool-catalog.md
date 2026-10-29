@@ -37,10 +37,6 @@ The MCP adapter exposes three protocol tools: `list_capabilities`, `execute_oper
 
 Remote MCP calls send their supplied input to the configured server. The server does not persist operation input/output by design; hosting administrators remain responsible for their own infrastructure logs, backups, and network policy. No browser-selected file is implicitly uploaded.
 
-## Limited image capability now implemented
-
-`image.inspect` reads caller-supplied Base64 bytes and reports dimensions and encoded byte length for supported PNG, JPEG, GIF, and WebP variants. It does not decode pixels, strip metadata, transform, transcode, or create artifacts. Input is limited to 750,000 Base64 characters / 560,000 decoded bytes. This narrow metadata operation is not equivalent to full Image Editor server support.
-
 ## Existing tools to evaluate
 
 Every item below is proposed for audit, not approved automatically. Phase labels are priorities, not current implementation status.
