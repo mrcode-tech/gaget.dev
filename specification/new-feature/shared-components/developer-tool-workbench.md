@@ -30,3 +30,8 @@
 - Input and output panels are side-by-side at XL widths and stack below XL. Controls wrap on narrow screens.
 - Every textarea and parameter input has an accessible name. Primary actions use visible text; copy/download icon buttons have accessible labels. Errors are announced; keyboard interaction relies on native controls and shared Button primitives.
 - Use semantic theme classes and existing shared primitives. Do not introduce one-off colors, shadows, or breakpoints.
+
+
+## Optional UTF-8 text-file input
+
+The shared DeveloperToolWorkbench may offer an optional styled file selector for text-based tools (Regex, XML, SQL, CSV ↔ JSON, HTML and cURL). The control reads bytes in the browser, requires valid UTF-8, rejects files over 200,000 bytes or decoded text over 200,000 characters, loads the content into the existing editor, and leaves the editor as the source of truth. Selecting a file never uploads it. Editing the text clears the selected-file label; Clear resets the input and file control. Hashing uses its separate raw-byte file path and 2 MB limit. Tests cover successful load/conversion and invalid UTF-8 rejection.

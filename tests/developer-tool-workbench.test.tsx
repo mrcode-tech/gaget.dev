@@ -74,3 +74,26 @@ describe("JWT time-claim interpretation",()=>{
   expect(screen.getAllByText("Invalid NumericDate").length).toBeGreaterThan(0);
  });
 });
+
+
+describe("optional UTF-8 file input for text-based developer tools",()=>{
+ it("loads a selected CSV file into the editor and converts it",async()=>{
+  const file=new File(['name,city\\nAda,"London, UK"'],"sample.csv",{type:"text/csv"});
+  Object.defineProperty(file,"arrayBuffer",{value:async()=>new TextEncoder().encode('name,city\\nAda,"London, UK"').buffer});
+  render(<DeveloperToolWorkbench operation="csv-json"/>);
+  fireEvent.change(screen.getByLabelText("Choose a text file for CSV ↔ JSON converter"),{target:{files:[file]}});
+  const input=screen.getByRole("textbox",{name:"CSV ↔ JSON converter input"}) as HTMLTextAreaElement;
+  await waitFor(()=>expect(input.value).toContain('"London, UK"'));
+  expect(await screen.findByText(/Loaded sample.csv as UTF-8 text/i)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button",{name:"Process"}));
+  const output=screen.getByRole("textbox",{name:"CSV ↔ JSON converter output"}) as HTMLTextAreaElement;
+  await waitFor(()=>expect(output.value).toContain('"city": "London, UK"'));
+ });
+ it("rejects non-UTF-8 byte sequences instead of silently replacing bytes",async()=>{
+  const file=new File(["invalid"],"invalid.csv",{type:"text/csv"});
+  Object.defineProperty(file,"arrayBuffer",{value:async()=>Uint8Array.from([0xc3,0x28]).buffer});
+  render(<DeveloperToolWorkbench operation="csv-json"/>);
+  fireEvent.change(screen.getByLabelText("Choose a text file for CSV ↔ JSON converter"),{target:{files:[file]}});
+  expect(await screen.findByRole("alert")).toBeTruthy();
+ });
+});
