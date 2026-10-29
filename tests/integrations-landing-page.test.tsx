@@ -32,7 +32,7 @@ describe("MCP landing page", () => {
     expect(screen.getByRole("heading", { name: /أدوات GaGet.dev/ })).toBeTruthy();
   });
   it("renders capability IDs and limits from the server registry props", () => {
-    render(<I18nProvider locale="en"><McpLandingPage capabilities={[{ id: "json.validate", version: "1.0.0", description: "Validate JSON syntax.", limits: { maxInputCharacters: 200000 } }, { id: "encoding.charset", version: "1.0.0", description: "Convert explicit charsets.", limits: { maxInputCharacters: 1000000 } }]} /></I18nProvider>);
+    render(<I18nProvider locale="en"><McpLandingPage capabilities={[{ id: "json.validate", version: "1.0.0", description: "Validate JSON syntax.", limits: { maxInputCharacters: 200000 }, inputTypes: ["text"], outputTypes: ["json"], executionModes: ["server", "mcp"], availability: "available", mcpExposure: "exposed", privacy: "no-persistence", deterministic: true }, { id: "encoding.charset", version: "1.0.0", description: "Convert explicit charsets.", limits: { maxInputCharacters: 1000000 }, inputTypes: ["text"], outputTypes: ["text"], executionModes: ["server", "mcp"], availability: "available", mcpExposure: "exposed", privacy: "no-persistence", deterministic: true }]} /></I18nProvider>);
     expect(screen.getByText("json.validate")).toBeTruthy();
     expect(screen.getByText("encoding.charset")).toBeTruthy();
     expect(screen.getByText("maxInputCharacters: 200,000")).toBeTruthy();

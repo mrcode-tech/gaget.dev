@@ -17,5 +17,5 @@ export const metadata: Metadata = {
 };
 
 export default function McpPage() {
-  return <McpLandingPage capabilities={listCapabilities().map(({ id, version, description, limits }) => ({ id, version, description, limits }))} />;
+  return <McpLandingPage capabilities={listCapabilities().map(({ id, version, description, limits, inputTypes, outputTypes, executionModes, availability, mcpExposure, privacy, deterministic }) => ({ id, version, description, limits, inputTypes, outputTypes, executionModes, availability, mcpExposure, privacy, deterministic }))} />;
 }
