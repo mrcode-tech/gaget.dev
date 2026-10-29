@@ -1320,6 +1320,7 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "datetime.convert": ["input"],
   "datetime.arithmetic": ["input"],
   "datetime.compare": ["left","right"],
+  "image.print-size": [],
   "audio.inspect": ["inputBase64"],
   "audio.analyze": ["inputBase64"],
   "audio.trim": ["inputBase64"],
