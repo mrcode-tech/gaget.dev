@@ -205,6 +205,7 @@ function normalizePcmWav(bytes: Buffer, targetDbfs: number): Record<string, unkn
 
 type IsoBmffBox = { type: string; start: number; payloadStart: number; end: number; children: IsoBmffBox[] };
 function inspectIsoBmff(bytes: Buffer): Record<string, unknown> {
+  if (bytes.byteLength < 16 || bytes.toString("ascii", 4, 8) !== "ftyp") throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Only ISO Base Media File Format containers beginning with ftyp are supported.");
   let parsedBoxCount = 0;
   const containerTypes = new Set(["moov","trak","mdia","minf","stbl","edts","dinf","udta","mvex","moof","traf"]);
   const parseBoxes = (start: number, end: number, depth: number): IsoBmffBox[] => {
