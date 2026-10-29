@@ -46,6 +46,14 @@
 
 Broader capability families in the developer-tools proposal (full format parsers, advanced certificate/key parsing, archive formats, deeper metadata parsers and advanced workflow features) remain incomplete or conditional; do not infer their availability from these routes.
 
+## Proposed MCP compatibility initiative
+
+- A dedicated proposal exists at specification/mcp/README.md.
+- It proposes a separate MCP server adapter, reusable operation contract, browser/server runtime separation, bounded workflows, optional Docker self-hosting, and contextual per-tool MCP help.
+- This is a proposal, not a current implementation claim. Existing browser-local routes and a workflow workbench do not establish server-side support, an MCP endpoint, Docker packaging, or MCP CI.
+- Before implementation, audit operation helpers, runtime dependencies, privacy/data flows, existing CI, and limits. Preserve browser-local processing and never silently upload selected files.
+- Track MCP exposure per operation and verify with tests; a route or registry entry is insufficient evidence.
+
 ## Current implementation-level design facts
 
 - Semantic theme CSS variables are defined in `app/globals.css` using HSL channels, with light and dark values.
