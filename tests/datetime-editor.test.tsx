@@ -199,3 +199,12 @@ it("does not render the redundant browser and calendar disclaimer", () => {
   expect(screen.queryByText(/Calendar availability depends on your browser/i)).toBeNull();
 });
 });
+
+  it("provides contextual MCP help through the mobile Features menu", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
+    render(<I18nProvider locale="en"><DateTimeEditor /></I18nProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Features" }));
+    fireEvent.click(screen.getByRole("button", { name: "AI / MCP help" }));
+    expect(screen.getByRole("dialog", { name: "AI / MCP help" })).toBeTruthy();
+    expect(screen.getByText(/elapsed UTC time/i)).toBeTruthy();
+  });

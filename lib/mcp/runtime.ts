@@ -1,4 +1,5 @@
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
+import { timingSafeEqual } from "node:crypto";
 import * as z from "zod/v4";
 import { transformEncoding, type EncodingMode, type EncodingDirection } from "../tools/encoding-operations.ts";
 import { transformText, type TextOperation } from "../tools/text-operations.ts";
@@ -584,12 +585,13 @@ const mcpHandler = createMcpHandler(() => {
       }).strict(),
       outputSchema: z.object({
         success: z.boolean(),
-        schemaVersion: z.literal(1),
-        steps: z.array(z.unknown()),
-        result: z.unknown(),
-        totalOutputBytes: z.number(),
-        elapsedMs: z.number()
-      })
+        schemaVersion: z.literal(1).optional(),
+        steps: z.array(z.unknown()).optional(),
+        result: z.unknown().optional(),
+        totalOutputBytes: z.number().optional(),
+        elapsedMs: z.number().optional(),
+        error: z.object({ code: z.string(), message: z.string() }).optional()
+      }).strict()
     },
     async (input) => {
       try {
@@ -612,7 +614,9 @@ const mcpHandler = createMcpHandler(() => {
 export async function handleMcpPost(request: Request, configuredToken: string | undefined): Promise<Response> {
   if (!configuredToken) return Response.json({ error: "MCP endpoint is not configured. Set MCP_AUTH_TOKEN before enabling remote access." }, { status: 503 });
   const authorization = request.headers.get("authorization") ?? "";
-  if (authorization !== `Bearer ${configuredToken}`) return Response.json({ error: "Authentication required." }, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
+  const expectedAuthorization = Buffer.from(`Bearer ${configuredToken}`, "utf8");
+  const actualAuthorization = Buffer.from(authorization, "utf8");
+  if (actualAuthorization.byteLength !== expectedAuthorization.byteLength || !timingSafeEqual(actualAuthorization, expectedAuthorization)) return Response.json({ error: "Authentication required." }, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
   const admissionError = admitMcpRequest();
   if (admissionError) return admissionError;
   try {

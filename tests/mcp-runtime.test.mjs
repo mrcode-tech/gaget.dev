@@ -209,3 +209,13 @@ test("MCP text operations do not expose regex execution until it is safely bound
   await assert.rejects(executeOperation("text.transform", { operation: "regex-test", input: "abc", options: { pattern: "(a+)+" } }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("text.transform", { operation: "find-replace", input: "abc", options: { pattern: "a", replacement: "x", regexFind: true } }), { code: "INVALID_INPUT" });
 });
+
+test("workflow tool returns schema-conforming structured errors for invalid references", async () => {
+  const response = await post({jsonrpc:"2.0",id:88,method:"tools/call",params:{name:"execute_workflow",arguments:{schemaVersion:1,steps:[
+    {id:"bad",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"missing.result"}}}
+  ]}}});
+  const payload = await parseProtocolResponse(response);
+  assert.equal(payload.result.isError, true);
+  assert.equal(payload.result.structuredContent.success, false);
+  assert.equal(payload.result.structuredContent.error.code, "INVALID_INPUT");
+});

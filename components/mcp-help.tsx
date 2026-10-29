@@ -91,7 +91,7 @@ const words = {
   ar: { button: "مساعدة الذكاء الاصطناعي / MCP", title: "مساعدة الذكاء الاصطناعي / MCP", close: "إغلاق المساعدة", status: "العمليات المتاحة", prompt: "مثال على طلب", privacy: "الخصوصية ونقل البيانات", privacyText: "يرسل طلب MCP المدخلات إلى خادم MCP الذي يحدده العميل. لا يمكن للخادم البعيد الوصول تلقائياً إلى الملفات المحددة في هذا المتصفح. لا ترسل محتوى الملفات إلا عندما تختار ذلك صراحةً.", setup: "الإعداد للاستضافة الذاتية", setupText: "اضبط عنوان GaGet.dev المستضاف ذاتياً ورمز Bearer الذي يقدمه المسؤول. عيّن MCP_AUTH_TOKEN على الخادم؛ لا تضع الرمز في صفحات عامة أو أمثلة مشتركة أو نظام التحكم بالإصدارات.", endpoint: "نمط نقطة النهاية", copy: "نسخ نقطة النهاية", copied: "تم النسخ", limits: "الحدود والسلوك", help: "نسخ مثال الطلب", copiedPrompt: "تم نسخ الطلب", operation: "معرّفات العمليات", hint: "توضح هذه اللوحة مجموعة العمليات المتاحة على الخادم والمتحقق منها؛ وليست مؤشراً لاتصال مباشر أو أداة تنفيذ عن بُعد." }
 } as const;
 
-export function McpHelp({ title }: { title: string }) {
+export function McpHelp({ title, compact = false, iconOnly = false }: { title: string; compact?: boolean; iconOnly?: boolean }) {
   const contract = contracts[title];
   const { locale } = useI18n();
   const direction = localeDirections[locale];
@@ -139,9 +139,9 @@ export function McpHelp({ title }: { title: string }) {
 
   return (
     <>
-      <div className="flex justify-end py-2">
-        <Button ref={triggerRef} type="button" variant="outline" size="sm" onClick={() => { setCopied(null); setOpen(true); }} aria-haspopup="dialog">
-          <Bot className="h-4 w-4" aria-hidden="true" /> {t.button}
+      <div className={compact ? "inline-flex" : "flex justify-end py-2"}>
+        <Button ref={triggerRef} type="button" variant="outline" size={iconOnly ? "icon" : "sm"} onClick={() => { setCopied(null); setOpen(true); }} aria-label={iconOnly ? t.button : undefined} aria-haspopup="dialog" title={iconOnly ? t.button : undefined}>
+          <Bot className="h-4 w-4" aria-hidden="true" />{iconOnly ? null : <> {t.button}</>}
         </Button>
       </div>
       {open && (

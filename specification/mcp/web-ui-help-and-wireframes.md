@@ -1,6 +1,6 @@
 # Web UI Integration, Per-Tool MCP Help, and Workflow Guidance
 
-**Status:** Partially implemented for supported developer-tool routes. Coverage, localization, and media-workspace gaps remain; see [implementation progress](./implementation-progress.md).  
+**Status:** Partially implemented for supported developer-tool routes. Date & Time workspace integration is added in the next revision and remains pending CI. Full localization and media-workspace gaps remain; see [implementation progress](./implementation-progress.md).  
 **Wireframe:** [MCP help panel proposal](./wireframes/mcp-help-panel-proposal.svg)
 
 ## Objective

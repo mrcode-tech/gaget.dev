@@ -4,7 +4,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request): Promise<Response> {
-  return handleMcpPost(request, process.env.MCP_AUTH_TOKEN);
+  const token = process.env.MCP_AUTH_TOKEN;
+  if (!token || new TextEncoder().encode(token).byteLength < 32) {
+    return Response.json({ error: "MCP_AUTH_TOKEN must be configured with at least 32 bytes of secret material." }, { status: 503 });
+  }
+  return handleMcpPost(request, token);
 }
 
 export async function GET(): Promise<Response> {

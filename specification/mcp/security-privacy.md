@@ -19,7 +19,7 @@ Address malicious files; oversized inputs and decompression bombs; regex denial 
 
 ## Runtime admission controls
 
-The current MCP runtime adds per-process admission controls: a bounded request rate, a bounded number of active requests, and a timeout while reading request bodies. These controls are defense-in-depth for a single server process, not a distributed quota. They can be bypassed across multiple serverless instances or replicas and must not be presented as sufficient protection for an unrestricted public endpoint. Public or multi-replica deployments should enforce identity-aware rate/concurrency limits at a trusted gateway or reverse proxy as well.
+The endpoint rejects configured tokens shorter than 32 bytes and compares bearer credentials using a constant-time comparison. The current MCP runtime adds per-process admission controls: a bounded request rate, a bounded number of active requests, and a timeout while reading request bodies. These controls are defense-in-depth for a single server process, not a distributed quota. They can be bypassed across multiple serverless instances or replicas and must not be presented as sufficient protection for an unrestricted public endpoint. Public or multi-replica deployments should enforce identity-aware rate/concurrency limits at a trusted gateway or reverse proxy as well.
 
 ## Limits
 Every server operation must define applicable request, file, item, expanded/decompressed output, CPU/wall-clock, memory/worker, result, artifact, workflow, and concurrency limits. Reject oversized data before expensive processing where possible. Defaults must be safe; unlimited values are not acceptable.
