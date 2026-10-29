@@ -78,8 +78,8 @@ describe("JWT time-claim interpretation",()=>{
 
 describe("optional UTF-8 file input for text-based developer tools",()=>{
  it("loads a selected CSV file into the editor and converts it",async()=>{
-  const file=new File(['name,city\\nAda,"London, UK"'],"sample.csv",{type:"text/csv"});
-  Object.defineProperty(file,"arrayBuffer",{value:async()=>new TextEncoder().encode('name,city\\nAda,"London, UK"').buffer});
+  const file=new File(['name,city\nAda,"London, UK"'],"sample.csv",{type:"text/csv"});
+  Object.defineProperty(file,"arrayBuffer",{value:async()=>new TextEncoder().encode('name,city\nAda,"London, UK"').buffer});
   render(<DeveloperToolWorkbench operation="csv-json"/>);
   fireEvent.change(screen.getByLabelText("Choose a text file for CSV ↔ JSON converter"),{target:{files:[file]}});
   const input=screen.getByRole("textbox",{name:"CSV ↔ JSON converter input"}) as HTMLTextAreaElement;
