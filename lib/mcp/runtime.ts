@@ -1,3 +1,5 @@
+import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
+import * as z from "zod/v4";
 import { transformEncoding, type EncodingMode, type EncodingDirection } from "../tools/encoding-operations.ts";
 import { transformText, type TextOperation } from "../tools/text-operations.ts";
 import { diagnoseJson, compareJsonDocuments } from "../tools/json-workspace.ts";
@@ -149,9 +151,62 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
   return result;
 }
 
-function rpcError(id: unknown, code: number, message: string) {
-  return { jsonrpc: "2.0", id: id ?? null, error: { code, message } };
-}
+const mcpHandler = createMcpHandler(() => {
+  const server = new McpServer({ name: "GaGet.dev MCP", version: "1.0.0" });
+  server.registerTool(
+    "list_capabilities",
+    {
+      title: "List GaGet capabilities",
+      description: "List the approved server-executable operations, schemas, and resource limits.",
+      inputSchema: z.object({}),
+      outputSchema: z.object({ capabilities: z.array(z.unknown()) })
+    },
+    async () => {
+      const capabilities = listCapabilities();
+      return {
+        content: [{ type: "text", text: JSON.stringify(capabilities) }],
+        structuredContent: { capabilities }
+      };
+    }
+  );
+  server.registerTool(
+    "execute_operation",
+    {
+      title: "Execute a GaGet operation",
+      description: "Execute one approved, bounded operation. It never executes code, runs shell commands, or makes network requests.",
+      inputSchema: z.object({
+        operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "developer.format"]),
+        arguments: z.record(z.string(), z.unknown())
+      }),
+      outputSchema: z.object({
+        success: z.boolean(),
+        operationId: z.string(),
+        result: z.unknown().optional(),
+        error: z.object({ code: z.string(), message: z.string() }).optional()
+      })
+    },
+    async ({ operationId, arguments: operationArguments }) => {
+      try {
+        const result = await executeOperation(operationId, operationArguments);
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+          structuredContent: { success: true, operationId, result }
+        };
+      } catch (error) {
+        const runtimeError = error instanceof McpRuntimeError
+          ? error
+          : new McpRuntimeError("PROCESSING_FAILED", "The operation failed. Check the input and supported options.");
+        return {
+          content: [{ type: "text", text: runtimeError.message }],
+          structuredContent: { success: false, operationId, error: { code: runtimeError.code, message: runtimeError.message } },
+          isError: true
+        };
+      }
+    }
+  );
+  return server;
+}, { responseMode: "json" });
+
 export async function handleMcpPost(request: Request, configuredToken: string | undefined): Promise<Response> {
   if (!configuredToken) return Response.json({ error: "MCP endpoint is not configured. Set MCP_AUTH_TOKEN before enabling remote access." }, { status: 503 });
   const authorization = request.headers.get("authorization") ?? "";
@@ -185,39 +240,12 @@ export async function handleMcpPost(request: Request, configuredToken: string | 
   } catch {
     return Response.json({ error: "Unable to read request body." }, { status: 400 });
   }
-  let message: unknown;
-  try { message = JSON.parse(raw); } catch { return Response.json(rpcError(null, -32700, "Parse error"), { status: 400 }); }
-  if (!isObject(message) || message.jsonrpc !== "2.0" || typeof message.method !== "string") return Response.json(rpcError(isObject(message) ? message.id : null, -32600, "Invalid Request"), { status: 400 });
-  const id = message.id;
-  if (message.method === "notifications/initialized" || message.method === "notifications/cancelled") return new Response(null, { status: 202 });
-  if (message.method === "ping") return Response.json({ jsonrpc: "2.0", id, result: {} });
-  if (message.method === "initialize") {
-    return Response.json({ jsonrpc: "2.0", id, result: { protocolVersion: MCP_PROTOCOL_VERSION, capabilities: { tools: { listChanged: false } }, serverInfo: { name: "GaGet.dev MCP", version: "1.0.0" }, instructions: "Only listed bounded operations are available. Inputs are processed server-side after explicit transfer; do not send secrets or files unless required." } });
+  if (new TextEncoder().encode(raw).byteLength > MCP_MAX_REQUEST_BYTES) {
+    return Response.json({ error: "Request body exceeds the 1,000,000 byte limit." }, { status: 413 });
   }
-  if (message.method === "tools/list") {
-    return Response.json({ jsonrpc: "2.0", id, result: { tools: [
-      { name: "list_capabilities", description: "List approved server-executable operations and limits.", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
-      { name: "execute_operation", description: "Execute one allowlisted bounded operation. Never executes code or makes network requests.", inputSchema: { type: "object", properties: { operationId: { type: "string", enum: capabilityList.map(c => c.id) }, arguments: { type: "object" } }, required: ["operationId","arguments"], additionalProperties: false } }
-    ] } });
-  }
-  if (message.method === "tools/call") {
-    const params = isObject(message.params) ? message.params : {};
-    const name = params.name;
-    const args = isObject(params.arguments) ? params.arguments : {};
-    try {
-      let result: unknown;
-      if (name === "list_capabilities") result = listCapabilities();
-      else if (name === "execute_operation") {
-        const operationId = typeof args.operationId === "string" ? args.operationId : "";
-        if (!capabilityList.some(capability => capability.id === operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "This operation is not enabled for MCP execution.");
-        result = await executeOperation(operationId, args.arguments);
-      } else throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Unknown MCP tool.");
-      return Response.json({ jsonrpc: "2.0", id, result: { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result, isError: false } });
-    } catch (error) {
-      const message = error instanceof McpRuntimeError ? error.message : "The operation failed.";
-      return Response.json({ jsonrpc: "2.0", id, result: { content: [{ type: "text", text: message }], isError: true } });
-    }
-  }
-  if (id === undefined) return new Response(null, { status: 202 });
-  return Response.json(rpcError(id, -32601, "Method not found"), { status: 200 });
+  return mcpHandler.fetch(new Request(request.url, {
+    method: "POST",
+    headers: request.headers,
+    body: raw
+  }));
 }
