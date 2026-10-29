@@ -198,3 +198,18 @@ Required workflow:
 11. Update mappings, help, current-state facts, roadmap, and tests only with evidence. Keep proposal status distinct from implemented/verified behavior.
 
 The MCP command in root command.md is a shortcut, not permission to skip these requirements.
+
+### MCP landing page, demo, and Batch Workbench requirements
+
+For MCP web-product experience work, read and follow `specification/mcp/web-ui-help-and-wireframes.md`, `specification/mcp/wireframes/mcp-landing-page-and-workflow-demo.svg`, `specification/mcp/implementation-roadmap.md`, and `specification/mcp/IMPLEMENTATION_PROMPT.md` in addition to the other MCP contracts. Treat these as required implementation requirements:
+
+- Build a discoverable public **MCP & Integrations** page that explains supported capabilities, setup, and hosted versus self-hosted/on-premises usage.
+- Keep **Batch Workbench** as its own primary sidebar destination directly below **Dev Tools**. It is a general-purpose multi-operation workspace and must remain useful without MCP. Keep it distinct from the MCP landing page, individual tools, contextual help, and the transport endpoint.
+- A workflow demo is **live** only when it calls the real MCP adapter/transport and actual allowlisted runtime. If that path is not safely available, label the experience as a guided example that was not executed. Never fake successful execution.
+- Use synthetic data by default. If anonymous live execution is implemented, restrict it to a dedicated narrow allowlist with request/output/time/concurrency limits and abuse controls. Never place privileged credentials in client-side code. Disclose remote data transfer before users submit custom data.
+- Show only operations verified in the MCP registry; a UI route or browser-only capability does not establish remote MCP support.
+- Ensure hosted and self-hosted/on-premises descriptions match verified authentication, transfer, retention, network, and deployment behavior. Do not make unsupported “air-gapped,” privacy, security, or compliance claims.
+- Follow existing app-shell, responsive, theme, localization/RTL, and shadcn-style component conventions. Test navigation, keyboard and screen-reader behavior, focus, loading/error/timeout/rate-limit states, privacy boundaries, and the real demo execution path.
+- Update the roadmap/progress only with exact-revision code, test, and CI evidence. A wireframe or documentation change alone does not count as implementation.
+
+
