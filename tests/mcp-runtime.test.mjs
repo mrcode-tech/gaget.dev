@@ -281,6 +281,11 @@ test("image inspection and transformations use bounded raster bytes", async () =
   const { default: sharp } = await import("sharp");
   const png = await sharp({ create: { width: 3, height: 2, channels: 3, background: "#336699" } }).png().toBuffer();
   const inputBase64 = png.toString("base64");
+  const pixel = await executeOperation("image.sample-pixel", { inputBase64, x: 0, y: 0 });
+  assert.equal(pixel.hex, "#336699");
+  assert.deepEqual(pixel.rgba, { r: 51, g: 102, b: 153, a: 255 });
+  await assert.rejects(executeOperation("image.sample-pixel", { inputBase64, x: 3, y: 0 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.sample-pixel", { inputBase64, x: -1, y: 0 }), { code: "INVALID_INPUT" });
   const inspected = await executeOperation("image.inspect", { inputBase64 });
   assert.equal(inspected.width, 3);
   assert.equal(inspected.height, 2);
