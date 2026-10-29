@@ -9,9 +9,9 @@ import { localeDirections } from "@/lib/i18n/messages";
 type HelpContract = { operations: string[]; prompt: string; note: string };
 const contracts: Record<string, HelpContract> = {
   "Encoding & Decoding": {
-    operations: ["encoding.transform"],
-    prompt: "Decode this Base64 text, validate it as JSON, then format the result.",
-    note: "Encoding transforms bounded text only. Encoding is not encryption."
+    operations: ["encoding.transform", "encoding.charset"],
+    prompt: "Decode this Base64 text, convert text to UTF-16BE hex bytes when needed, validate the decoded text as JSON, then format the result.",
+    note: "Encoding transforms bounded text only. Charset conversion uses explicit UTF-8, UTF-16LE, UTF-16BE, or Windows-1252 and represents bytes as hex. Encoding is not encryption."
   },
   "Text & Regex Workbench": {
     operations: ["text.transform"],
