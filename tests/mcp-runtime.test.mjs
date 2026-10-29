@@ -310,6 +310,19 @@ test("audio.inspect parses bounded PCM WAV metadata and rejects unsupported cont
   await assert.rejects(executeOperation("audio.inspect", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
 });
 
+test("image print-size calculator validates DPI and reports explicit physical units", async () => {
+  const result = await executeOperation("image.print-size", { width: 3000, height: 2400, dpi: 300, unit: "cm" });
+  assert.equal(result.widthInches, 10);
+  assert.equal(result.heightInches, 8);
+  assert.equal(result.widthCm, 25.4);
+  assert.equal(result.heightCm, 20.32);
+  assert.equal(result.widthInUnit, 25.4);
+  assert.equal(result.heightInUnit, 20.32);
+  await assert.rejects(executeOperation("image.print-size", { width: 0, height: 100, dpi: 300 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.print-size", { width: 100, height: 100, dpi: 0 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.print-size", { width: 100, height: 100, dpi: 300, unit: "px" }), { code: "INVALID_INPUT" });
+});
+
 test("image inspection and transformations use bounded raster bytes", async () => {
   const { default: sharp } = await import("sharp");
   const png = await sharp({ create: { width: 3, height: 2, channels: 3, background: "#336699" } }).png().toBuffer();

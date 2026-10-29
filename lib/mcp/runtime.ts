@@ -125,6 +125,7 @@ const schemas = {
   "json.escape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.unescape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.find": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, query: { type: "string", maxLength: 1000 }, match: { type: "string", enum: ["keys","values","both"] } }, required: ["input","query"], additionalProperties: false },
+  "image.print-size": { type: "object", properties: { width: { type: "number", exclusiveMinimum: 0, maximum: 100000 }, height: { type: "number", exclusiveMinimum: 0, maximum: 100000 }, dpi: { type: "number", minimum: 1, maximum: 9600 }, unit: { type: "string", enum: ["in","cm","mm"] } }, required: ["width","height","dpi"], additionalProperties: false },
   "audio.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "image.sample-pixel": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, x: { type: "integer", minimum: 0, maximum: 16000000 }, y: { type: "integer", minimum: 0, maximum: 16000000 } }, required: ["inputBase64","x","y"], additionalProperties: false },
@@ -152,6 +153,7 @@ const capabilityList = [
   { id: "json.unescape", version: "1.0.0", description: "Decode escaped JSON string content as plain text.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.find", version: "1.0.0", description: "Find JSON keys and/or values with bounded depth and result count.", limits: { maxInputCharacters: 200000, maxMatches: 1000, maxDepth: 64, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "audio.inspect", version: "1.0.0", description: "Inspect explicitly supplied WAV audio bytes without storing them. Supports uncompressed PCM and IEEE float WAV metadata only; it does not decode other containers or codecs.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxChannels: 8, minSampleRate: 8000, maxSampleRate: 192000, maxOutputBytes: 4096 } },
+  { id: "image.print-size", version: "1.0.0", description: "Calculate physical print dimensions from pixel width/height and DPI. Supports inch, centimeter, and millimeter output; it does not modify image metadata.", limits: { maxPixelDimension: 100000, minDpi: 1, maxDpi: 9600, maxOutputBytes: 1024 } },
   { id: "image.sample-pixel", version: "1.0.0", description: "Sample one pixel from an explicitly supplied bounded, single-frame raster image. Coordinates are zero-based pixels; returns RGB hex and RGBA channels. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: 1024, timeoutMs: 5000 } },
   { id: "image.inspect", version: "1.0.0", description: "Inspect dimensions, aspect ratio, pixel count, transparency, orientation, and basic metadata of a bounded supported raster image supplied explicitly as base64. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: MCP_MAX_OUTPUT_BYTES, timeoutMs: 5000 } },
   { id: "image.transform", version: "1.0.0", description: "Crop, resize with explicit fit and anchor options, rotate by arbitrary bounded angles with an optional hex background, flip, flop, auto-orient, grayscale, blur, adjust brightness/contrast/saturation, or convert a bounded supported image supplied explicitly as base64. Returns a bounded base64 result; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxOutputBytes: MCP_MAX_IMAGE_OUTPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxDimension: 4096, timeoutMs: 5000 } },
@@ -177,6 +179,7 @@ const outputSchemas = {
   "json.escape": { type: "string" },
   "json.unescape": { type: "string" },
   "json.find": { type: "object", properties: { matches: { type: "array", items: { type: "object" } }, truncated: { type: "boolean" } }, required: ["matches","truncated"], additionalProperties: false },
+  "image.print-size": { type: "object", properties: { width: { type: "number" }, height: { type: "number" }, dpi: { type: "number" }, unit: { type: "string", enum: ["in","cm","mm"] }, widthInches: { type: "number" }, heightInches: { type: "number" }, widthCm: { type: "number" }, heightCm: { type: "number" }, widthInUnit: { type: "number" }, heightInUnit: { type: "number" } }, required: ["width","height","dpi","unit","widthInches","heightInches","widthCm","heightCm","widthInUnit","heightInUnit"], additionalProperties: false },
   "image.sample-pixel": { type: "object", properties: { x: { type: "integer" }, y: { type: "integer" }, hex: { type: "string", pattern: "^#[0-9A-F]{6}$" }, rgba: { type: "object", properties: { r: { type: "integer" }, g: { type: "integer" }, b: { type: "integer" }, a: { type: "integer" } }, required: ["r","g","b","a"], additionalProperties: false } }, required: ["x","y","hex","rgba"], additionalProperties: false },
   "audio.inspect": { type: "object", properties: { format: { type: "string", const: "wav" }, encoding: { type: "string", enum: ["pcm","ieee-float"] }, bytes: { type: "integer" }, durationSeconds: { type: "number" }, sampleRate: { type: "integer" }, channels: { type: "integer" }, bitDepth: { type: "integer" }, frames: { type: "integer" }, dataBytes: { type: "integer" }, hasMetadataChunks: { type: "boolean" }, chunkIds: { type: "array", items: { type: "string" } } }, required: ["format","encoding","bytes","durationSeconds","sampleRate","channels","bitDepth","frames","dataBytes","hasMetadataChunks","chunkIds"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, aspectRatio: { type: "number" }, pixelCount: { type: "integer" }, channels: { type: "integer" }, hasAlpha: { type: "boolean" }, orientation: { type: ["integer","null"] }, bytes: { type: "integer" }, animated: { type: "boolean" }, dominantColor: { type: "string", pattern: "^#[0-9A-F]{6}$" } }, required: ["format","width","height","aspectRatio","pixelCount","channels","hasAlpha","orientation","bytes","animated","dominantColor"], additionalProperties: false },
@@ -373,6 +376,15 @@ const capabilityRuntimeMetadata = {
   "audio.inspect": {
     "inputTypes": ["audio/wav-base64"],
     "outputTypes": ["json", "audio-metadata"],
+    "executionModes": ["server", "mcp"],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "image.print-size": {
+    "inputTypes": ["parameters"],
+    "outputTypes": ["json", "dimensions"],
     "executionModes": ["server", "mcp"],
     "availability": "available",
     "mcpExposure": "exposed",
@@ -576,6 +588,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.unescape": ["input"],
     "json.find": ["input","query","match"],
     "audio.inspect": ["inputBase64"],
+    "image.print-size": ["width","height","dpi","unit"],
     "image.inspect": ["inputBase64"],
     "image.sample-pixel": ["inputBase64","x","y"],
     "image.transform": ["inputBase64","action","left","top","width","height","leftRatio","topRatio","widthRatio","heightRatio","degrees","background","format","quality","brightness","contrast","saturation","sigma","fit","position"],
@@ -712,6 +725,23 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Audio input must be at most 600,000 bytes.");
         }
         result = inspectPcmWav(bytes);
+        break;
+      }
+      case "image.print-size": {
+        const width = rawInput.width;
+        const height = rawInput.height;
+        const dpi = rawInput.dpi;
+        const unit = enumField(rawInput, "unit", ["in","cm","mm"] as const, "in");
+        for (const [name, value] of [["width",width],["height",height]] as const) {
+          if (typeof value !== "number" || !Number.isFinite(value) || value <= 0 || value > 100000) throw new McpRuntimeError("INVALID_INPUT", `'${name}' must be greater than 0 and at most 100,000 pixels.`);
+        }
+        if (typeof dpi !== "number" || !Number.isFinite(dpi) || dpi < 1 || dpi > 9600) throw new McpRuntimeError("INVALID_INPUT", "'dpi' must be between 1 and 9,600.");
+        const widthInches = width as number / (dpi as number);
+        const heightInches = height as number / (dpi as number);
+        const widthCm = widthInches * 2.54;
+        const heightCm = heightInches * 2.54;
+        const factor = unit === "in" ? 1 : unit === "cm" ? 2.54 : 25.4;
+        result = { width, height, dpi, unit, widthInches: Number(widthInches.toFixed(6)), heightInches: Number(heightInches.toFixed(6)), widthCm: Number(widthCm.toFixed(6)), heightCm: Number(heightCm.toFixed(6)), widthInUnit: Number((widthInches * factor).toFixed(6)), heightInUnit: Number((heightInches * factor).toFixed(6)) };
         break;
       }
       case "image.inspect": {
@@ -1017,7 +1047,7 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "image.transform": ["inputBase64"]
 };
 const workflowStringOutputs = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
-const workflowStructuredOutputs = new Set(["image.inspect", "image.sample-pixel", "json.validate", "json.diff", "json.find", "security.jwt.decode"]);
+const workflowStructuredOutputs = new Set(["image.print-size", "image.inspect", "image.sample-pixel", "json.validate", "json.diff", "json.find", "security.jwt.decode"]);
 function isWorkflowReference(value: unknown): value is WorkflowReference {
   return isObject(value) && Object.keys(value).length === 1 && typeof value.$ref === "string";
 }
@@ -1055,7 +1085,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
       throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow references an operation that is not enabled for MCP execution.");
     }
     if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
-    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.sample-pixel", "image.transform"]);
+    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]);
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
     for (const [field, value] of Object.entries(rawStep.arguments)) {
       if (isWorkflowReference(value)) {
@@ -1190,7 +1220,7 @@ const mcpHandler = createMcpHandler(() => {
       title: "Execute a GaGet operation",
       description: "Execute one approved, bounded operation. It never executes code, runs shell commands, or makes network requests.",
       inputSchema: z.object({
-        operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "image.inspect", "image.sample-pixel", "image.transform"]),
+        operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
         arguments: z.record(z.string(), z.unknown())
       }),
       outputSchema: z.object({
@@ -1230,7 +1260,7 @@ const mcpHandler = createMcpHandler(() => {
         output: z.object({ $ref: z.string().max(80) }).strict().optional(),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
-          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.sample-pixel", "image.transform"]),
+          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
           arguments: z.record(z.string(), z.unknown())
         }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
       }).strict(),
