@@ -195,7 +195,7 @@ jobs:
           mkdir -p artifacts/mcp-ci
           log_file=artifacts/mcp-ci/docker.log
           container_name="gaget-mcp-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          test_token="mcp-ci-only-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test_token="mcp-ci-only-0123456789abcdef0123456789abcdef-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           cleanup() {
             docker logs "$container_name" >> "$log_file" 2>&1 || true
             docker rm -f "$container_name" >/dev/null 2>&1 || true

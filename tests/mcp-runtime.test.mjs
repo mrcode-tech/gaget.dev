@@ -212,6 +212,19 @@ test("workflow tool returns schema-conforming structured errors for invalid refe
   assert.equal(payload.result.structuredContent.error.code, "INVALID_INPUT");
 });
 
+test("image metadata inspection supports bounded PNG and GIF bytes without file persistence", async () => {
+  const png = Buffer.from([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,2,0,0,0,3,8,6,0,0,0]);
+  const pngResult = await executeOperation("image.inspect", { dataBase64: png.toString("base64") });
+  assert.deepEqual(pngResult, { format: "png", width: 2, height: 3, byteLength: png.length });
+  const gif = Buffer.from("GIF89a", "ascii");
+  const dims = Buffer.from([4,0,5,0]);
+  const gifResult = await executeOperation("image.inspect", { dataBase64: Buffer.concat([gif,dims]).toString("base64") });
+  assert.deepEqual(gifResult, { format: "gif", width: 4, height: 5, byteLength: 10 });
+  await assert.rejects(executeOperation("image.inspect", { dataBase64: Buffer.from("not an image").toString("base64") }), { code: "UNSUPPORTED_FORMAT" });
+  await assert.rejects(executeOperation("image.inspect", { dataBase64: "not-base64!" }), { code: "INVALID_INPUT" });
+  assert.ok(listCapabilities().some(item => item.id === "image.inspect"));
+});
+
 test("per-instance request rate limiting rejects excessive authenticated calls", async () => {
   let response;
   for (let i = 0; i < MCP_MAX_REQUESTS_PER_MINUTE + 100; i++) {

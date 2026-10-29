@@ -8,6 +8,7 @@ import { localeDirections } from "@/lib/i18n/messages";
 
 type HelpContract = { operations: string[]; prompt: string; note: string };
 const contracts: Record<string, HelpContract> = {
+  "Image Editor": { operations: ["image.inspect"], prompt: "Inspect these supported image bytes and return format, dimensions, and byte length.", note: "Only metadata inspection is supported. The MCP client explicitly transfers Base64 image bytes to the server; image editing and artifact output are not implemented." },
   "Encoding & Decoding": {
     operations: ["encoding.transform"],
     prompt: "Decode this Base64 text, validate it as JSON, then format the result.",

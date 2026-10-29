@@ -28,6 +28,12 @@
 - Result: passed for that exact revision (unit/contract tests, component tests, MCP tests, lint, typecheck, production build, production dependency audit, and Docker build/smoke).
 - This evidence does **not** certify code added after that commit. The next run must be inspected and recorded after token hardening, workflow error-schema, and Date & Time help integration are integrated.
 
+## Latest implementation increment (pending CI)
+
+- Added `image.inspect` for bounded Base64 PNG/JPEG/GIF/WebP metadata parsing only; no pixel decode, transformation, persistence, or artifact output.
+- Added known-answer tests for PNG/GIF dimensions and unsupported/invalid input.
+- This increment remains pending exact-revision CI; it does not complete Phase 7.
+
 ## Explicit release blockers
 
 1. Server image/audio/video execution and artifact lifecycle are not implemented.

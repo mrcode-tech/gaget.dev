@@ -39,6 +39,10 @@ Every server operation must define applicable request, file, item, expanded/deco
 
 **Self-hosted:** does not automatically guarantee privacy. Document administrator responsibility for network, logs, backups, identity, storage, and upgrades.
 
+## Binary image input boundary
+
+The limited `image.inspect` operation accepts explicit Base64 bytes, caps the encoded field at 750,000 characters and decoded data at 560,000 bytes, and only parses supported headers. It does not decode pixel data or write files. This size ceiling is intentionally much smaller than common image uploads; larger image operations require a separately designed binary/artifact transport and resource-isolated processing.
+
 ## Sensitive operation boundaries
 - JWT decoding is not signature verification or trust validation.
 - Hashes/checksums are not encryption or proof of authenticity; HMAC keys are secret.
