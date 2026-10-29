@@ -289,6 +289,30 @@ test("workflow tool returns schema-conforming structured errors for invalid refe
   assert.equal(payload.result.structuredContent.error.code, "INVALID_INPUT");
 });
 
+test("audio.analyze reports normalized peak, RMS, DC offset, and clipping per channel", async () => {
+  const sampleRate = 8000, channels = 2, bitDepth = 16;
+  const pcm = Buffer.alloc(8);
+  pcm.writeInt16LE(-32768, 0); pcm.writeInt16LE(0, 2); pcm.writeInt16LE(16384, 4); pcm.writeInt16LE(32767, 6);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const result = await executeOperation("audio.analyze", { inputBase64: wav.toString("base64") });
+  assert.equal(result.format, "wav");
+  assert.equal(result.sampleRate, 8000);
+  assert.equal(result.channels, 2);
+  assert.equal(result.sampleCount, 4);
+  assert.equal(result.peak, 1);
+  assert.equal(result.clippedSamples, 1);
+  assert.equal(result.channelsSummary.length, 2);
+  assert.equal(result.channelsSummary[0].peak, 1);
+  assert.equal(result.channelsSummary[0].clippedSamples, 1);
+  assert.ok(Math.abs(result.rms - Math.sqrt((1 + 0 + 0.25 + (32767/32768)**2) / 4)) < 1e-7);
+  await assert.rejects(executeOperation("audio.analyze", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
+});
+
 test("audio.inspect parses bounded PCM WAV metadata and rejects unsupported containers", async () => {
   const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 80;
   const pcm = Buffer.alloc(frames * channels * bitDepth / 8);

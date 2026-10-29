@@ -39,6 +39,10 @@ The MCP adapter exposes three protocol tools: `list_capabilities`, `execute_oper
 
 Remote MCP calls send their supplied input to the configured server. The server does not persist operation input/output by design; hosting administrators remain responsible for their own infrastructure logs, backups, and network policy. No browser-selected file is implicitly uploaded.
 
+## Implemented audio analysis addition
+
+- `audio.analyze` reports normalized peak, RMS, DC offset, and clipping totals/per-channel for explicitly supplied bounded PCM/IEEE-float WAV bytes. This is sample analysis, not audio encoding or general codec support.
+
 ## Existing tools to evaluate
 
 Every item below is proposed for audit, not approved automatically. Phase labels are priorities, not current implementation status.

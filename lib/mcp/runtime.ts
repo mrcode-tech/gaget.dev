@@ -94,6 +94,40 @@ function inspectPcmWav(bytes: Buffer): Record<string, unknown> {
     chunkIds
   };
 }
+function analyzePcmWav(bytes: Buffer): Record<string, unknown> {
+  const metadata = inspectPcmWav(bytes);
+  let offset = 12, formatCode = 0, channels = 0, bitDepth = 0, dataOffset = -1, dataBytes = 0;
+  while (offset + 8 <= bytes.byteLength) {
+    const id = bytes.toString("ascii", offset, offset + 4), size = bytes.readUInt32LE(offset + 4), start = offset + 8, end = start + size;
+    if (end > bytes.byteLength || end < start) throw new McpRuntimeError("INVALID_INPUT", "WAV chunk length exceeds the container boundary.");
+    if (id === "fmt ") { formatCode = bytes.readUInt16LE(start); channels = bytes.readUInt16LE(start + 2); bitDepth = bytes.readUInt16LE(start + 14); }
+    else if (id === "data" && dataOffset < 0) { dataOffset = start; dataBytes = size; }
+    offset = end + (size % 2);
+  }
+  if (dataOffset < 0 || channels < 1 || dataBytes === 0) throw new McpRuntimeError("INVALID_INPUT", "WAV audio data is empty or incomplete.");
+  const bytesPerSample = bitDepth / 8, sampleCount = dataBytes / bytesPerSample;
+  const sums = Array<number>(channels).fill(0), squares = Array<number>(channels).fill(0), peaks = Array<number>(channels).fill(0), clipped = Array<number>(channels).fill(0);
+  for (let i = 0; i < sampleCount; i++) {
+    const position = dataOffset + i * bytesPerSample;
+    let sample: number;
+    if (formatCode === 3 && bitDepth === 32) sample = bytes.readFloatLE(position);
+    else if (formatCode === 3 && bitDepth === 64) sample = bytes.readDoubleLE(position);
+    else if (bitDepth === 8) sample = (bytes.readUInt8(position) - 128) / 128;
+    else if (bitDepth === 16) sample = bytes.readInt16LE(position) / 32768;
+    else if (bitDepth === 24) { let integer = bytes.readUIntLE(position, 3); if (integer & 0x800000) integer -= 0x1000000; sample = integer / 8388608; }
+    else if (bitDepth === 32) sample = bytes.readInt32LE(position) / 2147483648;
+    else throw new McpRuntimeError("UNSUPPORTED_FORMAT", "This WAV sample format is not supported for analysis.");
+    if (!Number.isFinite(sample)) throw new McpRuntimeError("INVALID_INPUT", "WAV audio contains non-finite floating-point samples.");
+    const channel = i % channels, magnitude = Math.abs(sample);
+    sums[channel] += sample; squares[channel] += sample * sample; peaks[channel] = Math.max(peaks[channel], magnitude);
+    if (magnitude >= 1) clipped[channel]++;
+  }
+  const framesPerChannel = sampleCount / channels;
+  const channelsSummary = peaks.map((peak, channel) => ({ channel: channel + 1, peak: Number(peak.toFixed(8)), peakDbfs: peak === 0 ? null : Number((20 * Math.log10(peak)).toFixed(6)), rms: Number(Math.sqrt(squares[channel] / framesPerChannel).toFixed(8)), dcOffset: Number((sums[channel] / framesPerChannel).toFixed(8)), clippedSamples: clipped[channel] }));
+  const peak = Math.max(...peaks), totalSquares = squares.reduce((sum, value) => sum + value, 0), totalSum = sums.reduce((sum, value) => sum + value, 0);
+  return { format: metadata.format, sampleRate: metadata.sampleRate, channels, bitDepth, durationSeconds: metadata.durationSeconds, sampleCount, peak: Number(peak.toFixed(8)), peakDbfs: peak === 0 ? null : Number((20 * Math.log10(peak)).toFixed(6)), rms: Number(Math.sqrt(totalSquares / sampleCount).toFixed(8)), dcOffset: Number((totalSum / sampleCount).toFixed(8)), clippedSamples: clipped.reduce((sum, value) => sum + value, 0), channelsSummary };
+}
+
 const stringField = (input: JsonObject, key: string, max = 200_000): string => {
   const value = input[key];
   if (typeof value !== "string") throw new McpRuntimeError("INVALID_INPUT", `'${key}' must be a string.`);
@@ -127,6 +161,7 @@ const schemas = {
   "json.find": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, query: { type: "string", maxLength: 1000 }, match: { type: "string", enum: ["keys","values","both"] } }, required: ["input","query"], additionalProperties: false },
   "image.print-size": { type: "object", properties: { width: { type: "number", exclusiveMinimum: 0, maximum: 100000 }, height: { type: "number", exclusiveMinimum: 0, maximum: 100000 }, dpi: { type: "number", minimum: 1, maximum: 9600 }, unit: { type: "string", enum: ["in","cm","mm"] } }, required: ["width","height","dpi"], additionalProperties: false },
   "audio.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
+  "audio.analyze": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "image.sample-pixel": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, x: { type: "integer", minimum: 0, maximum: 16000000 }, y: { type: "integer", minimum: 0, maximum: 16000000 } }, required: ["inputBase64","x","y"], additionalProperties: false },
   "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, leftRatio: { type: "number", minimum: 0, maximum: 1 }, topRatio: { type: "number", minimum: 0, maximum: 1 }, widthRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, heightRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, degrees: { type: "number", minimum: -180, maximum: 180 }, background: { type: "string", pattern: "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$" }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 }, fit: { type: "string", enum: ["contain","cover","fill","inside","outside"] }, position: { type: "string", enum: ["centre","north","northeast","east","southeast","south","southwest","west","northwest"] } }, required: ["inputBase64","action"], additionalProperties: false },
@@ -153,6 +188,7 @@ const capabilityList = [
   { id: "json.unescape", version: "1.0.0", description: "Decode escaped JSON string content as plain text.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.find", version: "1.0.0", description: "Find JSON keys and/or values with bounded depth and result count.", limits: { maxInputCharacters: 200000, maxMatches: 1000, maxDepth: 64, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "audio.inspect", version: "1.0.0", description: "Inspect explicitly supplied WAV audio bytes without storing them. Supports uncompressed PCM and IEEE float WAV metadata only; it does not decode other containers or codecs.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxChannels: 8, minSampleRate: 8000, maxSampleRate: 192000, maxOutputBytes: 4096 } },
+  { id: "audio.analyze", version: "1.0.0", description: "Analyze sample peak, RMS level, DC offset, and full-scale clipping in explicitly supplied PCM or IEEE-float WAV data. Supports uncompressed WAV only; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxChannels: 8, maxSampleRate: 192000, maxOutputBytes: 8192 } },
   { id: "image.print-size", version: "1.0.0", description: "Calculate physical print dimensions from pixel width/height and DPI. Supports inch, centimeter, and millimeter output; it does not modify image metadata.", limits: { maxPixelDimension: 100000, minDpi: 1, maxDpi: 9600, maxOutputBytes: 1024 } },
   { id: "image.sample-pixel", version: "1.0.0", description: "Sample one pixel from an explicitly supplied bounded, single-frame raster image. Coordinates are zero-based pixels; returns RGB hex and RGBA channels. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: 1024, timeoutMs: 5000 } },
   { id: "image.inspect", version: "1.0.0", description: "Inspect dimensions, aspect ratio, pixel count, transparency, orientation, and basic metadata of a bounded supported raster image supplied explicitly as base64. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: MCP_MAX_OUTPUT_BYTES, timeoutMs: 5000 } },
@@ -182,6 +218,7 @@ const outputSchemas = {
   "image.print-size": { type: "object", properties: { width: { type: "number" }, height: { type: "number" }, dpi: { type: "number" }, unit: { type: "string", enum: ["in","cm","mm"] }, widthInches: { type: "number" }, heightInches: { type: "number" }, widthCm: { type: "number" }, heightCm: { type: "number" }, widthInUnit: { type: "number" }, heightInUnit: { type: "number" } }, required: ["width","height","dpi","unit","widthInches","heightInches","widthCm","heightCm","widthInUnit","heightInUnit"], additionalProperties: false },
   "image.sample-pixel": { type: "object", properties: { x: { type: "integer" }, y: { type: "integer" }, hex: { type: "string", pattern: "^#[0-9A-F]{6}$" }, rgba: { type: "object", properties: { r: { type: "integer" }, g: { type: "integer" }, b: { type: "integer" }, a: { type: "integer" } }, required: ["r","g","b","a"], additionalProperties: false } }, required: ["x","y","hex","rgba"], additionalProperties: false },
   "audio.inspect": { type: "object", properties: { format: { type: "string", const: "wav" }, encoding: { type: "string", enum: ["pcm","ieee-float"] }, bytes: { type: "integer" }, durationSeconds: { type: "number" }, sampleRate: { type: "integer" }, channels: { type: "integer" }, bitDepth: { type: "integer" }, frames: { type: "integer" }, dataBytes: { type: "integer" }, hasMetadataChunks: { type: "boolean" }, chunkIds: { type: "array", items: { type: "string" } } }, required: ["format","encoding","bytes","durationSeconds","sampleRate","channels","bitDepth","frames","dataBytes","hasMetadataChunks","chunkIds"], additionalProperties: false },
+  "audio.analyze": { type: "object", properties: { format: { type: "string", const: "wav" }, sampleRate: { type: "integer" }, channels: { type: "integer" }, bitDepth: { type: "integer" }, durationSeconds: { type: "number" }, sampleCount: { type: "integer" }, peak: { type: "number" }, peakDbfs: { type: ["number","null"] }, rms: { type: "number" }, dcOffset: { type: "number" }, clippedSamples: { type: "integer" }, channelsSummary: { type: "array", items: { type: "object", properties: { channel: { type: "integer" }, peak: { type: "number" }, peakDbfs: { type: ["number","null"] }, rms: { type: "number" }, dcOffset: { type: "number" }, clippedSamples: { type: "integer" } }, required: ["channel","peak","peakDbfs","rms","dcOffset","clippedSamples"], additionalProperties: false } } }, required: ["format","sampleRate","channels","bitDepth","durationSeconds","sampleCount","peak","peakDbfs","rms","dcOffset","clippedSamples","channelsSummary"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, aspectRatio: { type: "number" }, pixelCount: { type: "integer" }, channels: { type: "integer" }, hasAlpha: { type: "boolean" }, orientation: { type: ["integer","null"] }, bytes: { type: "integer" }, animated: { type: "boolean" }, dominantColor: { type: "string", pattern: "^#[0-9A-F]{6}$" } }, required: ["format","width","height","aspectRatio","pixelCount","channels","hasAlpha","orientation","bytes","animated","dominantColor"], additionalProperties: false },
   "image.transform": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, bytes: { type: "integer" }, dataBase64: { type: "string", maxLength: 800000 } }, required: ["format","width","height","bytes","dataBase64"], additionalProperties: false },
   "developer.format": { type: "string" },
@@ -376,6 +413,15 @@ const capabilityRuntimeMetadata = {
   "audio.inspect": {
     "inputTypes": ["audio/wav-base64"],
     "outputTypes": ["json", "audio-metadata"],
+    "executionModes": ["server", "mcp"],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "audio.analyze": {
+    "inputTypes": ["audio/wav-base64"],
+    "outputTypes": ["json", "audio-analysis"],
     "executionModes": ["server", "mcp"],
     "availability": "available",
     "mcpExposure": "exposed",
@@ -588,6 +634,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.unescape": ["input"],
     "json.find": ["input","query","match"],
     "audio.inspect": ["inputBase64"],
+    "audio.analyze": ["inputBase64"],
     "image.print-size": ["width","height","dpi","unit"],
     "image.inspect": ["inputBase64"],
     "image.sample-pixel": ["inputBase64","x","y"],
@@ -713,6 +760,14 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const after = stringField(rawInput, "after");
         if (!diagnoseJson(before).ok || !diagnoseJson(after).ok) throw new McpRuntimeError("INVALID_INPUT", "Both inputs must be valid JSON.");
         result = compareJsonDocuments(before, after);
+        break;
+      }
+      case "audio.analyze": {
+        const inputBase64 = stringField(rawInput, "inputBase64", 800_000);
+        if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(inputBase64) || inputBase64.length === 0) throw new McpRuntimeError("INVALID_INPUT", "'inputBase64' must be valid standard Base64.");
+        const bytes = Buffer.from(inputBase64, "base64");
+        if (bytes.byteLength === 0 || bytes.byteLength > MCP_MAX_IMAGE_INPUT_BYTES || bytes.toString("base64") !== inputBase64) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Audio input must be at most 600,000 bytes.");
+        result = analyzePcmWav(bytes);
         break;
       }
       case "audio.inspect": {
