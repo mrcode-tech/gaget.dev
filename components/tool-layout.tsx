@@ -47,7 +47,7 @@ export function ToolLayout({
         </p>
       </header>}
 
-      <McpHelp title={title} />
+      {workspace ? <div className="fixed bottom-4 end-4 z-30"><McpHelp title={title} compact iconOnly /></div> : <McpHelp title={title} />}
       {children}
     </main>
   );
