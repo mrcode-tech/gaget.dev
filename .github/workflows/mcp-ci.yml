@@ -163,7 +163,7 @@ jobs:
             exit 1
           fi
           printf 'MCP test files:\n%s\n' "${test_files[@]}" | tee artifacts/mcp-ci/mcp-specific-tests.log
-          npx vitest run "${test_files[@]}" 2>&1 | tee -a artifacts/mcp-ci/mcp-specific-tests.log
+          node --experimental-strip-types --test "${test_files[@]}" 2>&1 | tee -a artifacts/mcp-ci/mcp-specific-tests.log
 
       - name: Run lint
         id: lint
