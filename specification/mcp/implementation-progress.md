@@ -12,7 +12,7 @@
 | 3 — Server runtime | Partial | Request-body byte cap, output cap, allowlist, schema validation, bounded workflow step/output budgets, safe errors, and bearer authentication exist. Per-operation preemptive deadlines, concurrency quotas, rate limiting, and broader cleanup tests remain. |
 | 4 — MCP adapter | Implemented, partial verification | Maintained TypeScript SDK, Streamable HTTP transport, tool discovery/calls, bearer-token gate, and SDK client test. Compatibility with the latest stateless MCP version and formal conformance remain unverified. |
 | 5 — Workflow engine | Implemented, partial | Sequential version-1 workflows, allowlisted operations, earlier text-result references, bounded steps/bytes/time budget, safe errors, and result manifest. Full static type inference, true preemption, and comprehensive cancellation/resource cleanup remain. |
-| 6 — Operation expansion | Partial | Initial developer/JSON operations and additional security, generator, offline inspection, and date/time operations are being implemented. The expanded set must pass CI before it is marked verified; broader catalog operations remain unevaluated. |
+| 6 — Operation expansion | Partial | Encoding/text/JSON baseline plus security, generator, offline inspection, and date/time operations passed MCP CI at commit `6b0d8f8ed48efc1d3ee368761ac10833c4208387` (run [40878707863](https://github.com/mrcode-tech/gaget.dev/actions/runs/40878707863)). Additional JSON sort/escape/unescape/find operations are added in the next revision and remain pending verification; broader catalog operations remain unevaluated. |
 | 7 — Image runtime/artifacts | Not implemented | No server image processing, binary artifact lifecycle, scoped retrieval, expiry, or cleanup verification. |
 | 8 — Audio/video | Not implemented | No server-side media job runtime, codecs, progress/cancellation, artifact transfer, or resource isolation. |
 | 9 — Docker/self-hosting | Verified at baseline revision | Docker build and authenticated MCP endpoint smoke passed in MCP CI run [40877002021](https://github.com/mrcode-tech/gaget.dev/actions/runs/40877002021), tested commit `6e2445ac9f348f420fa16f280f9d1fd769f10ec2`. Subsequent source changes require a new passing run. |
@@ -23,10 +23,10 @@
 
 - Repository: `mrcode-tech/gaget.dev`
 - Branch: `mcp-compatible`
-- Tested commit: `6e2445ac9f348f420fa16f280f9d1fd769f10ec2`
-- MCP CI run: [40877002021](https://github.com/mrcode-tech/gaget.dev/actions/runs/40877002021)
-- Result: passed for the baseline implementation at that commit (unit/contract tests, component tests, MCP tests, lint, typecheck, production build, production dependency audit, and Docker build/smoke).
-- This evidence does **not** certify code added after that commit. The next run must be inspected and recorded after the operation expansion and help changes are integrated.
+- Tested commit: `6b0d8f8ed48efc1d3ee368761ac10833c4208387`
+- MCP CI run: [40878707863](https://github.com/mrcode-tech/gaget.dev/actions/runs/40878707863)
+- Result: passed for that exact revision (unit/contract tests, component tests, MCP tests, lint, typecheck, production build, production dependency audit, and Docker build/smoke).
+- This evidence does **not** certify code added after that commit. The next run must be inspected and recorded after the additional JSON operations are integrated.
 
 ## Explicit release blockers
 

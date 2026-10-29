@@ -19,7 +19,7 @@ const contracts: Record<string, HelpContract> = {
     note: "Regex and text work are bounded. Avoid treating input as executable code."
   },
   "JSON Formatter & Validator": {
-    operations: ["json.validate", "json.format", "json.minify", "json.diff"],
+    operations: ["json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find"],
     prompt: "Validate this JSON document, format it with two-space indentation, and report any syntax errors.",
     note: "The JSON operations accept text documents up to 200,000 characters each."
   },

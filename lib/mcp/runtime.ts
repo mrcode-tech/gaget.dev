@@ -2,7 +2,7 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { transformEncoding, type EncodingMode, type EncodingDirection } from "../tools/encoding-operations.ts";
 import { transformText, type TextOperation } from "../tools/text-operations.ts";
-import { diagnoseJson, compareJsonDocuments } from "../tools/json-workspace.ts";
+import { diagnoseJson, compareJsonDocuments, sortJsonKeys, escapeJsonStringContents, unescapeJsonStringContents } from "../tools/json-workspace.ts";
 import { transformDeveloperTool, type DeveloperOperation } from "../tools/developer-operations.ts";
 import { computeHash, type HashMode, type DigestAlgorithm } from "../tools/security-operations.ts";
 import { generateSampleData, type SampleGeneratorOperation } from "../tools/sample-data-generator.ts";
@@ -44,6 +44,10 @@ const schemas = {
   "json.format": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, indent: { type: "integer", minimum: 0, maximum: 8 } }, required: ["input"], additionalProperties: false },
   "json.minify": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.diff": { type: "object", properties: { before: { type: "string", maxLength: 200000 }, after: { type: "string", maxLength: 200000 } }, required: ["before","after"], additionalProperties: false },
+  "json.sort-keys": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
+  "json.escape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
+  "json.unescape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
+  "json.find": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, query: { type: "string", maxLength: 1000 }, match: { type: "string", enum: ["keys","values","both"] } }, required: ["input","query"], additionalProperties: false },
   "developer.format": { type: "object", properties: { operation: { type: "string", enum: ["xml","sql","html","csv-json","curl"] }, input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["format","minify","json-to-csv"] }, delimiter: { type: "string", maxLength: 1 } }, required: ["operation","input"], additionalProperties: false },
   "security.hash": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["digest","hmac","crc32","crc16-ccitt","adler32"] }, algorithm: { type: "string", enum: ["SHA-256","SHA-384","SHA-512"] }, key: { type: "string", maxLength: 10000 } }, required: ["input","mode"], additionalProperties: false },
   "security.jwt.decode": { type: "object", properties: { token: { type: "string", maxLength: 20000 } }, required: ["token"], additionalProperties: false },
@@ -61,6 +65,10 @@ const capabilityList = [
   { id: "json.format", version: "1.0.0", description: "Format valid JSON.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.minify", version: "1.0.0", description: "Minify valid JSON.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.diff", version: "1.0.0", description: "Compare two JSON documents.", limits: { maxInputCharactersPerDocument: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
+  { id: "json.sort-keys", version: "1.0.0", description: "Sort object keys recursively while preserving JSON values and array order.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
+  { id: "json.escape", version: "1.0.0", description: "Escape text as JSON string content without surrounding quotes.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
+  { id: "json.unescape", version: "1.0.0", description: "Decode escaped JSON string content as plain text.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
+  { id: "json.find", version: "1.0.0", description: "Find JSON keys and/or values with bounded depth and result count.", limits: { maxInputCharacters: 200000, maxMatches: 1000, maxDepth: 64, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "developer.format", version: "1.0.0", description: "Format/minify supported XML, SQL, HTML text, or convert CSV/JSON. Does not execute input.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.hash", version: "1.0.0", description: "Compute bounded text digests, HMAC, or non-cryptographic checksums. HMAC keys are secret; hashes are not encryption.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.jwt.decode", version: "1.0.0", description: "Decode JWT header and claims without verifying its signature or trust.", limits: { maxInputCharacters: 20000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
@@ -78,6 +86,10 @@ const outputSchemas = {
   "json.format": { type: "string" },
   "json.minify": { type: "string" },
   "json.diff": { type: "array", items: { type: "object", properties: { path: { type: "string" }, kind: { type: "string", enum: ["added","removed","changed"] } }, required: ["path","kind"] } },
+  "json.sort-keys": { type: "string" },
+  "json.escape": { type: "string" },
+  "json.unescape": { type: "string" },
+  "json.find": { type: "object", properties: { matches: { type: "array", items: { type: "object" } }, truncated: { type: "boolean" } }, required: ["matches","truncated"], additionalProperties: false },
   "developer.format": { type: "string" },
   "security.hash": { type: "string" },
   "security.jwt.decode": { type: "object", properties: { header: { type: "object" }, claims: { type: "object" }, signaturePresent: { type: "boolean" }, signatureVerified: { type: "boolean" }, note: { type: "string" } }, required: ["header","claims","signaturePresent","signatureVerified","note"], additionalProperties: false },
@@ -104,6 +116,10 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.format": ["input", "indent"],
     "json.minify": ["input"],
     "json.diff": ["before", "after"],
+    "json.sort-keys": ["input"],
+    "json.escape": ["input"],
+    "json.unescape": ["input"],
+    "json.find": ["input","query","match"],
     "developer.format": ["operation", "input", "mode", "delimiter"],
     "security.hash": ["input","mode","algorithm","key"],
     "security.jwt.decode": ["token"],
@@ -151,6 +167,57 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           if (!Number.isInteger(indent) || indent < 0 || indent > 8) throw new McpRuntimeError("INVALID_INPUT", "'indent' must be an integer from 0 to 8.");
         }
         result = JSON.stringify(parsed.value, null, indent);
+        break;
+      }
+      case "json.sort-keys": {
+        const parsed = diagnoseJson(stringField(rawInput, "input"));
+        if (!parsed.ok) throw new McpRuntimeError("INVALID_INPUT", "Input is not valid JSON.");
+        result = JSON.stringify(sortJsonKeys(parsed.value), null, 2);
+        break;
+      }
+      case "json.escape": {
+        result = escapeJsonStringContents(stringField(rawInput, "input"));
+        break;
+      }
+      case "json.unescape": {
+        try { result = unescapeJsonStringContents(stringField(rawInput, "input")); }
+        catch { throw new McpRuntimeError("INVALID_INPUT", "Input is not valid escaped JSON string content."); }
+        break;
+      }
+      case "json.find": {
+        const parsed = diagnoseJson(stringField(rawInput, "input"));
+        if (!parsed.ok) throw new McpRuntimeError("INVALID_INPUT", "Input is not valid JSON.");
+        const query = stringField(rawInput, "query", 1000).toLocaleLowerCase("en-US");
+        if (!query) throw new McpRuntimeError("INVALID_INPUT", "'query' must not be empty.");
+        const match = enumField(rawInput, "match", ["keys","values","both"] as const, "both");
+        const matches: { path: string; kind: "key" | "value"; valuePreview: string }[] = [];
+        let truncated = false;
+        const childPath = (path: string, key: string | number) => typeof key === "number" ? `${path}[${key}]` : /^[A-Za-z_$][\w$]*$/.test(key) ? `${path}.${key}` : `${path}[${JSON.stringify(key)}]`;
+        const visit = (value: unknown, path: string, depth: number): void => {
+          if (matches.length >= 1000 || depth > 64) { truncated = true; return; }
+          if (Array.isArray(value)) {
+            for (let index = 0; index < value.length && matches.length < 1000; index++) visit(value[index], childPath(path,index), depth+1);
+            if (value.length && matches.length >= 1000) truncated = true;
+            return;
+          }
+          if (isObject(value)) {
+            for (const [key, child] of Object.entries(value)) {
+              if ((match === "keys" || match === "both") && key.toLocaleLowerCase("en-US").includes(query)) {
+                matches.push({ path: childPath(path,key), kind: "key", valuePreview: key.slice(0,500) });
+                if (matches.length >= 1000) { truncated = true; return; }
+              }
+              visit(child, childPath(path,key), depth+1);
+              if (matches.length >= 1000) { truncated = true; return; }
+            }
+            return;
+          }
+          if (match === "values" || match === "both") {
+            const text = value === null ? "null" : String(value);
+            if (text.toLocaleLowerCase("en-US").includes(query)) matches.push({ path, kind: "value", valuePreview: text.slice(0,500) });
+          }
+        };
+        visit(parsed.value, "$", 0);
+        result = { matches, truncated };
         break;
       }
       case "json.diff": {
@@ -300,6 +367,10 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "json.format": ["input"],
   "json.minify": ["input"],
   "json.diff": ["before", "after"],
+  "json.sort-keys": ["input"],
+  "json.escape": ["input"],
+  "json.unescape": ["input"],
+  "json.find": ["input"],
   "developer.format": ["input"],
   "security.hash": ["input"],
   "security.jwt.decode": ["token"],
@@ -309,7 +380,7 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "datetime.arithmetic": ["input"],
   "datetime.compare": ["left","right"]
 };
-const workflowStringOutputs = new Set(["encoding.transform", "text.transform", "json.format", "json.minify", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
+const workflowStringOutputs = new Set(["encoding.transform", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
 function isWorkflowReference(value: unknown): value is WorkflowReference {
   return isObject(value) && Object.keys(value).length === 1 && typeof value.$ref === "string";
 }
@@ -347,7 +418,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
       throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow references an operation that is not enabled for MCP execution.");
     }
     if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
-    const allowed = new Set(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]);
+    const allowed = new Set(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]);
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
     for (const [field, value] of Object.entries(rawStep.arguments)) {
       if (isWorkflowReference(value)) {
@@ -423,7 +494,7 @@ const mcpHandler = createMcpHandler(() => {
       title: "Execute a GaGet operation",
       description: "Execute one approved, bounded operation. It never executes code, runs shell commands, or makes network requests.",
       inputSchema: z.object({
-        operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
+        operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
         arguments: z.record(z.string(), z.unknown())
       }),
       outputSchema: z.object({
@@ -462,7 +533,7 @@ const mcpHandler = createMcpHandler(() => {
         schemaVersion: z.literal(1),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
-          operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
+          operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
           arguments: z.record(z.string(), z.unknown())
         }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
       }).strict(),

@@ -171,3 +171,13 @@ test("additional MCP capabilities advertise stable schemas and finite limits", (
   const ids = listCapabilities().map(item => item.id);
   for (const id of ["security.hash","security.jwt.decode","generator.sample","data.inspect","datetime.convert","datetime.arithmetic","datetime.compare"]) assert.ok(ids.includes(id), id);
 });
+
+test("JSON sort, escape, unescape, and bounded search operations are available", async () => {
+  assert.equal(await executeOperation("json.sort-keys", { input: '{"z":1,"a":{"y":2,"b":3}}' }), '{\n  "a": {\n    "b": 3,\n    "y": 2\n  },\n  "z": 1\n}');
+  assert.equal(await executeOperation("json.escape", { input: 'a"b\n' }), 'a\\"b\\n');
+  assert.equal(await executeOperation("json.unescape", { input: 'a\\"b\\n' }), 'a"b\n');
+  const found = await executeOperation("json.find", { input: '{"name":"Alice","nested":{"name":"Bob"}}', query: "name", match: "both" });
+  assert.equal(found.matches.length, 2);
+  assert.equal(found.truncated, false);
+  await assert.rejects(executeOperation("json.find", { input: "{}", query: "" }), { code: "INVALID_INPUT" });
+});
