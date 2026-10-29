@@ -4,6 +4,12 @@
 >
 > **Canonical specifications:** This prompt supplements, and does not replace, `AGENTS.md`, `command.md`, `specification/AI_INSTRUCTIONS.md`, and the specifications linked from `specification/mcp/README.md`. If this prompt conflicts with repository-wide safety instructions, follow the repository-wide instructions and record the conflict.
 
+## Mandatory workflow UX decision: one Batch Workbench
+
+Implement exactly one general-purpose user-facing workflow workspace: **Batch Workbench**, shown as a primary sidebar item immediately below **Dev Tools**. Do not build a separate “simple workflow”, pipeline builder, or MCP-specific workflow editor elsewhere in the application.
+
+Treat the workflow engine and pipeline schema as shared capabilities, not as additional menu destinations. Batch Workbench is the canonical web UI; the public MCP & Integrations page demonstrates a curated recipe from the same pipeline model and links to Batch Workbench rather than duplicating its full editor. The MCP adapter may expose only workflows composed entirely of verified server-exposed operations. Reuse canonical operation IDs, schemas, validation, budgets, and result manifests where runtime-compatible, while keeping web/MCP adapters, authorization, transport, and UI state independent. The landing-page demo must either execute through the real MCP adapter/runtime under its explicit demo policy or be clearly marked as a guided example that was not executed.
+
 ## 1. Role and objective
 
 Act as the senior software architect and implementation engineer responsible for delivering GaGet.dev's MCP compatibility initiative to production quality.
