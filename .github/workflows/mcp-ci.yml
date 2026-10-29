@@ -184,23 +184,62 @@ jobs:
         shell: bash
         run: set -o pipefail; npm audit --omit=dev --audit-level=high 2>&1 | tee artifacts/mcp-ci/npm-audit.log
 
-      - name: Verify Docker configuration when present
+      - name: Build and smoke-test the production Docker image
         id: docker
-        if: always()
+        if: always() && steps.install.outcome == 'success'
         shell: bash
         run: |
-          set -uo pipefail
+          set -euo pipefail
           mkdir -p artifacts/mcp-ci
-          if [[ -f Dockerfile ]]; then
-            if ! command -v docker >/dev/null 2>&1; then
-              echo "BLOCKED: Docker CLI is unavailable on this runner." | tee artifacts/mcp-ci/docker.log
-              exit 1
-            fi
-            docker build --tag gaget-mcp-ci:"$GITHUB_RUN_ID" . 2>&1 | tee artifacts/mcp-ci/docker.log
-          else
-            echo "SKIPPED: Dockerfile is not implemented yet. This is not a Docker verification pass; enable this gate when the deployment phase adds a reviewed Dockerfile." | tee artifacts/mcp-ci/docker.log
+          log_file=artifacts/mcp-ci/docker.log
+          container_name="gaget-mcp-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test_token="mcp-ci-only-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            docker logs "$container_name" >> "$log_file" 2>&1 || true
+            docker rm -f "$container_name" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          if [[ ! -f Dockerfile ]]; then
+            echo "::error::Dockerfile is required by the MCP release gate."
+            echo "BLOCKED: Dockerfile is missing; Docker is not verified." | tee "$log_file"
+            exit 1
           fi
-
+          docker build --pull --tag "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" . 2>&1 | tee "$log_file"
+          docker run --detach --name "$container_name" \
+            --memory=1g --cpus=2 --pids-limit=256 \
+            --publish 127.0.0.1:3000:3000 \
+            --env NODE_ENV=production --env PORT=3000 --env HOSTNAME=0.0.0.0 \
+            --env MCP_AUTH_TOKEN="$test_token" \
+            "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$log_file"
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:3000/ >/dev/null; then ready=1; break; fi
+            sleep 2
+          done
+          if [[ "$ready" != 1 ]]; then
+            echo "::error::Container did not become ready within 120 seconds."
+            exit 1
+          fi
+          uid="$(docker exec "$container_name" node -p 'process.getuid()')"
+          if [[ "$uid" == "0" ]]; then
+            echo "::error::Container must not run as root."
+            exit 1
+          fi
+          unauth_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+            http://127.0.0.1:3000/api/mcp)"
+          if [[ "$unauth_status" != "401" ]]; then
+            echo "::error::Expected unauthenticated MCP requests to return 401, got $unauth_status."
+            exit 1
+          fi
+          curl --silent --show-error --fail \
+            --header "Authorization: Bearer $test_token" \
+            --header 'Content-Type: application/json' \
+            --data '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            http://127.0.0.1:3000/api/mcp > artifacts/mcp-ci/docker-mcp-tools.json
+          node -e 'const r=require("./artifacts/mcp-ci/docker-mcp-tools.json"); if(!Array.isArray(r.result?.tools)||r.result.tools.length<2) process.exit(1); console.log("Authenticated MCP discovery succeeded with "+r.result.tools.length+" tools.")' | tee -a "$log_file"
+          echo "Docker build, startup, non-root, auth enforcement, and MCP discovery smoke checks passed." | tee -a "$log_file"
       - name: Generate verification summary
         if: always()
         shell: bash
