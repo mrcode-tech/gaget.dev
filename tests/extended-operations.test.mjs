@@ -283,3 +283,14 @@ test("GZIP metadata flags truncated headers and reserved flag bits without trust
  const extra=JSON.parse(inspectFileMetadata(Uint8Array.from([0x1f,0x8b,8,4,0,0,0,0,0,3,0xff])));assert.match(extra.notes.join(" "),/extra-field length is truncated/i);
  const reserved=JSON.parse(inspectFileMetadata(Uint8Array.from([0x1f,0x8b,8,0xe0,0,0,0,0,0,3])));assert.match(reserved.notes.join(" "),/Reserved GZIP flag bits/i);
 });
+
+test("raw DEFLATE round-trips when native compression streams support it",async()=>{
+ if(typeof CompressionStream==="undefined"||typeof DecompressionStream==="undefined")return;
+ const bytes=Uint8Array.from([0,255,128,0,1,13,10,254,42]);
+ let supported=true;
+ try{new CompressionStream("deflate-raw");new DecompressionStream("deflate-raw");}catch{supported=false;}
+ if(!supported){await assert.rejects(()=>compressBytes(bytes,"deflate-raw","compress"),/Raw DEFLATE is not supported/i);return;}
+ const packed=await compressBytes(bytes,"deflate-raw","compress");
+ const unpacked=await compressBytes(packed,"deflate-raw","decompress");
+ assert.deepEqual(Array.from(unpacked),Array.from(bytes));
+});

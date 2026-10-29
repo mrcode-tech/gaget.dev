@@ -2,13 +2,13 @@
 
 ## Compression & Decompression
 
-The `/data/binary-math` workbench implements browser-native gzip and zlib-wrapped DEFLATE compression/decompression. It limits input to 2 MB and resulting output to 8 MB. Raw DEFLATE and archive formats are not exposed. A wrapper-signature detector distinguishes gzip, likely zlib-wrapped DEFLATE and unknown bytes; it is only a signature hint.
+The `/data/binary-math` workbench implements browser-native gzip and zlib-wrapped DEFLATE compression/decompression, plus raw DEFLATE when the browser exposes it. Raw DEFLATE is feature-detected at runtime and reports a clear unsupported-format error when unavailable. It limits input to 2 MB and resulting output to 8 MB. Archive formats are not exposed. A wrapper-signature detector distinguishes gzip, likely zlib-wrapped DEFLATE and unknown bytes; it is only a signature hint.
 
 | ID | Operation | Contract |
 |---|---|---|
 | compress.gzip | gzip compress/decompress | Known fixtures, header/checksum validation and size reporting |
 | compress.zlib | zlib compress/decompress | Distinguish wrapper from raw DEFLATE |
-| compress.deflate | Supported DEFLATE mode | Raw vs wrapped format explicit |
+| compress.deflate | zlib-wrapped or raw DEFLATE mode | Implemented with explicit wrapper selection; raw mode depends on native browser support and is never inferred from a signature |
 | compress.detect | Detect supported format | Implemented for gzip magic and zlib header checksum pattern; reports unknown rather than claiming raw DEFLATE; signature match is not full stream validation |
 | compress.ratio | Size and compression ratio | Formula and zero-byte behavior defined |
 | compress.archive | Optional archive listing/extraction | Deferred until output size, expansion ratio, entry count, nesting and path-traversal protections |
