@@ -204,7 +204,7 @@ it("does not render the redundant browser and calendar disclaimer", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 390 });
     render(<I18nProvider locale="en"><DateTimeEditor /></I18nProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Features" }));
-    fireEvent.click(screen.getByRole("button", { name: "AI / MCP help" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "AI / MCP help" }).at(-1)!);
     expect(screen.getByRole("dialog", { name: "AI / MCP help" })).toBeTruthy();
     expect(screen.getByText(/elapsed UTC time/i)).toBeTruthy();
   });

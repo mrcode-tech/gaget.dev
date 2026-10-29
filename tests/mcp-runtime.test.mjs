@@ -195,15 +195,7 @@ test("request body streams that stall are cancelled after the read deadline", as
   const response = await handleMcpPost(request, token);
   assert.equal(response.status, 408);
 });
-test("per-instance request rate limiting rejects excessive authenticated calls", async () => {
-  let response;
-  for (let i = 0; i < MCP_MAX_REQUESTS_PER_MINUTE + 100; i++) {
-    response = await post({ jsonrpc: "2.0", id: 1000 + i, method: "tools/list" });
-    if (response.status === 429) break;
-  }
-  assert.equal(response.status, 429);
-  assert.ok(Number(response.headers.get("retry-after")) > 0);
-});
+
 
 test("MCP text operations do not expose regex execution until it is safely bounded", async () => {
   await assert.rejects(executeOperation("text.transform", { operation: "regex-test", input: "abc", options: { pattern: "(a+)+" } }), { code: "INVALID_INPUT" });
@@ -218,4 +210,14 @@ test("workflow tool returns schema-conforming structured errors for invalid refe
   assert.equal(payload.result.isError, true);
   assert.equal(payload.result.structuredContent.success, false);
   assert.equal(payload.result.structuredContent.error.code, "INVALID_INPUT");
+});
+
+test("per-instance request rate limiting rejects excessive authenticated calls", async () => {
+  let response;
+  for (let i = 0; i < MCP_MAX_REQUESTS_PER_MINUTE + 100; i++) {
+    response = await post({ jsonrpc: "2.0", id: 1000 + i, method: "tools/list" });
+    if (response.status === 429) break;
+  }
+  assert.equal(response.status, 429);
+  assert.ok(Number(response.headers.get("retry-after")) > 0);
 });
