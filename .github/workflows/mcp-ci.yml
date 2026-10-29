@@ -238,6 +238,7 @@ jobs:
           curl --silent --show-error --fail \
             --header "Authorization: Bearer $test_token" \
             --header 'Content-Type: application/json' \
+            --header 'Accept: application/json, text/event-stream' \
             --data '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
             http://127.0.0.1:3000/api/mcp > artifacts/mcp-ci/docker-mcp-tools.json
           node -e 'const r=require("./artifacts/mcp-ci/docker-mcp-tools.json"); if(!Array.isArray(r.result?.tools)||r.result.tools.length<2) process.exit(1); console.log("Authenticated MCP discovery succeeded with "+r.result.tools.length+" tools.")' | tee -a "$log_file"

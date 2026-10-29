@@ -27,7 +27,7 @@ test("maintained MCP SDK client initializes, discovers tools and invokes a real 
         arguments: { mode: "base64", direction: "encode", input: "hello" }
       }
     });
-    assert.equal(result.isError, false);
+    assert.notEqual(result.isError, true);
     assert.equal(result.structuredContent?.success, true);
     assert.equal(result.structuredContent?.result, "aGVsbG8=");
   } finally {

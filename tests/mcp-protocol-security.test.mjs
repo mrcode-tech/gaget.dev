@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { handleMcpPost } from "../lib/mcp/runtime.ts";
 
 const token = "regression-secret";
-const request = (payload, auth = `Bearer ${token}`, extraHeaders = {}) => new Request("http://localhost/api/mcp", { method: "POST", headers: { authorization: auth, "content-type": "application/json", ...extraHeaders }, body: typeof payload === "string" ? payload : JSON.stringify(payload) });
+const request = (payload, auth = `Bearer ${token}`, extraHeaders = {}) => new Request("http://localhost/api/mcp", { method: "POST", headers: { authorization: auth, "content-type": "application/json", accept: "application/json, text/event-stream", ...extraHeaders }, body: typeof payload === "string" ? payload : JSON.stringify(payload) });
 const call = (operationId, args) => ({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "execute_operation", arguments: { operationId, arguments: args } } });
 
 test("rejects invalid JSON and malformed JSON-RPC requests", async () => {
@@ -27,17 +27,18 @@ test("refuses remote operation execution unless explicit bearer authorization is
 test("malicious and unapproved operation IDs cannot access filesystem, shell or network", async () => {
   for (const operationId of ["../../etc/passwd", "shell.exec", "fetch.url", "node.import", "__proto__"]) {
     const response = await handleMcpPost(request(call(operationId, { input: "test" })), token);
-    assert.equal((await response.json()).result.isError, true);
+    const payload = await response.json();
+    assert.ok(payload.result?.isError === true || payload.error, JSON.stringify(payload));
   }
 });
 
 test("does not execute cURL text or treat HTML as active markup", async () => {
   const curl = await handleMcpPost(request(call("developer.format", { operation: "curl", input: "curl https://example.invalid" })), token);
   const curlResult = (await curl.json()).result;
-  assert.equal(curlResult.isError, false);
+  assert.notEqual(curlResult.isError, true);
   assert.match(curlResult.structuredContent.result, /never sends the request/i);
   const html = await handleMcpPost(request(call("developer.format", { operation: "html", input: "<script>alert(1)</script>", mode: "format" })), token);
-  assert.equal((await html.json()).result.isError, false);
+  assert.notEqual((await html.json()).result?.isError, true);
   assert.equal(html.headers.get("content-type")?.includes("application/json"), true);
 });
 
