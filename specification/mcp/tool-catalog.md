@@ -22,6 +22,7 @@ The MCP adapter exposes three protocol tools: `list_capabilities`, `execute_oper
 | Operation ID | Scope | Key limits / safety notes |
 |---|---|---|
 | `encoding.transform` | URL, Base64/Base64url, Base32, hex/binary, HTML entities, Unicode escapes, quoted-printable, Base58, Base85/Z85 | Up to 1,000,000 input characters; encoding is not encryption |
+| `encoding.charset` | Convert text to/from hex bytes using UTF-8, UTF-16LE, UTF-16BE, or Windows-1252 | Up to 1,000,000 input characters; encoding returns hex and decoding accepts hex; invalid byte sequences are rejected |
 | `text.transform` | Allowlisted text transforms | Up to 200,000 characters; regex execution is deliberately not exposed through MCP pending safe execution limits |
 | `json.validate`, `json.format`, `json.minify`, `json.diff`, `json.sort-keys`, `json.escape`, `json.unescape`, `json.find` | JSON diagnostics, format/minify, structural comparison | Up to 200,000 characters per document |
 | `image.inspect`, `image.transform` | Inspect and transform explicitly supplied raster image bytes | Input/output up to 600,000 bytes; 16M input-pixel cap; 4096px output dimension cap; 5-second image-processing deadline; no persistence |
@@ -44,7 +45,7 @@ Every item below is proposed for audit, not approved automatically. Phase labels
 ### P1 — Developer text/data
 | Existing tool / route | Candidate operations | Requirements |
 |---|---|---|
-| Encoding & Decoding — /encoding/url; /encoding/base64 redirects here | URL component, Base64/Base64url, Base32, hex/binary, HTML entities, Unicode escapes, quoted-printable, Base58, ASCII85/Z85, selected charset conversion | Bounded text/bytes; preserve byte/text semantics and limits; redirect is not a second tool. |
+| Encoding & Decoding — /encoding/url; /encoding/base64 redirects here | URL component, Base64/Base64url, Base32, hex/binary, HTML entities, Unicode escapes, quoted-printable, Base58, ASCII85/Z85, selected charset conversion via `encoding.charset` | Bounded text/bytes; preserve byte/text semantics and limits; charset encoding returns hex bytes, decoding consumes hex bytes; redirect is not a second tool. |
 | JWT Decoder — /security/jwt-decoder | Decode header/claims; interpret exp/iat/nbf | Decoding is not signature verification or trust validation. |
 | Data Generator — /generators/sample-data; /generators/uuid redirects here | Bounded synthetic JSON, strings, integers, timestamps, UUID batches | Count/length caps; do not claim cryptographic randomness/password strength unless verified. |
 | Hash & Checksum — /security/hash | SHA-256/384/512, HMAC-SHA-2, CRC32/IEEE, CRC-16/CCITT-FALSE, Adler-32 | Verify server parity/secret handling; distinguish digest, MAC and checksum. |
