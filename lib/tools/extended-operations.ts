@@ -701,7 +701,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       metadata.sectionHeaderCount=read16(elfClass===1?48:60);
       notes.push("ELF identification/header fields only; program segments and sections are not loaded or executed.");
     }else notes.push("The ELF identification is truncated or uses an unsupported class/byte order.");
-  } else if(ascii(0,16)==="SQLite format 3\\u0000") {
+  } else if(ascii(0,16)==="SQLite format 3\u0000") {
     metadata.format="SQLite database header";
     if(bytes.length<100)notes.push("The SQLite database header is truncated before its full 100-byte header is available.");
     else {
@@ -722,7 +722,7 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       if(pageCount>0&&pageCount*pageSize>bytes.length)notes.push("The declared database page count exceeds the supplied byte length; the file may be truncated.");
     }
     notes.push("SQLite header fields only; database pages and schema are not parsed, and no query is executed.");
-  } else if(ascii(0,4)==="\\u0000asm") {
+  } else if(ascii(0,4)==="\u0000asm") {
     metadata.format="WebAssembly module header";
     if(bytes.length<8)notes.push("The WebAssembly version field is truncated.");
     else {

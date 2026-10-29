@@ -296,7 +296,7 @@ test("raw DEFLATE round-trips when native compression streams support it",async(
 });
 
 test("file metadata inspector reads bounded SQLite and WebAssembly headers without parsing or executing payloads",()=>{
- const sqlite=new Uint8Array(100);sqlite.set(new TextEncoder().encode("SQLite format 3\\u0000"));sqlite[16]=0x10;sqlite[17]=0;sqlite[18]=2;sqlite[19]=2;new DataView(sqlite.buffer).setUint32(28,1,false);new DataView(sqlite.buffer).setUint32(44,4,false);new DataView(sqlite.buffer).setUint32(56,1,false);
+ const sqlite=new Uint8Array(100);sqlite.set(new TextEncoder().encode("SQLite format 3\u0000"));sqlite[16]=0x10;sqlite[17]=0;sqlite[18]=2;sqlite[19]=2;new DataView(sqlite.buffer).setUint32(28,1,false);new DataView(sqlite.buffer).setUint32(44,4,false);new DataView(sqlite.buffer).setUint32(56,1,false);
  const db=JSON.parse(inspectFileMetadata(sqlite));assert.equal(db.metadata.format,"SQLite database header");assert.equal(db.metadata.pageSizeBytes,4096);assert.equal(db.metadata.writeVersion,"WAL");assert.equal(db.metadata.databasePageCount,1);assert.equal(db.metadata.textEncoding,"UTF-8");assert.match(db.notes.join(" "),/not parsed/i);
  const truncated=JSON.parse(inspectFileMetadata(sqlite.slice(0,20)));assert.match(truncated.notes.join(" "),/truncated/i);
  const wasm=JSON.parse(inspectFileMetadata(Uint8Array.from([0,0x61,0x73,0x6d,1,0,0,0])));assert.equal(wasm.metadata.format,"WebAssembly module header");assert.equal(wasm.metadata.version,1);assert.match(wasm.notes.join(" "),/not validated or executed/i);
