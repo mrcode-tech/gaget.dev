@@ -14,7 +14,7 @@ describe("MCP landing page", () => {
   });
 
   it("shows a sample output only when requested and links to the canonical workbench", () => {
-    render(<I18nProvider locale="en"><McpLandingPage /></I18nProvider>);
+    render(<I18nProvider locale="en"><McpLandingPage capabilities={[{ id: "json.validate", version: "1.0.0", description: "Validate JSON syntax.", limits: { maxInputCharacters: 200000 } }]} /></I18nProvider>);
     expect(screen.getByRole("link", { name: /Open Batch Workbench/ }).getAttribute("href")).toBe("/workflow/pipeline");
     expect(screen.queryByText(/"ok": true/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Show sample output" }));
@@ -23,10 +23,10 @@ describe("MCP landing page", () => {
   });
 
   it("provides RTL copy for Persian and Arabic without changing operation IDs", () => {
-    const { rerender } = render(<I18nProvider locale="fa"><McpLandingPage /></I18nProvider>);
+    const { rerender } = render(<I18nProvider locale="fa"><McpLandingPage capabilities={[{ id: "json.validate", version: "1.0.0", description: "Validate JSON syntax.", limits: { maxInputCharacters: 200000 } }]} /></I18nProvider>);
     expect(screen.getByRole("heading", { name: /ابزارهای GaGet.dev/ })).toBeTruthy();
     expect(screen.getByText("json.validate")).toBeTruthy();
-    rerender(<I18nProvider locale="ar"><McpLandingPage /></I18nProvider>);
+    rerender(<I18nProvider locale="ar"><McpLandingPage capabilities={[{ id: "json.validate", version: "1.0.0", description: "Validate JSON syntax.", limits: { maxInputCharacters: 200000 } }]} /></I18nProvider>);
     expect(screen.getByRole("heading", { name: /أدوات GaGet.dev/ })).toBeTruthy();
   });
   it("renders capability IDs and limits from the server registry props", () => {
