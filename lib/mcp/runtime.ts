@@ -726,7 +726,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         if (action !== "resize" && action !== "crop" && (width !== undefined || height !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Width and height are valid only for resize or crop.");
         if (action !== "crop" && (left !== undefined || top !== undefined || leftRatio !== undefined || topRatio !== undefined || widthRatio !== undefined || heightRatio !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Crop coordinates are valid only for crop.");
         if (action !== "rotate" && degrees !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Degrees are valid only for rotate.");
-        if (action !== "rotate" && background !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Background is valid only for rotate.");
+
         if (action !== "convert" && (format !== undefined || quality !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Format and quality are valid only for convert.");
         if (quality !== undefined && format === undefined) throw new McpRuntimeError("INVALID_INPUT", "Quality requires an explicit output format.");
         if (action === "blur" && sigma === undefined) throw new McpRuntimeError("INVALID_INPUT", "Blur requires a sigma value from 0.3 to 100.");
