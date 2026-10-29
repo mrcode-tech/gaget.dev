@@ -289,6 +289,33 @@ test("workflow tool returns schema-conforming structured errors for invalid refe
   assert.equal(payload.result.structuredContent.error.code, "INVALID_INPUT");
 });
 
+test("audio.trim extracts frame-aligned PCM WAV segments and chains into audio analysis", async () => {
+  const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 80;
+  const pcm = Buffer.alloc(frames * 2);
+  for (let i = 0; i < frames; i++) pcm.writeInt16LE(i * 200, i * 2);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const trimmed = await executeOperation("audio.trim", { inputBase64: wav.toString("base64"), startSeconds: 0.002, endSeconds: 0.006 });
+  assert.equal(trimmed.format, "wav");
+  assert.equal(trimmed.frames, 32);
+  assert.equal(trimmed.durationSeconds, 0.004);
+  assert.equal(trimmed.bytes, 44 + 32 * 2);
+  const inspected = await executeOperation("audio.inspect", { inputBase64: trimmed.dataBase64 });
+  assert.equal(inspected.frames, 32);
+  await assert.rejects(executeOperation("audio.trim", { inputBase64: wav.toString("base64"), startSeconds: 0.006, endSeconds: 0.002 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("audio.trim", { inputBase64: wav.toString("base64"), startSeconds: 0, endSeconds: 1 }), { code: "INVALID_INPUT" });
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "trim", operationId: "audio.trim", arguments: { inputBase64: wav.toString("base64"), startSeconds: 0, endSeconds: 0.005 } },
+    { id: "analyze", operationId: "audio.analyze", arguments: { inputBase64: { $ref: "trim.result.dataBase64" } } }
+  ], output: { $ref: "analyze.result" } });
+  assert.equal(workflow.success, true);
+  assert.equal(workflow.result.sampleCount, 40);
+});
+
 test("audio.analyze reports normalized peak, RMS, DC offset, and clipping per channel", async () => {
   const sampleRate = 8000, channels = 2, bitDepth = 16;
   const pcm = Buffer.alloc(8);

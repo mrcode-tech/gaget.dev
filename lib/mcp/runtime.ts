@@ -128,6 +128,38 @@ function analyzePcmWav(bytes: Buffer): Record<string, unknown> {
   return { format: metadata.format, sampleRate: metadata.sampleRate, channels, bitDepth, durationSeconds: metadata.durationSeconds, sampleCount, peak: Number(peak.toFixed(8)), peakDbfs: peak === 0 ? null : Number((20 * Math.log10(peak)).toFixed(6)), rms: Number(Math.sqrt(totalSquares / sampleCount).toFixed(8)), dcOffset: Number((totalSum / sampleCount).toFixed(8)), clippedSamples: clipped.reduce((sum, value) => sum + value, 0), channelsSummary };
 }
 
+function trimPcmWav(bytes: Buffer, startSeconds: number, endSeconds: number): Record<string, unknown> {
+  const metadata = inspectPcmWav(bytes);
+  const durationSeconds = metadata.durationSeconds as number;
+  const sampleRate = metadata.sampleRate as number;
+  const frames = metadata.frames as number;
+  if (!Number.isFinite(startSeconds) || startSeconds < 0 || startSeconds >= durationSeconds) throw new McpRuntimeError("INVALID_INPUT", "'startSeconds' must be within the audio duration.");
+  if (!Number.isFinite(endSeconds) || endSeconds <= startSeconds || endSeconds > durationSeconds) throw new McpRuntimeError("INVALID_INPUT", "'endSeconds' must be greater than startSeconds and no greater than the audio duration.");
+  let offset = 12, formatCode = 0, channels = 0, bitDepth = 0, dataOffset = -1, dataBytes = 0;
+  while (offset + 8 <= bytes.byteLength) {
+    const id = bytes.toString("ascii", offset, offset + 4), size = bytes.readUInt32LE(offset + 4), start = offset + 8, end = start + size;
+    if (end > bytes.byteLength || end < start) throw new McpRuntimeError("INVALID_INPUT", "WAV chunk length exceeds the container boundary.");
+    if (id === "fmt ") { formatCode = bytes.readUInt16LE(start); channels = bytes.readUInt16LE(start + 2); bitDepth = bytes.readUInt16LE(start + 14); }
+    else if (id === "data" && dataOffset < 0) { dataOffset = start; dataBytes = size; }
+    offset = end + (size % 2);
+  }
+  if (dataOffset < 0 || channels < 1 || dataBytes === 0) throw new McpRuntimeError("INVALID_INPUT", "WAV audio data is empty or incomplete.");
+  const bytesPerFrame = channels * bitDepth / 8;
+  const firstFrame = Math.floor(startSeconds * sampleRate);
+  const lastFrame = Math.min(frames, Math.ceil(endSeconds * sampleRate));
+  if (lastFrame <= firstFrame) throw new McpRuntimeError("INVALID_INPUT", "The selected trim range is shorter than one audio frame.");
+  const frameStart = Math.min(dataBytes, firstFrame * bytesPerFrame);
+  const frameEnd = Math.min(dataBytes, lastFrame * bytesPerFrame);
+  const audioData = bytes.subarray(dataOffset + frameStart, dataOffset + frameEnd);
+  const output = Buffer.alloc(44 + audioData.byteLength);
+  output.write("RIFF", 0, "ascii"); output.writeUInt32LE(output.byteLength - 8, 4); output.write("WAVE", 8, "ascii");
+  output.write("fmt ", 12, "ascii"); output.writeUInt32LE(16, 16); output.writeUInt16LE(formatCode, 20); output.writeUInt16LE(channels, 22);
+  output.writeUInt32LE(sampleRate, 24); output.writeUInt32LE(sampleRate * bytesPerFrame, 28); output.writeUInt16LE(bytesPerFrame, 32); output.writeUInt16LE(bitDepth, 34);
+  output.write("data", 36, "ascii"); output.writeUInt32LE(audioData.byteLength, 40); audioData.copy(output, 44);
+  if (output.byteLength > MCP_MAX_IMAGE_OUTPUT_BYTES) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Trimmed audio exceeds the 600,000-byte output limit.");
+  return { format: "wav", startSeconds, endSeconds, durationSeconds: (lastFrame - firstFrame) / sampleRate, sampleRate, channels, bitDepth, frames: lastFrame - firstFrame, bytes: output.byteLength, dataBase64: output.toString("base64") };
+}
+
 const stringField = (input: JsonObject, key: string, max = 200_000): string => {
   const value = input[key];
   if (typeof value !== "string") throw new McpRuntimeError("INVALID_INPUT", `'${key}' must be a string.`);
@@ -162,6 +194,7 @@ const schemas = {
   "image.print-size": { type: "object", properties: { width: { type: "number", exclusiveMinimum: 0, maximum: 100000 }, height: { type: "number", exclusiveMinimum: 0, maximum: 100000 }, dpi: { type: "number", minimum: 1, maximum: 9600 }, unit: { type: "string", enum: ["in","cm","mm"] } }, required: ["width","height","dpi"], additionalProperties: false },
   "audio.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "audio.analyze": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
+  "audio.trim": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, startSeconds: { type: "number", minimum: 0 }, endSeconds: { type: "number", exclusiveMinimum: 0 } }, required: ["inputBase64","startSeconds","endSeconds"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "image.sample-pixel": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, x: { type: "integer", minimum: 0, maximum: 16000000 }, y: { type: "integer", minimum: 0, maximum: 16000000 } }, required: ["inputBase64","x","y"], additionalProperties: false },
   "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust","text-overlay"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, leftRatio: { type: "number", minimum: 0, maximum: 1 }, topRatio: { type: "number", minimum: 0, maximum: 1 }, widthRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, heightRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, degrees: { type: "number", minimum: -180, maximum: 180 }, background: { type: "string", pattern: "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$" }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 }, fit: { type: "string", enum: ["contain","cover","fill","inside","outside"] }, position: { type: "string", enum: ["centre","north","northeast","east","southeast","south","southwest","west","northwest"] }, text: { type: "string", maxLength: 500 }, x: { type: "integer", minimum: 0, maximum: 4096 }, y: { type: "integer", minimum: 0, maximum: 4096 }, fontSize: { type: "integer", minimum: 1, maximum: 256 }, color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" } }, required: ["inputBase64","action"], additionalProperties: false },
@@ -189,6 +222,7 @@ const capabilityList = [
   { id: "json.find", version: "1.0.0", description: "Find JSON keys and/or values with bounded depth and result count.", limits: { maxInputCharacters: 200000, maxMatches: 1000, maxDepth: 64, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "audio.inspect", version: "1.0.0", description: "Inspect explicitly supplied WAV audio bytes without storing them. Supports uncompressed PCM and IEEE float WAV metadata only; it does not decode other containers or codecs.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxChannels: 8, minSampleRate: 8000, maxSampleRate: 192000, maxOutputBytes: 4096 } },
   { id: "audio.analyze", version: "1.0.0", description: "Analyze sample peak, RMS level, DC offset, and full-scale clipping in explicitly supplied PCM or IEEE-float WAV data. Supports uncompressed WAV only; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxChannels: 8, maxSampleRate: 192000, maxOutputBytes: 8192 } },
+  { id: "audio.trim", version: "1.0.0", description: "Trim an explicitly supplied uncompressed PCM or IEEE-float WAV by start/end seconds. The output is a normalized WAV container with audio frames preserved byte-for-byte; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxOutputBytes: MCP_MAX_IMAGE_OUTPUT_BYTES, maxChannels: 8, maxSampleRate: 192000 } },
   { id: "image.print-size", version: "1.0.0", description: "Calculate physical print dimensions from pixel width/height and DPI. Supports inch, centimeter, and millimeter output; it does not modify image metadata.", limits: { maxPixelDimension: 100000, minDpi: 1, maxDpi: 9600, maxOutputBytes: 1024 } },
   { id: "image.sample-pixel", version: "1.0.0", description: "Sample one pixel from an explicitly supplied bounded, single-frame raster image. Coordinates are zero-based pixels; returns RGB hex and RGBA channels. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: 1024, timeoutMs: 5000 } },
   { id: "image.inspect", version: "1.0.0", description: "Inspect dimensions, aspect ratio, pixel count, transparency, orientation, and basic metadata of a bounded supported raster image supplied explicitly as base64. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: MCP_MAX_OUTPUT_BYTES, timeoutMs: 5000 } },
@@ -219,6 +253,7 @@ const outputSchemas = {
   "image.sample-pixel": { type: "object", properties: { x: { type: "integer" }, y: { type: "integer" }, hex: { type: "string", pattern: "^#[0-9A-F]{6}$" }, rgba: { type: "object", properties: { r: { type: "integer" }, g: { type: "integer" }, b: { type: "integer" }, a: { type: "integer" } }, required: ["r","g","b","a"], additionalProperties: false } }, required: ["x","y","hex","rgba"], additionalProperties: false },
   "audio.inspect": { type: "object", properties: { format: { type: "string", const: "wav" }, encoding: { type: "string", enum: ["pcm","ieee-float"] }, bytes: { type: "integer" }, durationSeconds: { type: "number" }, sampleRate: { type: "integer" }, channels: { type: "integer" }, bitDepth: { type: "integer" }, frames: { type: "integer" }, dataBytes: { type: "integer" }, hasMetadataChunks: { type: "boolean" }, chunkIds: { type: "array", items: { type: "string" } } }, required: ["format","encoding","bytes","durationSeconds","sampleRate","channels","bitDepth","frames","dataBytes","hasMetadataChunks","chunkIds"], additionalProperties: false },
   "audio.analyze": { type: "object", properties: { format: { type: "string", const: "wav" }, sampleRate: { type: "integer" }, channels: { type: "integer" }, bitDepth: { type: "integer" }, durationSeconds: { type: "number" }, sampleCount: { type: "integer" }, peak: { type: "number" }, peakDbfs: { type: ["number","null"] }, rms: { type: "number" }, dcOffset: { type: "number" }, clippedSamples: { type: "integer" }, channelsSummary: { type: "array", items: { type: "object", properties: { channel: { type: "integer" }, peak: { type: "number" }, peakDbfs: { type: ["number","null"] }, rms: { type: "number" }, dcOffset: { type: "number" }, clippedSamples: { type: "integer" } }, required: ["channel","peak","peakDbfs","rms","dcOffset","clippedSamples"], additionalProperties: false } } }, required: ["format","sampleRate","channels","bitDepth","durationSeconds","sampleCount","peak","peakDbfs","rms","dcOffset","clippedSamples","channelsSummary"], additionalProperties: false },
+  "audio.trim": { type: "object", properties: { format: { type: "string", const: "wav" }, startSeconds: { type: "number" }, endSeconds: { type: "number" }, durationSeconds: { type: "number" }, sampleRate: { type: "integer" }, channels: { type: "integer" }, bitDepth: { type: "integer" }, frames: { type: "integer" }, bytes: { type: "integer" }, dataBase64: { type: "string", maxLength: 800000 } }, required: ["format","startSeconds","endSeconds","durationSeconds","sampleRate","channels","bitDepth","frames","bytes","dataBase64"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, aspectRatio: { type: "number" }, pixelCount: { type: "integer" }, channels: { type: "integer" }, hasAlpha: { type: "boolean" }, orientation: { type: ["integer","null"] }, bytes: { type: "integer" }, animated: { type: "boolean" }, dominantColor: { type: "string", pattern: "^#[0-9A-F]{6}$" } }, required: ["format","width","height","aspectRatio","pixelCount","channels","hasAlpha","orientation","bytes","animated","dominantColor"], additionalProperties: false },
   "image.transform": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, bytes: { type: "integer" }, dataBase64: { type: "string", maxLength: 800000 } }, required: ["format","width","height","bytes","dataBase64"], additionalProperties: false },
   "developer.format": { type: "string" },
@@ -422,6 +457,15 @@ const capabilityRuntimeMetadata = {
   "audio.analyze": {
     "inputTypes": ["audio/wav-base64"],
     "outputTypes": ["json", "audio-analysis"],
+    "executionModes": ["server", "mcp"],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "audio.trim": {
+    "inputTypes": ["audio/wav-base64", "parameters"],
+    "outputTypes": ["audio/wav-base64", "audio-metadata"],
     "executionModes": ["server", "mcp"],
     "availability": "available",
     "mcpExposure": "exposed",
@@ -635,6 +679,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.find": ["input","query","match"],
     "audio.inspect": ["inputBase64"],
     "audio.analyze": ["inputBase64"],
+    "audio.trim": ["inputBase64","startSeconds","endSeconds"],
     "image.print-size": ["width","height","dpi","unit"],
     "image.inspect": ["inputBase64"],
     "image.sample-pixel": ["inputBase64","x","y"],
@@ -760,6 +805,16 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const after = stringField(rawInput, "after");
         if (!diagnoseJson(before).ok || !diagnoseJson(after).ok) throw new McpRuntimeError("INVALID_INPUT", "Both inputs must be valid JSON.");
         result = compareJsonDocuments(before, after);
+        break;
+      }
+      case "audio.trim": {
+        const inputBase64 = stringField(rawInput, "inputBase64", 800_000);
+        if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(inputBase64) || inputBase64.length === 0) throw new McpRuntimeError("INVALID_INPUT", "'inputBase64' must be valid standard Base64.");
+        const bytes = Buffer.from(inputBase64, "base64");
+        if (bytes.byteLength === 0 || bytes.byteLength > MCP_MAX_IMAGE_INPUT_BYTES || bytes.toString("base64") !== inputBase64) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Audio input must be at most 600,000 bytes.");
+        const startSeconds = rawInput.startSeconds, endSeconds = rawInput.endSeconds;
+        if (typeof startSeconds !== "number" || !Number.isFinite(startSeconds) || typeof endSeconds !== "number" || !Number.isFinite(endSeconds)) throw new McpRuntimeError("INVALID_INPUT", "Trim startSeconds and endSeconds must be finite numbers.");
+        result = trimPcmWav(bytes, startSeconds, endSeconds);
         break;
       }
       case "audio.analyze": {
@@ -1116,12 +1171,13 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "datetime.arithmetic": ["input"],
   "datetime.compare": ["left","right"],
   "audio.analyze": ["inputBase64"],
+  "audio.trim": ["inputBase64"],
   "image.inspect": ["inputBase64"],
   "image.sample-pixel": ["inputBase64"],
   "image.transform": ["inputBase64"]
 };
 const workflowStringOutputs = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
-const workflowStructuredOutputs = new Set(["image.print-size", "image.inspect", "image.sample-pixel", "audio.analyze", "json.validate", "json.diff", "json.find", "security.jwt.decode"]);
+const workflowStructuredOutputs = new Set(["image.print-size", "image.inspect", "image.sample-pixel", "audio.analyze", "audio.trim", "json.validate", "json.diff", "json.find", "security.jwt.decode"]);
 function isWorkflowReference(value: unknown): value is WorkflowReference {
   return isObject(value) && Object.keys(value).length === 1 && typeof value.$ref === "string";
 }
@@ -1159,7 +1215,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
       throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow references an operation that is not enabled for MCP execution.");
     }
     if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
-    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.analyze", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]);
+    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.analyze", "audio.trim", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]);
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
     for (const [field, value] of Object.entries(rawStep.arguments)) {
       if (isWorkflowReference(value)) {
@@ -1167,7 +1223,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
         if (!match || !seen.has(match[1])) throw new McpRuntimeError("INVALID_INPUT", `Workflow reference '${value.$ref}' must point to a previous step result.`);
         const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === match[1]) as JsonObject).operationId as string;
         if (match[2]) {
-          if (sourceOperation !== "image.transform" || match[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Only image.transform dataBase64 may be referenced as an object field.");
+          if (!["image.transform", "audio.trim"].includes(sourceOperation) || match[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Only image.transform dataBase64 may be referenced as an object field.");
         } else if (!workflowStringOutputs.has(sourceOperation)) {
           throw new McpRuntimeError("INVALID_INPUT", "Workflow arguments may reference only text results or the supported image data field.");
         }
@@ -1186,7 +1242,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
     if (!outputMatch || !seen.has(outputMatch[1])) throw new McpRuntimeError("INVALID_INPUT", "Workflow output must reference a declared step result.");
     const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === outputMatch[1]) as JsonObject).operationId as string;
     if (outputMatch[2]) {
-      if (sourceOperation !== "image.transform" || outputMatch[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Workflow output may select only image.transform dataBase64.");
+      if (!["image.transform", "audio.trim"].includes(sourceOperation) || outputMatch[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Workflow output may select only image.transform dataBase64.");
     } else if (!workflowStringOutputs.has(sourceOperation) && !workflowStructuredOutputs.has(sourceOperation)) {
       throw new McpRuntimeError("INVALID_INPUT", "Workflow output must select a supported text or structured result, or image data field.");
     }
@@ -1294,7 +1350,7 @@ const mcpHandler = createMcpHandler(() => {
       title: "Execute a GaGet operation",
       description: "Execute one approved, bounded operation. It never executes code, runs shell commands, or makes network requests.",
       inputSchema: z.object({
-        operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "audio.analyze", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
+        operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "audio.analyze", "audio.trim", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
         arguments: z.record(z.string(), z.unknown())
       }),
       outputSchema: z.object({
