@@ -227,4 +227,6 @@ test("image inspection and transformations use bounded raster bytes", async () =
   await assert.rejects(executeOperation("image.inspect", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 45 }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 90, width: 1 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "resize", width: 1, quality: 80 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "flip", format: "png" }), { code: "INVALID_INPUT" });
 });

@@ -314,6 +314,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           result = { format: output.info.format, width: output.info.width, height: output.info.height, bytes: output.data.byteLength, dataBase64: output.data.toString("base64") };
         } catch (error) {
           if (error instanceof McpRuntimeError) throw error;
+          if (error instanceof Error && /timeout/i.test(error.message)) throw new McpRuntimeError("TIMEOUT", "Image processing exceeded the five-second time limit.");
           throw new McpRuntimeError("INVALID_INPUT", "Image data could not be processed within the supported limits.");
         }
         break;

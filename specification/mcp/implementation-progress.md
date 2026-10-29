@@ -9,7 +9,7 @@
 | 0 — Audit and decisions | Audited, partial | Repository instructions, runtime boundaries, tool helpers, tests, dependencies, CI, and Docker were inspected. Full per-capability privacy/dependency matrix remains incomplete. |
 | 1 — Contract and registry | Partial | MCP operation IDs have schemas, output contracts, and limits. A single registry shared with all web UI workspaces is not yet implemented; exposure-status metadata needs reconciliation. |
 | 2 — Shared operations | Partial | Encoding, text, JSON, developer formatting, hashing, generation, inspection, and date/time operations reuse existing operation modules where compatible. Browser/server parity coverage is incomplete. |
-| 3 — Server runtime | Partial | Request-body byte cap, output cap, allowlist, schema validation, bounded workflow step/output budgets, safe errors, bearer authentication, per-process rate/concurrency gates, and request-body read timeout passed MCP CI at baseline commit `1f1ae50b7aec5be491464548478c7d1f6f8684e5`. Constant-time bearer comparison, a minimum configured token length, and the workflow error output contract passed MCP CI at commit `f4c09f5d7aceca1fc33d646c991b81b1b9787976` (run [40882818432](https://github.com/mrcode-tech/gaget.dev/actions/runs/40882818432)). Distributed quotas and preemptive cancellation of a synchronous operation remain. |
+| 3 — Server runtime | Partial | Request-body byte cap, output cap, allowlist, schema validation, bounded workflow step/output budgets, safe errors, bearer authentication, per-process rate/concurrency gates, and request-body read timeout passed MCP CI at baseline commit `1f1ae50b7aec5be491464548478c7d1f6f8684e5`. Constant-time bearer comparison, a minimum configured token length, and the workflow error output contract passed MCP CI at commit `410fb4401f50581f0722abc61b2e07219ba75e5b` (run [40884400947](https://github.com/mrcode-tech/gaget.dev/actions/runs/40884400947)). Distributed quotas and preemptive cancellation of a synchronous operation remain. |
 | 4 — MCP adapter | Implemented, partial verification | Maintained TypeScript SDK, Streamable HTTP transport, tool discovery/calls, bearer-token gate, and SDK client test. Compatibility with the latest stateless MCP version and formal conformance remain unverified. |
 | 5 — Workflow engine | Implemented, partial | Sequential version-1 workflows, allowlisted operations, earlier text-result references, bounded steps/bytes/time budget, safe errors, and result manifest. Full static type inference, true preemption, and comprehensive cancellation/resource cleanup remain. |
 | 6 — Operation expansion | Partial | Security, generator, offline inspection, date/time, JSON sort/escape/unescape/find, and stricter text schemas passed MCP CI at commit `1f1ae50b7aec5be491464548478c7d1f6f8684e5` (run [40879917356](https://github.com/mrcode-tech/gaget.dev/actions/runs/40879917356)). Broader catalog operations, binary/media transfer, and complete browser/server parity remain unevaluated. |
@@ -23,8 +23,8 @@
 
 - Repository: `mrcode-tech/gaget.dev`
 - Branch: `mcp-compatible`
-- Tested commit: `f4c09f5d7aceca1fc33d646c991b81b1b9787976`
-- MCP CI run: [40882818432](https://github.com/mrcode-tech/gaget.dev/actions/runs/40882818432)
+- Tested commit: `410fb4401f50581f0722abc61b2e07219ba75e5b`
+- MCP CI run: [40884400947](https://github.com/mrcode-tech/gaget.dev/actions/runs/40884400947)
 - Result: passed for that exact revision (unit/contract tests, component tests, MCP tests, lint, typecheck, production build, production dependency audit, and Docker build/smoke).
 - Result: passed for the exact tested commit, including dependency installation, unit/contract tests, component tests, MCP protocol/runtime/SDK client tests, lint, typecheck, production build, production dependency audit, and Docker build/startup/non-root/auth/discovery smoke. The CI artifact records the tested branch and SHA.
 
@@ -34,6 +34,11 @@
 - Caps: 600,000 input bytes, 16 million pixels, 4096-pixel output dimensions, 600,000 output bytes, five-second Sharp timeout; no persistence or artifact retrieval.
 - Known-answer tests create and resize a small PNG, validate metadata and output bounds, and reject malformed Base64/invalid rotation values.
 - This increment passed the checks listed above at the exact tested revision. Image artifact lifecycle and audio/video operations are not complete.
+
+## Pending image-runtime hardening (not yet verified)
+
+- Normalize Sharp processing timeouts to the stable `TIMEOUT` error and test rejection of incompatible quality/format arguments.
+- This change must pass the next exact-revision MCP CI run before it is considered verified.
 
 ## Explicit release blockers
 
