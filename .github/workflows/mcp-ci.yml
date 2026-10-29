@@ -99,15 +99,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # The checked-in lockfile is currently out of sync with package.json.
-          # Use npm install to resolve the declared manifest and allow downstream
-          # checks to expose source/test failures. The lockfile must still be
-          # regenerated and committed from a writable development workspace.
+          # Rebuild the lock from package.json because the committed lockfile
+          # has been missing declared runtime and test dependencies. Then prove
+          # that the generated lock supports a clean, reproducible install.
+          rm -f package-lock.json
           npm install --no-audit --no-fund 2>&1 | tee install.log
+          npm ci --no-audit --no-fund 2>&1 | tee -a install.log
           mkdir -p artifacts/mcp-ci
           cp package-lock.json artifacts/mcp-ci/package-lock.generated.json
           if ! git diff --quiet -- package-lock.json; then
-            echo "::warning::npm install changed package-lock.json in the runner; commit a reviewed lockfile update before treating this run as reproducible."
+            echo "::warning::The lockfile generated in CI differs from the checked-in lockfile. Review and commit artifacts/mcp-ci/package-lock.generated.json to make local and CI installs reproducible."
             git diff -- package-lock.json > artifacts/mcp-ci/package-lock-diff.patch
           fi
 
