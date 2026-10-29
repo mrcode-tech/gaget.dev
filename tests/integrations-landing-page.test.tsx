@@ -36,7 +36,8 @@ describe("MCP landing page", () => {
     expect(screen.getByText("json.validate")).toBeTruthy();
     expect(screen.getByText("encoding.charset")).toBeTruthy();
     expect(screen.getByText("maxInputCharacters: 200,000")).toBeTruthy();
-    expect(screen.getByText(/text.*json/)).toBeTruthy();
+    expect(screen.getByTestId("capability-type-flow").textContent).toContain("text");
+    expect(screen.getByTestId("capability-type-flow").textContent).toContain("json");
     expect(screen.getAllByText("MCP: exposed").length).toBeGreaterThan(0);
   });
 
