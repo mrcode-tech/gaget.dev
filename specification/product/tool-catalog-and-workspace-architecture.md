@@ -74,3 +74,12 @@ The current media and Date & Time destinations remain first-class global workspa
 Registry and workspace tests cover stable unique IDs, unique canonical destinations, category membership, explicit status, workspace IDs, and canonical workspace routes. JSON tests cover structural comparison including object key-order independence, nested edits, additions/removals, arrays, and invalid input. Keep `/json/diff` as a tested compatibility route into Compare mode. Catalog/browser tests must verify search, category discovery, empty results, planned-state non-launchability, direct canonical routes, legacy aliases, keyboard access, responsive behavior, and Persian/Arabic RTL.
 
 A green CI run is evidence only for the exact tested revision. Inspect its required job results, generated manifest and artifact contents. A mockup is target-design evidence, not proof that the running application conforms. Keep authored target wireframes labelled **Proposal** until explicitly approved.
+
+
+## Proposed MCP interface boundary
+
+MCP exposure is separate from the current category/workspace navigation model. The existing registry remains the UI discovery source until an approved implementation migration changes it. MCP mapping uses stable operation IDs, not route names, categories, or localized labels.
+
+A workspace may contain multiple operations; only individually audited operations may be exposed. The browser UI continues to use browser-local implementations for supported local workflows. Server-side MCP calls use a server runtime and explicit file-transfer/artifact contracts. A visible route, registry status, or successful browser execution does not prove server compatibility.
+
+See specification/mcp/tool-catalog.md and specification/mcp/architecture.md. These are proposed target contracts until implemented and verified.
