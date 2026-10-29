@@ -40,3 +40,28 @@ test("does not execute cURL text or treat HTML as active markup", async () => {
   assert.equal((await html.json()).result.isError, false);
   assert.equal(html.headers.get("content-type")?.includes("application/json"), true);
 });
+
+test("request body limit is enforced while streaming when Content-Length is absent", async () => {
+  const oversized = "x".repeat(1_000_001);
+  const body = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(oversized.slice(0, 500_000)));
+      controller.enqueue(new TextEncoder().encode(oversized.slice(500_000)));
+      controller.close();
+    }
+  });
+  const req = new Request("http://localhost/api/mcp", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body,
+    // A streamed request deliberately has no Content-Length header.
+    duplex: "half"
+  });
+  assert.equal((await handleMcpPost(req, token)).status, 413);
+});
+
+test("library exceptions are normalized without echoing internal exception details", async () => {
+  const response = await handleMcpPost(request(call("json.format", { input: "{broken" })), token);
+  const body = await response.text();
+  assert.doesNotMatch(body, /Unexpected token|JSON at position|stack|node_modules|\\/home\\//i);
+});

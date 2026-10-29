@@ -68,3 +68,10 @@ test("protocol errors do not expose stack traces or internal file paths", async 
   const body = await response.text();
   assert.doesNotMatch(body, /stack|\/home\/|node_modules|\.ts:\d+/i);
 });
+
+test("operation schemas reject unknown fields and invalid enum values", async () => {
+  await assert.rejects(executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: "x", extra: true }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("encoding.transform", { mode: "made-up", direction: "encode", input: "x" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("json.format", { input: "{\\"ok\\":true}", indent: 99 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("developer.format", { operation: "sql", input: "select 1", mode: "execute" }), { code: "INVALID_INPUT" });
+});
