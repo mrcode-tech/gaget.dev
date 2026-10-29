@@ -4,6 +4,8 @@
 >
 > **Canonical specifications:** This prompt supplements, and does not replace, `AGENTS.md`, `command.md`, `specification/AI_INSTRUCTIONS.md`, and the specifications linked from `specification/mcp/README.md`. If this prompt conflicts with repository-wide safety instructions, follow the repository-wide instructions and record the conflict.
 
+See `specification/mcp/workflow-ux-architecture.md` for the canonical navigation, shared execution boundaries, demo behavior, and acceptance criteria. Treat that document as the detailed design contract; this prompt remains the execution brief.
+
 ## Mandatory workflow UX decision: one Batch Workbench
 
 Implement exactly one general-purpose user-facing workflow workspace: **Batch Workbench**, shown as a primary sidebar item immediately below **Dev Tools**. Do not build a separate “simple workflow”, pipeline builder, or MCP-specific workflow editor elsewhere in the application.
