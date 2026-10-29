@@ -59,7 +59,7 @@ test("shared developer tools load a local UTF-8 CSV file and process it in-brows
 test("shared developer tools reject non-UTF-8 and oversized text files",async({page})=>{
  await page.goto("/data/csv-json");
  await page.getByLabel("Choose a text file for CSV ↔ JSON converter").setInputFiles({name:"invalid.csv",mimeType:"text/csv",buffer:Buffer.from([0xc3,0x28])});
- await expect(page.locator('[role="alert"]')).toContainText(/UTF-8/i);
+ await expect(page.locator('p[role="alert"]')).toContainText(/UTF-8/i);
  await page.getByLabel("Choose a text file for CSV ↔ JSON converter").setInputFiles({name:"large.csv",mimeType:"text/csv",buffer:Buffer.alloc(200001,0x61)});
- await expect(page.locator('[role="alert"]')).toContainText(/200,000 bytes/i);
+ await expect(page.locator('p[role="alert"]')).toContainText(/200,000 bytes/i);
 });
