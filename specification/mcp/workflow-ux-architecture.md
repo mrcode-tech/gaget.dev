@@ -1,85 +1,88 @@
-# MCP Workflow UX Architecture — One Batch Workbench
+# MCP Workflow UX Architecture and Wireframe Specification
 
-**Status:** Required target design; implementation status must be verified separately.  
-**Scope:** Product navigation, workflow composition, MCP integration, and the public MCP demo.
+**Status:** Target design; not proof of current implementation.  
+**Capability inventory:** [capabilities.md](./capabilities.md)  
+**Desktop wireframe:** [wireframes/unified-batch-workbench.svg](./wireframes/unified-batch-workbench.svg)
 
-## Decision
+## 1. Product and navigation decisions
 
-GaGet.dev has exactly one general-purpose user-facing workflow/pipeline editor: **Batch Workbench**. It is a first-class primary sidebar destination immediately below **Dev Tools**. Do not create a second “Simple Workflow”, pipeline builder, or MCP-only workflow editor under Dev Tools, MCP & Integrations, or another navigation group.
+Batch Workbench is the only pipeline editor. It is a main sidebar item immediately below Dev Tools and must not appear in the Dev Tools catalog, category navigation or search. Keep its existing canonical route; do not create a second simple workflow editor. MCP & Integrations is a separate destination for protocol overview, runtime-derived capability catalog, setup, security/privacy notes and showcase recipes. A showcase may load a recipe into Batch Workbench.
 
-This is a product UX decision, not a claim that all pipeline operations are already implemented or MCP-compatible.
+The pipeline orchestrates operations from existing product workspaces; it does not force Image, Audio, Video, Date & Time or JSON into a single UI.
 
-## Navigation model
+## 2. Architecture
 
-- **Dev Tools:** individual developer tools and their catalog/categories.
-- **Batch Workbench:** the single general-purpose workspace for composing, reviewing, running, inspecting, importing/exporting where supported, and reusing multi-step operation recipes.
-- **MCP & Integrations:** public education and setup destination. It explains supported operations, transport/client configuration, deployment modes, security/data flow, and shows a curated workflow demonstration. It is not a second pipeline editor.
-- **Individual tool/workspace routes:** remain focused on the single capability and may link to contextual MCP help.
-- **MCP transport endpoint:** protocol endpoint only; never use it as a human-facing landing page.
+- Capability inventory: intended scope and audit checklist in capabilities.md.
+- Runtime registry: actual executable MCP allowlist and schemas; the only source for current MCP claims.
+- Operation adapters: translate UI input and MCP arguments to operation contracts.
+- Browser runtime: verified browser-compatible operations; selected files stay local unless explicitly exported/transferred.
+- Server runtime: only operations with tested server adapters; browser-only APIs cannot be assumed.
+- Pipeline validator: validates IDs, versions, parameters, references, input/output types and budgets before execution.
+- Pipeline executor: sequential by default; typed outputs, per-step status, deadlines/cancellation, cleanup and artifact manifests.
+- MCP adapter: only allowlisted operations; bounded content or authorized expiring artifact references.
+- Batch Workbench UI: input selector, typed source panel, searchable picker, step cards, run controls and typed result viewer.
+- MCP landing page: setup/catalog/showcase, not a second editor; never call a mock a live run.
 
-The landing page should be discoverable from an appropriate navigation surface without overcrowding the existing app shell. The sidebar position for Batch Workbench is mandatory; the exact placement of MCP & Integrations should be confirmed against the actual responsive navigation and existing route conventions.
+## 3. User journey
 
-## Shared execution architecture
+1. Open Batch Workbench and choose Text, JSON/structured text, Image, Audio, Video, File/Binary, Multiple files or Date & Time.
+2. Paste/type input or explicitly select/drop a file. Show accepted formats, size and available metadata.
+3. Search by task, operation, alias, category or type. Filter to operations compatible with current input/output and chosen runtime.
+4. Add/configure steps. Output type becomes next step's input. Reordering or edits revalidate downstream steps.
+5. Review preflight: incompatible steps, unsupported runtime operations, and known output/resource budgets.
+6. Before remote transfer, show configured destination and known transfer/retention behavior.
+7. Run sequentially. Show truthful state, safe errors and Cancel where supported. Never fake progress.
+8. Preview/copy/download result or use it as the next compatible input.
+9. Optionally export a versioned recipe containing configuration only. Import validates and never auto-runs.
 
-Use a shared, versioned declarative pipeline contract and compatible workflow service across interfaces. Reuse stable operation IDs, schemas, validation, authorization checks, budgets, error shapes, and result-manifest semantics where technically compatible.
+## 4. Searchable operation picker
 
-Keep these concerns separate:
-- **Shared capability layer:** operation registry and status, versioned schema, typed references, validation, execution budgets, safe errors, and result manifest.
-- **Batch Workbench web adapter:** editor state, human interaction, preview, progress, accessibility, localization, and browser-specific file handling.
-- **MCP adapter:** protocol transport, authentication/authorization, server runtime policy, structured MCP results, and protocol errors.
-- **MCP landing-page demo:** a constrained sample flow or real, explicitly policy-limited MCP invocation. It is not a parallel general-purpose editor.
+Use the existing shadcn/Radix combobox/listbox pattern. Support keyboard navigation, type-ahead, Escape, focus return, accessible names and an empty state. Search title, description, aliases, keywords, category and input/output types. Each result displays input → output, runtime, availability, MCP exposure and relevant limits. Browser availability is not MCP exposure. Planned/deferred operations cannot run. Suggest explicit conversion steps only when they actually exist.
 
-Do not share React state, framework request objects, MCP SDK objects, or browser-only assumptions across these boundaries. The web UI must not require MCP to perform browser-local operations. The MCP adapter must not rely on a browser tab or silently access its selected files.
+## 5. Desktop wireframe anatomy
 
-## MCP workflow compatibility
+The linked SVG is a static concept wireframe, not a screenshot. Target desktop uses three zones when width permits:
+- **Input (about 22–25%):** input type, editor or existing styled dropzone, file metadata, accepted formats/limits and execution/privacy mode.
+- **Pipeline (about 43–48%):** operation search, compatible choices, ordered step cards, parameters, typed connectors, add/reorder/duplicate/remove and validation.
+- **Result (about 30–33%):** type-specific preview, copy/download/use-as-next-input, artifact manifest, run summary and safe errors.
 
-A pipeline may be offered for MCP execution only if:
-1. Every step references a stable operation ID exposed by the current server registry.
-2. Each operation is implemented for the server runtime and marked available/approved.
-3. Input/output schemas, data references, limits, authorization, and error behavior are validated.
-4. The complete chain satisfies aggregate step, input, output, time, memory, concurrency, and artifact budgets.
-5. Runtime and privacy behavior are documented, including explicit data transfer where applicable.
-6. Tests exercise the actual MCP adapter/runtime and reject unavailable or browser-only operations.
+Run/Cancel remains prominent. Do not squeeze three columns at tablet widths. The crop → resize → Base64 sample is an illustrative target only until every operation is verified in the selected runtime.
 
-A route, catalog card, browser-only capability, or Batch Workbench feature does not prove MCP support.
+## 6. Responsive and state wireframes
 
-## Public MCP demo
+**Tablet:** compact input summary at top or left rail; pipeline is primary; parameter/result details in a side panel or sheet. Keep picker usable and Run/Cancel reachable.
 
-The landing page should demonstrate the same pipeline model with a curated example such as Base64 decode → JSON validation → JSON formatting, only when those operations are verified for server execution.
+**Mobile:** single vertical flow: input → steps → result. Full-width search; parameter controls in an accessible sheet/dialog; step cards show types. Provide move up/down as an alternative to drag. Never hide Run/Cancel behind a sheet.
 
-- Use synthetic sample data by default.
-- Show ordered steps, status, output, result manifest, and a disclosure for the actual MCP request/response with secrets and sensitive values redacted.
-- Label the execution state prominently: **Live MCP request** only for real adapter/transport/runtime execution; otherwise **Guided example — not executed**.
-- A public anonymous live demo needs its own narrow allowlist, quotas, deadlines, payload/output limits, concurrency limits, abuse controls, and no production secrets or arbitrary network/filesystem access.
-- Never put a privileged token in frontend code. Explain remote transfer before allowing custom input to be submitted.
-- Link to **Open Batch Workbench** for full pipeline authoring. Do not duplicate the full editor on the landing page.
+**Short viewport/landscape:** scrollable panels must not trap focus or clip actions. Keep active step, close/return control and Run/Cancel reachable.
 
-## Hosted and self-hosted paths
+**Empty/input states:** empty workspace; text/JSON editor; image/audio/video/file dropzone; explicit multi-file list; permission-gated capture; unsupported format/codec rejection before expensive work.
 
-Present hosted GaGet.dev and self-hosted/on-premises as distinct ways to connect. Describe only verified transport, authentication, retention, logging, external network dependencies, and configuration behavior. Self-hosting gives operators control over their deployment environment; it does not by itself establish air-gap operation, compliance, or that no data leaves their network.
+**Pipeline states:** empty chain; compatible configured step; invalid type connection that blocks Run; running with real status; failed step preserving input/configuration; cancelled with cleanup; completed typed output; multi-artifact manifest; remote-transfer confirmation.
 
-## Design-system requirements
+## 7. MCP landing page demo
 
-Inspect existing app shell, sidebar, route conventions, shadcn-style controls, code editor/output panels, dialogs, copy controls, status indicators, and responsive behavior before implementation. Reuse established components and tokens. Support keyboard navigation, visible focus, screen-reader labels, mobile and short-height layouts, theme, localization, RTL, reduced motion, loading/error/empty states, and bounded output presentation.
+The MCP & Integrations page should show transport/setup, runtime-derived executable capability list, hosted versus self-hosted distinctions, limitations, privacy/security notes and curated examples. Label each showcase either **Live run** only when a real MCP request traverses the configured transport and runtime allowlist, or **Guided example — not executed** for static output. Never put private inputs in URLs. The demo and Batch Workbench share recipe metadata, but remote execution is limited to server-exposed operations.
 
-## Acceptance criteria
+## 8. Safety and privacy
 
-- Batch Workbench is the sole general-purpose workflow editor and appears immediately below Dev Tools in the primary sidebar.
-- No duplicate simple workflow or MCP-only workflow editor is added.
-- MCP & Integrations demonstrates a curated recipe and links to Batch Workbench.
-- Both web and MCP paths use the canonical pipeline contract where runtime-compatible without coupling UI state and transport.
-- The MCP catalog/demo advertises only server-verified operations.
-- Live and guided demo states are truthful and distinguishable.
-- Privacy, authentication, retention, and deployment claims match code and tests.
-- Automated tests cover navigation, workflow contract reuse, unavailable operation rejection, demo mode labelling, transfer disclosure, responsive/accessibility behavior, and relevant errors.
-- Exact commit, CI runs, and test artifacts are recorded before marking the design implemented or verified.
+Validate the whole chain before execution. Bound bytes, characters, pixels, duration, frames, file count, output, time and concurrency. Clean temporary artifacts at every terminal state. No arbitrary code/shell, dynamic imports, filesystem paths, URL fetch or unrestricted network. Browser-local operations stay local; remote MCP sends data to the configured server. Remote MCP cannot read browser files, camera or microphone without an explicitly designed and permissioned bridge. Public anonymous demos require synthetic data, a narrow allowlist, quotas, timeouts, output/concurrency caps and abuse controls; otherwise keep them non-executed. Do not claim zero retention, encryption, compliance or air-gap without evidence.
 
-## Related specifications
+## 9. Design system, accessibility and localization
 
-- [MCP overview](./README.md)
-- [Architecture and runtime separation](./architecture.md)
-- [Workflow and pipeline contract](./workflow-pipelines.md)
-- [Web UI help, landing page, and demo requirements](./web-ui-help-and-wireframes.md)
-- [Implementation roadmap](./implementation-roadmap.md)
-- [End-to-end implementation prompt](./IMPLEMENTATION_PROMPT.md)
-- [Landing page and demo wireframe](./wireframes/mcp-landing-page-and-workflow-demo.svg)
+Reuse GaGet shell, design tokens, themes, editors, file/dropzone, dialogs/sheets and shadcn-style controls. Avoid generic chatbot styling; emphasize operation types and execution state. Support keyboard selection/reordering, visible focus, screen-reader announcements, reduced motion, sufficient contrast, touch targets and non-color-only statuses. All strings localizable; Persian/Arabic RTL must remain correct.
+
+## 10. Acceptance checklist
+
+- [ ] Batch Workbench appears once in main sidebar directly below Dev Tools, never in Dev Tools catalog/search.
+- [ ] Input selector covers applicable input types.
+- [ ] Picker is accessible, searchable, localized, type-aware and truthful about runtime/MCP.
+- [ ] Whole chain validates before execution; conversions are explicit.
+- [ ] Text/file/media/date-time outputs can be chained when contracts permit.
+- [ ] Crop → resize → Base64 runs only where every step is verified.
+- [ ] Result viewer follows actual output type; multi-artifacts use manifests.
+- [ ] Limits, cancellation, cleanup and transfer consent are enforced.
+- [ ] Recipe import validates and never auto-runs; export excludes data/secrets by default.
+- [ ] Showcase labels live execution versus guided example truthfully.
+- [ ] Desktop/tablet/mobile/short-height, light/dark, RTL, keyboard and screen reader are tested.
+- [ ] Inventory, registry, API, UI, help, demo and CI are reconciled.
