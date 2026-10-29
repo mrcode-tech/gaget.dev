@@ -24,6 +24,7 @@ The MCP adapter exposes three protocol tools: `list_capabilities`, `execute_oper
 | `encoding.transform` | URL, Base64/Base64url, Base32, hex/binary, HTML entities, Unicode escapes, quoted-printable, Base58, Base85/Z85 | Up to 1,000,000 input characters; encoding is not encryption |
 | `text.transform` | Allowlisted text transforms | Up to 200,000 characters; regex execution is deliberately not exposed through MCP pending safe execution limits |
 | `json.validate`, `json.format`, `json.minify`, `json.diff`, `json.sort-keys`, `json.escape`, `json.unescape`, `json.find` | JSON diagnostics, format/minify, structural comparison | Up to 200,000 characters per document |
+| `image.inspect`, `image.transform` | Inspect and transform explicitly supplied raster image bytes | Input/output up to 600,000 bytes; 16M input-pixel cap; 4096px output dimension cap; 5-second image-processing deadline; no persistence |
 | `developer.format` | XML, SQL, HTML, CSV/JSON, cURL text operations | Up to 200,000 characters; no execution or network calls |
 | `security.hash` | SHA-2 digests, HMAC, CRC32, CRC16-CCITT, Adler-32 | Up to 200,000 characters; HMAC key is sensitive; digest/checksum is not encryption |
 | `security.jwt.decode` | Decode JWT header and claims | Up to 20,000 characters; signature, issuer, audience, and trust are not verified |

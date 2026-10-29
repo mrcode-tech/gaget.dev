@@ -1,5 +1,6 @@
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { timingSafeEqual } from "node:crypto";
+import sharp from "sharp";
 import * as z from "zod/v4";
 import { transformEncoding, type EncodingMode, type EncodingDirection } from "../tools/encoding-operations.ts";
 import { transformText, type TextOperation } from "../tools/text-operations.ts";
@@ -65,6 +66,9 @@ function inspectImageBase64(input: string): { format: "png" | "jpeg" | "gif" | "
 }
 
 export const MCP_MAX_OUTPUT_BYTES = 2_000_000;
+export const MCP_MAX_IMAGE_INPUT_BYTES = 600_000;
+export const MCP_MAX_IMAGE_OUTPUT_BYTES = 600_000;
+export const MCP_MAX_IMAGE_PIXELS = 16_000_000;
 export const MCP_MAX_CONCURRENT_REQUESTS = 8;
 export const MCP_MAX_REQUESTS_PER_MINUTE = 120;
 export const MCP_BODY_READ_TIMEOUT_MS = 5_000;
@@ -76,6 +80,16 @@ export class McpRuntimeError extends Error {
 }
 type JsonObject = Record<string, unknown>;
 const isObject = (v: unknown): v is JsonObject => !!v && typeof v === "object" && !Array.isArray(v);
+function decodeBoundedImageBase64(value: string): Buffer {
+  if (value.length === 0 || value.length > 800_000 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) {
+    throw new McpRuntimeError("INVALID_INPUT", "'inputBase64' must be valid bounded standard base64.");
+  }
+  const bytes = Buffer.from(value, "base64");
+  if (bytes.byteLength === 0 || bytes.byteLength > MCP_MAX_IMAGE_INPUT_BYTES || bytes.toString("base64") !== value) {
+    throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Image input must be at most 600,000 bytes.");
+  }
+  return bytes;
+}
 const stringField = (input: JsonObject, key: string, max = 200_000): string => {
   const value = input[key];
   if (typeof value !== "string") throw new McpRuntimeError("INVALID_INPUT", `'${key}' must be a string.`);
@@ -107,6 +121,8 @@ const schemas = {
   "json.escape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.unescape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.find": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, query: { type: "string", maxLength: 1000 }, match: { type: "string", enum: ["keys","values","both"] } }, required: ["input","query"], additionalProperties: false },
+  "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
+  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["resize","rotate","flip","flop","convert","auto-orient"] }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, degrees: { type: "integer", enum: [90,180,270] }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 } }, required: ["inputBase64","action"], additionalProperties: false },
   "developer.format": { type: "object", properties: { operation: { type: "string", enum: ["xml","sql","html","csv-json","curl"] }, input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["format","minify","json-to-csv"] }, delimiter: { type: "string", maxLength: 1 } }, required: ["operation","input"], additionalProperties: false },
   "security.hash": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["digest","hmac","crc32","crc16-ccitt","adler32"] }, algorithm: { type: "string", enum: ["SHA-256","SHA-384","SHA-512"] }, key: { type: "string", maxLength: 10000 } }, required: ["input","mode"], additionalProperties: false },
   "security.jwt.decode": { type: "object", properties: { token: { type: "string", maxLength: 20000 } }, required: ["token"], additionalProperties: false },
@@ -129,6 +145,8 @@ const capabilityList = [
   { id: "json.escape", version: "1.0.0", description: "Escape text as JSON string content without surrounding quotes.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.unescape", version: "1.0.0", description: "Decode escaped JSON string content as plain text.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.find", version: "1.0.0", description: "Find JSON keys and/or values with bounded depth and result count.", limits: { maxInputCharacters: 200000, maxMatches: 1000, maxDepth: 64, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
+  { id: "image.inspect", version: "1.0.0", description: "Inspect dimensions and basic metadata of a bounded JPEG, PNG, WebP, AVIF, GIF, or TIFF image supplied explicitly as base64. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: MCP_MAX_OUTPUT_BYTES, timeoutMs: 5000 } },
+  { id: "image.transform", version: "1.0.0", description: "Resize, rotate, flip, flop, auto-orient, or convert a bounded supported image supplied explicitly as base64. Returns a bounded base64 result; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxOutputBytes: MCP_MAX_IMAGE_OUTPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxDimension: 4096, timeoutMs: 5000 } },
   { id: "developer.format", version: "1.0.0", description: "Format/minify supported XML, SQL, HTML text, or convert CSV/JSON. Does not execute input.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.hash", version: "1.0.0", description: "Compute bounded text digests, HMAC, or non-cryptographic checksums. HMAC keys are secret; hashes are not encryption.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.jwt.decode", version: "1.0.0", description: "Decode JWT header and claims without verifying its signature or trust.", limits: { maxInputCharacters: 20000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
@@ -151,6 +169,8 @@ const outputSchemas = {
   "json.escape": { type: "string" },
   "json.unescape": { type: "string" },
   "json.find": { type: "object", properties: { matches: { type: "array", items: { type: "object" } }, truncated: { type: "boolean" } }, required: ["matches","truncated"], additionalProperties: false },
+  "image.inspect": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, channels: { type: "integer" }, hasAlpha: { type: "boolean" }, orientation: { type: ["integer","null"] }, bytes: { type: "integer" }, animated: { type: "boolean" } }, required: ["format","width","height","channels","hasAlpha","orientation","bytes","animated"], additionalProperties: false },
+  "image.transform": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, bytes: { type: "integer" }, dataBase64: { type: "string", maxLength: 800000 } }, required: ["format","width","height","bytes","dataBase64"], additionalProperties: false },
   "developer.format": { type: "string" },
   "security.hash": { type: "string" },
   "security.jwt.decode": { type: "object", properties: { header: { type: "object" }, claims: { type: "object" }, signaturePresent: { type: "boolean" }, signatureVerified: { type: "boolean" }, note: { type: "string" } }, required: ["header","claims","signaturePresent","signatureVerified","note"], additionalProperties: false },
@@ -182,6 +202,8 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.escape": ["input"],
     "json.unescape": ["input"],
     "json.find": ["input","query","match"],
+    "image.inspect": ["inputBase64"],
+    "image.transform": ["inputBase64","action","width","height","degrees","format","quality"],
     "developer.format": ["operation", "input", "mode", "delimiter"],
     "security.hash": ["input","mode","algorithm","key"],
     "security.jwt.decode": ["token"],
@@ -300,6 +322,58 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const after = stringField(rawInput, "after");
         if (!diagnoseJson(before).ok || !diagnoseJson(after).ok) throw new McpRuntimeError("INVALID_INPUT", "Both inputs must be valid JSON.");
         result = compareJsonDocuments(before, after);
+        break;
+      }
+      case "image.inspect": {
+        const inputBase64 = stringField(rawInput, "inputBase64", 800_000);
+        const bytes = decodeBoundedImageBase64(inputBase64);
+        try {
+          const metadata = await sharp(bytes, { limitInputPixels: MCP_MAX_IMAGE_PIXELS, sequentialRead: true, failOn: "error" }).timeout({ seconds: 5 }).metadata();
+          if (!metadata.format || !["jpeg","png","webp","avif","gif","tiff"].includes(metadata.format) || !metadata.width || !metadata.height || !metadata.channels) {
+            throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Only supported raster image formats are accepted.");
+          }
+          result = { format: metadata.format, width: metadata.width, height: metadata.height, channels: metadata.channels, hasAlpha: Boolean(metadata.hasAlpha), orientation: metadata.orientation ?? null, bytes: bytes.byteLength, animated: (metadata.pages ?? 1) > 1 };
+        } catch (error) {
+          if (error instanceof McpRuntimeError) throw error;
+          throw new McpRuntimeError("INVALID_INPUT", "Image data is invalid, unsupported, or exceeds the processing limit.");
+        }
+        break;
+      }
+      case "image.transform": {
+        const inputBase64 = stringField(rawInput, "inputBase64", 800_000);
+        const bytes = decodeBoundedImageBase64(inputBase64);
+        const action = enumField(rawInput, "action", ["resize","rotate","flip","flop","convert","auto-orient"] as const);
+        const width = rawInput.width;
+        const height = rawInput.height;
+        const degrees = rawInput.degrees;
+        const format = rawInput.format;
+        const quality = rawInput.quality;
+        if (width !== undefined && (!Number.isSafeInteger(width) || (width as number) < 1 || (width as number) > 4096)) throw new McpRuntimeError("INVALID_INPUT", "'width' must be an integer from 1 to 4096.");
+        if (height !== undefined && (!Number.isSafeInteger(height) || (height as number) < 1 || (height as number) > 4096)) throw new McpRuntimeError("INVALID_INPUT", "'height' must be an integer from 1 to 4096.");
+        if (quality !== undefined && (!Number.isSafeInteger(quality) || (quality as number) < 1 || (quality as number) > 100)) throw new McpRuntimeError("INVALID_INPUT", "'quality' must be an integer from 1 to 100.");
+        if (action === "resize" && width === undefined && height === undefined) throw new McpRuntimeError("INVALID_INPUT", "Resize requires width, height, or both.");
+        if (action === "rotate" && degrees !== 90 && degrees !== 180 && degrees !== 270) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires degrees of 90, 180, or 270.");
+        if (action === "convert" && (typeof format !== "string" || !["jpeg","png","webp","avif"].includes(format))) throw new McpRuntimeError("INVALID_INPUT", "Convert requires a supported output format.");
+        if (format !== undefined && !["jpeg","png","webp","avif"].includes(String(format))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported output format.");
+        if (quality !== undefined && format === undefined && action !== "convert") throw new McpRuntimeError("INVALID_INPUT", "Quality may be set only when converting to a lossy output format.");
+        try {
+          let pipeline = sharp(bytes, { limitInputPixels: MCP_MAX_IMAGE_PIXELS, sequentialRead: true, failOn: "error" }).timeout({ seconds: 5 });
+          const metadata = await pipeline.metadata();
+          if (!metadata.format || !["jpeg","png","webp","avif","gif","tiff"].includes(metadata.format) || !metadata.width || !metadata.height) throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Only supported raster image formats are accepted.");
+          if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: "inside", withoutEnlargement: true });
+          else if (action === "rotate") pipeline = pipeline.rotate(degrees as number);
+          else if (action === "flip") pipeline = pipeline.flip();
+          else if (action === "flop") pipeline = pipeline.flop();
+          else if (action === "auto-orient") pipeline = pipeline.rotate();
+          else if (action === "convert") pipeline = pipeline.toFormat(format as "jpeg" | "png" | "webp" | "avif", quality === undefined ? {} : { quality: quality as number });
+          if (action !== "resize") pipeline = pipeline.resize({ width: 4096, height: 4096, fit: "inside", withoutEnlargement: true });
+          const output = await pipeline.toBuffer({ resolveWithObject: true });
+          if (output.data.byteLength > MCP_MAX_IMAGE_OUTPUT_BYTES) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Processed image exceeds the 600,000-byte output limit.");
+          result = { format: output.info.format, width: output.info.width, height: output.info.height, bytes: output.data.byteLength, dataBase64: output.data.toString("base64") };
+        } catch (error) {
+          if (error instanceof McpRuntimeError) throw error;
+          throw new McpRuntimeError("INVALID_INPUT", "Image data could not be processed within the supported limits.");
+        }
         break;
       }
       case "developer.format": {
@@ -641,7 +715,7 @@ const mcpHandler = createMcpHandler(() => {
         schemaVersion: z.literal(1),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
-          operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
+          operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "image.inspect", "image.transform", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
           arguments: z.record(z.string(), z.unknown())
         }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
       }).strict(),

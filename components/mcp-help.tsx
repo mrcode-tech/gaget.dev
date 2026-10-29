@@ -19,6 +19,11 @@ const contracts: Record<string, HelpContract> = {
     prompt: "Trim this text, remove duplicate lines, and return basic statistics.",
     note: "Regex and text work are bounded. Avoid treating input as executable code."
   },
+  "Image Editor": {
+    operations: ["image.inspect", "image.transform"],
+    prompt: "Inspect this image's dimensions, then resize it to fit within 1024 by 1024 pixels. Return the transformed image only if its output is within the server limits.",
+    note: "You must explicitly provide image bytes as base64. The MCP server receives that data; inputs and outputs are capped at 600,000 bytes and are not persisted by this operation."
+  },
   "JSON Formatter & Validator": {
     operations: ["json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find"],
     prompt: "Validate this JSON document, format it with two-space indentation, and report any syntax errors.",

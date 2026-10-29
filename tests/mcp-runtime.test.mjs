@@ -234,3 +234,19 @@ test("per-instance request rate limiting rejects excessive authenticated calls",
   assert.equal(response.status, 429);
   assert.ok(Number(response.headers.get("retry-after")) > 0);
 });
+
+test("image inspection and transformations use bounded raster bytes", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 3, height: 2, channels: 3, background: "#336699" } }).png().toBuffer();
+  const inputBase64 = png.toString("base64");
+  const inspected = await executeOperation("image.inspect", { inputBase64 });
+  assert.equal(inspected.width, 3);
+  assert.equal(inspected.height, 2);
+  assert.equal(inspected.format, "png");
+  const transformed = await executeOperation("image.transform", { inputBase64, action: "resize", width: 1 });
+  assert.equal(transformed.width, 1);
+  assert.equal(transformed.height, 1);
+  assert.ok(Buffer.from(transformed.dataBase64, "base64").length <= 600_000);
+  await assert.rejects(executeOperation("image.inspect", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 45 }), { code: "INVALID_INPUT" });
+});
