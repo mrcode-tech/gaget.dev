@@ -1308,7 +1308,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
     if (!outputMatch || !seen.has(outputMatch[1])) throw new McpRuntimeError("INVALID_INPUT", "Workflow output must reference a declared step result.");
     const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === outputMatch[1]) as JsonObject).operationId as string;
     if (outputMatch[2]) {
-      if (!["image.transform", "audio.trim"].includes(sourceOperation) || outputMatch[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Workflow output may select only image.transform dataBase64.");
+      if (!["image.transform", "audio.trim", "audio.normalize"].includes(sourceOperation) || outputMatch[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Workflow output may select only supported image/audio dataBase64 fields.");
     } else if (!workflowStringOutputs.has(sourceOperation) && !workflowStructuredOutputs.has(sourceOperation)) {
       throw new McpRuntimeError("INVALID_INPUT", "Workflow output must select a supported text or structured result, or image data field.");
     }
@@ -1416,7 +1416,7 @@ const mcpHandler = createMcpHandler(() => {
       title: "Execute a GaGet operation",
       description: "Execute one approved, bounded operation. It never executes code, runs shell commands, or makes network requests.",
       inputSchema: z.object({
-        operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "audio.analyze", "audio.trim", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
+        operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "audio.analyze", "audio.trim", "audio.normalize", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
         arguments: z.record(z.string(), z.unknown())
       }),
       outputSchema: z.object({

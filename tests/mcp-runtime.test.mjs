@@ -309,6 +309,27 @@ test("audio.normalize adjusts integer PCM peak toward target dBFS without changi
   await assert.rejects(executeOperation("audio.normalize", { inputBase64: wav.toString("base64"), targetDbfs: -40 }), { code: "INVALID_INPUT" });
 });
 
+test("audio.normalize can be invoked through MCP and selected as a workflow binary output", async () => {
+  const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 8;
+  const pcm = Buffer.alloc(frames * 2);
+  for (let i = 0; i < frames; i++) pcm.writeInt16LE(i * 2000, i * 2);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "normalize", operationId: "audio.normalize", arguments: { inputBase64: wav.toString("base64"), targetDbfs: -6 } }
+  ], output: { $ref: "normalize.result.dataBase64" } });
+  assert.equal(workflow.success, true);
+  assert.equal(typeof workflow.result, "string");
+  const normalizedBytes = Buffer.from(workflow.result, "base64");
+  assert.equal(normalizedBytes.toString("ascii", 0, 4), "RIFF");
+  const inspected = await executeOperation("audio.inspect", { inputBase64: workflow.result });
+  assert.equal(inspected.frames, frames);
+});
+
 test("audio.trim extracts frame-aligned PCM WAV segments and chains into audio analysis", async () => {
   const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 80;
   const pcm = Buffer.alloc(frames * 2);
