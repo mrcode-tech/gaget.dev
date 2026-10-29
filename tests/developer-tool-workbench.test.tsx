@@ -105,6 +105,6 @@ it("rejects text files above the byte limit before decoding",async()=>{
  const input=screen.getByRole("textbox",{name:"CSV ↔ JSON converter input"}) as HTMLTextAreaElement;
  const before=input.value;
  fireEvent.change(screen.getByLabelText("Choose a text file for CSV ↔ JSON converter"),{target:{files:[file]}});
- expect(await screen.findByRole("alert")).toHaveTextContent(/200,000 bytes/i);
+ expect((await screen.findByRole("alert")).textContent??"").toMatch(/200,000 bytes/i);
  expect(input.value).toBe(before);
 });
