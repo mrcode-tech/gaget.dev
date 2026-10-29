@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1120" viewBox="0 0 1440 1120" role="img" aria-labelledby="title desc">
+  <title id="title">GaGet.dev MCP landing page and interactive workflow demo — proposal</title>
+  <desc id="desc">Target desktop wireframe showing product navigation, MCP hero, workflow demo with ordered steps and result, hosted and self-hosted options, and verified capability catalog.</desc>
+  <defs>
+    <style>
+      .bg{fill:#f7f8fa}.surface{fill:#fff;stroke:#d5dbe3;stroke-width:1.5}.ink{fill:#17202c;font-family:Inter,Arial,sans-serif}.muted{fill:#586576;font-family:Inter,Arial,sans-serif}.tiny{font-size:12px}.small{font-size:14px}.body{font-size:16px}.h2{font-size:25px;font-weight:700}.h1{font-size:38px;font-weight:700}.label{font-size:13px;font-weight:700;letter-spacing:.5px}.line{stroke:#d5dbe3;stroke-width:1.5}.accent{fill:#e6eefc;stroke:#9cb9ef;stroke-width:1.5}.button{fill:#203b69}.buttonText{fill:#fff;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700}.mono{fill:#263447;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
+    </style>
+  </defs>
+  <rect class="bg" width="1440" height="1120"/>
+  <rect class="surface" x="24" y="20" width="1392" height="64" rx="12"/>
+  <text class="ink" x="48" y="59" font-size="21" font-weight="700">GaGet.dev</text>
+  <text class="muted small" x="220" y="58">Home</text>
+  <text class="muted small" x="292" y="58">Dev Tools</text>
+  <rect class="accent" x="390" y="34" width="150" height="36" rx="8"/>
+  <text class="ink small" x="407" y="57" font-weight="700">Batch Workbench</text>
+  <text class="ink small" x="568" y="58" font-weight="700">MCP &amp; Integrations</text>
+  <text class="muted small" x="735" y="58">Docs</text>
+  <text class="muted small" x="1300" y="58">Theme · Language</text>
+
+  <text class="muted label" x="72" y="133">MCP COMPATIBILITY</text>
+  <text class="ink h1" x="72" y="183">Bring GaGet.dev tools into</text>
+  <text class="ink h1" x="72" y="227">your AI workflows</text>
+  <text class="muted body" x="72" y="264">Discover supported operations, chain them into workflows, and connect</text>
+  <text class="muted body" x="72" y="288">a compatible MCP client—or run GaGet.dev in infrastructure you control.</text>
+  <rect class="button" x="72" y="316" width="174" height="44" rx="8"/>
+  <text class="buttonText" x="95" y="343">Try the MCP demo</text>
+  <rect class="surface" x="258" y="316" width="170" height="44" rx="8"/>
+  <text class="ink small" x="278" y="343" font-weight="700">Connect your client</text>
+  <text class="ink small" x="72" y="389" text-decoration="underline">Self-host GaGet.dev →</text>
+
+  <rect class="surface" x="900" y="116" width="468" height="286" rx="14"/>
+  <text class="ink label" x="928" y="150">HOW IT WORKS</text>
+  <rect class="accent" x="928" y="170" width="412" height="52" rx="8"/>
+  <text class="ink body" x="946" y="192" font-weight="700">1 · Connect</text>
+  <text class="muted small" x="946" y="210">Compatible MCP client</text>
+  <path d="M1134 222 v16" class="line"/>
+  <rect class="surface" x="928" y="240" width="412" height="52" rx="8"/>
+  <text class="ink body" x="946" y="262" font-weight="700">2 · Discover &amp; run</text>
+  <text class="muted small" x="946" y="280">Verified operations and bounded workflows</text>
+  <path d="M1134 292 v16" class="line"/>
+  <rect class="surface" x="928" y="310" width="412" height="52" rx="8"/>
+  <text class="ink body" x="946" y="332" font-weight="700">3 · Get structured results</text>
+  <text class="muted small" x="946" y="350">Result data, status, and manifest</text>
+  <text class="muted tiny" x="928" y="385">Only supported operations are shown as available.</text>
+
+  <text class="ink h2" x="72" y="455">Try a real workflow</text>
+  <text class="muted body" x="72" y="482">Run a safe sample, inspect each step, and see the MCP request and result.</text>
+  <rect class="surface" x="72" y="504" width="1296" height="370" rx="14"/>
+  <rect class="bg" x="92" y="524" width="1256" height="48" rx="8"/>
+  <text class="ink body" x="112" y="554" font-weight="700">Workflow Lab</text>
+  <rect class="accent" x="1042" y="534" width="284" height="28" rx="6"/>
+  <text class="ink tiny" x="1055" y="552" font-weight="700">Guided sample · no personal data needed</text>
+
+  <text class="ink label" x="100" y="608">TASK</text>
+  <rect class="surface" x="100" y="620" width="536" height="52" rx="7"/>
+  <text class="muted small" x="116" y="650">Decode this Base64, validate JSON, then format it</text>
+  <text class="ink label" x="100" y="704">SAMPLE INPUT</text>
+  <rect class="surface" x="100" y="716" width="536" height="76" rx="7"/>
+  <text class="mono" x="116" y="742">eyJvayI6dHJ1ZX0=</text>
+  <text class="muted tiny" x="116" y="766">Sample input is used by default. Remote submission is explicit.</text>
+  <rect class="button" x="100" y="810" width="126" height="40" rx="7"/>
+  <text class="buttonText" x="126" y="835">Run sample</text>
+  <rect class="surface" x="238" y="810" width="104" height="40" rx="7"/>
+  <text class="ink small" x="260" y="835" font-weight="700">Reset</text>
+
+  <line x1="660" y1="596" x2="660" y2="850" class="line"/>
+  <text class="ink label" x="688" y="608">WORKFLOW STEPS</text>
+  <circle cx="702" cy="642" r="12" fill="#e6eefc" stroke="#9cb9ef"/>
+  <text class="ink tiny" x="698" y="646" font-weight="700">1</text>
+  <text class="ink small" x="724" y="646" font-weight="700">encoding.transform</text>
+  <text class="muted tiny" x="724" y="664">Decode Base64 · result available</text>
+  <circle cx="702" cy="698" r="12" fill="#e6eefc" stroke="#9cb9ef"/>
+  <text class="ink tiny" x="698" y="702" font-weight="700">2</text>
+  <text class="ink small" x="724" y="702" font-weight="700">json.validate</text>
+  <text class="muted tiny" x="724" y="720">Validate decoded JSON</text>
+  <circle cx="702" cy="754" r="12" fill="#e6eefc" stroke="#9cb9ef"/>
+  <text class="ink tiny" x="698" y="758" font-weight="700">3</text>
+  <text class="ink small" x="724" y="758" font-weight="700">json.format</text>
+  <text class="muted tiny" x="724" y="776">Return formatted text and manifest</text>
+  <rect class="surface" x="688" y="800" width="638" height="50" rx="7"/>
+  <text class="ink small" x="704" y="821" font-weight="700">Show MCP request / response</text>
+  <text class="muted tiny" x="704" y="838">Tool name · sanitized arguments · bounded result</text>
+
+  <text class="ink h2" x="72" y="925">Choose where GaGet.dev runs</text>
+  <rect class="surface" x="72" y="948" width="626" height="126" rx="12"/>
+  <text class="ink body" x="96" y="980" font-weight="700">Hosted GaGet.dev</text>
+  <text class="muted small" x="96" y="1007">Quickest setup. Connect to the published endpoint when available.</text>
+  <text class="muted small" x="96" y="1031">Review authentication, limits, transfer, and retention details.</text>
+  <text class="ink small" x="96" y="1056" font-weight="700">Hosted setup guide →</text>
+  <rect class="surface" x="718" y="948" width="650" height="126" rx="12"/>
+  <text class="ink body" x="742" y="980" font-weight="700">Self-hosted / on-premises</text>
+  <text class="muted small" x="742" y="1007">Operate the UI and MCP service in infrastructure you control.</text>
+  <text class="muted small" x="742" y="1031">Configure auth, network policy, TLS, storage, and resource limits.</text>
+  <text class="ink small" x="742" y="1056" font-weight="700">Docker &amp; deployment guide →</text>
+  <text class="muted tiny" x="72" y="1100">PROPOSAL WIREFRAME · Target design only, not a screenshot or proof of implementation.</text>
+</svg>
