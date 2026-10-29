@@ -68,7 +68,7 @@ const schemas = {
   "json.unescape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.find": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, query: { type: "string", maxLength: 1000 }, match: { type: "string", enum: ["keys","values","both"] } }, required: ["input","query"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
-  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, degrees: { type: "integer", enum: [90,180,270] }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 } }, required: ["inputBase64","action"], additionalProperties: false },
+  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, degrees: { type: "integer", enum: [90,180,270] }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 }, fit: { type: "string", enum: ["contain","cover","fill","inside","outside"] }, position: { type: "string", enum: ["centre","north","northeast","east","southeast","south","southwest","west","northwest"] } }, required: ["inputBase64","action"], additionalProperties: false },
   "developer.format": { type: "object", properties: { operation: { type: "string", enum: ["xml","sql","html","csv-json","curl"] }, input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["format","minify","json-to-csv"] }, delimiter: { type: "string", maxLength: 1 } }, required: ["operation","input"], additionalProperties: false },
   "security.hash": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["digest","hmac","crc32","crc16-ccitt","adler32"] }, algorithm: { type: "string", enum: ["SHA-256","SHA-384","SHA-512"] }, key: { type: "string", maxLength: 10000 } }, required: ["input","mode"], additionalProperties: false },
   "security.jwt.decode": { type: "object", properties: { token: { type: "string", maxLength: 20000 } }, required: ["token"], additionalProperties: false },
@@ -149,7 +149,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.unescape": ["input"],
     "json.find": ["input","query","match"],
     "image.inspect": ["inputBase64"],
-    "image.transform": ["inputBase64","action","left","top","width","height","degrees","format","quality","brightness","contrast","saturation","sigma"],
+    "image.transform": ["inputBase64","action","left","top","width","height","degrees","format","quality","brightness","contrast","saturation","sigma","fit","position"],
     "developer.format": ["operation", "input", "mode", "delimiter"],
     "security.hash": ["input","mode","algorithm","key"],
     "security.jwt.decode": ["token"],
@@ -303,6 +303,8 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const contrast = rawInput.contrast;
         const saturation = rawInput.saturation;
         const sigma = rawInput.sigma;
+        const fit = rawInput.fit;
+        const position = rawInput.position;
         if (left !== undefined && (!Number.isSafeInteger(left) || (left as number) < 0 || (left as number) > 16_000_000)) throw new McpRuntimeError("INVALID_INPUT", "'left' must be an integer from 0 to 16,000,000.");
         if (top !== undefined && (!Number.isSafeInteger(top) || (top as number) < 0 || (top as number) > 16_000_000)) throw new McpRuntimeError("INVALID_INPUT", "'top' must be an integer from 0 to 16,000,000.");
         if (width !== undefined && (!Number.isSafeInteger(width) || (width as number) < 1 || (width as number) > 4096)) throw new McpRuntimeError("INVALID_INPUT", "'width' must be an integer from 1 to 4096.");
@@ -311,6 +313,10 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         for (const [name, value, min, max] of [["brightness", brightness, 0.1, 2], ["contrast", contrast, 0, 3], ["saturation", saturation, 0, 3], ["sigma", sigma, 0.3, 100]] as const) {
           if (value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max)) throw new McpRuntimeError("INVALID_INPUT", "'" + name + "' is outside the supported numeric range.");
         }
+        if (fit !== undefined && !["contain","cover","fill","inside","outside"].includes(String(fit))) throw new McpRuntimeError("INVALID_INPUT", "Fit must be contain, cover, fill, inside, or outside.");
+        if (position !== undefined && !["centre","north","northeast","east","southeast","south","southwest","west","northwest"].includes(String(position))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported resize position.");
+        if ((fit !== undefined || position !== undefined) && action !== "resize") throw new McpRuntimeError("INVALID_INPUT", "Fit and position are valid only for resize.");
+        if (action === "resize" && action !== "resize" && position !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Position is valid only for resize.");
         if (action === "resize" && width === undefined && height === undefined) throw new McpRuntimeError("INVALID_INPUT", "Resize requires width, height, or both.");
         if (action === "crop" && (left === undefined || top === undefined || width === undefined || height === undefined)) throw new McpRuntimeError("INVALID_INPUT", "Crop requires left, top, width, and height.");
         if (action === "rotate" && degrees !== 90 && degrees !== 180 && degrees !== 270) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires degrees of 90, 180, or 270.");
@@ -333,7 +339,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           if (action === "crop") {
             if ((left as number) + (width as number) > metadata.width || (top as number) + (height as number) > metadata.height) throw new McpRuntimeError("INVALID_INPUT", "Crop rectangle must fit entirely inside the source image.");
             pipeline = pipeline.extract({ left: left as number, top: top as number, width: width as number, height: height as number });
-          } else if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: "inside", withoutEnlargement: true });
+          } else if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: (fit as "contain" | "cover" | "fill" | "inside" | "outside" | undefined) ?? "inside", position: (position as string | undefined) ?? "centre", withoutEnlargement: true });
           else if (action === "rotate") pipeline = pipeline.rotate(degrees as number);
           else if (action === "flip") pipeline = pipeline.flip();
           else if (action === "flop") pipeline = pipeline.flop();

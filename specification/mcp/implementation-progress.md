@@ -30,6 +30,7 @@
 ## Latest implementation increment (verified by MCP CI)
 
 - Added bounded Sharp-backed `image.inspect` and `image.transform` operations for explicitly supplied Base64 raster data. Supported actions: resize, rotate, flip, flop, auto-orient, and conversion to JPEG/PNG/WebP/AVIF.
+- Latest implementation increment adds explicit resize fit modes (`contain`, `cover`, `fill`, `inside`, `outside`) and positioning anchors, with strict action-specific validation and runtime tests. Exact-revision CI evidence is pending for this increment; it is not marked verified until both workflows finish.
 - Caps: 600,000 input bytes, 16 million pixels, 4096-pixel output dimensions, 600,000 output bytes, five-second Sharp timeout; no persistence or artifact retrieval.
 - Known-answer tests create and resize a small PNG, validate metadata and output bounds, reject malformed Base64/invalid rotation values, and reject action-inapplicable parameters. Sharp timeouts map to a stable `TIMEOUT` error.
 - This increment passed the checks listed above at the exact tested revision. Image artifact lifecycle and audio/video operations are not complete.
