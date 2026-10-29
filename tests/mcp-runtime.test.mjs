@@ -347,6 +347,17 @@ test("image print-size calculator validates DPI and reports explicit physical un
   await assert.rejects(executeOperation("image.print-size", { width: 100, height: 100, dpi: 300, unit: "px" }), { code: "INVALID_INPUT" });
 });
 
+test("image text overlay rasterizes escaped text within bounded image limits", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 64, height: 48, channels: 3, background: "#FFFFFF" } }).png().toBuffer();
+  const result = await executeOperation("image.transform", { inputBase64: png.toString("base64"), action: "text-overlay", text: "<tag>&text", x: 2, y: 2, fontSize: 12, color: "#112233" });
+  assert.equal(result.width, 64);
+  assert.equal(result.height, 48);
+  assert.ok(Buffer.from(result.dataBase64, "base64").byteLength > 0);
+  await assert.rejects(executeOperation("image.transform", { inputBase64: png.toString("base64"), action: "text-overlay", text: "hi", x: 65, y: 2, fontSize: 12, color: "#112233" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64: png.toString("base64"), action: "text-overlay", text: "<svg/>", x: 2, y: 2, fontSize: 12, color: "red" }), { code: "INVALID_INPUT" });
+});
+
 test("image inspection and transformations use bounded raster bytes", async () => {
   const { default: sharp } = await import("sharp");
   const png = await sharp({ create: { width: 3, height: 2, channels: 3, background: "#336699" } }).png().toBuffer();

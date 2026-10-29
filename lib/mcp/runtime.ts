@@ -164,7 +164,7 @@ const schemas = {
   "audio.analyze": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
   "image.sample-pixel": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, x: { type: "integer", minimum: 0, maximum: 16000000 }, y: { type: "integer", minimum: 0, maximum: 16000000 } }, required: ["inputBase64","x","y"], additionalProperties: false },
-  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, leftRatio: { type: "number", minimum: 0, maximum: 1 }, topRatio: { type: "number", minimum: 0, maximum: 1 }, widthRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, heightRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, degrees: { type: "number", minimum: -180, maximum: 180 }, background: { type: "string", pattern: "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$" }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 }, fit: { type: "string", enum: ["contain","cover","fill","inside","outside"] }, position: { type: "string", enum: ["centre","north","northeast","east","southeast","south","southwest","west","northwest"] } }, required: ["inputBase64","action"], additionalProperties: false },
+  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust","text-overlay"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, leftRatio: { type: "number", minimum: 0, maximum: 1 }, topRatio: { type: "number", minimum: 0, maximum: 1 }, widthRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, heightRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, degrees: { type: "number", minimum: -180, maximum: 180 }, background: { type: "string", pattern: "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$" }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 }, fit: { type: "string", enum: ["contain","cover","fill","inside","outside"] }, position: { type: "string", enum: ["centre","north","northeast","east","southeast","south","southwest","west","northwest"] }, text: { type: "string", maxLength: 500 }, x: { type: "integer", minimum: 0, maximum: 4096 }, y: { type: "integer", minimum: 0, maximum: 4096 }, fontSize: { type: "integer", minimum: 1, maximum: 256 }, color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" } }, required: ["inputBase64","action"], additionalProperties: false },
   "developer.format": { type: "object", properties: { operation: { type: "string", enum: ["xml","sql","html","csv-json","curl"] }, input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["format","minify","json-to-csv"] }, delimiter: { type: "string", maxLength: 1 } }, required: ["operation","input"], additionalProperties: false },
   "security.hash": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["digest","hmac","crc32","crc16-ccitt","adler32"] }, algorithm: { type: "string", enum: ["SHA-256","SHA-384","SHA-512"] }, key: { type: "string", maxLength: 10000 } }, required: ["input","mode"], additionalProperties: false },
   "security.jwt.decode": { type: "object", properties: { token: { type: "string", maxLength: 20000 } }, required: ["token"], additionalProperties: false },
@@ -192,7 +192,7 @@ const capabilityList = [
   { id: "image.print-size", version: "1.0.0", description: "Calculate physical print dimensions from pixel width/height and DPI. Supports inch, centimeter, and millimeter output; it does not modify image metadata.", limits: { maxPixelDimension: 100000, minDpi: 1, maxDpi: 9600, maxOutputBytes: 1024 } },
   { id: "image.sample-pixel", version: "1.0.0", description: "Sample one pixel from an explicitly supplied bounded, single-frame raster image. Coordinates are zero-based pixels; returns RGB hex and RGBA channels. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: 1024, timeoutMs: 5000 } },
   { id: "image.inspect", version: "1.0.0", description: "Inspect dimensions, aspect ratio, pixel count, transparency, orientation, and basic metadata of a bounded supported raster image supplied explicitly as base64. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: MCP_MAX_OUTPUT_BYTES, timeoutMs: 5000 } },
-  { id: "image.transform", version: "1.0.0", description: "Crop, resize with explicit fit and anchor options, rotate by arbitrary bounded angles with an optional hex background, flip, flop, auto-orient, grayscale, blur, adjust brightness/contrast/saturation, or convert a bounded supported image supplied explicitly as base64. Returns a bounded base64 result; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxOutputBytes: MCP_MAX_IMAGE_OUTPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxDimension: 4096, timeoutMs: 5000 } },
+  { id: "image.transform", version: "1.0.0", description: "Crop, resize with explicit fit and anchor options, rotate by arbitrary bounded angles with an optional hex background, flip, flop, auto-orient, grayscale, blur, adjust brightness/contrast/saturation, or convert a bounded supported image supplied explicitly as base64, or add a plain-text overlay using escaped SVG text rendered to raster output. Returns a bounded base64 result; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxOutputBytes: MCP_MAX_IMAGE_OUTPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxDimension: 4096, timeoutMs: 5000 } },
   { id: "developer.format", version: "1.0.0", description: "Format/minify supported XML, SQL, HTML text, or convert CSV/JSON. Does not execute input.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.hash", version: "1.0.0", description: "Compute bounded text digests, HMAC, or non-cryptographic checksums. HMAC keys are secret; hashes are not encryption.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.jwt.decode", version: "1.0.0", description: "Decode JWT header and claims without verifying its signature or trust.", limits: { maxInputCharacters: 20000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
@@ -639,7 +639,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "image.print-size": ["width","height","dpi","unit"],
     "image.inspect": ["inputBase64"],
     "image.sample-pixel": ["inputBase64","x","y"],
-    "image.transform": ["inputBase64","action","left","top","width","height","leftRatio","topRatio","widthRatio","heightRatio","degrees","background","format","quality","brightness","contrast","saturation","sigma","fit","position"],
+    "image.transform": ["inputBase64","action","left","top","width","height","leftRatio","topRatio","widthRatio","heightRatio","degrees","background","format","quality","brightness","contrast","saturation","sigma","fit","position","text","x","y","fontSize","color"],
     "developer.format": ["operation", "input", "mode", "delimiter"],
     "security.hash": ["input","mode","algorithm","key"],
     "security.jwt.decode": ["token"],
@@ -848,7 +848,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
       case "image.transform": {
         const inputBase64 = stringField(rawInput, "inputBase64", 800_000);
         const bytes = decodeBoundedImageBase64(inputBase64);
-        const action = enumField(rawInput, "action", ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] as const);
+        const action = enumField(rawInput, "action", ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust","text-overlay"] as const);
         const left = rawInput.left;
         const top = rawInput.top;
         const width = rawInput.width;
@@ -867,6 +867,11 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const sigma = rawInput.sigma;
         const fit = rawInput.fit;
         const position = rawInput.position;
+        const text = rawInput.text;
+        const textX = rawInput.x;
+        const textY = rawInput.y;
+        const fontSize = rawInput.fontSize;
+        const color = rawInput.color;
         if (left !== undefined && (!Number.isSafeInteger(left) || (left as number) < 0 || (left as number) > 16_000_000)) throw new McpRuntimeError("INVALID_INPUT", "'left' must be an integer from 0 to 16,000,000.");
         if (top !== undefined && (!Number.isSafeInteger(top) || (top as number) < 0 || (top as number) > 16_000_000)) throw new McpRuntimeError("INVALID_INPUT", "'top' must be an integer from 0 to 16,000,000.");
         if (width !== undefined && (!Number.isSafeInteger(width) || (width as number) < 1 || (width as number) > 4096)) throw new McpRuntimeError("INVALID_INPUT", "'width' must be an integer from 1 to 4096.");
@@ -877,6 +882,13 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         }
         if (fit !== undefined && !["contain","cover","fill","inside","outside"].includes(String(fit))) throw new McpRuntimeError("INVALID_INPUT", "Fit must be contain, cover, fill, inside, or outside.");
         if (position !== undefined && !["centre","north","northeast","east","southeast","south","southwest","west","northwest"].includes(String(position))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported resize position.");
+        if (action === "text-overlay") {
+          if (typeof text !== "string" || text.length < 1 || text.length > 500) throw new McpRuntimeError("INVALID_INPUT", "Text overlay requires 1 to 500 characters.");
+          if (!Number.isSafeInteger(textX) || (textX as number) < 0 || (textX as number) > 4096 || !Number.isSafeInteger(textY) || (textY as number) < 0 || (textY as number) > 4096) throw new McpRuntimeError("INVALID_INPUT", "Text overlay x and y must be integers from 0 to 4,096.");
+          if (!Number.isSafeInteger(fontSize) || (fontSize as number) < 1 || (fontSize as number) > 256) throw new McpRuntimeError("INVALID_INPUT", "Text overlay fontSize must be an integer from 1 to 256.");
+          if (typeof color !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(color)) throw new McpRuntimeError("INVALID_INPUT", "Text overlay color must be a six-digit hexadecimal color.");
+        } else if (text !== undefined || textX !== undefined || textY !== undefined || fontSize !== undefined || color !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Text overlay options are valid only for the text-overlay action.");
+
         if ((fit !== undefined || position !== undefined) && action !== "resize") throw new McpRuntimeError("INVALID_INPUT", "Fit and position are valid only for resize.");
         const ratioValues = [leftRatio, topRatio, widthRatio, heightRatio];
         if (ratioValues.some(value => value != null && (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1)) || (typeof widthRatio === "number" && widthRatio <= 0) || (typeof heightRatio === "number" && heightRatio <= 0)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop values must be finite ratios between 0 and 1; widthRatio and heightRatio must be greater than 0.");
@@ -925,6 +937,12 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           else if (action === "auto-orient") pipeline = pipeline.rotate();
           else if (action === "grayscale") pipeline = pipeline.grayscale();
           else if (action === "blur") pipeline = pipeline.blur(sigma as number);
+          else if (action === "text-overlay") {
+            if ((textX as number) >= metadata.width || (textY as number) >= metadata.height) throw new McpRuntimeError("INVALID_INPUT", "Text overlay origin must be inside the source image.");
+            const escapedText = (text as string).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+            const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="' + metadata.width + '" height="' + metadata.height + '"><text x="' + textX + '" y="' + ((textY as number) + (fontSize as number)) + '" font-size="' + fontSize + '" fill="' + color + '" font-family="sans-serif">' + escapedText + '</text></svg>');
+            pipeline = pipeline.composite([{ input: svg, left: 0, top: 0 }]);
+          }
           else if (action === "adjust") {
             if (brightness !== undefined || saturation !== undefined) pipeline = pipeline.modulate({ ...(brightness === undefined ? {} : { brightness: brightness as number }), ...(saturation === undefined ? {} : { saturation: saturation as number }) });
             if (contrast !== undefined) pipeline = pipeline.linear(contrast as number, 128 * (1 - (contrast as number)));

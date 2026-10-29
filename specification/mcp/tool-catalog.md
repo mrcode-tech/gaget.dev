@@ -43,6 +43,10 @@ Remote MCP calls send their supplied input to the configured server. The server 
 
 - `audio.analyze` reports normalized peak, RMS, DC offset, and clipping totals/per-channel for explicitly supplied bounded PCM/IEEE-float WAV bytes. This is sample analysis, not audio encoding or general codec support.
 
+## Image overlay addition
+
+- `image.transform` supports a `text-overlay` action that escapes supplied text and rasterizes it through the existing image pipeline. It does not accept arbitrary SVG markup.
+
 ## Existing tools to evaluate
 
 Every item below is proposed for audit, not approved automatically. Phase labels are priorities, not current implementation status.
