@@ -42,6 +42,8 @@ Keyboard reachable, visible focus, Escape closes and focus returns, dialog has a
 
 The SVG is a target concept labelled Proposal, not current-state evidence. Update it with the prose contract after design review. Every verified MCP tool must link accurate help; privacy is explained before server transfer; help passes accessibility, responsive, theme, localization/RTL, and copy tests.
 
+The canonical product/navigation decision and acceptance criteria are maintained in [MCP Workflow UX Architecture](./workflow-ux-architecture.md). The landing page demonstrates a curated pipeline; Batch Workbench is the only general-purpose workflow editor.
+
 ## Public MCP landing page and interactive demonstration
 
 **Target route:** `/mcp` (or the repository's established equivalent after route audit). This is a public product/education page, distinct from contextual per-tool help and distinct from the MCP transport endpoint. Do not use a route name that conflicts with the actual protocol endpoint.
