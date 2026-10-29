@@ -2,6 +2,12 @@
 
 **Status:** Partially implemented. The current MCP workflow subset and remaining acceptance gaps are tracked in [implementation progress](./implementation-progress.md).
 
+## User-facing workspace ownership
+
+Batch Workbench is the only general-purpose workflow editor in GaGet.dev. It is separate from Dev Tools and sits immediately below Dev Tools in the primary sidebar. Do not create a second simple workflow or MCP-specific editor.
+
+MCP & Integrations may demonstrate a curated pipeline, but should link to Batch Workbench for full authoring. Both interfaces use this canonical pipeline contract; MCP executes only the subset whose operations are verified for the server runtime. See [MCP Workflow UX Architecture](./workflow-ux-architecture.md).
+
 ## Goal and rules
 Let AI clients compose approved GaGet operations without reimplementing each transformation. The engine is independent of MCP and the web UI. Browser adapters may execute local workflows; MCP may execute approved server workflows.
 
