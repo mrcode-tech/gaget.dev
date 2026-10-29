@@ -230,6 +230,19 @@ test("image transformations support bounded grayscale, blur, and tonal adjustmen
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "grayscale", sigma: 1 }), { code: "INVALID_INPUT" });
 });
 
+test("workflow can select a bounded image data field as its final text output", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 4, height: 3, channels: 3, background: "#336699" } }).png().toBuffer();
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 0, top: 0, width: 3, height: 2 } },
+    { id: "resize", operationId: "image.transform", arguments: { inputBase64: { $ref: "crop.result.dataBase64" }, action: "resize", width: 2, height: 2 } }
+  ], output: { $ref: "resize.result.dataBase64" } });
+  assert.equal(workflow.success, true);
+  assert.equal(typeof workflow.result, "string");
+  assert.ok(Buffer.from(workflow.result, "base64").byteLength > 0);
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [{ id: "validate", operationId: "json.validate", arguments: { input: "{}" } }], output: { $ref: "validate.result.valid" } }), { code: "INVALID_INPUT" });
+});
+
 test("image crop and resize can be chained through explicit bounded dataBase64 references", async () => {
   const { default: sharp } = await import("sharp");
   const png = await sharp({ create: { width: 4, height: 3, channels: 3, background: "#336699" } }).png().toBuffer();

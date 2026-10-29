@@ -488,7 +488,7 @@ export const MCP_MAX_WORKFLOW_BYTES = 1_000_000;
 export const MCP_WORKFLOW_DEADLINE_MS = 10_000;
 type WorkflowReference = { $ref: string };
 type WorkflowStep = { id: string; operationId: string; arguments: Record<string, unknown> };
-type WorkflowRecipe = { schemaVersion: 1; steps: WorkflowStep[] };
+type WorkflowRecipe = { schemaVersion: 1; steps: WorkflowStep[]; output?: WorkflowReference };
 const workflowStringInputs: Record<string, readonly string[]> = {
   "encoding.transform": ["input"],
   "encoding.charset": ["input"],
@@ -533,7 +533,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
   let serialized: string;
   try { serialized = JSON.stringify(raw); } catch { throw new McpRuntimeError("INVALID_INPUT", "Workflow must be serializable JSON."); }
   if (new TextEncoder().encode(serialized).byteLength > MCP_MAX_WORKFLOW_BYTES) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Workflow definition exceeds the 1,000,000 byte limit.");
-  assertAllowedKeys(raw, ["schemaVersion", "steps"]);
+  assertAllowedKeys(raw, ["schemaVersion", "steps", "output"]);
   if (raw.schemaVersion !== 1) throw new McpRuntimeError("INVALID_INPUT", "Workflow schemaVersion must be 1.");
   if (!Array.isArray(raw.steps) || raw.steps.length < 1 || raw.steps.length > MCP_MAX_WORKFLOW_STEPS) {
     throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", `Workflow must contain between 1 and ${MCP_MAX_WORKFLOW_STEPS} steps.`);
@@ -571,6 +571,17 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
     }
     seen.add(rawStep.id);
   }
+  if (raw.output !== undefined) {
+    if (!isWorkflowReference(raw.output)) throw new McpRuntimeError("INVALID_INPUT", "Workflow output must be a direct reference to a previous step result.");
+    const outputMatch = /^([a-z][a-z0-9_-]{0,39})\.result(?:\.([A-Za-z][A-Za-z0-9]*))?$/.exec(raw.output.$ref);
+    if (!outputMatch || !seen.has(outputMatch[1])) throw new McpRuntimeError("INVALID_INPUT", "Workflow output must reference a declared step result.");
+    const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === outputMatch[1]) as JsonObject).operationId as string;
+    if (outputMatch[2]) {
+      if (sourceOperation !== "image.transform" || outputMatch[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Workflow output may select only image.transform dataBase64.");
+    } else if (!workflowStringOutputs.has(sourceOperation)) {
+      throw new McpRuntimeError("INVALID_INPUT", "Workflow output must select a text result or supported image data field.");
+    }
+  }
   return raw as unknown as WorkflowRecipe;
 }
 export async function executeWorkflow(raw: unknown, options: { signal?: AbortSignal; deadlineMs?: number } = {}): Promise<{
@@ -606,7 +617,15 @@ export async function executeWorkflow(raw: unknown, options: { signal?: AbortSig
     results.set(step.id, result);
     manifest.push({ id: step.id, operationId: step.operationId, success: true, result, outputBytes });
   }
-  return { success: true, schemaVersion: 1, steps: manifest, result: manifest[manifest.length - 1].result, totalOutputBytes, elapsedMs: Date.now() - startedAt };
+  let finalResult = manifest[manifest.length - 1].result;
+  if (recipe.output) {
+    const match = /^([a-z][a-z0-9_-]{0,39})\.result(?:\.([A-Za-z][A-Za-z0-9]*))?$/.exec(recipe.output.$ref) as RegExpExecArray;
+    const sourceResult = results.get(match[1]);
+    finalResult = match[2] === "dataBase64" && isObject(sourceResult) ? sourceResult.dataBase64 : sourceResult;
+  }
+  const finalBytes = new TextEncoder().encode(JSON.stringify(finalResult)).byteLength;
+  if (finalBytes > MCP_MAX_WORKFLOW_BYTES) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Selected workflow output exceeds the 1,000,000-byte limit.");
+  return { success: true, schemaVersion: 1, steps: manifest, result: finalResult, totalOutputBytes, elapsedMs: Date.now() - startedAt };
 }
 
 let rateWindowStartedAt = Date.now();
@@ -703,6 +722,7 @@ const mcpHandler = createMcpHandler(() => {
       description: "Run a sequential workflow of approved operations. Workflow references may point only to earlier text results or image.transform dataBase64 fields. Maximum 20 steps, 1,000,000 aggregate output bytes, and 10 seconds. No code, shell, filesystem, or network execution.",
       inputSchema: z.object({
         schemaVersion: z.literal(1),
+        output: z.object({ $ref: z.string().max(80) }).strict().optional(),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
           operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.transform"]),
