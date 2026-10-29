@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { McpLandingPage } from "@/components/mcp-landing-page";
+import { listCapabilities } from "@/lib/mcp/runtime";
+
+export const runtime = "nodejs";
 
 export const metadata: Metadata = {
   title: "MCP & Integrations",
@@ -14,5 +17,5 @@ export const metadata: Metadata = {
 };
 
 export default function McpPage() {
-  return <McpLandingPage />;
+  return <McpLandingPage capabilities={listCapabilities().map(({ id, version, description, limits }) => ({ id, version, description, limits }))} />;
 }

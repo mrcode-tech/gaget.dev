@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { LocaleLink } from "@/components/locale-link";
 import { useI18n } from "@/components/i18n-provider";
 
+type PublicCapability = { id: string; version: string; description: string; limits: Record<string, number> };
+
 const content = {
   en: {
     eyebrow: "MCP & INTEGRATIONS",
@@ -27,15 +29,7 @@ const content = {
     outputNote: "This is a precomputed illustration, not runtime evidence.",
     fullEditor: "Build and run your own pipeline in Batch Workbench",
     capabilitiesTitle: "Supported server operation families",
-    capabilitiesIntro: "The MCP endpoint publishes an allowlisted subset. Actual availability depends on the server build and configuration; a browser route alone does not imply remote support.",
-    capabilityGroups: [
-      ["Encoding & charset", "encoding.transform · encoding.charset"],
-      ["Text & JSON", "text.transform · json.validate · json.format · json.diff · json.minify · json.sort-keys · json.escape · json.unescape · json.find"],
-      ["Developer utilities", "developer.format · data.inspect · generator.sample"],
-      ["Security & time", "security.hash · security.jwt.decode · datetime.convert · datetime.arithmetic · datetime.compare"],
-      ["Raster image operations", "image.inspect · image.transform (explicit Base64 input; bounded)"],
-      ["Workflow orchestration", "execute_workflow (sequential, allowlisted, bounded)"],
-    ],
+    capabilitiesIntro: "This catalog is generated from the server runtime capability registry. Actual availability still depends on deployment configuration; a browser route alone does not imply remote support.",
     howTitle: "How the integration works",
     howSteps: [
       ["Connect", "Configure a compatible MCP client to use the endpoint provided by your deployment administrator."],
@@ -75,15 +69,7 @@ const content = {
     outputNote: "این خروجی از پیش آماده شده و شاهد اجرای واقعی نیست.",
     fullEditor: "ساخت و اجرای خط لوله در Batch Workbench",
     capabilitiesTitle: "گروه‌های عملیات سرور",
-    capabilitiesIntro: "نقطه پایانی MCP فقط زیرمجموعه مجاز را منتشر می‌کند. دسترسی واقعی به ساخت و پیکربندی سرور بستگی دارد؛ وجود مسیر مرورگر به‌تنهایی پشتیبانی راه دور را ثابت نمی‌کند.",
-    capabilityGroups: [
-      ["کدگذاری و نویسه‌ها", "encoding.transform · encoding.charset"],
-      ["متن و JSON", "text.transform · json.validate · json.format · json.diff · json.minify · json.sort-keys · json.escape · json.unescape · json.find"],
-      ["ابزارهای توسعه", "developer.format · data.inspect · generator.sample"],
-      ["امنیت و زمان", "security.hash · security.jwt.decode · datetime.convert · datetime.arithmetic · datetime.compare"],
-      ["عملیات تصویر شطرنجی", "image.inspect · image.transform (ورودی Base64 صریح و محدود)"],
-      ["اجرای گردش‌کار", "execute_workflow (ترتیبی، مجاز و محدود)"],
-    ],
+    capabilitiesIntro: "این فهرست از رجیستری قابلیت‌های زمان اجرای سرور ساخته می‌شود. دسترسی واقعی به ساخت و پیکربندی سرور بستگی دارد؛ وجود مسیر مرورگر به‌تنهایی پشتیبانی راه دور را ثابت نمی‌کند.",
     howTitle: "نحوه کار یکپارچه‌سازی",
     howSteps: [
       ["اتصال", "کارخواه سازگار با MCP را با نشانی ارائه‌شده توسط مدیر استقرار تنظیم کنید."],
@@ -123,15 +109,7 @@ const content = {
     outputNote: "هذه نتيجة توضيحية مُعدّة مسبقاً وليست دليلاً على تنفيذ فعلي.",
     fullEditor: "أنشئ خط أنابيبك وشغّله في Batch Workbench",
     capabilitiesTitle: "مجموعات عمليات الخادم المدعومة",
-    capabilitiesIntro: "تنشر نقطة MCP مجموعة فرعية مسموحاً بها فقط. يعتمد التوفر الفعلي على إصدار الخادم وإعداده؛ وجود صفحة في المتصفح لا يثبت دعم التنفيذ عن بُعد.",
-    capabilityGroups: [
-      ["الترميز ومجموعات المحارف", "encoding.transform · encoding.charset"],
-      ["النص وJSON", "text.transform · json.validate · json.format · json.diff · json.minify · json.sort-keys · json.escape · json.unescape · json.find"],
-      ["أدوات المطور", "developer.format · data.inspect · generator.sample"],
-      ["الأمان والوقت", "security.hash · security.jwt.decode · datetime.convert · datetime.arithmetic · datetime.compare"],
-      ["عمليات الصور النقطية", "image.inspect · image.transform (إدخال Base64 صريح ومحدود)"],
-      ["تنسيق سير العمل", "execute_workflow (تسلسلي ومسموح ومحدود)"],
-    ],
+    capabilitiesIntro: "تُنشأ هذه القائمة من سجل قدرات تشغيل الخادم. يعتمد التوفر الفعلي على إعداد النشر؛ وجود صفحة في المتصفح لا يثبت دعم التنفيذ عن بُعد.",
     howTitle: "كيف يعمل التكامل",
     howSteps: [
       ["الاتصال", "اضبط عميل MCP المتوافق باستخدام عنوان نقطة النهاية الذي يقدمه مسؤول النشر."],
@@ -153,7 +131,7 @@ const content = {
   },
 } as const;
 
-export function McpLandingPage() {
+export function McpLandingPage({ capabilities }: { capabilities: PublicCapability[] }) {
   const { locale } = useI18n();
   const t = content[locale as keyof typeof content] ?? content.en;
   const [showOutput, setShowOutput] = useState(false);
@@ -191,7 +169,7 @@ export function McpLandingPage() {
         <div className="mt-5 flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-start gap-3"><Workflow className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div><h3 className="font-semibold">{t.helpTitle}</h3><p className="mt-1 text-sm text-muted-foreground">{t.helpBody}</p></div></div><Button asChild className="shrink-0"><LocaleLink href="/workflow/pipeline">{t.workbenchCta}<ArrowRight className="ms-2 h-4 w-4" /></LocaleLink></Button></div>
       </section>
 
-      <section className="border-b border-border py-10 lg:py-14"><h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.capabilitiesTitle}</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">{t.capabilitiesIntro}</p><div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{t.capabilityGroups.map(([title, operations]) => <article key={title} className="min-w-0 rounded-xl border border-border bg-card p-4"><h3 className="font-semibold">{title}</h3><p dir="ltr" className="mt-2 break-words font-mono text-xs leading-5 text-muted-foreground">{operations}</p></article>)}</div></section>
+      <section className="border-b border-border py-10 lg:py-14"><h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.capabilitiesTitle}</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">{t.capabilitiesIntro}</p><div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{capabilities.map((capability) => <article key={capability.id} className="min-w-0 rounded-xl border border-border bg-card p-4"><div className="flex items-start justify-between gap-2"><h3 dir="ltr" className="break-all font-mono text-sm font-semibold">{capability.id}</h3><span className="shrink-0 rounded-md bg-muted px-2 py-1 text-[10px] text-muted-foreground">v{capability.version}</span></div><p className="mt-2 text-sm leading-5 text-muted-foreground">{capability.description}</p><div className="mt-3 flex flex-wrap gap-1.5">{Object.entries(capability.limits).map(([key, value]) => <span key={key} className="rounded-md border border-border px-2 py-1 text-[10px] text-muted-foreground">{key}: {value.toLocaleString()}</span>)}</div></article>)}<article className="min-w-0 rounded-xl border border-primary/30 bg-primary/5 p-4"><h3 dir="ltr" className="font-mono text-sm font-semibold">execute_workflow</h3><p className="mt-2 text-sm leading-5 text-muted-foreground">Run sequential, allowlisted steps with earlier-step references and bounded step, output, and time budgets.</p><div className="mt-3 flex flex-wrap gap-1.5"><span className="rounded-md border border-border px-2 py-1 text-[10px]">20 steps max</span><span className="rounded-md border border-border px-2 py-1 text-[10px]">10 s deadline</span></div></article></div></section>
 
       <section id="setup" className="scroll-mt-6 py-10 lg:py-14"><div className="mb-6"><h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.setupCta}</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t.privacyBody}</p></div><div className="grid gap-4 lg:grid-cols-2"><article className="rounded-2xl border border-border bg-card p-5 sm:p-6"><div className="flex items-center gap-3"><PlugZap className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">{t.hostedTitle}</h3></div><p className="mt-3 text-sm leading-6 text-muted-foreground">{t.hostedBody}</p><div className="mt-4 rounded-lg bg-muted p-3"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Endpoint path</p><code dir="ltr" className="mt-1 block break-all text-sm">/api/mcp</code></div></article><article className="rounded-2xl border border-border bg-card p-5 sm:p-6"><div className="flex items-center gap-3"><Container className="h-5 w-5 text-primary" /><h3 className="text-lg font-semibold">{t.selfHostedTitle}</h3></div><p className="mt-3 text-sm leading-6 text-muted-foreground">{t.selfHostedBody}</p><div className="mt-4 flex flex-wrap gap-3"><Button asChild variant="outline"><a href="https://github.com/mrcode-tech/gaget.dev/blob/mcp-compatible/specification/mcp/deployment-docker.md" target="_blank" rel="noreferrer">{t.dockerLink}</a></Button><Button asChild variant="ghost"><LocaleLink href="/workflow/pipeline">{t.workbenchCta}</LocaleLink></Button></div></article></div><div className="mt-5 rounded-xl border border-border p-4"><div className="flex items-center gap-3"><Code2 className="h-5 w-5 text-muted-foreground" /><div><h3 className="font-semibold">{t.privacyTitle}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{t.privacyBody}</p></div></div></div></section>
     </main>
