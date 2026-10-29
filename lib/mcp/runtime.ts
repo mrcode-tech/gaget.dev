@@ -174,16 +174,16 @@ function normalizePcmWav(bytes: Buffer, targetDbfs: number): Record<string, unkn
   if (formatCode !== 1) throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Audio normalization currently supports integer PCM WAV only.");
   if (dataOffset < 0 || channels < 1 || dataBytes === 0) throw new McpRuntimeError("INVALID_INPUT", "WAV audio data is empty or incomplete.");
   const bytesPerSample = bitDepth / 8, sampleCount = dataBytes / bytesPerSample;
-  const readSample = (position: number): number => {
-    if (bitDepth === 8) return (bytes.readUInt8(position) - 128) / 128;
-    if (bitDepth === 16) return bytes.readInt16LE(position) / 32768;
-    if (bitDepth === 24) { let integer = bytes.readUIntLE(position, 3); if (integer & 0x800000) integer -= 0x1000000; return integer / 8388608; }
-    if (bitDepth === 32) return bytes.readInt32LE(position) / 2147483648;
+  const readSample = (sourceBytes: Buffer, position: number): number => {
+    if (bitDepth === 8) return (sourceBytes.readUInt8(position) - 128) / 128;
+    if (bitDepth === 16) return sourceBytes.readInt16LE(position) / 32768;
+    if (bitDepth === 24) { let integer = sourceBytes.readUIntLE(position, 3); if (integer & 0x800000) integer -= 0x1000000; return integer / 8388608; }
+    if (bitDepth === 32) return sourceBytes.readInt32LE(position) / 2147483648;
     throw new McpRuntimeError("UNSUPPORTED_FORMAT", "This PCM bit depth is not supported for normalization.");
   };
   const source = Array<number>(sampleCount);
   let peakBefore = 0;
-  for (let i = 0; i < sampleCount; i++) { const value = readSample(dataOffset + i * bytesPerSample); source[i] = value; peakBefore = Math.max(peakBefore, Math.abs(value)); }
+  for (let i = 0; i < sampleCount; i++) { const value = readSample(bytes, dataOffset + i * bytesPerSample); source[i] = value; peakBefore = Math.max(peakBefore, Math.abs(value)); }
   const targetPeak = Math.pow(10, targetDbfs / 20);
   const gain = peakBefore === 0 ? 1 : targetPeak / peakBefore;
   const output = Buffer.from(bytes);
@@ -195,7 +195,7 @@ function normalizePcmWav(bytes: Buffer, targetDbfs: number): Record<string, unkn
     else if (bitDepth === 16) output.writeInt16LE(Math.max(-32768, Math.min(32767, Math.round(scaled * 32768))), position);
     else if (bitDepth === 24) output.writeIntLE(Math.max(-8388608, Math.min(8388607, Math.round(scaled * 8388608))), position, 3);
     else if (bitDepth === 32) output.writeInt32LE(Math.max(-2147483648, Math.min(2147483647, Math.round(scaled * 2147483648))), position);
-    const actual = readSample.call(null, position);
+    const actual = readSample(output, position);
     peakAfter = Math.max(peakAfter, Math.abs(actual));
     if (Math.abs(actual) >= 1) fullScaleSamples++;
   }
