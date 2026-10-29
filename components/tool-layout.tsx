@@ -3,6 +3,7 @@
 import { ChevronRight, Home } from "lucide-react";
 import { LocaleLink } from "@/components/locale-link";
 import { useI18n } from "@/components/i18n-provider";
+import { McpHelp } from "@/components/mcp-help";
 
 export function ToolLayout({
   category,
@@ -46,6 +47,7 @@ export function ToolLayout({
         </p>
       </header>}
 
+      <McpHelp title={title} />
       {children}
     </main>
   );

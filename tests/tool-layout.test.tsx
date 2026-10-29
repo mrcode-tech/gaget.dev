@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@/components/i18n-provider";
 import { ToolLayout } from "@/components/tool-layout";
 
@@ -40,5 +41,25 @@ describe("ToolLayout workspace gutter ownership", () => {
     expect(main.className).toContain("px-0");
     expect(main.className).not.toContain("sm:px-6");
     expect(main.className).not.toContain("lg:px-8");
+  });
+});
+
+describe("MCP contextual help", () => {
+  it("shows accurate MCP help for a verified JSON workspace in English", async () => {
+    render(<I18nProvider locale="en"><ToolLayout category="JSON" title="JSON Formatter & Validator" description="Format JSON." workspace><div>JSON workspace</div></ToolLayout></I18nProvider>);
+    expect(screen.getByRole("button", { name: /AI \/ MCP help/i })).toBeTruthy();
+    expect(screen.getByText("JSON workspace")).toBeTruthy();
+  });
+  it("does not advertise MCP help for a workspace without a verified server operation", () => {
+    render(<I18nProvider locale="en"><ToolLayout category="Image" title="Image Editor" description="Edit images." workspace><div>Date workspace</div></ToolLayout></I18nProvider>);
+    expect(screen.queryByRole("button", { name: /AI \/ MCP help/i })).toBeNull();
+  });
+  it("opens an accessible help dialog with privacy and setup information", async () => {
+    const user = userEvent.setup();
+    render(<I18nProvider locale="fa"><ToolLayout category="JSON" title="JSON Formatter & Validator" description="Format JSON."><div>JSON workspace</div></ToolLayout></I18nProvider>);
+    await user.click(screen.getByRole("button", { name: /راهنمای هوش مصنوعی \/ MCP/i }));
+    expect(screen.getByRole("dialog", { name: "راهنمای هوش مصنوعی / MCP" })).toBeTruthy();
+    expect(screen.getByText("حریم خصوصی و انتقال داده")).toBeTruthy();
+    expect(screen.getByText("راه‌اندازی میزبانی‌شده توسط خودتان")).toBeTruthy();
   });
 });

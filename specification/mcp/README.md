@@ -1,6 +1,6 @@
 # GaGet.dev MCP Compatibility and Shared Runtime
 
-**Status:** Proposal. Implementation follows the evidence-gated roadmap.
+**Status:** In progress. A bounded MCP runtime, SDK transport, workflow tool, and Docker packaging are implemented; see [implementation progress](./implementation-progress.md) for exact-revision verification and remaining gaps.
 
 ## Start here
 - [End-to-end implementation prompt](./IMPLEMENTATION_PROMPT.md) — copy this prompt to direct an implementation agent through every phase, including tests, CI, Docker, privacy, and release gates.

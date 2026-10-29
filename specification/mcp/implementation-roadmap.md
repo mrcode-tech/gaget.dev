@@ -1,6 +1,6 @@
 # MCP Compatibility — Implementation Roadmap
 
-**Status:** Proposed. Phase completion requires implementation and verification evidence, not documentation alone.
+**Status:** In progress. Phase status and exact-revision evidence are maintained in [implementation progress](./implementation-progress.md). Phase completion requires implementation and verification evidence, not documentation alone.
 
 ## Phase 0 — Audit and decisions (P0 prerequisite)
 Inspect routes/source, registry, operation helpers, JSON/media/date-time workspaces, workflow pipeline, dependencies/licenses, tests, CI, runtime boundaries, Docker feasibility.

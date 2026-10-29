@@ -1,6 +1,6 @@
 # MCP Tool Catalog and Existing Capability Mapping
 
-**Status:** Proposed exposure plan; tool list is not proof of server compatibility.
+**Status:** Implemented subset; current revision and verification evidence are tracked in [implementation progress](./implementation-progress.md). Tool listing is not proof of release certification.
 
 Sources: [Current state](../product/current-state.md), [Product inventory](../product/product-and-feature-inventory.md), [Tool catalog architecture](../product/tool-catalog-and-workspace-architecture.md), [Developer tools inventory](../new-feature/feature-inventory.md).
 
@@ -14,6 +14,27 @@ Use stable operation IDs; track status per operation; publish only audited serve
 - **get_job_status / get_job_result:** only if long-running tasks and artifact retrieval need asynchronous jobs.
 
 The generic dispatcher is internal machinery, not arbitrary code, path, shell, dynamic-import, or network execution. Add curated operation-specific tools if testing shows a generic tool is hard for models to choose.
+
+## Implemented MCP operation subset
+
+The MCP adapter exposes three protocol tools: `list_capabilities`, `execute_operation`, and `execute_workflow`. The dispatcher is allowlisted; operation IDs are stable and are not derived from routes. The following operation IDs are implemented in the server runtime; the current branch revision must pass MCP CI before they are marked verified.
+
+| Operation ID | Scope | Key limits / safety notes |
+|---|---|---|
+| `encoding.transform` | URL, Base64/Base64url, Base32, hex/binary, HTML entities, Unicode escapes, quoted-printable, Base58, Base85/Z85 | Up to 1,000,000 input characters; encoding is not encryption |
+| `text.transform` | Allowlisted text transforms | Up to 200,000 characters; regex and text limits apply |
+| `json.validate`, `json.format`, `json.minify`, `json.diff` | JSON diagnostics, format/minify, structural comparison | Up to 200,000 characters per document |
+| `developer.format` | XML, SQL, HTML, CSV/JSON, cURL text operations | Up to 200,000 characters; no execution or network calls |
+| `security.hash` | SHA-2 digests, HMAC, CRC32, CRC16-CCITT, Adler-32 | Up to 200,000 characters; HMAC key is sensitive; digest/checksum is not encryption |
+| `security.jwt.decode` | Decode JWT header and claims | Up to 20,000 characters; signature, issuer, audience, and trust are not verified |
+| `generator.sample` | Bounded strings, integers, timestamps, sample JSON, UUIDs | At most 100 records/identifiers; timestamps use server clock |
+| `data.inspect` | Allowlisted offline URL/query/key-value/numeric/network-text/HTTP/DNS/signature inspections | Up to 200,000 characters; offline only; no DNS lookup or URL fetch |
+| `datetime.convert` | ISO instant/epoch conversion and explicit-zone formatting | Requires ISO timestamp with explicit UTC offset or integer epoch input |
+| `datetime.arithmetic` | Elapsed-time arithmetic on ISO instants | Integer amount bounded to ±1,000,000; elapsed UTC time, not calendar-day arithmetic |
+| `datetime.compare` | Compare two ISO instants | Both timestamps require explicit UTC offsets |
+| `execute_workflow` | Sequential composition of allowlisted operations | At most 20 steps, 1,000,000-byte recipe/output budget, 10-second deadline budget; only earlier text-result references |
+
+Remote MCP calls send their supplied input to the configured server. The server does not persist operation input/output by design; hosting administrators remain responsible for their own infrastructure logs, backups, and network policy. No browser-selected file is implicitly uploaded.
 
 ## Existing tools to evaluate
 

@@ -106,7 +106,7 @@ test("workflow rejects forward, missing, object, and non-text references", async
     {id:"use",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"check.result"}}}
   ]}), {code:"INVALID_INPUT"});
   await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
-    {id:"first",operationId:"text.transform",arguments:{operation:"trim",input:{nested:"no"}}}
+    {id:"first",operationId:"text.transform",arguments:{operation:"trim",input:{nested:{$ref:"first.result"}}}}
   ]}), {code:"INVALID_INPUT"});
 });
 test("workflow enforces schema, step, reference, deadline and cancellation limits", async () => {
@@ -124,4 +124,50 @@ test("MCP execute_workflow tool is discoverable and returns a safe manifest", as
   const payload = await parseProtocolResponse(response);
   assert.equal(payload.result.structuredContent.success,true);
   assert.equal(payload.result.structuredContent.steps.length,2);
+});
+
+test("security hash operation distinguishes digest and HMAC and protects keys", async () => {
+  assert.equal(await executeOperation("security.hash", { input: "abc", mode: "digest", algorithm: "SHA-256" }), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  await assert.rejects(executeOperation("security.hash", { input: "abc", mode: "hmac" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("security.hash", { input: "abc", mode: "digest", key: "secret" }), { code: "INVALID_INPUT" });
+});
+test("JWT decoder returns claims without implying signature verification", async () => {
+  const token = Buffer.from(JSON.stringify({alg:"none",typ:"JWT"})).toString("base64url") + "." + Buffer.from(JSON.stringify({sub:"123",exp:1})).toString("base64url") + ".";
+  const result = await executeOperation("security.jwt.decode", { token });
+  assert.equal(result.signatureVerified, false);
+  assert.equal(result.claims.sub, "123");
+  assert.match(result.note, /does not verify/i);
+  await assert.rejects(executeOperation("security.jwt.decode", { token: "not.a.jwt" }), { code: "INVALID_INPUT" });
+});
+test("bounded synthetic data and offline inspection operations work without network access", async () => {
+  const uuid = await executeOperation("generator.sample", { operation: "uuid", count: 2 });
+  assert.equal(uuid.split("\n").length, 2);
+  await assert.rejects(executeOperation("generator.sample", { operation: "uuid", count: 101 }), { code: "INVALID_INPUT" });
+  const parsed = await executeOperation("data.inspect", { operation: "url-parse", input: "https://example.test/path?q=1" });
+  assert.match(parsed, /networkRequestsMade": false/);
+  await assert.rejects(executeOperation("data.inspect", { operation: "url-parse", input: "https://example.test", options: { unexpected: true } }), { code: "INVALID_INPUT" });
+});
+test("date-time operations require explicit offsets and handle UTC arithmetic deterministically", async () => {
+  const converted = await executeOperation("datetime.convert", { mode: "iso-to-epoch", input: "2024-01-01T00:00:00Z" });
+  assert.equal(converted.epochMilliseconds, 1704067200000);
+  const added = await executeOperation("datetime.arithmetic", { input: "2024-01-01T00:00:00Z", amount: 1, unit: "days" });
+  assert.equal(added.result, "2024-01-02T00:00:00.000Z");
+  const compared = await executeOperation("datetime.compare", { left: "2024-01-01T00:00:00Z", right: "2023-12-31T19:00:00-05:00" });
+  assert.equal(compared.relation, "equal");
+  await assert.rejects(executeOperation("datetime.convert", { mode: "format", input: "2024-01-01T00:00:00" }), { code: "INVALID_INPUT" });
+});
+
+test("workflow accepts bounded literal options but rejects nested references", async () => {
+  const result = await executeWorkflow({schemaVersion:1,steps:[
+    {id:"replace",operationId:"text.transform",arguments:{operation:"find-replace",input:"abc",options:{pattern:"b",replacement:"X"}}}
+  ]});
+  assert.equal(result.result,"aXc");
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"first",operationId:"json.format",arguments:{input:"{}"}},
+    {id:"second",operationId:"text.transform",arguments:{operation:"trim",input:"x",options:{nested:{$ref:"first.result"}}}}
+  ]}), {code:"INVALID_INPUT"});
+});
+test("additional MCP capabilities advertise stable schemas and finite limits", () => {
+  const ids = listCapabilities().map(item => item.id);
+  for (const id of ["security.hash","security.jwt.decode","generator.sample","data.inspect","datetime.convert","datetime.arithmetic","datetime.compare"]) assert.ok(ids.includes(id), id);
 });

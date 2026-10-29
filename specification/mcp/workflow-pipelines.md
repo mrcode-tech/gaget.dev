@@ -1,6 +1,6 @@
 # Workflow and Pipeline Contract
 
-**Status:** Proposal.
+**Status:** Partially implemented. The current MCP workflow subset and remaining acceptance gaps are tracked in [implementation progress](./implementation-progress.md).
 
 ## Goal and rules
 Let AI clients compose approved GaGet operations without reimplementing each transformation. The engine is independent of MCP and the web UI. Browser adapters may execute local workflows; MCP may execute approved server workflows.
@@ -15,20 +15,27 @@ Let AI clients compose approved GaGet operations without reimplementing each tra
 - Cancellation cleans workers, buffers, temp files and artifacts where possible.
 - Parallel execution, loops, arbitrary expressions, external calls and custom code are deferred.
 
-## Illustrative schema
+## Implemented MCP workflow schema
+
+The current MCP endpoint accepts a strict version-1 recipe. A step has a unique ID, an allowlisted operation ID, and an `arguments` object. A direct argument value may reference a previous step's text result using `{ "$ref": "step-id.result" }`.
+
     {
       "schemaVersion": 1,
       "steps": [
-        { "id": "decode", "operationId": "encoding.base64.decode",
-          "input": { "text": "eyJvayI6dHJ1ZX0=" } },
-        { "id": "validate", "operationId": "json.validate",
-          "input": { "text": { "$ref": "decode.result.text" } } },
-        { "id": "format", "operationId": "json.format",
-          "input": { "text": { "$ref": "decode.result.text" }, "indent": 2 } }
+        {
+          "id": "decode",
+          "operationId": "encoding.transform",
+          "arguments": { "mode": "base64", "direction": "decode", "input": "eyJvayI6dHJ1ZX0=" }
+        },
+        {
+          "id": "validate",
+          "operationId": "json.validate",
+          "arguments": { "input": { "$ref": "decode.result" } }
+        }
       ]
     }
 
-Illustrative only; IDs and fields must match the registry before advertised as executable. Reject missing references, incompatible types, cycles, unknown operations, oversized payloads, and invalid parameters.
+Only earlier-step references are allowed, and only operations with text results may be referenced. References are accepted only as direct argument values, not nested inside options. Literal option objects are permitted with bounded nesting. The engine is sequential and fail-fast; it returns step results and a bounded manifest. Unsupported media, arbitrary expressions, loops, parallel execution, and artifact/job references are not available through this workflow tool.
 
 ## Lifecycle
 1. Validate schema/version.
