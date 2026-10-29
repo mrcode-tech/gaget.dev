@@ -21,6 +21,8 @@ Implement server invocation, validation, quotas, deadlines, cancellation, safe e
 ## Phase 4 — MCP adapter (P1)
 Integrate maintained SDK/transport; implement discovery, list_capabilities, execute_operation; apply appropriate auth/authorization; expose only approved operations. Exit when compatible client initializes, discovers, invokes, receives safe errors, and cannot invoke disabled/deferred operations.
 
+Detailed navigation, shared pipeline boundaries, demo safety, and acceptance criteria are specified in [MCP Workflow UX Architecture](./workflow-ux-architecture.md).
+
 ## Product architecture decision — one workflow workspace
 
 There is one general-purpose user-facing workflow workspace: **Batch Workbench**, a separate primary sidebar destination immediately below **Dev Tools**. Do not create a second simple workflow/pipeline workspace under Dev Tools or a parallel MCP-only editor.
