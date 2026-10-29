@@ -1,13 +1,16 @@
 name: GaGet.dev CI
 
 on:
+  # Exercise the full application suite on the authorized MCP implementation branch too.
+  push:
+    branches:
+      - mcp-compatible
   # Validate proposed changes to the protected integration branches.
   pull_request:
     branches:
       - stage
       - main
-  # Pull requests are the only automatic full-suite trigger.
-  # Use manual dispatch for deliberate diagnosis outside a PR.
+  # Use manual dispatch for deliberate diagnosis outside an active push or pull request.
   workflow_dispatch:
 
 # Only one GaGet.dev CI run should consume resources at a time.
