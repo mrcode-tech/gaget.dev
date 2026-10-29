@@ -22,6 +22,7 @@ The MCP adapter exposes three protocol tools: `list_capabilities`, `execute_oper
 | Operation ID | Scope | Key limits / safety notes |
 |---|---|---|
 | `encoding.transform` | URL, Base64/Base64url, Base32, hex/binary, HTML entities, Unicode escapes, quoted-printable, Base58, Base85/Z85 | Up to 1,000,000 input characters; encoding is not encryption |
+| `encoding.charset` | Explicit UTF-8, UTF-16LE/BE, and Windows-1252 conversion to/from hexadecimal bytes | Up to 1,000,000 input characters; decoding requires valid hex and strict character decoding |
 | `encoding.charset` | Convert text to/from hex bytes using UTF-8, UTF-16LE, UTF-16BE, or Windows-1252 | Up to 1,000,000 input characters; encoding returns hex and decoding accepts hex; invalid byte sequences are rejected |
 | `text.transform` | Allowlisted text transforms | Up to 200,000 characters; regex execution is deliberately not exposed through MCP pending safe execution limits |
 | `json.validate`, `json.format`, `json.minify`, `json.diff`, `json.sort-keys`, `json.escape`, `json.unescape`, `json.find` | JSON diagnostics, format/minify, structural comparison | Up to 200,000 characters per document |
