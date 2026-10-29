@@ -326,7 +326,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const hasAnyPixelCrop = [left, top, width, height].some(value => value != null);
         const hasRatioCrop = ratioValues.every(value => value != null);
         const hasAnyRatioCrop = ratioValues.some(value => value != null);
-        if (hasPixelCrop && hasAnyRatioCrop || hasAnyPixelCrop && !hasPixelCrop || hasAnyRatioCrop && !hasRatioCrop) throw new McpRuntimeError("INVALID_INPUT", "Crop must use either all four pixel values or all four normalized ratios, not a mixture.");
+        if (action === "crop" && (hasPixelCrop && hasAnyRatioCrop || hasAnyPixelCrop && !hasPixelCrop || hasAnyRatioCrop && !hasRatioCrop)) throw new McpRuntimeError("INVALID_INPUT", "Crop must use either all four pixel values or all four normalized ratios, not a mixture.");
         if (action === "crop" && !hasPixelCrop && !hasRatioCrop) throw new McpRuntimeError("INVALID_INPUT", "Crop requires left/top/width/height pixels or leftRatio/topRatio/widthRatio/heightRatio.");
         if (action === "rotate" && degrees !== 90 && degrees !== 180 && degrees !== 270) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires degrees of 90, 180, or 270.");
         if (action === "convert" && (typeof format !== "string" || !["jpeg","png","webp","avif"].includes(format))) throw new McpRuntimeError("INVALID_INPUT", "Convert requires a supported output format.");
