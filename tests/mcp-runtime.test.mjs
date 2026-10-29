@@ -278,6 +278,8 @@ test("image inspection and transformations use bounded raster bytes", async () =
   assert.equal(inspected.width, 3);
   assert.equal(inspected.height, 2);
   assert.equal(inspected.format, "png");
+  assert.equal(inspected.aspectRatio, 1.5);
+  assert.equal(inspected.pixelCount, 6);
   const cropped = await executeOperation("image.transform", { inputBase64, action: "crop", left: 1, top: 0, width: 2, height: 1 });
   assert.equal(cropped.width, 2);
   assert.equal(cropped.height, 1);
