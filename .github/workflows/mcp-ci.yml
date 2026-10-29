@@ -49,7 +49,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: mcp-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -99,16 +99,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Rebuild the lock from package.json because the committed lockfile
-          # has been missing declared runtime and test dependencies. Then prove
-          # that the generated lock supports a clean, reproducible install.
-          rm -f package-lock.json
-          npm install --no-audit --no-fund 2>&1 | tee install.log
-          npm ci --no-audit --no-fund 2>&1 | tee -a install.log
           mkdir -p artifacts/mcp-ci
+          if npm ci --no-audit --no-fund 2>&1 | tee install.log; then
+            echo "lockfile_regenerated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::The committed lockfile is stale. Regenerating it from package.json, then validating a clean install."
+            npm install --no-audit --no-fund 2>&1 | tee -a install.log
+            npm ci --no-audit --no-fund 2>&1 | tee -a install.log
+            echo "lockfile_regenerated=true" >> "$GITHUB_OUTPUT"
+          fi
           cp package-lock.json artifacts/mcp-ci/package-lock.generated.json
           if ! git diff --quiet -- package-lock.json; then
-            echo "::warning::The lockfile generated in CI differs from the checked-in lockfile. Review and commit artifacts/mcp-ci/package-lock.generated.json to make local and CI installs reproducible."
             git diff -- package-lock.json > artifacts/mcp-ci/package-lock-diff.patch
           fi
 
@@ -252,3 +253,21 @@ jobs:
           path: artifacts/mcp-ci/
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Commit regenerated lockfile on the authorized feature branch
+        if: always() && steps.install.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/mcp-compatible' && steps.install.outputs.lockfile_regenerated == 'true'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- package-lock.json; then
+            echo "No lockfile changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "build: regenerate reproducible npm lockfile"
+          auth="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c http.extraheader="AUTHORIZATION: basic $auth" push origin "HEAD:${GITHUB_REF_NAME}"
