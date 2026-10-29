@@ -29,6 +29,19 @@ test("allowlisted operations invoke real shared transformations", async () => {
   await assert.rejects(executeOperation("shell.exec", { command: "id" }), { code: "UNSUPPORTED_OPERATION" });
 });
 
+test("charset conversion is explicit, bounded, and composable in workflows", async () => {
+  assert.equal(await executeOperation("encoding.charset", { direction: "encode", charset: "utf-8", input: "Hello" }), "48656c6c6f");
+  assert.equal(await executeOperation("encoding.charset", { direction: "decode", charset: "utf-16be", input: "00480069" }), "Hi");
+  assert.equal(await executeOperation("encoding.charset", { direction: "encode", charset: "windows-1252", input: "€" }), "80");
+  await assert.rejects(executeOperation("encoding.charset", { direction: "decode", charset: "utf-8", input: "zz" }), { code: "PROCESSING_FAILED" });
+  await assert.rejects(executeOperation("encoding.charset", { direction: "encode", charset: "unsupported", input: "x" }), { code: "INVALID_INPUT" });
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "toHex", operationId: "encoding.charset", arguments: { direction: "encode", charset: "utf-8", input: "Hi" } },
+    { id: "back", operationId: "encoding.charset", arguments: { direction: "decode", charset: "utf-8", input: { "$ref": "toHex.result" } } }
+  ] });
+  assert.equal(workflow.result, "Hi");
+});
+
 test("runtime rejects malformed inputs and over-limit data with stable errors", async () => {
   await assert.rejects(executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: 42 }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: "x".repeat(1_000_001) }), { code: "RESOURCE_LIMIT_EXCEEDED" });
