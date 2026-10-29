@@ -321,11 +321,11 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         if (position !== undefined && !["centre","north","northeast","east","southeast","south","southwest","west","northwest"].includes(String(position))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported resize position.");
         if ((fit !== undefined || position !== undefined) && action !== "resize") throw new McpRuntimeError("INVALID_INPUT", "Fit and position are valid only for resize.");
         const ratioValues = [leftRatio, topRatio, widthRatio, heightRatio];
-        if (ratioValues.some(value => value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1)) || (typeof widthRatio === "number" && widthRatio <= 0) || (typeof heightRatio === "number" && heightRatio <= 0)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop values must be finite ratios between 0 and 1; widthRatio and heightRatio must be greater than 0.");
-        const hasPixelCrop = [left, top, width, height].every(value => value !== undefined);
-        const hasAnyPixelCrop = [left, top, width, height].some(value => value !== undefined);
-        const hasRatioCrop = ratioValues.every(value => value !== undefined);
-        const hasAnyRatioCrop = ratioValues.some(value => value !== undefined);
+        if (ratioValues.some(value => value != null && (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1)) || (typeof widthRatio === "number" && widthRatio <= 0) || (typeof heightRatio === "number" && heightRatio <= 0)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop values must be finite ratios between 0 and 1; widthRatio and heightRatio must be greater than 0.");
+        const hasPixelCrop = [left, top, width, height].every(value => value != null);
+        const hasAnyPixelCrop = [left, top, width, height].some(value => value != null);
+        const hasRatioCrop = ratioValues.every(value => value != null);
+        const hasAnyRatioCrop = ratioValues.some(value => value != null);
         if (hasPixelCrop && hasAnyRatioCrop || hasAnyPixelCrop && !hasPixelCrop || hasAnyRatioCrop && !hasRatioCrop) throw new McpRuntimeError("INVALID_INPUT", "Crop must use either all four pixel values or all four normalized ratios, not a mixture.");
         if (action === "crop" && !hasPixelCrop && !hasRatioCrop) throw new McpRuntimeError("INVALID_INPUT", "Crop requires left/top/width/height pixels or leftRatio/topRatio/widthRatio/heightRatio.");
         if (action === "rotate" && degrees !== 90 && degrees !== 180 && degrees !== 270) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires degrees of 90, 180, or 270.");
