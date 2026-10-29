@@ -83,7 +83,7 @@ const contracts: Record<string, HelpContract> = {
     prompt: "Convert this ISO timestamp to Unix milliseconds, add two hours, and compare it with another timestamp.",
     note: "Timestamps require an explicit UTC offset. Arithmetic uses elapsed UTC time, not calendar-day rules across daylight-saving changes."
   },
-  "Workflow & Batch Workbench": {
+  "Batch Workbench": {
     operations: ["execute_workflow"],
     prompt: "Decode this Base64 value, validate the decoded JSON, and format valid JSON as a final step.",
     note: "Workflows run sequentially, use only approved operations, and have finite step, output, and time budgets."
