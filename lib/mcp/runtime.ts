@@ -621,7 +621,7 @@ export async function handleMcpPost(request: Request, configuredToken: string | 
   if (admissionError) return admissionError;
   try {
   const lengthHeader = request.headers.get("content-length");
-  if (lengthHeader && /^\\d+$/.test(lengthHeader) && Number(lengthHeader) > MCP_MAX_REQUEST_BYTES) {
+  if (lengthHeader && /^\d+$/.test(lengthHeader) && Number(lengthHeader) > MCP_MAX_REQUEST_BYTES) {
     return Response.json({ error: "Request body exceeds the 1,000,000 byte limit." }, { status: 413 });
   }
   let raw: string;

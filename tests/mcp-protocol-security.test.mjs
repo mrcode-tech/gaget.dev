@@ -72,3 +72,12 @@ test("invalid operation errors do not expose parser internals", async () => {
   const body = await response.text();
   assert.doesNotMatch(body, /Unexpected token|JSON at position|stack|node_modules|home/i);
 });
+
+test("declared oversized Content-Length is rejected before body processing", async () => {
+  const response = await handleMcpPost(new Request("http://localhost/api/mcp", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "content-length": "1000001" },
+    body: "{}"
+  }), token);
+  assert.equal(response.status, 413);
+});
