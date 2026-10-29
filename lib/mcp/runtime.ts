@@ -339,7 +339,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           if (action === "crop") {
             if ((left as number) + (width as number) > metadata.width || (top as number) + (height as number) > metadata.height) throw new McpRuntimeError("INVALID_INPUT", "Crop rectangle must fit entirely inside the source image.");
             pipeline = pipeline.extract({ left: left as number, top: top as number, width: width as number, height: height as number });
-          } else if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: (fit as "contain" | "cover" | "fill" | "inside" | "outside" | undefined) ?? "inside", position: (position as string | undefined) ?? "centre", withoutEnlargement: true });
+          } else if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: (fit as "contain" | "cover" | "fill" | "inside" | "outside" | undefined) ?? "inside", position: (position as string | undefined) ?? "centre", withoutEnlargement: fit === undefined || fit === "inside" });
           else if (action === "rotate") pipeline = pipeline.rotate(degrees as number);
           else if (action === "flip") pipeline = pipeline.flip();
           else if (action === "flop") pipeline = pipeline.flop();
