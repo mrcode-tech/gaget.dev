@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 import { executeOperation, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES } from "../lib/mcp/runtime.ts";
 
 const token = "test-only-secret-token";
+const parseProtocolResponse = async (response) => {
+  const body = await response.text();
+  const eventData = body.split(/\\r?\\n/).filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).at(-1);
+  return JSON.parse(eventData ?? body);
+};
 const post = (body, authorization = `Bearer ${token}`, headers = {}) => handleMcpPost(new Request("http://localhost/api/mcp", { method: "POST", headers: { authorization, "content-type": "application/json", accept: "application/json, text/event-stream", ...headers }, body: typeof body === "string" ? body : JSON.stringify(body) }), token);
 
 test("capability registry contains stable IDs, versions and finite limits", () => {
@@ -40,22 +45,22 @@ test("authentication is mandatory and missing server configuration disables the 
 test("MCP initialize and tools/list implement JSON-RPC response envelopes", async () => {
   const initialized = await post({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "contract-test", version: "1" } } });
   assert.equal(initialized.status, 200);
-  const init = await initialized.json();
+  const init = await parseProtocolResponse(initialized);
   assert.equal(init.result.protocolVersion, "2025-11-25");
   assert.equal(init.result.serverInfo.name, "GaGet.dev MCP");
   const listed = await post({ jsonrpc: "2.0", id: 2, method: "tools/list" });
-  const tools = (await listed.json()).result.tools;
+  const tools = (await parseProtocolResponse(listed)).result.tools;
   assert.deepEqual(tools.map(tool => tool.name), ["list_capabilities", "execute_operation"]);
 });
 
 test("MCP tool call returns structured results and refuses disabled operation IDs", async () => {
   const good = await post({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "encoding.transform", arguments: { mode: "base64", direction: "encode", input: "hello" } } } });
-  const result = (await good.json()).result;
+  const result = (await parseProtocolResponse(good)).result;
   assert.equal(result.isError, false);
   assert.equal(result.structuredContent.success, true);
   assert.equal(result.structuredContent.result, "aGVsbG8=");
   const bad = await post({ jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "arbitrary.shell", arguments: { command: "whoami" } } } });
-  const badResult = await bad.json();
+  const badResult = await parseProtocolResponse(bad);
   assert.ok(badResult.result?.isError === true || badResult.result?.structuredContent?.success === false || badResult.error);
 });
 
