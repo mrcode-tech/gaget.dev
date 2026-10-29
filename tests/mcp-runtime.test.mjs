@@ -36,8 +36,8 @@ test("charset conversion is explicit, bounded, and composable in workflows", asy
   await assert.rejects(executeOperation("encoding.charset", { direction: "decode", charset: "utf-8", input: "zz" }), { code: "PROCESSING_FAILED" });
   await assert.rejects(executeOperation("encoding.charset", { direction: "encode", charset: "unsupported", input: "x" }), { code: "INVALID_INPUT" });
   const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
-    { id: "toHex", operationId: "encoding.charset", arguments: { direction: "encode", charset: "utf-8", input: "Hi" } },
-    { id: "back", operationId: "encoding.charset", arguments: { direction: "decode", charset: "utf-8", input: { "$ref": "toHex.result" } } }
+    { id: "to_hex", operationId: "encoding.charset", arguments: { direction: "encode", charset: "utf-8", input: "Hi" } },
+    { id: "back", operationId: "encoding.charset", arguments: { direction: "decode", charset: "utf-8", input: { "$ref": "to_hex.result" } } }
   ] });
   assert.equal(workflow.result, "Hi");
 });
