@@ -161,7 +161,7 @@ test("workflow accepts bounded literal options but rejects nested references", a
   const result = await executeWorkflow({schemaVersion:1,steps:[
     {id:"replace",operationId:"text.transform",arguments:{operation:"find-replace",input:"abc",options:{pattern:"b",replacement:"X"}}}
   ]});
-  assert.equal(result.result,"aXc");
+  assert.equal(JSON.parse(result.result).result,"aXc");
   await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
     {id:"first",operationId:"json.format",arguments:{input:"{}"}},
     {id:"second",operationId:"text.transform",arguments:{operation:"trim",input:"x",options:{nested:{$ref:"first.result"}}}}
