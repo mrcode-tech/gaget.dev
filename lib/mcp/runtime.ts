@@ -151,6 +151,97 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
   return result;
 }
 
+
+export const MCP_MAX_WORKFLOW_STEPS = 20;
+export const MCP_MAX_WORKFLOW_BYTES = 1_000_000;
+export const MCP_WORKFLOW_DEADLINE_MS = 10_000;
+type WorkflowReference = { $ref: string };
+type WorkflowStep = { id: string; operationId: string; arguments: Record<string, unknown> };
+type WorkflowRecipe = { schemaVersion: 1; steps: WorkflowStep[] };
+const workflowStringInputs: Record<string, readonly string[]> = {
+  "encoding.transform": ["input"],
+  "text.transform": ["input"],
+  "json.validate": ["input"],
+  "json.format": ["input"],
+  "json.minify": ["input"],
+  "json.diff": ["before", "after"],
+  "developer.format": ["input"]
+};
+const workflowStringOutputs = new Set(["encoding.transform", "text.transform", "json.format", "json.minify", "developer.format"]);
+function isWorkflowReference(value: unknown): value is WorkflowReference {
+  return isObject(value) && Object.keys(value).length === 1 && typeof value.$ref === "string";
+}
+function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
+  if (!isObject(raw)) throw new McpRuntimeError("INVALID_INPUT", "Workflow must be a JSON object.");
+  assertAllowedKeys(raw, ["schemaVersion", "steps"]);
+  if (raw.schemaVersion !== 1) throw new McpRuntimeError("INVALID_INPUT", "Workflow schemaVersion must be 1.");
+  if (!Array.isArray(raw.steps) || raw.steps.length < 1 || raw.steps.length > MCP_MAX_WORKFLOW_STEPS) {
+    throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", `Workflow must contain between 1 and ${MCP_MAX_WORKFLOW_STEPS} steps.`);
+  }
+  const seen = new Set<string>();
+  for (const [index, rawStep] of raw.steps.entries()) {
+    if (!isObject(rawStep)) throw new McpRuntimeError("INVALID_INPUT", `Workflow step ${index + 1} must be an object.`);
+    assertAllowedKeys(rawStep, ["id", "operationId", "arguments"]);
+    if (typeof rawStep.id !== "string" || !/^[a-z][a-z0-9_-]{0,39}$/.test(rawStep.id)) {
+      throw new McpRuntimeError("INVALID_INPUT", `Workflow step ${index + 1} has an invalid id.`);
+    }
+    if (seen.has(rawStep.id)) throw new McpRuntimeError("INVALID_INPUT", "Workflow step IDs must be unique.");
+    if (typeof rawStep.operationId !== "string" || !Object.hasOwn(workflowStringInputs, rawStep.operationId)) {
+      throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow references an operation that is not enabled for MCP execution.");
+    }
+    if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
+    const allowed = new Set(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "developer.format"]);
+    if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
+    for (const [field, value] of Object.entries(rawStep.arguments)) {
+      if (isWorkflowReference(value)) {
+        const match = /^([a-z][a-z0-9_-]{0,39})\.result$/.exec(value.$ref);
+        if (!match || !seen.has(match[1])) throw new McpRuntimeError("INVALID_INPUT", `Workflow reference '${value.$ref}' must point to a previous step result.`);
+        if (!workflowStringOutputs.has((raw.steps.find(s => isObject(s) && s.id === match[1]) as JsonObject).operationId as string)) {
+          throw new McpRuntimeError("INVALID_INPUT", "Workflow references must target a text result.");
+        }
+        if (!workflowStringInputs[rawStep.operationId].includes(field)) {
+          throw new McpRuntimeError("INVALID_INPUT", `Workflow field '${field}' does not accept a text result reference.`);
+        }
+      } else if (value !== null && typeof value === "object") {
+        throw new McpRuntimeError("INVALID_INPUT", "Nested workflow values and arbitrary object references are not supported.");
+      }
+    }
+    seen.add(rawStep.id);
+  }
+  return raw as unknown as WorkflowRecipe;
+}
+export async function executeWorkflow(raw: unknown, options: { signal?: AbortSignal; deadlineMs?: number } = {}): Promise<{
+  success: true; schemaVersion: 1; steps: { id: string; operationId: string; success: true; result: unknown; outputBytes: number }[];
+  result: unknown; totalOutputBytes: number; elapsedMs: number;
+}> {
+  const recipe = validateWorkflowRecipe(raw);
+  const startedAt = Date.now();
+  const deadlineMs = options.deadlineMs ?? MCP_WORKFLOW_DEADLINE_MS;
+  if (!Number.isFinite(deadlineMs) || deadlineMs < 1 || deadlineMs > MCP_WORKFLOW_DEADLINE_MS) {
+    throw new McpRuntimeError("INVALID_INPUT", `Workflow deadline must be between 1 and ${MCP_WORKFLOW_DEADLINE_MS} ms.`);
+  }
+  const results = new Map<string, unknown>();
+  const manifest: { id: string; operationId: string; success: true; result: unknown; outputBytes: number }[] = [];
+  let totalOutputBytes = 0;
+  for (const step of recipe.steps) {
+    if (options.signal?.aborted) throw new McpRuntimeError("CANCELLED", "Workflow execution was cancelled.");
+    if (Date.now() - startedAt >= deadlineMs) throw new McpRuntimeError("TIMEOUT", "Workflow exceeded its execution deadline.");
+    const args: Record<string, unknown> = {};
+    for (const [field, value] of Object.entries(step.arguments)) {
+      if (isWorkflowReference(value)) args[field] = results.get(value.$ref.slice(0, -".result".length));
+      else args[field] = value;
+    }
+    const result = await executeOperation(step.operationId, args);
+    const outputBytes = new TextEncoder().encode(JSON.stringify(result)).byteLength;
+    totalOutputBytes += outputBytes;
+    if (totalOutputBytes > MCP_MAX_WORKFLOW_BYTES) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Workflow outputs exceed the total byte budget.");
+    if (Date.now() - startedAt > deadlineMs) throw new McpRuntimeError("TIMEOUT", "Workflow exceeded its execution deadline.");
+    results.set(step.id, result);
+    manifest.push({ id: step.id, operationId: step.operationId, success: true, result, outputBytes });
+  }
+  return { success: true, schemaVersion: 1, steps: manifest, result: manifest[manifest.length - 1].result, totalOutputBytes, elapsedMs: Date.now() - startedAt };
+}
+
 const mcpHandler = createMcpHandler(() => {
   const server = new McpServer({ name: "GaGet.dev MCP", version: "1.0.0" });
   server.registerTool(
@@ -204,6 +295,44 @@ const mcpHandler = createMcpHandler(() => {
       }
     }
   );
+
+  server.registerTool(
+    "execute_workflow",
+    {
+      title: "Execute a bounded GaGet workflow",
+      description: "Run a sequential workflow of approved operations. Workflow references may point only to earlier text results. Maximum 20 steps, 1,000,000 aggregate output bytes, and 10 seconds. No code, shell, filesystem, or network execution.",
+      inputSchema: z.object({
+        schemaVersion: z.literal(1),
+        steps: z.array(z.object({
+          id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
+          operationId: z.enum(["encoding.transform", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "developer.format"]),
+          arguments: z.record(z.string(), z.unknown())
+        }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
+      }).strict(),
+      outputSchema: z.object({
+        success: z.boolean(),
+        schemaVersion: z.literal(1),
+        steps: z.array(z.unknown()),
+        result: z.unknown(),
+        totalOutputBytes: z.number(),
+        elapsedMs: z.number()
+      })
+    },
+    async (input) => {
+      try {
+        const result = await executeWorkflow(input);
+        return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      } catch (error) {
+        const runtimeError = error instanceof McpRuntimeError ? error : new McpRuntimeError("PROCESSING_FAILED", "Workflow execution failed.");
+        return {
+          content: [{ type: "text", text: runtimeError.message }],
+          structuredContent: { success: false, error: { code: runtimeError.code, message: runtimeError.message } },
+          isError: true
+        };
+      }
+    }
+  );
+
   return server;
 }, { responseMode: "json" });
 

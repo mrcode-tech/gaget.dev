@@ -50,7 +50,7 @@ test("MCP initialize and tools/list implement JSON-RPC response envelopes", asyn
   assert.equal(init.result.serverInfo.name, "GaGet.dev MCP");
   const listed = await post({ jsonrpc: "2.0", id: 2, method: "tools/list" });
   const tools = (await parseProtocolResponse(listed)).result.tools;
-  assert.deepEqual(tools.map(tool => tool.name), ["list_capabilities", "execute_operation"]);
+  assert.deepEqual(tools.map(tool => tool.name), ["list_capabilities", "execute_operation", "execute_workflow"]);
 });
 
 test("MCP tool call returns structured results and refuses disabled operation IDs", async () => {
@@ -81,4 +81,47 @@ test("operation schemas reject unknown fields and invalid enum values", async ()
   await assert.rejects(executeOperation("encoding.transform", { mode: "made-up", direction: "encode", input: "x" }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("json.format", { input: '{"ok":true}', indent: 99 }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("developer.format", { operation: "sql", input: "select 1", mode: "execute" }), { code: "INVALID_INPUT" });
+});
+
+test("bounded workflows execute typed sequential operations and return a result manifest", async () => {
+  const result = await executeWorkflow({
+    schemaVersion: 1,
+    steps: [
+      { id: "format", operationId: "json.format", arguments: { input: '{"ok":true}', indent: 2 } },
+      { id: "trim", operationId: "text.transform", arguments: { operation: "trim", input: { $ref: "format.result" } } }
+    ]
+  });
+  assert.equal(result.success, true);
+  assert.equal(result.steps.length, 2);
+  assert.equal(result.result, '{\n  "ok": true\n}');
+  assert.ok(result.totalOutputBytes > 0);
+});
+test("workflow rejects forward, missing, object, and non-text references", async () => {
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"first",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"later.result"}}},
+    {id:"later",operationId:"json.format",arguments:{input:"{}"}}
+  ]}), {code:"INVALID_INPUT"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"check",operationId:"json.validate",arguments:{input:"{}"}},
+    {id:"use",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"check.result"}}}
+  ]}), {code:"INVALID_INPUT"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"first",operationId:"text.transform",arguments:{operation:"trim",input:{nested:"no"}}}
+  ]}), {code:"INVALID_INPUT"});
+});
+test("workflow enforces schema, step, reference, deadline and cancellation limits", async () => {
+  await assert.rejects(executeWorkflow({schemaVersion:2,steps:[{id:"a",operationId:"json.format",arguments:{input:"{}"}}]}), {code:"INVALID_INPUT"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:Array.from({length:MCP_MAX_WORKFLOW_STEPS+1},(_,i)=>({id:"s"+i,operationId:"text.transform",arguments:{operation:"trim",input:"x"}}))}), {code:"RESOURCE_LIMIT_EXCEEDED"});
+  const controller = new AbortController(); controller.abort();
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[{id:"a",operationId:"json.format",arguments:{input:"{}"}}]},{signal:controller.signal}), {code:"CANCELLED"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[{id:"a",operationId:"json.format",arguments:{input:"{}"}}]},{deadlineMs:0}), {code:"INVALID_INPUT"});
+});
+test("MCP execute_workflow tool is discoverable and returns a safe manifest", async () => {
+  const response = await post({jsonrpc:"2.0",id:17,method:"tools/call",params:{name:"execute_workflow",arguments:{schemaVersion:1,steps:[
+    {id:"format",operationId:"json.format",arguments:{input:'{"ok":true}',indent:2}},
+    {id:"trim",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"format.result"}}}
+  ]}}});
+  const payload = await parseProtocolResponse(response);
+  assert.equal(payload.result.structuredContent.success,true);
+  assert.equal(payload.result.structuredContent.steps.length,2);
 });

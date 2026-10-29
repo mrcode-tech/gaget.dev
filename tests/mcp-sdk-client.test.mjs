@@ -18,7 +18,7 @@ test("maintained MCP SDK client initializes, discovers tools and invokes a real 
   try {
     await client.connect(transport);
     const listed = await client.listTools();
-    assert.deepEqual(listed.tools.map(tool => tool.name), ["list_capabilities", "execute_operation"]);
+    assert.deepEqual(listed.tools.map(tool => tool.name), ["list_capabilities", "execute_operation", "execute_workflow"]);
 
     const result = await client.callTool({
       name: "execute_operation",
