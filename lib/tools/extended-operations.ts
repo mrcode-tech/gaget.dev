@@ -701,6 +701,35 @@ export function inspectFileMetadata(bytes: Uint8Array): string {
       metadata.sectionHeaderCount=read16(elfClass===1?48:60);
       notes.push("ELF identification/header fields only; program segments and sections are not loaded or executed.");
     }else notes.push("The ELF identification is truncated or uses an unsupported class/byte order.");
+  } else if(ascii(0,16)==="SQLite format 3\\u0000") {
+    metadata.format="SQLite database header";
+    if(bytes.length<100)notes.push("The SQLite database header is truncated before its full 100-byte header is available.");
+    else {
+      const rawPageSize=(bytes[16]<<8)|bytes[17];
+      const pageSize=rawPageSize===1?65536:rawPageSize;
+      metadata.pageSizeBytes=pageSize;
+      metadata.writeVersion=bytes[18]===1?"legacy":bytes[18]===2?"WAL":`unknown (${bytes[18]})`;
+      metadata.readVersion=bytes[19]===1?"legacy":bytes[19]===2?"WAL":`unknown (${bytes[19]})`;
+      metadata.reservedBytesPerPage=bytes[20];
+      metadata.maxEmbeddedPayloadFraction=bytes[21];
+      metadata.minEmbeddedPayloadFraction=bytes[22];
+      metadata.leafPayloadFraction=bytes[23];
+      metadata.databasePageCount=u32be(28);
+      metadata.schemaFormat=u32be(44);
+      metadata.textEncoding=({1:"UTF-8",2:"UTF-16 little-endian",3:"UTF-16 big-endian"} as Record<number,string>)[u32be(56)??0]??"unknown";
+      if(pageSize<512||pageSize>65536||(pageSize&(pageSize-1))!==0)notes.push("The declared SQLite page size is not a valid power of two from 512 through 65,536 bytes.");
+      const pageCount=metadata.databasePageCount as number;
+      if(pageCount>0&&pageCount*pageSize>bytes.length)notes.push("The declared database page count exceeds the supplied byte length; the file may be truncated.");
+    }
+    notes.push("SQLite header fields only; database pages and schema are not parsed, and no query is executed.");
+  } else if(ascii(0,4)==="\\u0000asm") {
+    metadata.format="WebAssembly module header";
+    if(bytes.length<8)notes.push("The WebAssembly version field is truncated.");
+    else {
+      metadata.version=u32le(4);
+      if(metadata.version!==1)notes.push("The WebAssembly version is not the supported MVP version 1.");
+    }
+    notes.push("WebAssembly magic and version only; module sections are not validated or executed.");
   } else {
     metadata.format="No supported metadata parser matched";
     notes.push("The file may be unsupported, truncated, or contain a format variant not handled by this inspector.");
