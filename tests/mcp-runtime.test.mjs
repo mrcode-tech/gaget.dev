@@ -339,6 +339,10 @@ test("video.inspect reads bounded ISO BMFF movie and track metadata without deco
   assert.equal(result.trackCount, 1);
   assert.deepEqual(result.tracks[0], { trackId: 7, kind: "video", handler: "vide", codec: "avc1", width: 1920, height: 1080, durationSeconds: 5 });
   await assert.rejects(executeOperation("video.inspect", { inputBase64: Buffer.from("not a video").toString("base64") }), { code: "UNSUPPORTED_FORMAT" });
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "metadata", operationId: "video.inspect", arguments: { inputBase64: mp4.toString("base64") } }
+  ], output: { $ref: "metadata.result" } });
+  assert.equal(workflow.result.trackCount, 1);
 });
 
 test("audio.normalize can be invoked through MCP and selected as a workflow binary output", async () => {

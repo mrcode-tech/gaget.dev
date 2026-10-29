@@ -1319,6 +1319,7 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "datetime.convert": ["input"],
   "datetime.arithmetic": ["input"],
   "datetime.compare": ["left","right"],
+  "audio.inspect": ["inputBase64"],
   "audio.analyze": ["inputBase64"],
   "audio.trim": ["inputBase64"],
   "audio.normalize": ["inputBase64"],
@@ -1586,7 +1587,7 @@ const mcpHandler = createMcpHandler(() => {
         output: z.object({ $ref: z.string().max(80) }).strict().optional(),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
-          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
+          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "audio.analyze", "audio.trim", "audio.normalize", "video.inspect", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]),
           arguments: z.record(z.string(), z.unknown())
         }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
       }).strict(),
