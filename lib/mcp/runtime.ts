@@ -634,7 +634,6 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.unescape": ["input"],
     "json.find": ["input","query","match"],
     "audio.inspect": ["inputBase64"],
-  "audio.analyze": ["inputBase64"],
     "audio.analyze": ["inputBase64"],
     "image.print-size": ["width","height","dpi","unit"],
     "image.inspect": ["inputBase64"],
@@ -1116,6 +1115,7 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "datetime.convert": ["input"],
   "datetime.arithmetic": ["input"],
   "datetime.compare": ["left","right"],
+  "audio.analyze": ["inputBase64"],
   "image.inspect": ["inputBase64"],
   "image.sample-pixel": ["inputBase64"],
   "image.transform": ["inputBase64"]
