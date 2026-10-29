@@ -215,7 +215,7 @@ jobs:
             "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$log_file"
           ready=0
           for attempt in $(seq 1 60); do
-            if curl --silent --fail http://127.0.0.1:3000/ >/dev/null; then ready=1; break; fi
+            if curl --connect-timeout 1 --max-time 3 --silent --fail http://127.0.0.1:3000/ >/dev/null; then ready=1; break; fi
             sleep 2
           done
           if [[ "$ready" != 1 ]]; then
@@ -227,7 +227,7 @@ jobs:
             echo "::error::Container must not run as root."
             exit 1
           fi
-          unauth_status="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+          unauth_status="$(curl --connect-timeout 1 --max-time 3 --silent --output /dev/null --write-out '%{http_code}' \
             --header 'Content-Type: application/json' \
             --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
             http://127.0.0.1:3000/api/mcp)"
@@ -235,7 +235,7 @@ jobs:
             echo "::error::Expected unauthenticated MCP requests to return 401, got $unauth_status."
             exit 1
           fi
-          curl --silent --show-error --fail \
+          curl --connect-timeout 1 --max-time 10 --silent --show-error --fail \
             --header "Authorization: Bearer $test_token" \
             --header 'Content-Type: application/json' \
             --header 'Accept: application/json, text/event-stream' \
