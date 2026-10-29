@@ -178,3 +178,23 @@ For tasks concerning the developer-tools expansion, consult [the package README]
 - A new reusable component requires a documented gap analysis, component contract, wireframe, accessibility/responsive states and tests.
 - Do not claim encoding is encryption, token decoding is signature verification, or file-analysis indicators prove safety. Document resource limits and privacy behavior.
 - Update roadmap phase status only with implementation and verification evidence. Record consequential unresolved product/security decisions rather than guessing.
+
+
+## MCP compatibility, shared operation contracts, and server runtime
+
+For work involving MCP, server-side execution, workflow pipelines, operation extraction, Docker/self-hosting, or per-tool AI help, read specification/mcp/README.md and the relevant package before implementation.
+
+Required workflow:
+1. Inspect exact branch/commit, source registry, routes, operation helpers, runtime dependencies, tests, privacy behavior, and current CI. Registry metadata and proposals are not proof of runtime capability.
+2. Complete Phase 0 of the MCP roadmap before broad refactoring. Record browser-only, shared, and server-compatible implementations separately.
+3. Keep UI and MCP adapters independent. The web UI uses browser execution for local-capable operations; remote MCP invokes approved server execution. Neither adapter depends on the other's UI/transport implementation.
+4. Share operation IDs, schemas, errors, and compatible pure logic where justified. Do not force browser globals, Canvas, Web Audio, MediaRecorder, React, or Next.js request objects into shared/server modules.
+5. Never silently upload a local browser file to make an MCP operation work. Server transfer, artifact retention, network access, or persistence must be explicit, authorized, bounded, and documented.
+6. Expose only audited operations with validation, limits, error handling, cleanup, and tests. No arbitrary code, shell, unrestricted filesystem, or unrestricted network fetching.
+7. Validate workflow graph, type references, operation allowlist, step count, resource budget, and cancellation/error policy. Imported recipes are untrusted.
+8. Add contextual MCP help only when exposure status/examples are verified. Help states runtime, file-transfer behavior, limits, and chain examples.
+9. Add unit, contract, MCP integration, workflow, browser privacy, server E2E, and Docker tests as applicable. Follow MCP testing, acceptance, and dedicated CI specifications.
+10. Run main CI and dedicated MCP CI against the same exact commit. Inspect job conclusions and artifacts/manifests. Stale, skipped, mocked-only, or unrun tests do not count as passing.
+11. Update mappings, help, current-state facts, roadmap, and tests only with evidence. Keep proposal status distinct from implemented/verified behavior.
+
+The MCP command in root command.md is a shortcut, not permission to skip these requirements.
