@@ -19,6 +19,13 @@ test("capability registry contains stable IDs, versions and finite limits", () =
     assert.ok(Object.values(item.limits).every(limit => Number.isFinite(limit) && limit > 0));
     assert.equal(item.inputSchema.type, "object");
     assert.ok(item.outputSchema.type);
+    assert.ok(item.inputTypes.length > 0);
+    assert.ok(item.outputTypes.length > 0);
+    assert.ok(item.executionModes.includes("mcp"));
+    assert.equal(item.availability, "available");
+    assert.equal(item.mcpExposure, "exposed");
+    assert.equal(item.privacy, "no-persistence");
+    assert.equal(typeof item.deterministic, "boolean");
   }
 });
 

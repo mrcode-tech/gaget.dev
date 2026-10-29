@@ -127,9 +127,354 @@ const outputSchemas = {
   "datetime.compare": { type: "object" }
 } as const;
 
+
+const capabilityRuntimeMetadata = {
+  "encoding.transform": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "encoding.charset": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "text.transform": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.validate": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "json"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.format": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.minify": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.diff": {
+    "inputTypes": [
+      "json",
+      "text"
+    ],
+    "outputTypes": [
+      "json"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.sort-keys": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.escape": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.unescape": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "json.find": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "json"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "image.inspect": {
+    "inputTypes": [
+      "image/base64"
+    ],
+    "outputTypes": [
+      "json"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "image.transform": {
+    "inputTypes": [
+      "image/base64"
+    ],
+    "outputTypes": [
+      "image/base64"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "developer.format": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "security.hash": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "security.jwt.decode": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "json"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "generator.sample": {
+    "inputTypes": [
+      "parameters"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": false
+  },
+  "data.inspect": {
+    "inputTypes": [
+      "text"
+    ],
+    "outputTypes": [
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "datetime.convert": {
+    "inputTypes": [
+      "date-time"
+    ],
+    "outputTypes": [
+      "date-time",
+      "json",
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "datetime.arithmetic": {
+    "inputTypes": [
+      "date-time"
+    ],
+    "outputTypes": [
+      "date-time",
+      "text"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  },
+  "datetime.compare": {
+    "inputTypes": [
+      "date-time"
+    ],
+    "outputTypes": [
+      "json"
+    ],
+    "executionModes": [
+      "server",
+      "mcp"
+    ],
+    "availability": "available",
+    "mcpExposure": "exposed",
+    "privacy": "no-persistence",
+    "deterministic": true
+  }
+} as const;
+
 export function listCapabilities() {
   return capabilityList.map(capability => ({
     ...capability,
+    ...capabilityRuntimeMetadata[capability.id],
     inputSchema: schemas[capability.id],
     outputSchema: outputSchemas[capability.id]
   }));
