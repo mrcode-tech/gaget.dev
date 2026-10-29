@@ -97,3 +97,14 @@ describe("optional UTF-8 file input for text-based developer tools",()=>{
   expect(await screen.findByRole("alert")).toBeTruthy();
  });
 });
+
+it("rejects text files above the byte limit before decoding",async()=>{
+ const file=new File(["x".repeat(200_001)],"large.csv",{type:"text/csv"});
+ Object.defineProperty(file,"arrayBuffer",{value:async()=>new TextEncoder().encode("x".repeat(200_001)).buffer});
+ render(<DeveloperToolWorkbench operation="csv-json"/>);
+ const input=screen.getByRole("textbox",{name:"CSV ↔ JSON converter input"}) as HTMLTextAreaElement;
+ const before=input.value;
+ fireEvent.change(screen.getByLabelText("Choose a text file for CSV ↔ JSON converter"),{target:{files:[file]}});
+ expect(await screen.findByRole("alert")).toHaveTextContent(/200,000 bytes/i);
+ expect(input.value).toBe(before);
+});

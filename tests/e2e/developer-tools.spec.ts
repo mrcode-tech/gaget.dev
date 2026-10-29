@@ -45,3 +45,21 @@ test("OpenSSH public-key inspector parses a supplied Ed25519 key without exposin
 });
 
 test("legacy UUID URL redirects to the unified Data Generator",async({page})=>{await page.goto("/generators/uuid");await expect(page).toHaveURL(/\/generators\/sample-data$/);await expect(page.getByRole("heading",{name:"Data Generator"})).toBeVisible();await expect(page.getByRole("combobox",{name:"Data generator operation"})).toBeVisible();});
+
+
+test("shared developer tools load a local UTF-8 CSV file and process it in-browser",async({page})=>{
+ await page.goto("/data/csv-json");
+ await page.getByLabel("Choose a text file for CSV ↔ JSON converter").setInputFiles({name:"sample.csv",mimeType:"text/csv",buffer:Buffer.from('name,city\nAda,"London, UK"',"utf8")});
+ await expect(page.getByText(/Loaded sample.csv as UTF-8 text/i)).toBeVisible();
+ await expect(page.getByRole("textbox",{name:"CSV ↔ JSON converter input"})).toHaveValue('name,city\nAda,"London, UK"');
+ await page.getByRole("button",{name:"Process"}).click();
+ await expect(page.getByRole("textbox",{name:"CSV ↔ JSON converter output"})).toHaveValue(/"city": "London, UK"/);
+});
+
+test("shared developer tools reject non-UTF-8 and oversized text files",async({page})=>{
+ await page.goto("/data/csv-json");
+ await page.getByLabel("Choose a text file for CSV ↔ JSON converter").setInputFiles({name:"invalid.csv",mimeType:"text/csv",buffer:Buffer.from([0xc3,0x28])});
+ await expect(page.locator('[role="alert"]')).toContainText(/UTF-8/i);
+ await page.getByLabel("Choose a text file for CSV ↔ JSON converter").setInputFiles({name:"large.csv",mimeType:"text/csv",buffer:Buffer.alloc(200001,0x61)});
+ await expect(page.locator('[role="alert"]')).toContainText(/200,000 bytes/i);
+});
