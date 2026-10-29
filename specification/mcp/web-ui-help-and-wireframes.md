@@ -41,3 +41,52 @@ Developer tools prompt: “Decode this Base64 text, validate it as JSON, then fo
 Keyboard reachable, visible focus, Escape closes and focus returns, dialog has accessible name/description, code samples selectable with copy confirmation, mobile layout avoids overflow, long config is bounded/scrollable, theme/localization/RTL/reduced-motion supported. Essential help must not be hover-only.
 
 The SVG is a target concept labelled Proposal, not current-state evidence. Update it with the prose contract after design review. Every verified MCP tool must link accurate help; privacy is explained before server transfer; help passes accessibility, responsive, theme, localization/RTL, and copy tests.
+
+## Public MCP landing page and interactive demonstration
+
+**Target route:** `/mcp` (or the repository's established equivalent after route audit). This is a public product/education page, distinct from contextual per-tool help and distinct from the MCP transport endpoint. Do not use a route name that conflicts with the actual protocol endpoint.
+
+### Product goals
+
+The page should explain the value of MCP to both developers and technical decision-makers, demonstrate a real supported operation, and give visitors a clear path to use GaGet.dev as a hosted service or run it in infrastructure they control. It must not imply that every browser feature is remotely callable or that a self-hosted deployment is already enterprise-certified.
+
+### Page structure
+
+1. **Hero:** concise value proposition such as “Bring GaGet.dev tools into your AI workflows.” Explain that compatible MCP clients can discover and call supported GaGet operations. Primary CTA: **Try the MCP demo**. Secondary CTA: **Connect your client**. Tertiary text link: **Self-host GaGet.dev**.
+2. **Three-step explainer:** connect a compatible MCP client; discover the verified tool catalog; run an operation or a bounded workflow. Use a small request → operation → result visual, not generic AI artwork.
+3. **Interactive demo / Workflow Lab:** a safe, guided sample that chains supported text/encoding/JSON operations. Include a task prompt, ordered steps, editable sample input, Run, per-step status, output preview, and a result manifest. A “Show MCP request/response” disclosure exposes the actual tool name, bounded arguments, and sanitized result/error. Include a reset action and clear size/time limits.
+4. **Demo execution truthfulness:** a live demo must invoke the real MCP adapter/transport and actual allowlisted runtime; it must not call a mocked function and label it “live MCP.” Public anonymous access, if supported, must use a dedicated demo policy with a narrow operation allowlist, synthetic/sample data by default, strict request/output/time/concurrency quotas, abuse controls, and no access to production secrets or arbitrary URLs/filesystem/network. Never embed a privileged bearer token in browser code. If a safe public live path is not available, present a clearly labelled guided example with copyable request/response and do not claim it executed. Do not accept sensitive user data in a public demo by default.
+5. **Workflow and Batch Workbench:** explain that Batch Workbench is a first-class user-facing workspace, useful without MCP, where people can compose and run multiple supported operations. Link to the actual workspace. Offer “Use this workflow with MCP” to show the equivalent recipe only for operations verified by the server registry. Do not conflate browser-only file workflows with remote MCP workflows.
+6. **Tool catalog and compatibility:** show only verified server-exposed operations, runtime mode, input/output types, limits, version/compatibility, and supported workflow composition. Distinguish Available, Partial, Planned, and Unsupported. Never derive availability from a UI route alone.
+7. **Choose how to run GaGet.dev:** present two equally understandable deployment paths:
+   - **Hosted GaGet.dev:** quickest start; connect a compatible client to the documented hosted endpoint if one is actually available. State authentication, data transfer, retention, limits, availability, and pricing only when confirmed. Explain that data sent to remote MCP is processed by that server according to the published policy; browser-local UI operations remain local unless the user explicitly transfers data.
+   - **Self-hosted / on-premises:** link to Docker/deployment docs and a configuration checklist. Explain that operators control the deployment environment and its network/storage policy, but must configure authentication, TLS/reverse proxy, access controls, logs, updates, backups if needed, and resource limits. Do not claim “air-gapped,” “zero data leaves your network,” or compliance certification unless tests and deployment documentation support the claim. Document outbound network behavior and optional external dependencies accurately.
+8. **Trust and security:** summarize explicit transfer, allowlisted operations, bounded inputs/workflows, authentication expectations, no arbitrary code execution, and retention/cleanup behavior supported by the current implementation. Link to the full security/privacy contract and publish known limitations.
+9. **Getting started and FAQ:** tested client configuration, supported transports/protocol version, common auth errors, workflow example, local-vs-remote file access, and links to API/tool docs.
+
+### Navigation and information architecture
+
+- Add **Batch Workbench** as its own primary sidebar item immediately below **Dev Tools**. It is a multi-operation workspace, not a category inside the individual tool catalog. Reuse the existing app shell and responsive navigation conventions.
+- Add a public **MCP & Integrations** destination in the product's appropriate navigation surface (or a discoverable link from the main navigation/footer if a primary slot would overcrowd the shell). It leads to the landing page, not directly to an endpoint or raw technical docs.
+- Keep individual Dev Tools, Batch Workbench, MCP & Integrations, and the transport endpoint as distinct concepts. Confirm actual routes and avoid duplicate/conflicting navigation entries before implementation.
+- Link contextual MCP help from supported tools to the landing page and back to relevant operation documentation.
+
+### Interaction, privacy, and accessibility requirements
+
+- The demo starts with synthetic sample data and makes the execution mode visible: **Live MCP request** or **Guided example — not executed**. Never imply a live request succeeded before a real response is received.
+- Before a user submits custom data to a remote demo, show that it leaves the browser and is sent to the configured server. Keep sample-only mode as the default; do not retain demo input/output by default.
+- Never expose auth tokens, private endpoint URLs, internal stack traces, or unredacted server logs in displayed MCP payloads. Keep request and result displays bounded and copyable.
+- The demo must work with keyboard and screen readers, provide visible focus and accessible step statuses, avoid color-only state, and handle loading, timeout, rate-limit, auth, unsupported-operation, and server-error states.
+- Responsive layout: desktop can use side-by-side workflow/result panels; tablet and mobile stack the steps, input, output, and request inspector without horizontal overflow. Support existing theme, localization, RTL, and reduced-motion conventions.
+- Track product analytics only if already approved and implemented under the privacy policy; do not add hidden content capture or telemetry as part of the demo.
+
+### Acceptance criteria
+
+- The page route, navigation, content, and links are verified against the actual app.
+- Demo operations are selected from the verified MCP registry and covered by end-to-end tests.
+- A live demo proves a real request/response and enforces its restricted policy; otherwise the UI explicitly identifies the example as not executed.
+- Hosted and self-hosted guidance matches implemented deployment/authentication/data-flow behavior and lists limitations.
+- The Batch Workbench appears below Dev Tools in desktop and responsive navigation, has its own route, and can demonstrate at least one supported multi-step workflow.
+- The demo and catalog do not advertise browser-only operations as remotely available.
+- Accessibility, localization/RTL, responsive, error-state, privacy, and route/navigation tests pass.
+
