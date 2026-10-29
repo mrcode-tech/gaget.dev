@@ -115,7 +115,7 @@ const outputSchemas = {
   "json.escape": { type: "string" },
   "json.unescape": { type: "string" },
   "json.find": { type: "object", properties: { matches: { type: "array", items: { type: "object" } }, truncated: { type: "boolean" } }, required: ["matches","truncated"], additionalProperties: false },
-  "image.inspect": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, aspectRatio: { type: "number" }, pixelCount: { type: "integer" }, channels: { type: "integer" }, hasAlpha: { type: "boolean" }, orientation: { type: ["integer","null"] }, bytes: { type: "integer" }, animated: { type: "boolean" } }, required: ["format","width","height","aspectRatio","pixelCount","channels","hasAlpha","orientation","bytes","animated"], additionalProperties: false },
+  "image.inspect": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, aspectRatio: { type: "number" }, pixelCount: { type: "integer" }, channels: { type: "integer" }, hasAlpha: { type: "boolean" }, orientation: { type: ["integer","null"] }, bytes: { type: "integer" }, animated: { type: "boolean" }, dominantColor: { type: "string", pattern: "^#[0-9A-F]{6}$" } }, required: ["format","width","height","aspectRatio","pixelCount","channels","hasAlpha","orientation","bytes","animated","dominantColor"], additionalProperties: false },
   "image.transform": { type: "object", properties: { format: { type: "string" }, width: { type: "integer" }, height: { type: "integer" }, bytes: { type: "integer" }, dataBase64: { type: "string", maxLength: 800000 } }, required: ["format","width","height","bytes","dataBase64"], additionalProperties: false },
   "developer.format": { type: "string" },
   "security.hash": { type: "string" },
@@ -626,9 +626,12 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           if (!metadata.format || !["jpeg","png","webp","avif","gif","tiff"].includes(metadata.format) || !metadata.width || !metadata.height || !metadata.channels) {
             throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Only supported raster image formats are accepted.");
           }
-          result = { format: metadata.format, width: metadata.width, height: metadata.height, aspectRatio: Number((metadata.width / metadata.height).toFixed(6)), pixelCount: metadata.width * metadata.height, channels: metadata.channels, hasAlpha: Boolean(metadata.hasAlpha), orientation: metadata.orientation ?? null, bytes: bytes.byteLength, animated: (metadata.pages ?? 1) > 1 };
+          const stats = await sharp(bytes, { limitInputPixels: MCP_MAX_IMAGE_PIXELS, sequentialRead: true, failOn: "error" }).timeout({ seconds: 5 }).stats();
+          const dominantColor = "#" + [stats.dominant.r, stats.dominant.g, stats.dominant.b].map(value => Math.round(value).toString(16).padStart(2, "0")).join("").toUpperCase();
+          result = { format: metadata.format, width: metadata.width, height: metadata.height, aspectRatio: Number((metadata.width / metadata.height).toFixed(6)), pixelCount: metadata.width * metadata.height, channels: metadata.channels, hasAlpha: Boolean(metadata.hasAlpha), orientation: metadata.orientation ?? null, bytes: bytes.byteLength, animated: (metadata.pages ?? 1) > 1, dominantColor };
         } catch (error) {
           if (error instanceof McpRuntimeError) throw error;
+          if (error instanceof Error && /timeout/i.test(error.message)) throw new McpRuntimeError("TIMEOUT", "Image inspection exceeded the five-second time limit.");
           throw new McpRuntimeError("INVALID_INPUT", "Image data is invalid, unsupported, or exceeds the processing limit.");
         }
         break;
