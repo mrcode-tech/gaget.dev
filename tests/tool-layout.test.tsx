@@ -50,9 +50,10 @@ describe("MCP contextual help", () => {
     expect(screen.getByRole("button", { name: /AI \/ MCP help/i })).toBeTruthy();
     expect(screen.getByText("JSON workspace")).toBeTruthy();
   });
-  it("does not advertise MCP help for a workspace without a verified server operation", () => {
-    render(<I18nProvider locale="en"><ToolLayout category="Image" title="Image Editor" description="Edit images." workspace><div>Date workspace</div></ToolLayout></I18nProvider>);
-    expect(screen.queryByRole("button", { name: /AI \/ MCP help/i })).toBeNull();
+  it("advertises contextual MCP help for bounded server-side image operations", () => {
+    render(<I18nProvider locale="en"><ToolLayout category="Image" title="Image Editor" description="Edit images." workspace><div>Image workspace</div></ToolLayout></I18nProvider>);
+    expect(screen.getByRole("button", { name: /AI \/ MCP help/i })).toBeTruthy();
+    expect(screen.getByText("Image workspace")).toBeTruthy();
   });
   it("opens an accessible help dialog with privacy and setup information", async () => {
     const user = userEvent.setup();
