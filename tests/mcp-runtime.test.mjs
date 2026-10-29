@@ -19,7 +19,7 @@ test("allowlisted operations invoke real shared transformations", async () => {
   assert.equal(await executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: "Hello" }), "SGVsbG8=");
   assert.deepEqual(await executeOperation("json.validate", { input: "{\"ok\":true}" }), { valid: true });
   assert.equal(await executeOperation("json.format", { input: "{\"ok\":true}" }), '{\n  "ok": true\n}');
-  assert.throws(() => executeOperation("shell.exec", { command: "id" }), { code: "UNSUPPORTED_OPERATION" });
+  await assert.rejects(executeOperation("shell.exec", { command: "id" }), { code: "UNSUPPORTED_OPERATION" });
 });
 
 test("runtime rejects malformed inputs and over-limit data with stable errors", async () => {
