@@ -974,8 +974,8 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
         const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === match[1]) as JsonObject).operationId as string;
         if (match[2]) {
           if (sourceOperation !== "image.transform" || match[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Only image.transform dataBase64 may be referenced as an object field.");
-        } else if (!workflowStringOutputs.has(sourceOperation) && !workflowStructuredOutputs.has(sourceOperation)) {
-          throw new McpRuntimeError("INVALID_INPUT", "Workflow references must target a supported text or structured result.");
+        } else if (!workflowStringOutputs.has(sourceOperation)) {
+          throw new McpRuntimeError("INVALID_INPUT", "Workflow arguments may reference only text results or the supported image data field.");
         }
         if (!workflowStringInputs[rawStep.operationId].includes(field)) {
           throw new McpRuntimeError("INVALID_INPUT", `Workflow field '${field}' does not accept a text result reference.`);
