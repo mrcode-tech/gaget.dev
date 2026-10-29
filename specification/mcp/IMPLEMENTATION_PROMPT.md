@@ -8,7 +8,7 @@
 
 Act as the senior software architect and implementation engineer responsible for delivering GaGet.dev's MCP compatibility initiative to production quality.
 
-Implement the approved MCP capabilities in the existing `mrcode-tech/gaget.dev` repository. Deliver a working, independently testable MCP interface and server runtime, a shared capability/operation contract used by both the existing web application and MCP adapter where runtime compatibility allows, validated workflow composition, safe self-hosted Docker deployment, contextual MCP help in applicable tool workspaces, automated tests, a dedicated MCP CI workflow, and evidence-backed documentation.
+Implement the approved MCP capabilities in the existing `mrcode-tech/gaget.dev` repository. Deliver a working, independently testable MCP interface and server runtime, a shared capability/operation contract used by both the existing web application and MCP adapter where runtime compatibility allows, validated workflow composition, safe self-hosted Docker deployment, contextual MCP help in applicable tool workspaces, a public MCP & Integrations landing page with a truthful interactive workflow demo, a first-class Batch Workbench navigation item immediately below Dev Tools, hosted and on-premises usage guidance, automated tests, a dedicated MCP CI workflow, and evidence-backed documentation.
 
 This is a **full implementation task across all roadmap phases**, not a proposal-only task. Do not stop after auditing or writing documentation. Continue phase by phase until each feasible phase is implemented and verified, or until a concrete blocker requiring user input is reached. Do not claim the initiative is complete while any required phase is unimplemented or unverified.
 
@@ -272,10 +272,12 @@ By the end of the task, deliver:
 6. Incrementally expanded, explicitly gated MCP tool exposure, including media only where proven feasible.
 7. Safe self-hosted Docker packaging and operational documentation.
 8. Accessible per-tool MCP help with tested examples.
-9. A real dedicated MCP GitHub Actions workflow, not only a Markdown plan.
-10. Unit, contract, integration, protocol, workflow, browser privacy, E2E, Docker, and security tests as applicable.
-11. Updated specifications, inventories, support matrix, phase status, exact-revision evidence, and known limitations.
-12. A final implementation report with changed paths, architectural decisions, tests actually run, CI run identifiers/links and outcomes if available, inspected artifacts, residual risks, and explicit not-done items.
+9. A public MCP & Integrations page with a real MCP-backed demo where safely available; otherwise an unmistakably non-executed guided example. Include the Batch Workbench as a separate primary navigation destination directly below Dev Tools, with verified MCP recipe mapping.
+10. Hosted and self-hosted/on-premises guidance that matches actual auth, transfer, retention, network, and deployment behavior; no unsupported privacy/compliance claims.
+11. A real dedicated MCP GitHub Actions workflow, not only a Markdown plan.
+12. Unit, contract, integration, protocol, workflow, browser privacy, E2E, navigation/accessibility, Docker, and security tests as applicable.
+13. Updated specifications, inventories, support matrix, phase status, exact-revision evidence, and known limitations.
+14. A final implementation report with changed paths, architectural decisions, tests actually run, CI run identifiers/links and outcomes if available, inspected artifacts, residual risks, and explicit not-done items.
 
 ## 11. Final verification and report format
 
