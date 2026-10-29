@@ -215,6 +215,23 @@ test("MCP text operations do not expose regex execution until it is safely bound
   await assert.rejects(executeOperation("text.transform", { operation: "find-replace", input: "abc", options: { pattern: "a", replacement: "x", regexFind: true } }), { code: "INVALID_INPUT" });
 });
 
+test("image crop and resize can be chained through explicit bounded dataBase64 references", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 4, height: 3, channels: 3, background: "#336699" } }).png().toBuffer();
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 1, top: 1, width: 2, height: 2 } },
+    { id: "resize", operationId: "image.transform", arguments: { inputBase64: { $ref: "crop.result.dataBase64" }, action: "resize", width: 1, height: 1 } }
+  ] });
+  assert.equal(workflow.success, true);
+  assert.equal(workflow.steps.length, 2);
+  assert.equal(workflow.result.width, 1);
+  assert.equal(workflow.result.height, 1);
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 0, top: 0, width: 2, height: 2 } },
+    { id: "bad", operationId: "image.transform", arguments: { inputBase64: { $ref: "crop.result.width" }, action: "resize", width: 1 } }
+  ] }), { code: "INVALID_INPUT" });
+});
+
 test("workflow tool returns schema-conforming structured errors for invalid references", async () => {
   const response = await post({jsonrpc:"2.0",id:88,method:"tools/call",params:{name:"execute_workflow",arguments:{schemaVersion:1,steps:[
     {id:"bad",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"missing.result"}}}

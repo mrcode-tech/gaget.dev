@@ -491,7 +491,9 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "data.inspect": ["input"],
   "datetime.convert": ["input"],
   "datetime.arithmetic": ["input"],
-  "datetime.compare": ["left","right"]
+  "datetime.compare": ["left","right"],
+  "image.inspect": ["inputBase64"],
+  "image.transform": ["inputBase64"]
 };
 const workflowStringOutputs = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
 function isWorkflowReference(value: unknown): value is WorkflowReference {
@@ -535,10 +537,13 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
     for (const [field, value] of Object.entries(rawStep.arguments)) {
       if (isWorkflowReference(value)) {
-        const match = /^([a-z][a-z0-9_-]{0,39})\.result$/.exec(value.$ref);
+        const match = /^([a-z][a-z0-9_-]{0,39})\.result(?:\.([A-Za-z][A-Za-z0-9]*))?$/.exec(value.$ref);
         if (!match || !seen.has(match[1])) throw new McpRuntimeError("INVALID_INPUT", `Workflow reference '${value.$ref}' must point to a previous step result.`);
-        if (!workflowStringOutputs.has((raw.steps.find(s => isObject(s) && s.id === match[1]) as JsonObject).operationId as string)) {
-          throw new McpRuntimeError("INVALID_INPUT", "Workflow references must target a text result.");
+        const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === match[1]) as JsonObject).operationId as string;
+        if (match[2]) {
+          if (sourceOperation !== "image.transform" || match[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Only image.transform dataBase64 may be referenced as an object field.");
+        } else if (!workflowStringOutputs.has(sourceOperation)) {
+          throw new McpRuntimeError("INVALID_INPUT", "Workflow references must target a text result or supported image data field.");
         }
         if (!workflowStringInputs[rawStep.operationId].includes(field)) {
           throw new McpRuntimeError("INVALID_INPUT", `Workflow field '${field}' does not accept a text result reference.`);
@@ -569,8 +574,12 @@ export async function executeWorkflow(raw: unknown, options: { signal?: AbortSig
     if (Date.now() - startedAt >= deadlineMs) throw new McpRuntimeError("TIMEOUT", "Workflow exceeded its execution deadline.");
     const args: Record<string, unknown> = {};
     for (const [field, value] of Object.entries(step.arguments)) {
-      if (isWorkflowReference(value)) args[field] = results.get(value.$ref.slice(0, -".result".length));
-      else args[field] = value;
+      if (isWorkflowReference(value)) {
+        const reference = /^([a-z][a-z0-9_-]{0,39})\.result(?:\.([A-Za-z][A-Za-z0-9]*))?$/.exec(value.$ref);
+        if (!reference) throw new McpRuntimeError("INVALID_INPUT", "Workflow reference is malformed.");
+        const sourceResult = results.get(reference[1]);
+        args[field] = reference[2] === "dataBase64" && isObject(sourceResult) ? sourceResult.dataBase64 : sourceResult;
+      } else args[field] = value;
     }
     const result = await executeOperation(step.operationId, args);
     const outputBytes = new TextEncoder().encode(JSON.stringify(result)).byteLength;
@@ -674,12 +683,12 @@ const mcpHandler = createMcpHandler(() => {
     "execute_workflow",
     {
       title: "Execute a bounded GaGet workflow",
-      description: "Run a sequential workflow of approved operations. Workflow references may point only to earlier text results. Maximum 20 steps, 1,000,000 aggregate output bytes, and 10 seconds. No code, shell, filesystem, or network execution.",
+      description: "Run a sequential workflow of approved operations. Workflow references may point only to earlier text results or image.transform dataBase64 fields. Maximum 20 steps, 1,000,000 aggregate output bytes, and 10 seconds. No code, shell, filesystem, or network execution.",
       inputSchema: z.object({
         schemaVersion: z.literal(1),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
-          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare"]),
+          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.transform"]),
           arguments: z.record(z.string(), z.unknown())
         }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
       }).strict(),
