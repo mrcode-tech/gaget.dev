@@ -67,6 +67,16 @@ The agent must inspect relevant documentation and code, cite concrete paths and 
 
 The agent must inspect the actual current status, diffs, tests, CI, and documentation; identify unfinished or unverified work; complete only the in-scope work; and provide an evidence-based handoff. Do not assume a prior task or CI run succeeded.
 
+### 8. Plan and implement MCP compatibility
+
+> Based on command.md, **MCP compatibility**: implement the approved plan in specification/mcp/ phase by phase, refactor the app to the shared operation contract, keep browser and MCP adapters independent, add contextual MCP help, tests, Docker support where scheduled, and verify through main CI plus dedicated MCP CI.
+
+Read specification/mcp/README.md and follow the roadmap and architecture, operation contract, tool catalog, workflow, security/privacy, deployment, UI help, testing, acceptance, and CI documents as relevant. First complete Phase 0 audit. Do not mass-refactor or expose every registry item before verifying server compatibility, privacy, schemas, limits, dependencies, and tests. Keep the web UI browser-local by default and MCP transport/server code out of UI components. Update statuses only with exact-revision evidence.
+
+### 9. MCP specification or audit only
+
+> Based on command.md, **MCP spec/audit**: audit specification/mcp/ against source, registry, tests, runtime dependencies, CI, and privacy behavior; update the specification and traceability without implementing application code unless explicitly requested.
+
 ## Required rules for every command
 
 - Follow `specification/AI_INSTRUCTIONS.md` and the relevant foundation documents.
