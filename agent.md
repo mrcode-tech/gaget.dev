@@ -6,6 +6,8 @@ This file is a compatibility pointer for agents that look for `agent.md`. The ca
 
 For MCP tasks, read [`specification/mcp/README.md`](./specification/mcp/README.md) and follow [`specification/mcp/implementation-roadmap.md`](./specification/mcp/implementation-roadmap.md) and [`specification/mcp/IMPLEMENTATION_PROMPT.md`](./specification/mcp/IMPLEMENTATION_PROMPT.md). For UI work, also read [`specification/mcp/web-ui-help-and-wireframes.md`](./specification/mcp/web-ui-help-and-wireframes.md) and the [MCP landing page and workflow demo wireframe](./specification/mcp/wireframes/mcp-landing-page-and-workflow-demo.svg).
 
+Workflow UX decision: Batch Workbench is the only general-purpose workflow/pipeline editor and must be a separate primary sidebar item immediately below Dev Tools. Do not create a second simple workflow feature/menu or MCP-only editor. The MCP landing page demonstrates a curated recipe from the same canonical pipeline model and links to Batch Workbench; reuse contracts and validation where runtime-compatible, but keep web and MCP adapters, authorization, transport, and UI state separate. Only server-verified operations can be included in MCP-executable workflows.
+
 Required product direction:
 - Implement a public **MCP & Integrations** landing page that explains supported operations, setup, and hosted versus self-hosted/on-premises use.
 - Keep **Batch Workbench** as a separate primary sidebar item immediately below **Dev Tools**. It must be useful without MCP and remain distinct from individual tools, MCP help, the landing page, and the transport endpoint.
