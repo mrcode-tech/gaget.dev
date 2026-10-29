@@ -10,7 +10,8 @@
 - [Workflow and pipeline contract](./workflow-pipelines.md)
 - [Security and privacy](./security-privacy.md)
 - [Docker and enterprise deployment](./deployment-docker.md)
-- [Web UI help and wireframes](./web-ui-help-and-wireframes.md)
+- [Web UI help and wireframes](./web-ui-help-and-wireframes.md) — includes the public MCP & Integrations landing page, live-versus-guided demo contract, and Batch Workbench requirements.
+- [MCP landing page and workflow demo wireframe](./wireframes/mcp-landing-page-and-workflow-demo.svg) — target desktop layout for the public demo and hosted/self-hosted paths.
 - [Testing strategy](./testing-strategy.md)
 - [End-to-end acceptance tests](./e2e-acceptance-tests.md)
 - [Dedicated MCP CI workflow design](./github-actions-ci.md)
