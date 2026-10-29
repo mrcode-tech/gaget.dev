@@ -3,6 +3,7 @@
 **Status:** Proposal. Implementation follows the evidence-gated roadmap.
 
 ## Start here
+- [End-to-end implementation prompt](./IMPLEMENTATION_PROMPT.md) — copy this prompt to direct an implementation agent through every phase, including tests, CI, Docker, privacy, and release gates.
 - [Architecture](./architecture.md)
 - [Shared operation contract](./operation-contract.md)
 - [MCP tool catalog](./tool-catalog.md)
