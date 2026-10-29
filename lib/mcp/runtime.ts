@@ -10,8 +10,11 @@ import { runExtendedOperation, type ExtendedOperation, type ExtendedOptions } fr
 
 export const MCP_MAX_REQUEST_BYTES = 1_000_000;
 export const MCP_MAX_OUTPUT_BYTES = 2_000_000;
+export const MCP_MAX_CONCURRENT_REQUESTS = 8;
+export const MCP_MAX_REQUESTS_PER_MINUTE = 120;
+export const MCP_BODY_READ_TIMEOUT_MS = 5_000;
 export const MCP_PROTOCOL_VERSION = "2025-11-25";
-export type McpErrorCode = "INVALID_INPUT" | "UNSUPPORTED_OPERATION" | "RESOURCE_LIMIT_EXCEEDED" | "PROCESSING_FAILED" | "AUTHENTICATION_REQUIRED" | "TIMEOUT" | "CANCELLED";
+export type McpErrorCode = "INVALID_INPUT" | "UNSUPPORTED_OPERATION" | "UNSUPPORTED_EXECUTION_MODE" | "UNSUPPORTED_FORMAT" | "RESOURCE_LIMIT_EXCEEDED" | "TIMEOUT" | "CANCELLED" | "PROCESSING_FAILED" | "DEPENDENCY_UNAVAILABLE" | "AUTHENTICATION_REQUIRED" | "PERMISSION_DENIED";
 export class McpRuntimeError extends Error {
   readonly code: McpErrorCode;
   constructor(code: McpErrorCode, message: string) { super(message); this.code = code; this.name = "McpRuntimeError"; }
@@ -39,7 +42,7 @@ const enumField = <T extends string>(input: JsonObject, key: string, allowed: re
 };
 const schemas = {
   "encoding.transform": { type: "object", properties: { mode: { type: "string", enum: ["url","base64","base64url","base32","hex","binary","html-entities","unicode-escapes","quoted-printable","base58","base85","z85"] }, direction: { type: "string", enum: ["encode","decode"] }, input: { type: "string", maxLength: 1000000 } }, required: ["mode","direction","input"], additionalProperties: false },
-  "text.transform": { type: "object", properties: { operation: { type: "string", enum: ["trim","sort-dedupe","case","normalize","escape","statistics","diff","find-replace","split-join"] }, input: { type: "string", maxLength: 200000 }, options: { type: "object" } }, required: ["operation","input"], additionalProperties: false },
+  "text.transform": { type: "object", properties: { operation: { type: "string", enum: ["trim","sort-dedupe","case","normalize","escape","statistics","diff","find-replace","split-join"] }, input: { type: "string", maxLength: 200000 }, options: { type: "object", properties: { pattern: { type: "string", maxLength: 200000 }, replacement: { type: "string", maxLength: 200000 }, delimiter: { type: "string", maxLength: 1000 }, caseMode: { type: "string", enum: ["upper","lower","title"] }, normalizeForm: { type: "string", enum: ["NFC","NFD","NFKC","NFKD"] }, trimMode: { type: "string", enum: ["both","start","end"] }, escapeMode: { type: "string", enum: ["html","json"] }, secondInput: { type: "string", maxLength: 200000 } }, additionalProperties: false } }, required: ["operation","input"], additionalProperties: false },
   "json.validate": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.format": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, indent: { type: "integer", minimum: 0, maximum: 8 } }, required: ["input"], additionalProperties: false },
   "json.minify": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
@@ -147,6 +150,15 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const input = stringField(rawInput, "input");
         if (rawInput.options !== undefined && !isObject(rawInput.options)) throw new McpRuntimeError("INVALID_INPUT", "'options' must be an object.");
         const options = isObject(rawInput.options) ? rawInput.options : {};
+        assertAllowedKeys(options, ["pattern","replacement","delimiter","caseMode","normalizeForm","trimMode","escapeMode","secondInput"]);
+        for (const key of ["pattern","replacement","delimiter","caseMode","normalizeForm","trimMode","escapeMode","secondInput"] as const) {
+          if (options[key] !== undefined && typeof options[key] !== "string") throw new McpRuntimeError("INVALID_INPUT", `Option '${key}' must be a string.`);
+          if (typeof options[key] === "string" && (options[key] as string).length > 200_000) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", `Option '${key}' exceeds the supported input limit.`);
+        }
+        if (options.caseMode !== undefined && !["upper","lower","title"].includes(options.caseMode as string)) throw new McpRuntimeError("INVALID_INPUT", "Option 'caseMode' is not supported.");
+        if (options.normalizeForm !== undefined && !["NFC","NFD","NFKC","NFKD"].includes(options.normalizeForm as string)) throw new McpRuntimeError("INVALID_INPUT", "Option 'normalizeForm' is not supported.");
+        if (options.trimMode !== undefined && !["both","start","end"].includes(options.trimMode as string)) throw new McpRuntimeError("INVALID_INPUT", "Option 'trimMode' is not supported.");
+        if (options.escapeMode !== undefined && !["html","json"].includes(options.escapeMode as string)) throw new McpRuntimeError("INVALID_INPUT", "Option 'escapeMode' is not supported.");
         result = transformText(operation, input, options as Parameters<typeof transformText>[2]);
         break;
       }
@@ -470,6 +482,39 @@ export async function executeWorkflow(raw: unknown, options: { signal?: AbortSig
   return { success: true, schemaVersion: 1, steps: manifest, result: manifest[manifest.length - 1].result, totalOutputBytes, elapsedMs: Date.now() - startedAt };
 }
 
+let rateWindowStartedAt = Date.now();
+let requestsInRateWindow = 0;
+let activeMcpRequests = 0;
+function admitMcpRequest(): Response | null {
+  const now = Date.now();
+  if (now - rateWindowStartedAt >= 60_000) {
+    rateWindowStartedAt = now;
+    requestsInRateWindow = 0;
+  }
+  if (requestsInRateWindow >= MCP_MAX_REQUESTS_PER_MINUTE) {
+    return Response.json({ error: "MCP request rate limit exceeded for this server instance." }, { status: 429, headers: { "Retry-After": "60" } });
+  }
+  requestsInRateWindow += 1;
+  if (activeMcpRequests >= MCP_MAX_CONCURRENT_REQUESTS) {
+    return Response.json({ error: "MCP server is at its concurrent request limit. Retry shortly." }, { status: 503, headers: { "Retry-After": "1" } });
+  }
+  activeMcpRequests += 1;
+  return null;
+}
+async function readChunkWithTimeout(reader: ReadableStreamDefaultReader<Uint8Array>): Promise<ReadableStreamReadResult<Uint8Array>> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      reader.read(),
+      new Promise<ReadableStreamReadResult<Uint8Array>>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Request body read timed out.")), MCP_BODY_READ_TIMEOUT_MS);
+      })
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 const mcpHandler = createMcpHandler(() => {
   const server = new McpServer({ name: "GaGet.dev MCP", version: "1.0.0" });
   server.registerTool(
@@ -568,19 +613,23 @@ export async function handleMcpPost(request: Request, configuredToken: string | 
   if (!configuredToken) return Response.json({ error: "MCP endpoint is not configured. Set MCP_AUTH_TOKEN before enabling remote access." }, { status: 503 });
   const authorization = request.headers.get("authorization") ?? "";
   if (authorization !== `Bearer ${configuredToken}`) return Response.json({ error: "Authentication required." }, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
+  const admissionError = admitMcpRequest();
+  if (admissionError) return admissionError;
+  try {
   const lengthHeader = request.headers.get("content-length");
   if (lengthHeader && /^\\d+$/.test(lengthHeader) && Number(lengthHeader) > MCP_MAX_REQUEST_BYTES) {
     return Response.json({ error: "Request body exceeds the 1,000,000 byte limit." }, { status: 413 });
   }
   let raw: string;
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
-    const reader = request.body?.getReader();
+    reader = request.body?.getReader();
     if (!reader) raw = "";
     else {
       const chunks: Uint8Array[] = [];
       let totalBytes = 0;
       while (true) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readChunkWithTimeout(reader);
         if (done) break;
         totalBytes += value.byteLength;
         if (totalBytes > MCP_MAX_REQUEST_BYTES) {
@@ -595,14 +644,18 @@ export async function handleMcpPost(request: Request, configuredToken: string | 
       raw = new TextDecoder().decode(bytes);
     }
   } catch {
-    return Response.json({ error: "Unable to read request body." }, { status: 400 });
+    await reader?.cancel().catch(() => undefined);
+    return Response.json({ error: "Unable to read request body within the supported time limit." }, { status: 408 });
   }
   if (new TextEncoder().encode(raw).byteLength > MCP_MAX_REQUEST_BYTES) {
     return Response.json({ error: "Request body exceeds the 1,000,000 byte limit." }, { status: 413 });
   }
-  return mcpHandler.fetch(new Request(request.url, {
+  return await mcpHandler.fetch(new Request(request.url, {
     method: "POST",
     headers: request.headers,
     body: raw
   }));
+  } finally {
+    activeMcpRequests -= 1;
+  }
 }

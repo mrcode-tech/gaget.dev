@@ -1,6 +1,6 @@
 # MCP Security, Privacy, and Threat Model
 
-**Status:** Proposed requirements.
+**Status:** Partially implemented. The current bearer-token gate and per-process admission controls are implemented; deployment and authorization gaps remain.
 
 ## Security goals
 Prevent unauthorized invocation, data access, resource exhaustion, unsafe file/network behavior, and sensitive data leakage. Preserve the public website's browser-local privacy model. Make server-side data flow and retention explicit. AI clients must not gain ambient filesystem, network, or code-execution privileges.
@@ -16,6 +16,10 @@ Address malicious files; oversized inputs and decompression bombs; regex denial 
 - Job IDs/artifact references do not replace authorization.
 - Secrets never belong in client bundles, tool descriptions, logs, or recipes.
 - Choose an established authorization approach during Phase 0; do not invent a custom protocol without a documented need.
+
+## Runtime admission controls
+
+The current MCP runtime adds per-process admission controls: a bounded request rate, a bounded number of active requests, and a timeout while reading request bodies. These controls are defense-in-depth for a single server process, not a distributed quota. They can be bypassed across multiple serverless instances or replicas and must not be presented as sufficient protection for an unrestricted public endpoint. Public or multi-replica deployments should enforce identity-aware rate/concurrency limits at a trusted gateway or reverse proxy as well.
 
 ## Limits
 Every server operation must define applicable request, file, item, expanded/decompressed output, CPU/wall-clock, memory/worker, result, artifact, workflow, and concurrency limits. Reject oversized data before expensive processing where possible. Defaults must be safe; unlimited values are not acceptable.

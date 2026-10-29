@@ -1,6 +1,6 @@
 # Docker, Self-Hosting, and Enterprise Deployment
 
-**Status:** Proposal.
+**Status:** Implemented for a self-hosted Docker baseline; exact-revision evidence and remaining operational gaps are tracked in [implementation progress](./implementation-progress.md).
 
 ## Goal
 Enable individuals and enterprises to deploy GaGet's web UI and MCP server in infrastructure they control without requiring public GaGet.dev to process their files.

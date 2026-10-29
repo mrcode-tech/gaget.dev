@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { executeOperation, executeWorkflow, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES, MCP_MAX_WORKFLOW_STEPS } from "../lib/mcp/runtime.ts";
+import { executeOperation, executeWorkflow, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES, MCP_MAX_WORKFLOW_STEPS, MCP_MAX_REQUESTS_PER_MINUTE } from "../lib/mcp/runtime.ts";
 
 const token = "test-only-secret-token";
 const parseProtocolResponse = async (response) => {
@@ -180,4 +180,32 @@ test("JSON sort, escape, unescape, and bounded search operations are available",
   assert.equal(found.matches.length, 2);
   assert.equal(found.truncated, false);
   await assert.rejects(executeOperation("json.find", { input: "{}", query: "" }), { code: "INVALID_INPUT" });
+});
+
+test("request body streams that stall are cancelled after the read deadline", async () => {
+  const stream = new ReadableStream({
+    start(controller) { controller.enqueue(new TextEncoder().encode('{"jsonrpc":"2.0","id":1,"method":"tools/list"}')); }
+  });
+  const request = new Request("http://localhost/api/mcp", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: stream,
+    duplex: "half"
+  });
+  const response = await handleMcpPost(request, token);
+  assert.equal(response.status, 408);
+});
+test("per-instance request rate limiting rejects excessive authenticated calls", async () => {
+  let response;
+  for (let i = 0; i < MCP_MAX_REQUESTS_PER_MINUTE + 100; i++) {
+    response = await post({ jsonrpc: "2.0", id: 1000 + i, method: "tools/list" });
+    if (response.status === 429) break;
+  }
+  assert.equal(response.status, 429);
+  assert.ok(Number(response.headers.get("retry-after")) > 0);
+});
+
+test("MCP text operations do not expose regex execution until it is safely bounded", async () => {
+  await assert.rejects(executeOperation("text.transform", { operation: "regex-test", input: "abc", options: { pattern: "(a+)+" } }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("text.transform", { operation: "find-replace", input: "abc", options: { pattern: "a", replacement: "x", regexFind: true } }), { code: "INVALID_INPUT" });
 });
