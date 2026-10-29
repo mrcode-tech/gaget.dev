@@ -293,11 +293,15 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         if (action === "rotate" && degrees !== 90 && degrees !== 180 && degrees !== 270) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires degrees of 90, 180, or 270.");
         if (action === "convert" && (typeof format !== "string" || !["jpeg","png","webp","avif"].includes(format))) throw new McpRuntimeError("INVALID_INPUT", "Convert requires a supported output format.");
         if (format !== undefined && !["jpeg","png","webp","avif"].includes(String(format))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported output format.");
-        if (quality !== undefined && format === undefined && action !== "convert") throw new McpRuntimeError("INVALID_INPUT", "Quality may be set only when converting to a lossy output format.");
+        if (action !== "resize" && (width !== undefined || height !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Width and height are valid only for resize.");
+        if (action !== "rotate" && degrees !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Degrees are valid only for rotate.");
+        if (action !== "convert" && (format !== undefined || quality !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Format and quality are valid only for convert.");
+        if (quality !== undefined && format === undefined) throw new McpRuntimeError("INVALID_INPUT", "Quality requires an explicit output format.");
         try {
           let pipeline = sharp(bytes, { limitInputPixels: MCP_MAX_IMAGE_PIXELS, sequentialRead: true, failOn: "error" }).timeout({ seconds: 5 });
           const metadata = await pipeline.metadata();
           if (!metadata.format || !["jpeg","png","webp","avif","gif","tiff"].includes(metadata.format) || !metadata.width || !metadata.height) throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Only supported raster image formats are accepted.");
+          if ((metadata.pages ?? 1) > 1) throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Animated and multi-page images are not supported by image transformations.");
           if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: "inside", withoutEnlargement: true });
           else if (action === "rotate") pipeline = pipeline.rotate(degrees as number);
           else if (action === "flip") pipeline = pipeline.flip();

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { executeOperation, executeWorkflow, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES, MCP_MAX_WORKFLOW_STEPS, MCP_MAX_REQUESTS_PER_MINUTE } from "../lib/mcp/runtime.ts";
+import { executeOperation, executeWorkflow, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES, MCP_MAX_WORKFLOW_STEPS } from "../lib/mcp/runtime.ts";
 
 const token = "test-only-secret-token";
 const parseProtocolResponse = async (response) => {
@@ -226,4 +226,5 @@ test("image inspection and transformations use bounded raster bytes", async () =
   assert.ok(Buffer.from(transformed.dataBase64, "base64").length <= 600_000);
   await assert.rejects(executeOperation("image.inspect", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 45 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 90, width: 1 }), { code: "INVALID_INPUT" });
 });
