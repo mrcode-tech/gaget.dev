@@ -43,6 +43,7 @@ Remote MCP calls send their supplied input to the configured server. The server 
 
 - `audio.analyze` reports normalized peak, RMS, DC offset, and clipping totals/per-channel for explicitly supplied bounded PCM/IEEE-float WAV bytes. This is sample analysis, not audio encoding or general codec support.
 - `audio.trim` extracts frame-aligned time ranges from bounded PCM/IEEE-float WAV input and returns a normalized WAV file as bounded Base64. The workflow engine can pass its `dataBase64` field to `audio.analyze`; no temporary files are stored.
+- `audio.normalize` adjusts integer PCM WAV samples toward a target peak in dBFS while preserving WAV chunks and byte length. It supports 8/16/24/32-bit PCM only and is not dynamic-range compression.
 
 ## Image overlay addition
 
