@@ -241,7 +241,7 @@ jobs:
             --header 'Accept: application/json, text/event-stream' \
             --data '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
             http://127.0.0.1:3000/api/mcp > artifacts/mcp-ci/docker-mcp-tools.json
-          node -e 'const fs=require("fs"); const raw=fs.readFileSync("./artifacts/mcp-ci/docker-mcp-tools.json","utf8"); const data=raw.split("\\n").filter(l=>l.startsWith("data:")).map(l=>l.slice(5).trim()).at(-1); const r=JSON.parse(data||raw); if(!Array.isArray(r.result?.tools)||r.result.tools.length<2) process.exit(1); console.log("Authenticated MCP discovery succeeded with "+r.result.tools.length+" tools.")' | tee -a "$log_file"
+          node -e 'const fs=require("fs"); const raw=fs.readFileSync("./artifacts/mcp-ci/docker-mcp-tools.json","utf8"); const data=raw.split("\n").filter(l=>l.startsWith("data:")).map(l=>l.slice(5).trim()).at(-1); const r=JSON.parse(data||raw); if(!Array.isArray(r.result?.tools)||r.result.tools.length<2) process.exit(1); console.log("Authenticated MCP discovery succeeded with "+r.result.tools.length+" tools.")' | tee -a "$log_file"
           echo "Docker build, startup, non-root, auth enforcement, and MCP discovery smoke checks passed." | tee -a "$log_file"
       - name: Generate verification summary
         if: always()
