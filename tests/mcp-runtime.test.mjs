@@ -250,6 +250,18 @@ test("workflow can select a bounded image data field as its final text output", 
   await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [{ id: "validate", operationId: "json.validate", arguments: { input: "{}" } }], output: { $ref: "validate.result.valid" } }), { code: "INVALID_INPUT" });
 });
 
+test("typed image workflow can sample a pixel from an earlier transform and return structured output", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 3, height: 2, channels: 3, background: "#336699" } }).png().toBuffer();
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 0, top: 0, width: 2, height: 2 } },
+    { id: "sample", operationId: "image.sample-pixel", arguments: { inputBase64: { $ref: "crop.result.dataBase64" }, x: 1, y: 1 } }
+  ], output: { $ref: "sample.result" } });
+  assert.equal(workflow.success, true);
+  assert.deepEqual(workflow.result.rgba, { r: 51, g: 102, b: 153, a: 255 });
+  assert.equal(workflow.result.hex, "#336699");
+});
+
 test("image crop and resize can be chained through explicit bounded dataBase64 references", async () => {
   const { default: sharp } = await import("sharp");
   const png = await sharp({ create: { width: 4, height: 3, channels: 3, background: "#336699" } }).png().toBuffer();

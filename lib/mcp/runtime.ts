@@ -919,9 +919,11 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "datetime.arithmetic": ["input"],
   "datetime.compare": ["left","right"],
   "image.inspect": ["inputBase64"],
+  "image.sample-pixel": ["inputBase64"],
   "image.transform": ["inputBase64"]
 };
 const workflowStringOutputs = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
+const workflowStructuredOutputs = new Set(["image.inspect", "image.sample-pixel", "json.validate", "json.diff", "json.find", "security.jwt.decode"]);
 function isWorkflowReference(value: unknown): value is WorkflowReference {
   return isObject(value) && Object.keys(value).length === 1 && typeof value.$ref === "string";
 }
@@ -959,7 +961,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
       throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow references an operation that is not enabled for MCP execution.");
     }
     if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
-    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.transform"]);
+    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.sample-pixel", "image.transform"]);
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
     for (const [field, value] of Object.entries(rawStep.arguments)) {
       if (isWorkflowReference(value)) {
@@ -968,8 +970,8 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
         const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === match[1]) as JsonObject).operationId as string;
         if (match[2]) {
           if (sourceOperation !== "image.transform" || match[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Only image.transform dataBase64 may be referenced as an object field.");
-        } else if (!workflowStringOutputs.has(sourceOperation)) {
-          throw new McpRuntimeError("INVALID_INPUT", "Workflow references must target a text result or supported image data field.");
+        } else if (!workflowStringOutputs.has(sourceOperation) && !workflowStructuredOutputs.has(sourceOperation)) {
+          throw new McpRuntimeError("INVALID_INPUT", "Workflow references must target a supported text or structured result.");
         }
         if (!workflowStringInputs[rawStep.operationId].includes(field)) {
           throw new McpRuntimeError("INVALID_INPUT", `Workflow field '${field}' does not accept a text result reference.`);
@@ -987,8 +989,8 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
     const sourceOperation = (raw.steps.find(s => isObject(s) && s.id === outputMatch[1]) as JsonObject).operationId as string;
     if (outputMatch[2]) {
       if (sourceOperation !== "image.transform" || outputMatch[2] !== "dataBase64") throw new McpRuntimeError("INVALID_INPUT", "Workflow output may select only image.transform dataBase64.");
-    } else if (!workflowStringOutputs.has(sourceOperation)) {
-      throw new McpRuntimeError("INVALID_INPUT", "Workflow output must select a text result or supported image data field.");
+    } else if (!workflowStringOutputs.has(sourceOperation) && !workflowStructuredOutputs.has(sourceOperation)) {
+      throw new McpRuntimeError("INVALID_INPUT", "Workflow output must select a supported text or structured result, or image data field.");
     }
   }
   return raw as unknown as WorkflowRecipe;
@@ -1128,13 +1130,13 @@ const mcpHandler = createMcpHandler(() => {
     "execute_workflow",
     {
       title: "Execute a bounded GaGet workflow",
-      description: "Run a sequential workflow of approved operations. Workflow references may point only to earlier text results or image.transform dataBase64 fields. Maximum 20 steps, 1,000,000 aggregate output bytes, and 10 seconds. No code, shell, filesystem, or network execution.",
+      description: "Run a sequential workflow of approved operations. Workflow references may point only to earlier supported text/structured results or image.transform dataBase64 fields. Maximum 20 steps, 1,000,000 aggregate output bytes, and 10 seconds. No code, shell, filesystem, or network execution.",
       inputSchema: z.object({
         schemaVersion: z.literal(1),
         output: z.object({ $ref: z.string().max(80) }).strict().optional(),
         steps: z.array(z.object({
           id: z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),
-          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.transform"]),
+          operationId: z.enum(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "image.inspect", "image.sample-pixel", "image.transform"]),
           arguments: z.record(z.string(), z.unknown())
         }).strict()).min(1).max(MCP_MAX_WORKFLOW_STEPS)
       }).strict(),
