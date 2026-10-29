@@ -8,7 +8,8 @@ export const MCP_MAX_OUTPUT_BYTES = 2_000_000;
 export const MCP_PROTOCOL_VERSION = "2025-11-25";
 export type McpErrorCode = "INVALID_INPUT" | "UNSUPPORTED_OPERATION" | "RESOURCE_LIMIT_EXCEEDED" | "PROCESSING_FAILED" | "AUTHENTICATION_REQUIRED";
 export class McpRuntimeError extends Error {
-  constructor(readonly code: McpErrorCode, message: string) { super(message); this.name = "McpRuntimeError"; }
+  readonly code: McpErrorCode;
+  constructor(code: McpErrorCode, message: string) { super(message); this.code = code; this.name = "McpRuntimeError"; }
 }
 type JsonObject = Record<string, unknown>;
 const isObject = (v: unknown): v is JsonObject => !!v && typeof v === "object" && !Array.isArray(v);
