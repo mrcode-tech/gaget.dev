@@ -215,6 +215,21 @@ test("MCP text operations do not expose regex execution until it is safely bound
   await assert.rejects(executeOperation("text.transform", { operation: "find-replace", input: "abc", options: { pattern: "a", replacement: "x", regexFind: true } }), { code: "INVALID_INPUT" });
 });
 
+test("image transformations support bounded grayscale, blur, and tonal adjustments", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 8, height: 6, channels: 3, background: "#336699" } }).png().toBuffer();
+  const inputBase64 = png.toString("base64");
+  for (const actionArgs of [{ action: "grayscale" }, { action: "blur", sigma: 1.2 }, { action: "adjust", brightness: 1.1, contrast: 1.2, saturation: 0.8 }]) {
+    const result = await executeOperation("image.transform", { inputBase64, ...actionArgs });
+    assert.equal(result.width, 8);
+    assert.equal(result.height, 6);
+    assert.ok(Buffer.from(result.dataBase64, "base64").byteLength > 0);
+  }
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "blur" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "adjust", brightness: 10 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "grayscale", sigma: 1 }), { code: "INVALID_INPUT" });
+});
+
 test("image crop and resize can be chained through explicit bounded dataBase64 references", async () => {
   const { default: sharp } = await import("sharp");
   const png = await sharp({ create: { width: 4, height: 3, channels: 3, background: "#336699" } }).png().toBuffer();

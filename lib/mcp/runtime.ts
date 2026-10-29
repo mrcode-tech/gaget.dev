@@ -68,7 +68,7 @@ const schemas = {
   "json.unescape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.find": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, query: { type: "string", maxLength: 1000 }, match: { type: "string", enum: ["keys","values","both"] } }, required: ["input","query"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
-  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, degrees: { type: "integer", enum: [90,180,270] }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 } }, required: ["inputBase64","action"], additionalProperties: false },
+  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, degrees: { type: "integer", enum: [90,180,270] }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 } }, required: ["inputBase64","action"], additionalProperties: false },
   "developer.format": { type: "object", properties: { operation: { type: "string", enum: ["xml","sql","html","csv-json","curl"] }, input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["format","minify","json-to-csv"] }, delimiter: { type: "string", maxLength: 1 } }, required: ["operation","input"], additionalProperties: false },
   "security.hash": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["digest","hmac","crc32","crc16-ccitt","adler32"] }, algorithm: { type: "string", enum: ["SHA-256","SHA-384","SHA-512"] }, key: { type: "string", maxLength: 10000 } }, required: ["input","mode"], additionalProperties: false },
   "security.jwt.decode": { type: "object", properties: { token: { type: "string", maxLength: 20000 } }, required: ["token"], additionalProperties: false },
@@ -92,7 +92,7 @@ const capabilityList = [
   { id: "json.unescape", version: "1.0.0", description: "Decode escaped JSON string content as plain text.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "json.find", version: "1.0.0", description: "Find JSON keys and/or values with bounded depth and result count.", limits: { maxInputCharacters: 200000, maxMatches: 1000, maxDepth: 64, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "image.inspect", version: "1.0.0", description: "Inspect dimensions and basic metadata of a bounded JPEG, PNG, WebP, AVIF, GIF, or TIFF image supplied explicitly as base64. No persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxOutputBytes: MCP_MAX_OUTPUT_BYTES, timeoutMs: 5000 } },
-  { id: "image.transform", version: "1.0.0", description: "Crop, resize, rotate, flip, flop, auto-orient, or convert a bounded supported image supplied explicitly as base64. Returns a bounded base64 result; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxOutputBytes: MCP_MAX_IMAGE_OUTPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxDimension: 4096, timeoutMs: 5000 } },
+  { id: "image.transform", version: "1.0.0", description: "Crop, resize, rotate, flip, flop, auto-orient, grayscale, blur, adjust brightness/contrast/saturation, or convert a bounded supported image supplied explicitly as base64. Returns a bounded base64 result; no persistence.", limits: { maxInputBytes: MCP_MAX_IMAGE_INPUT_BYTES, maxOutputBytes: MCP_MAX_IMAGE_OUTPUT_BYTES, maxPixels: MCP_MAX_IMAGE_PIXELS, maxDimension: 4096, timeoutMs: 5000 } },
   { id: "developer.format", version: "1.0.0", description: "Format/minify supported XML, SQL, HTML text, or convert CSV/JSON. Does not execute input.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.hash", version: "1.0.0", description: "Compute bounded text digests, HMAC, or non-cryptographic checksums. HMAC keys are secret; hashes are not encryption.", limits: { maxInputCharacters: 200000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
   { id: "security.jwt.decode", version: "1.0.0", description: "Decode JWT header and claims without verifying its signature or trust.", limits: { maxInputCharacters: 20000, maxOutputBytes: MCP_MAX_OUTPUT_BYTES } },
@@ -149,7 +149,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.unescape": ["input"],
     "json.find": ["input","query","match"],
     "image.inspect": ["inputBase64"],
-    "image.transform": ["inputBase64","action","left","top","width","height","degrees","format","quality"],
+    "image.transform": ["inputBase64","action","left","top","width","height","degrees","format","quality","brightness","contrast","saturation","sigma"],
     "developer.format": ["operation", "input", "mode", "delimiter"],
     "security.hash": ["input","mode","algorithm","key"],
     "security.jwt.decode": ["token"],
@@ -291,7 +291,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
       case "image.transform": {
         const inputBase64 = stringField(rawInput, "inputBase64", 800_000);
         const bytes = decodeBoundedImageBase64(inputBase64);
-        const action = enumField(rawInput, "action", ["crop","resize","rotate","flip","flop","convert","auto-orient"] as const);
+        const action = enumField(rawInput, "action", ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] as const);
         const left = rawInput.left;
         const top = rawInput.top;
         const width = rawInput.width;
@@ -299,11 +299,18 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const degrees = rawInput.degrees;
         const format = rawInput.format;
         const quality = rawInput.quality;
+        const brightness = rawInput.brightness;
+        const contrast = rawInput.contrast;
+        const saturation = rawInput.saturation;
+        const sigma = rawInput.sigma;
         if (left !== undefined && (!Number.isSafeInteger(left) || (left as number) < 0 || (left as number) > 16_000_000)) throw new McpRuntimeError("INVALID_INPUT", "'left' must be an integer from 0 to 16,000,000.");
         if (top !== undefined && (!Number.isSafeInteger(top) || (top as number) < 0 || (top as number) > 16_000_000)) throw new McpRuntimeError("INVALID_INPUT", "'top' must be an integer from 0 to 16,000,000.");
         if (width !== undefined && (!Number.isSafeInteger(width) || (width as number) < 1 || (width as number) > 4096)) throw new McpRuntimeError("INVALID_INPUT", "'width' must be an integer from 1 to 4096.");
         if (height !== undefined && (!Number.isSafeInteger(height) || (height as number) < 1 || (height as number) > 4096)) throw new McpRuntimeError("INVALID_INPUT", "'height' must be an integer from 1 to 4096.");
         if (quality !== undefined && (!Number.isSafeInteger(quality) || (quality as number) < 1 || (quality as number) > 100)) throw new McpRuntimeError("INVALID_INPUT", "'quality' must be an integer from 1 to 100.");
+        for (const [name, value, min, max] of [["brightness", brightness, 0.1, 2], ["contrast", contrast, 0, 3], ["saturation", saturation, 0, 3], ["sigma", sigma, 0.3, 100]] as const) {
+          if (value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max)) throw new McpRuntimeError("INVALID_INPUT", "'" + name + "' is outside the supported numeric range.");
+        }
         if (action === "resize" && width === undefined && height === undefined) throw new McpRuntimeError("INVALID_INPUT", "Resize requires width, height, or both.");
         if (action === "crop" && (left === undefined || top === undefined || width === undefined || height === undefined)) throw new McpRuntimeError("INVALID_INPUT", "Crop requires left, top, width, and height.");
         if (action === "rotate" && degrees !== 90 && degrees !== 180 && degrees !== 270) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires degrees of 90, 180, or 270.");
@@ -314,6 +321,10 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         if (action !== "rotate" && degrees !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Degrees are valid only for rotate.");
         if (action !== "convert" && (format !== undefined || quality !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Format and quality are valid only for convert.");
         if (quality !== undefined && format === undefined) throw new McpRuntimeError("INVALID_INPUT", "Quality requires an explicit output format.");
+        if (action === "blur" && sigma === undefined) throw new McpRuntimeError("INVALID_INPUT", "Blur requires a sigma value from 0.3 to 100.");
+        if (action !== "blur" && sigma !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Sigma is valid only for blur.");
+        if (action === "adjust" && brightness === undefined && contrast === undefined && saturation === undefined) throw new McpRuntimeError("INVALID_INPUT", "Adjust requires at least one of brightness, contrast, or saturation.");
+        if (action !== "adjust" && (brightness !== undefined || contrast !== undefined || saturation !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Brightness, contrast, and saturation are valid only for adjust.");
         try {
           let pipeline = sharp(bytes, { limitInputPixels: MCP_MAX_IMAGE_PIXELS, sequentialRead: true, failOn: "error" }).timeout({ seconds: 5 });
           const metadata = await pipeline.metadata();
@@ -327,6 +338,12 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           else if (action === "flip") pipeline = pipeline.flip();
           else if (action === "flop") pipeline = pipeline.flop();
           else if (action === "auto-orient") pipeline = pipeline.rotate();
+          else if (action === "grayscale") pipeline = pipeline.grayscale();
+          else if (action === "blur") pipeline = pipeline.blur(sigma as number);
+          else if (action === "adjust") {
+            if (brightness !== undefined || saturation !== undefined) pipeline = pipeline.modulate({ ...(brightness === undefined ? {} : { brightness: brightness as number }), ...(saturation === undefined ? {} : { saturation: saturation as number }) });
+            if (contrast !== undefined) pipeline = pipeline.linear(contrast as number, 128 * (1 - (contrast as number)));
+          }
           else if (action === "convert") pipeline = pipeline.toFormat(format as "jpeg" | "png" | "webp" | "avif", quality === undefined ? {} : { quality: quality as number });
           if (action !== "resize") pipeline = pipeline.resize({ width: 4096, height: 4096, fit: "inside", withoutEnlargement: true });
           const output = await pipeline.toBuffer({ resolveWithObject: true });
