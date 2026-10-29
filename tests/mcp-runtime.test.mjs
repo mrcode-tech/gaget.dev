@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { executeOperation, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES } from "../lib/mcp/runtime.ts";
+import { executeOperation, executeWorkflow, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES, MCP_MAX_WORKFLOW_STEPS } from "../lib/mcp/runtime.ts";
 
 const token = "test-only-secret-token";
 const parseProtocolResponse = async (response) => {

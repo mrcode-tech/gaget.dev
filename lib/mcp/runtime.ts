@@ -8,7 +8,7 @@ import { transformDeveloperTool, type DeveloperOperation } from "../tools/develo
 export const MCP_MAX_REQUEST_BYTES = 1_000_000;
 export const MCP_MAX_OUTPUT_BYTES = 2_000_000;
 export const MCP_PROTOCOL_VERSION = "2025-11-25";
-export type McpErrorCode = "INVALID_INPUT" | "UNSUPPORTED_OPERATION" | "RESOURCE_LIMIT_EXCEEDED" | "PROCESSING_FAILED" | "AUTHENTICATION_REQUIRED";
+export type McpErrorCode = "INVALID_INPUT" | "UNSUPPORTED_OPERATION" | "RESOURCE_LIMIT_EXCEEDED" | "PROCESSING_FAILED" | "AUTHENTICATION_REQUIRED" | "TIMEOUT" | "CANCELLED";
 export class McpRuntimeError extends Error {
   readonly code: McpErrorCode;
   constructor(code: McpErrorCode, message: string) { super(message); this.code = code; this.name = "McpRuntimeError"; }
