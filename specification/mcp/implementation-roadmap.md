@@ -36,8 +36,12 @@ Audit codecs, licenses, dependencies, resource costs, worker isolation, async jo
 ## Phase 9 — Docker/self-hosting (P1/P2 after runtime design)
 Package UI/MCP services; secure configuration, health, non-root runtime, limits, cleanup and upgrade docs. Add combined/separate profiles only when testable. Exit when clean build, MCP smoke and policy tests pass.
 
-## Phase 10 — Per-tool help and beta (P1/P2)
-Add shared contextual help to each MCP-enabled workspace/tool with verified examples, runtime, privacy/file transfer, limits, setup and operation chains. Add registry-driven docs checks where practical. Exit when each exposed tool has accessible, localized help and tested task examples.
+## Phase 10 — MCP discovery, public landing page, and help (P1/P2)
+Add shared contextual help to each MCP-enabled workspace/tool with verified examples, runtime, privacy/file transfer, limits, setup and operation chains. Design and implement a public MCP & Integrations landing page with a guided workflow demo, verified capability catalog, tested client setup, and explicit hosted versus self-hosted/on-premises guidance. The demo must execute against the real MCP adapter/runtime to be labelled live; otherwise it must be visibly labelled as a guided, non-executed example. Any anonymous live demo requires a dedicated narrow allowlist, strict quotas/timeouts, abuse controls, synthetic sample defaults, and no privileged credentials in frontend code.
+
+Add **Batch Workbench** as a separate primary sidebar destination immediately below **Dev Tools**. It is a general multi-operation workspace that remains useful without MCP; it must link to an MCP-equivalent recipe only for operations verified in the server registry. Keep the MCP landing page, Batch Workbench, individual tools, contextual help, and protocol endpoint distinct. Reuse existing app shell, navigation, shadcn-style primitives, theme, responsive, localization and RTL conventions. Add route/navigation, demo execution, privacy, accessibility, error-state, and hosted/self-hosted content tests. Add registry-driven docs checks where practical.
+
+Exit when each exposed tool has accessible, localized help and tested examples; the landing page truthfully distinguishes live execution from examples; Batch Workbench is independently navigable; and hosted/on-premises claims match implemented deployment and security behavior.
 
 ## Phase 11 — Hardening and release gate (P0)
 Run main CI, MCP CI, security/privacy, browser E2E, Docker smoke and acceptance matrix. Inspect artifacts for exact commit. Publish support matrix and limitations. Exit when required jobs pass, manifest matches commit, no critical security/privacy findings remain, docs match shipped behavior.
