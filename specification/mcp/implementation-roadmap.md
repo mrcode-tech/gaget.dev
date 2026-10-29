@@ -21,6 +21,12 @@ Implement server invocation, validation, quotas, deadlines, cancellation, safe e
 ## Phase 4 — MCP adapter (P1)
 Integrate maintained SDK/transport; implement discovery, list_capabilities, execute_operation; apply appropriate auth/authorization; expose only approved operations. Exit when compatible client initializes, discovers, invokes, receives safe errors, and cannot invoke disabled/deferred operations.
 
+## Product architecture decision — one workflow workspace
+
+There is one general-purpose user-facing workflow workspace: **Batch Workbench**, a separate primary sidebar destination immediately below **Dev Tools**. Do not create a second simple workflow/pipeline workspace under Dev Tools or a parallel MCP-only editor.
+
+The workflow engine and versioned pipeline contract are shared capabilities, not additional navigation destinations. Batch Workbench, the MCP adapter, and the public MCP demo reuse the canonical operation IDs, schemas, validation, budgets, and result manifest where runtime-compatible. Keep adapters, authorization, transport, and UI state separate. The landing page demonstrates a curated recipe from the same pipeline model and links to Batch Workbench; it does not duplicate the full editor. Only server-verified operations may be represented as remotely executable MCP steps.
+
 ## Phase 5 — Workflow engine (P1)
 Define versioned schema, typed references, sequential execution, budgets, cancellation and result manifest. Audit existing browser Workflow & Batch Workbench; do not assume server compatibility. Exit when valid workflows run and invalid/unbounded workflows are rejected.
 
@@ -39,7 +45,7 @@ Package UI/MCP services; secure configuration, health, non-root runtime, limits,
 ## Phase 10 — MCP discovery, public landing page, and help (P1/P2)
 Add shared contextual help to each MCP-enabled workspace/tool with verified examples, runtime, privacy/file transfer, limits, setup and operation chains. Design and implement a public MCP & Integrations landing page with a guided workflow demo, verified capability catalog, tested client setup, and explicit hosted versus self-hosted/on-premises guidance. The demo must execute against the real MCP adapter/runtime to be labelled live; otherwise it must be visibly labelled as a guided, non-executed example. Any anonymous live demo requires a dedicated narrow allowlist, strict quotas/timeouts, abuse controls, synthetic sample defaults, and no privileged credentials in frontend code.
 
-Add **Batch Workbench** as a separate primary sidebar destination immediately below **Dev Tools**. It is a general multi-operation workspace that remains useful without MCP; it must link to an MCP-equivalent recipe only for operations verified in the server registry. Keep the MCP landing page, Batch Workbench, individual tools, contextual help, and protocol endpoint distinct. Reuse existing app shell, navigation, shadcn-style primitives, theme, responsive, localization and RTL conventions. Add route/navigation, demo execution, privacy, accessibility, error-state, and hosted/self-hosted content tests. Add registry-driven docs checks where practical.
+Add **Batch Workbench** as the single general-purpose multi-operation workspace and a separate primary sidebar destination immediately below **Dev Tools**. Do not add a second workflow/pipeline editor. The public MCP landing page demonstrates a curated recipe from the same pipeline model and links to Batch Workbench; it must link to an MCP-equivalent recipe only for operations verified in the server registry. Keep the MCP landing page, Batch Workbench, individual tools, contextual help, and protocol endpoint distinct. Reuse existing app shell, navigation, shadcn-style primitives, theme, responsive, localization and RTL conventions. Add route/navigation, demo execution, privacy, accessibility, error-state, and hosted/self-hosted content tests. Add registry-driven docs checks where practical.
 
 Exit when each exposed tool has accessible, localized help and tested examples; the landing page truthfully distinguishes live execution from examples; Batch Workbench is independently navigable; and hosted/on-premises claims match implemented deployment and security behavior.
 
