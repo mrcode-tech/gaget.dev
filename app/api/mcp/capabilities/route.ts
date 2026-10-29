@@ -4,8 +4,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-static";
 
 export async function GET(): Promise<Response> {
-  const capabilities = listCapabilities().map(({ id, version, description, limits, inputSchema, outputSchema }) => ({
-    id, version, description, limits, inputSchema, outputSchema,
+  const capabilities = listCapabilities().map(({ id, version, description, limits, inputTypes, outputTypes, executionModes, availability, mcpExposure, privacy, deterministic, inputSchema, outputSchema }) => ({
+    id, version, description, limits, inputTypes, outputTypes, executionModes, availability, mcpExposure, privacy, deterministic, inputSchema, outputSchema,
   }));
   return Response.json({
     protocol: "Model Context Protocol",

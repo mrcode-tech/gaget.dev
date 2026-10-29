@@ -8,6 +8,7 @@ describe("public MCP capability catalog", () => {
     const payload = await response.json();
     expect(payload.protocolTools).toEqual(["list_capabilities", "execute_operation", "execute_workflow"]);
     expect(payload.capabilities.some((item: { id: string }) => item.id === "json.validate")).toBe(true);
+    expect(payload.capabilities.every((item: { inputTypes?: string[]; outputTypes?: string[]; executionModes?: string[]; mcpExposure?: string; availability?: string }) => item.inputTypes?.length && item.outputTypes?.length && item.executionModes?.includes("mcp") && item.mcpExposure === "exposed" && item.availability === "available")).toBe(true);
     expect(JSON.stringify(payload)).not.toContain("MCP_AUTH_TOKEN");
   });
 });
