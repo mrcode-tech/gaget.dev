@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1120" viewBox="0 0 1440 1120" role="img" aria-labelledby="title desc">
   <title id="title">GaGet.dev MCP landing page and interactive workflow demo — proposal</title>
-  <desc id="desc">Target desktop wireframe showing product navigation, MCP hero, workflow demo with ordered steps and result, hosted and self-hosted options, and verified capability catalog.</desc>
+  <desc id="desc">Target desktop wireframe showing product navigation, MCP hero, a curated pipeline demo that links to the single Batch Workbench editor, hosted and self-hosted options, and verified capability catalog.</desc>
   <defs>
     <style>
       .bg{fill:#f7f8fa}.surface{fill:#fff;stroke:#d5dbe3;stroke-width:1.5}.ink{fill:#17202c;font-family:Inter,Arial,sans-serif}.muted{fill:#586576;font-family:Inter,Arial,sans-serif}.tiny{font-size:12px}.small{font-size:14px}.body{font-size:16px}.h2{font-size:25px;font-weight:700}.h1{font-size:38px;font-weight:700}.label{font-size:13px;font-weight:700;letter-spacing:.5px}.line{stroke:#d5dbe3;stroke-width:1.5}.accent{fill:#e6eefc;stroke:#9cb9ef;stroke-width:1.5}.button{fill:#203b69}.buttonText{fill:#fff;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700}.mono{fill:#263447;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
@@ -43,11 +43,11 @@
   <text class="muted small" x="946" y="350">Result data, status, and manifest</text>
   <text class="muted tiny" x="928" y="385">Only supported operations are shown as available.</text>
 
-  <text class="ink h2" x="72" y="455">Try a real workflow</text>
-  <text class="muted body" x="72" y="482">Run a safe sample, inspect each step, and see the MCP request and result.</text>
+  <text class="ink h2" x="72" y="455">Explore a sample pipeline</text>
+  <text class="muted body" x="72" y="482">Explore a curated recipe; inspect its request and result, then open Batch Workbench for full editing.</text>
   <rect class="surface" x="72" y="504" width="1296" height="370" rx="14"/>
   <rect class="bg" x="92" y="524" width="1256" height="48" rx="8"/>
-  <text class="ink body" x="112" y="554" font-weight="700">Workflow Lab</text>
+  <text class="ink body" x="112" y="554" font-weight="700">Curated pipeline demo</text>
   <rect class="accent" x="1042" y="534" width="284" height="28" rx="6"/>
   <text class="ink tiny" x="1055" y="552" font-weight="700">Guided sample · no personal data needed</text>
 
@@ -58,8 +58,9 @@
   <rect class="surface" x="100" y="716" width="536" height="76" rx="7"/>
   <text class="mono" x="116" y="742">eyJvayI6dHJ1ZX0=</text>
   <text class="muted tiny" x="116" y="766">Sample input is used by default. Remote submission is explicit.</text>
+  <text class="muted tiny" x="100" y="866">Full workflow authoring lives in Batch Workbench — this page is a demo, not a second editor.</text>
   <rect class="button" x="100" y="810" width="126" height="40" rx="7"/>
-  <text class="buttonText" x="126" y="835">Run sample</text>
+  <text class="buttonText" x="126" y="835">Run / view sample</text>
   <rect class="surface" x="238" y="810" width="104" height="40" rx="7"/>
   <text class="ink small" x="260" y="835" font-weight="700">Reset</text>
 
