@@ -9,6 +9,9 @@
 - [MCP tool catalog](./tool-catalog.md)
 - [Workflow and pipeline contract](./workflow-pipelines.md)
 - [Workflow UX architecture — one Batch Workbench](./workflow-ux-architecture.md) — canonical navigation, shared pipeline, MCP demo, and acceptance requirements.
+- [Capabilities inventory](./capabilities.md) — cross-tool feature inventory, typed input/output model, operation status and MCP exposure rules.
+- [Unified Batch Workbench architecture and wireframes](./workflow-ux-architecture.md) — responsive UX and typed pipeline specification.
+- [Unified Batch Workbench desktop wireframe](./wireframes/unified-batch-workbench.svg) — target three-zone input, pipeline and result layout.
 - [Security and privacy](./security-privacy.md)
 - [Docker and enterprise deployment](./deployment-docker.md)
 - [Web UI help and wireframes](./web-ui-help-and-wireframes.md) — includes the public MCP & Integrations landing page, live-versus-guided demo contract, and Batch Workbench requirements.
