@@ -940,7 +940,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           else if (action === "text-overlay") {
             if ((textX as number) >= metadata.width || (textY as number) >= metadata.height) throw new McpRuntimeError("INVALID_INPUT", "Text overlay origin must be inside the source image.");
             const escapedText = (text as string).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
-            const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="' + metadata.width + '" height="' + metadata.height + '"><text x="' + textX + '" y="' + ((textY as number) + (fontSize as number)) + '" font-size="' + fontSize + '" fill="' + color + '" font-family="sans-serif">' + escapedText + '</text></svg>');
+            const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="' + metadata.width + '" height="' + metadata.height + '"><text x="' + (textX as number) + '" y="' + ((textY as number) + (fontSize as number)) + '" font-size="' + (fontSize as number) + '" fill="' + (color as string) + '" font-family="sans-serif">' + escapedText + '</text></svg>');
             pipeline = pipeline.composite([{ input: svg, left: 0, top: 0 }]);
           }
           else if (action === "adjust") {
