@@ -8,6 +8,7 @@
 - [Shared operation contract](./operation-contract.md)
 - [MCP tool catalog](./tool-catalog.md)
 - [Workflow and pipeline contract](./workflow-pipelines.md)
+- [Workflow UX architecture — one Batch Workbench](./workflow-ux-architecture.md) — canonical navigation, shared pipeline, MCP demo, and acceptance requirements.
 - [Security and privacy](./security-privacy.md)
 - [Docker and enterprise deployment](./deployment-docker.md)
 - [Web UI help and wireframes](./web-ui-help-and-wireframes.md) — includes the public MCP & Integrations landing page, live-versus-guided demo contract, and Batch Workbench requirements.
