@@ -9,7 +9,7 @@ describe("MCP landing page", () => {
   it("clearly labels the pipeline example as guided and not executed", () => {
     render(<I18nProvider locale="en"><McpLandingPage capabilities={[{ id: "json.validate", version: "1.0.0", description: "Validate JSON syntax.", limits: { maxInputCharacters: 200000 } }]} /></I18nProvider>);
     expect(screen.getByRole("heading", { name: "Bring GaGet.dev tools into your AI workflows" })).toBeTruthy();
-    expect(screen.getByText("Guided example · not executed")).toBeTruthy();
+    expect(screen.getAllByText("Guided example · not executed")).toHaveLength(2);
     expect(screen.getByText(/does not send a request to the MCP server/)).toBeTruthy();
     expect(screen.getByTestId("mcp-image-pipeline-recipe")).toBeTruthy();
     expect(screen.getByText(/select the result dataBase64 field as the final text output/)).toBeTruthy();

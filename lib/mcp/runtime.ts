@@ -320,9 +320,8 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         if (fit !== undefined && !["contain","cover","fill","inside","outside"].includes(String(fit))) throw new McpRuntimeError("INVALID_INPUT", "Fit must be contain, cover, fill, inside, or outside.");
         if (position !== undefined && !["centre","north","northeast","east","southeast","south","southwest","west","northwest"].includes(String(position))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported resize position.");
         if ((fit !== undefined || position !== undefined) && action !== "resize") throw new McpRuntimeError("INVALID_INPUT", "Fit and position are valid only for resize.");
-        if (action === "resize" && action !== "resize" && position !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Position is valid only for resize.");
         const ratioValues = [leftRatio, topRatio, widthRatio, heightRatio];
-        if (ratioValues.some(value => value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1)) || (widthRatio !== undefined && widthRatio <= 0) || (heightRatio !== undefined && heightRatio <= 0)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop values must be finite ratios between 0 and 1; widthRatio and heightRatio must be greater than 0.");
+        if (ratioValues.some(value => value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1)) || (typeof widthRatio === "number" && widthRatio <= 0) || (typeof heightRatio === "number" && heightRatio <= 0)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop values must be finite ratios between 0 and 1; widthRatio and heightRatio must be greater than 0.");
         const hasPixelCrop = [left, top, width, height].every(value => value !== undefined);
         const hasAnyPixelCrop = [left, top, width, height].some(value => value !== undefined);
         const hasRatioCrop = ratioValues.every(value => value !== undefined);
@@ -368,6 +367,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           else if (action === "convert") pipeline = pipeline.toFormat(format as "jpeg" | "png" | "webp" | "avif", quality === undefined ? {} : { quality: quality as number });
           if (action !== "resize") pipeline = pipeline.resize({ width: 4096, height: 4096, fit: "inside", withoutEnlargement: true });
           const output = await pipeline.toBuffer({ resolveWithObject: true });
+          if (output.info.width > 4096 || output.info.height > 4096) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Processed image dimensions exceed the 4,096-pixel limit.");
           if (output.data.byteLength > MCP_MAX_IMAGE_OUTPUT_BYTES) throw new McpRuntimeError("RESOURCE_LIMIT_EXCEEDED", "Processed image exceeds the 600,000-byte output limit.");
           result = { format: output.info.format, width: output.info.width, height: output.info.height, bytes: output.data.byteLength, dataBase64: output.data.toString("base64") };
         } catch (error) {
