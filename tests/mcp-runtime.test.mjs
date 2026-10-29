@@ -319,6 +319,28 @@ test("workflow preflight rejects invalid later-step arguments before executing e
   ] }), { code: "INVALID_INPUT" });
 });
 
+test("video.inspect reads bounded ISO BMFF movie and track metadata without decoding", async () => {
+  const box = (type, payload) => { const out = Buffer.alloc(8 + payload.length); out.writeUInt32BE(out.length, 0); out.write(type, 4, "ascii"); payload.copy(out, 8); return out; };
+  const ftypPayload = Buffer.alloc(16); ftypPayload.write("isom", 0, "ascii"); ftypPayload.writeUInt32BE(0, 4); ftypPayload.write("isom", 8, "ascii"); ftypPayload.write("mp42", 12, "ascii");
+  const mvhd = Buffer.alloc(20); mvhd.writeUInt32BE(1000, 12); mvhd.writeUInt32BE(5000, 16);
+  const tkhd = Buffer.alloc(80); tkhd.writeUInt32BE(7, 12); tkhd.writeUInt32BE(1920 * 65536, 72); tkhd.writeUInt32BE(1080 * 65536, 76);
+  const mdhd = Buffer.alloc(20); mdhd.writeUInt32BE(1000, 12); mdhd.writeUInt32BE(5000, 16);
+  const hdlr = Buffer.alloc(12); hdlr.write("vide", 8, "ascii");
+  const stsdPayload = Buffer.alloc(16); stsdPayload.writeUInt32BE(1, 4); stsdPayload.writeUInt32BE(8, 8); stsdPayload.write("avc1", 12, "ascii");
+  const stbl = box("stbl", box("stsd", stsdPayload));
+  const mdia = box("mdia", Buffer.concat([box("mdhd", mdhd), box("hdlr", hdlr), box("minf", stbl)]));
+  const trak = box("trak", Buffer.concat([box("tkhd", tkhd), mdia]));
+  const moov = box("moov", Buffer.concat([box("mvhd", mvhd), trak]));
+  const mp4 = Buffer.concat([box("ftyp", ftypPayload), moov]);
+  const result = await executeOperation("video.inspect", { inputBase64: mp4.toString("base64") });
+  assert.equal(result.format, "iso-bmff");
+  assert.equal(result.majorBrand, "isom");
+  assert.equal(result.durationSeconds, 5);
+  assert.equal(result.trackCount, 1);
+  assert.deepEqual(result.tracks[0], { trackId: 7, kind: "video", handler: "vide", codec: "avc1", width: 1920, height: 1080, durationSeconds: 5 });
+  await assert.rejects(executeOperation("video.inspect", { inputBase64: Buffer.from("not a video").toString("base64") }), { code: "UNSUPPORTED_FORMAT" });
+});
+
 test("audio.normalize can be invoked through MCP and selected as a workflow binary output", async () => {
   const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 8;
   const pcm = Buffer.alloc(frames * 2);

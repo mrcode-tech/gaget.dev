@@ -49,6 +49,10 @@ Remote MCP calls send their supplied input to the configured server. The server 
 
 - `image.transform` supports a `text-overlay` action that escapes supplied text and rasterizes it through the existing image pipeline. It does not accept arbitrary SVG markup.
 
+## Implemented video metadata inspection addition
+
+- `video.inspect` reads bounded ISO BMFF `ftyp`/`moov` structures and reports movie duration, track kind, codec sample-entry identifiers, and video dimensions. It does not decode, transcode, or claim universal MOV/MP4 support.
+
 ## Existing tools to evaluate
 
 Every item below is proposed for audit, not approved automatically. Phase labels are priorities, not current implementation status.
