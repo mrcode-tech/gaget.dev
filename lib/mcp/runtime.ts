@@ -243,7 +243,7 @@ function inspectIsoBmff(bytes: Buffer): Record<string, unknown> {
     if (version !== 0 && version !== 1 || box.end - box.payloadStart < durationOffset + durationBytes) return null;
     const timescale = bytes.readUInt32BE(box.payloadStart + timescaleOffset);
     const duration = durationBytes === 8 ? bytes.readBigUInt64BE(box.payloadStart + durationOffset) : BigInt(bytes.readUInt32BE(box.payloadStart + durationOffset));
-    if (!timescale || duration === 0xffffffffffffffffn || duration === 0xffffffffn) return null;
+    if (!timescale || duration === BigInt("18446744073709551615") || duration === BigInt("4294967295")) return null;
     const seconds = Number(duration) / timescale;
     return Number.isFinite(seconds) ? Number(seconds.toFixed(6)) : null;
   };
