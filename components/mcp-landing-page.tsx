@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LocaleLink } from "@/components/locale-link";
 import { useI18n } from "@/components/i18n-provider";
 
-type PublicCapability = { id: string; version: string; description: string; limits: Record<string, number>; inputTypes: string[]; outputTypes: string[]; executionModes: string[]; availability: "available" | "deferred"; mcpExposure: "exposed" | "disabled"; privacy: string; deterministic: boolean };
+type PublicCapability = { id: string; version: string; description: string; limits: Record<string, number>; inputTypes: readonly string[]; outputTypes: readonly string[]; executionModes: readonly string[]; availability: "available" | "deferred"; mcpExposure: "exposed" | "disabled"; privacy: string; deterministic: boolean };
 
 const content = {
   en: {
