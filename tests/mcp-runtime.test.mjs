@@ -283,6 +283,9 @@ test("image inspection and transformations use bounded raster bytes", async () =
   const cropped = await executeOperation("image.transform", { inputBase64, action: "crop", left: 1, top: 0, width: 2, height: 1 });
   assert.equal(cropped.width, 2);
   assert.equal(cropped.height, 1);
+  const normalizedCrop = await executeOperation("image.transform", { inputBase64, action: "crop", leftRatio: 0, topRatio: 0, widthRatio: 2 / 3, heightRatio: 0.5 });
+  assert.equal(normalizedCrop.width, 2);
+  assert.equal(normalizedCrop.height, 1);
   const transformed = await executeOperation("image.transform", { inputBase64, action: "resize", width: 1 });
   assert.equal(transformed.width, 1);
   assert.equal(transformed.height, 1);
@@ -304,4 +307,6 @@ test("image inspection and transformations use bounded raster bytes", async () =
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "flip", format: "png" }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", left: 2, top: 0, width: 2, height: 1 }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", left: -1, top: 0, width: 1, height: 1 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", leftRatio: 0.8, topRatio: 0, widthRatio: 0.5, heightRatio: 0.5 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", left: 0, top: 0, width: 1, height: 1, widthRatio: 0.5, heightRatio: 0.5 }), { code: "INVALID_INPUT" });
 });

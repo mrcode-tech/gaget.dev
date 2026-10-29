@@ -68,7 +68,7 @@ const schemas = {
   "json.unescape": { type: "object", properties: { input: { type: "string", maxLength: 200000 } }, required: ["input"], additionalProperties: false },
   "json.find": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, query: { type: "string", maxLength: 1000 }, match: { type: "string", enum: ["keys","values","both"] } }, required: ["input","query"], additionalProperties: false },
   "image.inspect": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 } }, required: ["inputBase64"], additionalProperties: false },
-  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, degrees: { type: "integer", enum: [90,180,270] }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 }, fit: { type: "string", enum: ["contain","cover","fill","inside","outside"] }, position: { type: "string", enum: ["centre","north","northeast","east","southeast","south","southwest","west","northwest"] } }, required: ["inputBase64","action"], additionalProperties: false },
+  "image.transform": { type: "object", properties: { inputBase64: { type: "string", maxLength: 800000 }, action: { type: "string", enum: ["crop","resize","rotate","flip","flop","convert","auto-orient","grayscale","blur","adjust"] }, left: { type: "integer", minimum: 0, maximum: 16000000 }, top: { type: "integer", minimum: 0, maximum: 16000000 }, width: { type: "integer", minimum: 1, maximum: 4096 }, height: { type: "integer", minimum: 1, maximum: 4096 }, leftRatio: { type: "number", minimum: 0, maximum: 1 }, topRatio: { type: "number", minimum: 0, maximum: 1 }, widthRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, heightRatio: { type: "number", exclusiveMinimum: 0, maximum: 1 }, degrees: { type: "integer", enum: [90,180,270] }, format: { type: "string", enum: ["jpeg","png","webp","avif"] }, quality: { type: "integer", minimum: 1, maximum: 100 }, brightness: { type: "number", minimum: 0.1, maximum: 2 }, contrast: { type: "number", minimum: 0, maximum: 3 }, saturation: { type: "number", minimum: 0, maximum: 3 }, sigma: { type: "number", minimum: 0.3, maximum: 100 }, fit: { type: "string", enum: ["contain","cover","fill","inside","outside"] }, position: { type: "string", enum: ["centre","north","northeast","east","southeast","south","southwest","west","northwest"] } }, required: ["inputBase64","action"], additionalProperties: false },
   "developer.format": { type: "object", properties: { operation: { type: "string", enum: ["xml","sql","html","csv-json","curl"] }, input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["format","minify","json-to-csv"] }, delimiter: { type: "string", maxLength: 1 } }, required: ["operation","input"], additionalProperties: false },
   "security.hash": { type: "object", properties: { input: { type: "string", maxLength: 200000 }, mode: { type: "string", enum: ["digest","hmac","crc32","crc16-ccitt","adler32"] }, algorithm: { type: "string", enum: ["SHA-256","SHA-384","SHA-512"] }, key: { type: "string", maxLength: 10000 } }, required: ["input","mode"], additionalProperties: false },
   "security.jwt.decode": { type: "object", properties: { token: { type: "string", maxLength: 20000 } }, required: ["token"], additionalProperties: false },
@@ -149,7 +149,7 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
     "json.unescape": ["input"],
     "json.find": ["input","query","match"],
     "image.inspect": ["inputBase64"],
-    "image.transform": ["inputBase64","action","left","top","width","height","degrees","format","quality","brightness","contrast","saturation","sigma","fit","position"],
+    "image.transform": ["inputBase64","action","left","top","width","height","leftRatio","topRatio","widthRatio","heightRatio","degrees","format","quality","brightness","contrast","saturation","sigma","fit","position"],
     "developer.format": ["operation", "input", "mode", "delimiter"],
     "security.hash": ["input","mode","algorithm","key"],
     "security.jwt.decode": ["token"],
@@ -296,6 +296,10 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         const top = rawInput.top;
         const width = rawInput.width;
         const height = rawInput.height;
+        const leftRatio = rawInput.leftRatio;
+        const topRatio = rawInput.topRatio;
+        const widthRatio = rawInput.widthRatio;
+        const heightRatio = rawInput.heightRatio;
         const degrees = rawInput.degrees;
         const format = rawInput.format;
         const quality = rawInput.quality;
@@ -317,13 +321,19 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
         if (position !== undefined && !["centre","north","northeast","east","southeast","south","southwest","west","northwest"].includes(String(position))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported resize position.");
         if ((fit !== undefined || position !== undefined) && action !== "resize") throw new McpRuntimeError("INVALID_INPUT", "Fit and position are valid only for resize.");
         if (action === "resize" && action !== "resize" && position !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Position is valid only for resize.");
-        if (action === "resize" && width === undefined && height === undefined) throw new McpRuntimeError("INVALID_INPUT", "Resize requires width, height, or both.");
-        if (action === "crop" && (left === undefined || top === undefined || width === undefined || height === undefined)) throw new McpRuntimeError("INVALID_INPUT", "Crop requires left, top, width, and height.");
+        const ratioValues = [leftRatio, topRatio, widthRatio, heightRatio];
+        if (ratioValues.some(value => value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1)) || (widthRatio !== undefined && widthRatio <= 0) || (heightRatio !== undefined && heightRatio <= 0)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop values must be finite ratios between 0 and 1; widthRatio and heightRatio must be greater than 0.");
+        const hasPixelCrop = [left, top, width, height].every(value => value !== undefined);
+        const hasAnyPixelCrop = [left, top, width, height].some(value => value !== undefined);
+        const hasRatioCrop = ratioValues.every(value => value !== undefined);
+        const hasAnyRatioCrop = ratioValues.some(value => value !== undefined);
+        if (hasPixelCrop && hasAnyRatioCrop || hasAnyPixelCrop && !hasPixelCrop || hasAnyRatioCrop && !hasRatioCrop) throw new McpRuntimeError("INVALID_INPUT", "Crop must use either all four pixel values or all four normalized ratios, not a mixture.");
+        if (action === "crop" && !hasPixelCrop && !hasRatioCrop) throw new McpRuntimeError("INVALID_INPUT", "Crop requires left/top/width/height pixels or leftRatio/topRatio/widthRatio/heightRatio.");
         if (action === "rotate" && degrees !== 90 && degrees !== 180 && degrees !== 270) throw new McpRuntimeError("INVALID_INPUT", "Rotate requires degrees of 90, 180, or 270.");
         if (action === "convert" && (typeof format !== "string" || !["jpeg","png","webp","avif"].includes(format))) throw new McpRuntimeError("INVALID_INPUT", "Convert requires a supported output format.");
         if (format !== undefined && !["jpeg","png","webp","avif"].includes(String(format))) throw new McpRuntimeError("INVALID_INPUT", "Unsupported output format.");
         if (action !== "resize" && action !== "crop" && (width !== undefined || height !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Width and height are valid only for resize or crop.");
-        if (action !== "crop" && (left !== undefined || top !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Left and top are valid only for crop.");
+        if (action !== "crop" && (left !== undefined || top !== undefined || leftRatio !== undefined || topRatio !== undefined || widthRatio !== undefined || heightRatio !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Crop coordinates are valid only for crop.");
         if (action !== "rotate" && degrees !== undefined) throw new McpRuntimeError("INVALID_INPUT", "Degrees are valid only for rotate.");
         if (action !== "convert" && (format !== undefined || quality !== undefined)) throw new McpRuntimeError("INVALID_INPUT", "Format and quality are valid only for convert.");
         if (quality !== undefined && format === undefined) throw new McpRuntimeError("INVALID_INPUT", "Quality requires an explicit output format.");
@@ -337,8 +347,13 @@ export async function executeOperation(operationId: string, rawInput: unknown): 
           if (!metadata.format || !["jpeg","png","webp","avif","gif","tiff"].includes(metadata.format) || !metadata.width || !metadata.height) throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Only supported raster image formats are accepted.");
           if ((metadata.pages ?? 1) > 1) throw new McpRuntimeError("UNSUPPORTED_FORMAT", "Animated and multi-page images are not supported by image transformations.");
           if (action === "crop") {
-            if ((left as number) + (width as number) > metadata.width || (top as number) + (height as number) > metadata.height) throw new McpRuntimeError("INVALID_INPUT", "Crop rectangle must fit entirely inside the source image.");
-            pipeline = pipeline.extract({ left: left as number, top: top as number, width: width as number, height: height as number });
+            const cropLeft = hasRatioCrop ? Math.floor((leftRatio as number) * metadata.width) : left as number;
+            const cropTop = hasRatioCrop ? Math.floor((topRatio as number) * metadata.height) : top as number;
+            const cropWidth = hasRatioCrop ? Math.max(1, Math.round((widthRatio as number) * metadata.width)) : width as number;
+            const cropHeight = hasRatioCrop ? Math.max(1, Math.round((heightRatio as number) * metadata.height)) : height as number;
+            if (hasRatioCrop && ((leftRatio as number) + (widthRatio as number) > 1 || (topRatio as number) + (heightRatio as number) > 1)) throw new McpRuntimeError("INVALID_INPUT", "Normalized crop rectangle must fit within ratios 0 to 1.");
+            if (cropLeft + cropWidth > metadata.width || cropTop + cropHeight > metadata.height) throw new McpRuntimeError("INVALID_INPUT", "Crop rectangle must fit entirely inside the source image.");
+            pipeline = pipeline.extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight });
           } else if (action === "resize") pipeline = pipeline.resize(width as number | undefined, height as number | undefined, { fit: (fit as "contain" | "cover" | "fill" | "inside" | "outside" | undefined) ?? "inside", position: (position as string | undefined) ?? "centre", withoutEnlargement: fit === undefined || fit === "inside" });
           else if (action === "rotate") pipeline = pipeline.rotate(degrees as number);
           else if (action === "flip") pipeline = pipeline.flip();
