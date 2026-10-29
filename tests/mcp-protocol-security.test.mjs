@@ -60,8 +60,8 @@ test("request body limit is enforced while streaming when Content-Length is abse
   assert.equal((await handleMcpPost(req, token)).status, 413);
 });
 
-test("library exceptions are normalized without echoing internal exception details", async () => {
+test("invalid operation errors do not expose parser internals", async () => {
   const response = await handleMcpPost(request(call("json.format", { input: "{broken" })), token);
   const body = await response.text();
-  assert.doesNotMatch(body, /Unexpected token|JSON at position|stack|node_modules|\\/home\\//i);
+  assert.doesNotMatch(body, /Unexpected token|JSON at position|stack|node_modules|home/i);
 });
