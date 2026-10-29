@@ -1329,7 +1329,7 @@ const workflowStringInputs: Record<string, readonly string[]> = {
   "image.transform": ["inputBase64"]
 };
 const workflowStringOutputs = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.format", "json.minify", "json.sort-keys", "json.escape", "json.unescape", "developer.format", "security.hash", "generator.sample", "data.inspect"]);
-const workflowStructuredOutputs = new Set(["image.print-size", "image.inspect", "image.sample-pixel", "audio.analyze", "audio.trim", "audio.normalize", "video.inspect", "json.validate", "json.diff", "json.find", "security.jwt.decode"]);
+const workflowStructuredOutputs = new Set(["image.print-size", "image.inspect", "image.sample-pixel", "audio.inspect", "audio.analyze", "audio.trim", "audio.normalize", "video.inspect", "json.validate", "json.diff", "json.find", "security.jwt.decode"]);
 function isWorkflowReference(value: unknown): value is WorkflowReference {
   return isObject(value) && Object.keys(value).length === 1 && typeof value.$ref === "string";
 }
@@ -1406,7 +1406,7 @@ function validateWorkflowRecipe(raw: unknown): WorkflowRecipe {
       throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow references an operation that is not enabled for MCP execution.");
     }
     if (!isObject(rawStep.arguments)) throw new McpRuntimeError("INVALID_INPUT", `Arguments for workflow step '${rawStep.id}' must be an object.`);
-    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.analyze", "audio.trim", "audio.normalize", "video.inspect", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]);
+    const allowed = new Set(["encoding.transform", "encoding.charset", "text.transform", "json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find", "developer.format", "security.hash", "security.jwt.decode", "generator.sample", "data.inspect", "datetime.convert", "datetime.arithmetic", "datetime.compare", "audio.inspect", "audio.analyze", "audio.trim", "audio.normalize", "video.inspect", "image.print-size", "image.inspect", "image.sample-pixel", "image.transform"]);
     if (!allowed.has(rawStep.operationId)) throw new McpRuntimeError("UNSUPPORTED_OPERATION", "Workflow operation is not enabled.");
 
     const operationSchema = schemas[rawStep.operationId as keyof typeof schemas];
