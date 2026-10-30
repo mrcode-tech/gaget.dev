@@ -25,6 +25,15 @@ function chooseMobileFeature(slugLabel: string) {
 }
 
 describe("VideoWorkbench", () => {
+
+  it("opens contextual MCP help for the verified video metadata operation", () => {
+    render(<VideoWorkbench slug="editor" />);
+    fireEvent.click(screen.getByRole("button", { name: "AI / MCP help" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("video.inspect")).toBeTruthy();
+    expect(within(dialog).getByText(/without decoding or storing media/i)).toBeTruthy();
+  });
+
   it("renders the Video Editor empty state and shared File menu", () => {
     render(<VideoWorkbench slug="editor" />);
     expect(screen.getByRole("main", { name: "GaGet Video Editor" })).toBeTruthy();

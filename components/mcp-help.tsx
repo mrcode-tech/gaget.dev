@@ -28,6 +28,11 @@ const contracts: Record<string, HelpContract> = {
     prompt: "Inspect this WAV file, summarize its duration and sample format, create a per-channel waveform envelope, and identify peak/RMS levels. Use only the explicitly supplied audio bytes.",
     note: "The server subset accepts uncompressed PCM or IEEE-float WAV only. Supply audio bytes explicitly as base64; files are not retained. Waveform output is limited to 1,000 buckets and up to eight channels. Other audio containers/codecs and browser microphone capture are not supported by remote MCP."
   },
+  "Video Editor": {
+    operations: ["video.inspect"],
+    prompt: "Inspect this explicitly supplied MP4-family media file and summarize its container brand, duration, track types, codec identifiers, and video dimensions. Do not claim that the media was decoded or transformed.",
+    note: "Remote MCP currently inspects bounded ISO Base Media File Format containers with ftyp/moov boxes only. It reads metadata without decoding or storing media. Video editing, transcoding, frame extraction, and other codecs are not exposed by this server runtime."
+  },
   "JSON Formatter & Validator": {
     operations: ["json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find"],
     prompt: "Validate this JSON document, format it with two-space indentation, and report any syntax errors.",

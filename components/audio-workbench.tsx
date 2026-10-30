@@ -6,6 +6,7 @@ import {Button} from "@/components/ui/button";
 import {useResizableFeatureSheet} from "@/components/use-resizable-feature-sheet";
 import {Input} from "@/components/ui/input";
 import { useI18n } from "@/components/i18n-provider";
+import { McpHelp } from "@/components/mcp-help";
 import { FeatureMenuNoResults, FeatureMenuSearch } from "@/components/feature-menu-search";
 import { useFeatureMenuSearch } from "@/lib/feature-menu-search";
 
@@ -49,7 +50,7 @@ export function AudioWorkbench({slug}:{slug:string}){ const [activeSlug,setActiv
    {filteredAudioGroups.filter(group=>menuOpen==="Features"||group.label===menuOpen).map(group=><section key={group.label} className="mb-2 last:mb-0"><h3 className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</h3><div className="flex flex-col gap-0.5">{group.items.map(([label,feature])=>{const FeatureIcon=audioFeatureIcons[feature]||AudioLines;return <button key={feature} type="button" className={"flex min-h-10 min-w-0 items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm hover:bg-accent "+(activeSlug===feature?"bg-accent font-medium":"")} aria-label={label} aria-describedby={`audio-feature-desc-${feature}`} onClick={()=>{setActiveSlug(feature);setError("");setStatus("");setResult(null);setPanelOpen(true);setMenuOpen(null);if(feature==="base64"&&file){const reader=new FileReader();reader.onload=()=>setBase64(String(reader.result||""));reader.readAsDataURL(file)}}}><FeatureIcon className="h-4 w-4 shrink-0 text-muted-foreground"/><span className="min-w-0 flex-1"><span className="block text-sm leading-5">{label}</span><span id={`audio-feature-desc-${feature}`} className="block text-xs leading-4 text-muted-foreground">{audioFeatureDescriptions[feature]}</span></span></button>})}</div></section>)}
   </div>}
   </div>
-  <div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4"/><span>Private · local</span></div>
+  <div className="ms-auto flex shrink-0 items-center gap-2"><McpHelp title="Audio Editor" compact iconOnly/><div className="hidden shrink-0 items-center gap-2 text-xs text-muted-foreground xl:flex"><ShieldCheck className="h-4 w-4"/><span>Private · local</span></div></div>
  </div><div className={"relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-6 " + (!loaded && !isRecorder && !isBase64Decode ? "bg-muted/25" : "space-y-3")}>
  {isRecorder&&<Button onClick={()=>recording?media.current?.stop():void record()} variant={recording?"destructive":"default"}><Mic className="mr-2 h-4 w-4"/>{recording?"Stop recording":"Start microphone recording"}</Button>}
  {isBase64Decode&&<div className="space-y-2"><label htmlFor="audio-base64" className="text-sm font-medium">Base64 audio data</label><textarea id="audio-base64" value={base64} onChange={e=>setBase64(e.target.value)} className="min-h-36 w-full rounded-lg border border-input bg-background p-3 font-mono text-xs" placeholder="Paste Base64 or data URL…"/><Button onClick={decodeBase64}>Decode Base64</Button></div>}
