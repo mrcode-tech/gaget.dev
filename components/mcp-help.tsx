@@ -23,6 +23,11 @@ const contracts: Record<string, HelpContract> = {
     prompt: "Inspect this image's dimensions, then resize it to fit within 1024 by 1024 pixels. Return the transformed image only if its output is within the server limits.",
     note: "You must explicitly provide image bytes as base64. The MCP server receives that data; inputs and outputs are capped at 600,000 bytes and are not persisted by this operation."
   },
+  "Audio Editor": {
+    operations: ["audio.inspect", "audio.analyze", "audio.waveform", "audio.trim", "audio.normalize"],
+    prompt: "Inspect this WAV file, summarize its duration and sample format, create a per-channel waveform envelope, and identify peak/RMS levels. Use only the explicitly supplied audio bytes.",
+    note: "The server subset accepts uncompressed PCM or IEEE-float WAV only. Supply audio bytes explicitly as base64; files are not retained. Waveform output is limited to 1,000 buckets and up to eight channels. Other audio containers/codecs and browser microphone capture are not supported by remote MCP."
+  },
   "JSON Formatter & Validator": {
     operations: ["json.validate", "json.format", "json.minify", "json.diff", "json.sort-keys", "json.escape", "json.unescape", "json.find"],
     prompt: "Validate this JSON document, format it with two-space indentation, and report any syntax errors.",

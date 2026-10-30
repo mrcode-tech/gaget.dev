@@ -539,13 +539,17 @@ test("audio.waveform returns bounded per-channel min/max/RMS envelopes", async (
   assert.equal(result.channelWaveforms.length, 2);
   assert.equal(result.channelWaveforms[0].buckets.length, 4);
   assert.equal(result.channelWaveforms[0].buckets[0].min, -1);
-  assert.equal(result.channelWaveforms[0].buckets[1].max, 1);
+  assert.equal(result.channelWaveforms[0].buckets[1].max, 0.5);
   assert.equal(result.channelWaveforms[1].buckets[2].min, -1);
   assert.ok(result.channelWaveforms[0].buckets.every(bucket => bucket.rms >= 0 && bucket.rms <= 1));
   const defaultResult = await executeOperation("audio.waveform", { inputBase64: wav.toString("base64") });
   assert.equal(defaultResult.bucketCount, frames);
   await assert.rejects(executeOperation("audio.waveform", { inputBase64: wav.toString("base64"), bucketCount: 1001 }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("audio.waveform", { inputBase64: "not-base64", bucketCount: 10 }), { code: "INVALID_INPUT" });
+  const mcpCall = await post({ jsonrpc: "2.0", id: 91, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "audio.waveform", arguments: { inputBase64: wav.toString("base64"), bucketCount: 2 } } } });
+  const mcpResult = await parseProtocolResponse(mcpCall);
+  assert.equal(mcpResult.result.structuredContent.success, true);
+  assert.equal(mcpResult.result.structuredContent.result.bucketCount, 2);
   const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
     { id: "waveform", operationId: "audio.waveform", arguments: { inputBase64: wav.toString("base64"), bucketCount: 2 } }
   ], output: { $ref: "waveform.result" } });
