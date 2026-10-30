@@ -516,3 +516,39 @@ test("image inspection and transformations use bounded raster bytes", async () =
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", leftRatio: 0.8, topRatio: 0, widthRatio: 0.5, heightRatio: 0.5 }), { code: "INVALID_INPUT" });
   await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", left: 0, top: 0, width: 1, height: 1, widthRatio: 0.5, heightRatio: 0.5 }), { code: "INVALID_INPUT" });
 });
+
+
+test("audio.waveform returns bounded per-channel min/max/RMS envelopes", async () => {
+  const sampleRate = 8000, channels = 2, bitDepth = 16, frames = 8;
+  const pcm = Buffer.alloc(frames * channels * 2);
+  const left = [-32768, -16384, 0, 16384, 32767, 0, -8192, 8192];
+  const right = [0, 8192, 16384, 24576, 32767, -32768, -16384, 0];
+  for (let frame = 0; frame < frames; frame++) {
+    pcm.writeInt16LE(left[frame], frame * 4);
+    pcm.writeInt16LE(right[frame], frame * 4 + 2);
+  }
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const result = await executeOperation("audio.waveform", { inputBase64: wav.toString("base64"), bucketCount: 4 });
+  assert.equal(result.format, "wav");
+  assert.equal(result.bucketCount, 4);
+  assert.equal(result.channelWaveforms.length, 2);
+  assert.equal(result.channelWaveforms[0].buckets.length, 4);
+  assert.equal(result.channelWaveforms[0].buckets[0].min, -1);
+  assert.equal(result.channelWaveforms[0].buckets[1].max, 1);
+  assert.equal(result.channelWaveforms[1].buckets[2].min, -1);
+  assert.ok(result.channelWaveforms[0].buckets.every(bucket => bucket.rms >= 0 && bucket.rms <= 1));
+  const defaultResult = await executeOperation("audio.waveform", { inputBase64: wav.toString("base64") });
+  assert.equal(defaultResult.bucketCount, frames);
+  await assert.rejects(executeOperation("audio.waveform", { inputBase64: wav.toString("base64"), bucketCount: 1001 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("audio.waveform", { inputBase64: "not-base64", bucketCount: 10 }), { code: "INVALID_INPUT" });
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "waveform", operationId: "audio.waveform", arguments: { inputBase64: wav.toString("base64"), bucketCount: 2 } }
+  ], output: { $ref: "waveform.result" } });
+  assert.equal(workflow.success, true);
+  assert.equal(workflow.result.bucketCount, 2);
+});

@@ -114,7 +114,7 @@ Image limits cover encoded bytes, decoded pixels, dimensions, output bytes and m
 - Volume/gain/normalization: units and clipping policy.
 - Dynamic-range compression, distinct from file-size compression.
 - Speed: distinguish playback rate from time-stretching; pitch shift only with a real engine.
-- Waveform and spectrum: bounded output, FFT/window/resolution semantics.
+- Waveform: `audio.waveform` computes bounded per-channel min/max/RMS envelopes for explicitly supplied PCM/IEEE-float WAV; bucket count is capped at 1,000. Spectrum/FFT remains unexposed until a tested spectral implementation exists.
 - Silence detection: threshold, minimum duration and dBFS semantics.
 - Convert/WAV: only verified codecs, sample format and channel behavior.
 - Explicit audio bytes ↔ Base64.
