@@ -30,3 +30,8 @@ Registry metadata is not proof of runtime behavior. Recheck source, tests and br
 Reuse existing components first. Prefer project shadcn/ui-style primitives and wrappers over raw, unstyled controls. File-only workflows reuse the existing file-input zone if suitable; mixed text/file workflows retain the styled editor and add styled file selection. A new reusable component requires both a justified specification and wireframe. Prefer local processing where technically supported and disclose exceptions. Encoding is not encryption; JWT decoding is not signature verification; file indicators are not a safety verdict.
 
 All wireframes here are **Proposal** until approved.
+
+
+## Cross-cutting MCP initiative
+
+MCP compatibility is specified separately in specification/mcp/. That initiative may evaluate developer tools in this package, but it does not override this package's existing scope exclusions or imply that browser operations are server-compatible. MCP operation mapping and server exposure status must be verified independently.

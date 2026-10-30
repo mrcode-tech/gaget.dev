@@ -15,6 +15,15 @@ afterEach(() => {
 });
 
 describe("AudioWorkbench template parity", () => {
+
+  it("opens contextual MCP help for the verified WAV server operations", () => {
+    render(<AudioWorkbench slug="editor" />);
+    fireEvent.click(screen.getByRole("button", { name: "AI / MCP help" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("audio.waveform")).toBeTruthy();
+    expect(within(dialog).getByText(/uncompressed PCM or IEEE-float WAV only/i)).toBeTruthy();
+  });
+
   it("uses the shared empty-state scroll region and upload geometry", () => {
     render(<AudioWorkbench slug="editor" />);
     const intro = screen.getByTestId("audio-empty-intro");

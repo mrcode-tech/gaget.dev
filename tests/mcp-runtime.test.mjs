@@ -1,0 +1,558 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { executeOperation, executeWorkflow, handleMcpPost, listCapabilities, MCP_MAX_REQUEST_BYTES, MCP_MAX_WORKFLOW_STEPS } from "../lib/mcp/runtime.ts";
+
+const token = "test-only-secret-token";
+const parseProtocolResponse = async (response) => {
+  const body = await response.text();
+  const eventData = body.split("\n").filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).at(-1);
+  return JSON.parse(eventData ?? body);
+};
+const post = (body, authorization = `Bearer ${token}`, headers = {}) => handleMcpPost(new Request("http://localhost/api/mcp", { method: "POST", headers: { authorization, "content-type": "application/json", accept: "application/json, text/event-stream", ...headers }, body: typeof body === "string" ? body : JSON.stringify(body) }), token);
+
+test("capability registry contains stable IDs, versions and finite limits", () => {
+  const capabilities = listCapabilities();
+  assert.ok(capabilities.length >= 5);
+  assert.equal(new Set(capabilities.map(item => item.id)).size, capabilities.length);
+  for (const item of capabilities) {
+    assert.match(item.version, /^\d+\.\d+\.\d+$/);
+    assert.ok(Object.values(item.limits).every(limit => Number.isFinite(limit) && limit > 0));
+    assert.equal(item.inputSchema.type, "object");
+    assert.ok(item.outputSchema.type);
+    assert.ok(item.inputTypes.length > 0);
+    assert.ok(item.outputTypes.length > 0);
+    assert.ok(item.executionModes.includes("mcp"));
+    assert.equal(item.availability, "available");
+    assert.equal(item.mcpExposure, "exposed");
+    assert.equal(item.privacy, "no-persistence");
+    assert.equal(typeof item.deterministic, "boolean");
+  }
+});
+
+test("allowlisted operations invoke real shared transformations", async () => {
+  assert.equal(await executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: "Hello" }), "SGVsbG8=");
+  assert.deepEqual(await executeOperation("json.validate", { input: "{\"ok\":true}" }), { valid: true });
+  assert.equal(await executeOperation("json.format", { input: "{\"ok\":true}" }), '{\n  "ok": true\n}');
+  await assert.rejects(executeOperation("shell.exec", { command: "id" }), { code: "UNSUPPORTED_OPERATION" });
+});
+
+test("charset conversion is explicit, bounded, and composable in workflows", async () => {
+  assert.equal(await executeOperation("encoding.charset", { direction: "encode", charset: "utf-8", input: "Hello" }), "48656c6c6f");
+  assert.equal(await executeOperation("encoding.charset", { direction: "decode", charset: "utf-16be", input: "00480069" }), "Hi");
+  assert.equal(await executeOperation("encoding.charset", { direction: "encode", charset: "windows-1252", input: "€" }), "80");
+  await assert.rejects(executeOperation("encoding.charset", { direction: "decode", charset: "utf-8", input: "zz" }), { code: "PROCESSING_FAILED" });
+  await assert.rejects(executeOperation("encoding.charset", { direction: "encode", charset: "unsupported", input: "x" }), { code: "INVALID_INPUT" });
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "to_hex", operationId: "encoding.charset", arguments: { direction: "encode", charset: "utf-8", input: "Hi" } },
+    { id: "back", operationId: "encoding.charset", arguments: { direction: "decode", charset: "utf-8", input: { "$ref": "to_hex.result" } } }
+  ] });
+  assert.equal(workflow.result, "Hi");
+});
+
+test("runtime rejects malformed inputs and over-limit data with stable errors", async () => {
+  await assert.rejects(executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: 42 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: "x".repeat(1_000_001) }), { code: "RESOURCE_LIMIT_EXCEEDED" });
+  await assert.rejects(executeOperation("json.format", { input: "{broken" }), { code: "INVALID_INPUT" });
+});
+
+test("authentication is mandatory and missing server configuration disables the endpoint", async () => {
+  const noAuth = await handleMcpPost(new Request("http://localhost/api/mcp", { method: "POST", body: "{}" }), token);
+  assert.equal(noAuth.status, 401);
+  const disabled = await handleMcpPost(new Request("http://localhost/api/mcp", { method: "POST", body: "{}" }), undefined);
+  assert.equal(disabled.status, 503);
+});
+
+test("MCP initialize and tools/list implement JSON-RPC response envelopes", async () => {
+  const initialized = await post({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "contract-test", version: "1" } } });
+  assert.equal(initialized.status, 200);
+  const init = await parseProtocolResponse(initialized);
+  assert.equal(init.result.protocolVersion, "2025-11-25");
+  assert.equal(init.result.serverInfo.name, "GaGet.dev MCP");
+  const listed = await post({ jsonrpc: "2.0", id: 2, method: "tools/list" });
+  const tools = (await parseProtocolResponse(listed)).result.tools;
+  assert.deepEqual(tools.map(tool => tool.name), ["list_capabilities", "execute_operation", "execute_workflow"]);
+});
+
+test("MCP tool call returns structured results and refuses disabled operation IDs", async () => {
+  const good = await post({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "encoding.transform", arguments: { mode: "base64", direction: "encode", input: "hello" } } } });
+  const result = (await parseProtocolResponse(good)).result;
+  assert.notEqual(result.isError, true);
+  assert.equal(result.structuredContent.success, true);
+  assert.equal(result.structuredContent.result, "aGVsbG8=");
+  const bad = await post({ jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "arbitrary.shell", arguments: { command: "whoami" } } } });
+  const badResult = await parseProtocolResponse(bad);
+  assert.ok(badResult.result?.isError === true || badResult.result?.structuredContent?.success === false || badResult.error);
+});
+
+test("request body byte limits are enforced before protocol dispatch", async () => {
+  const body = "x".repeat(MCP_MAX_REQUEST_BYTES + 1);
+  const response = await post(body);
+  assert.equal(response.status, 413);
+});
+
+test("protocol errors do not expose stack traces or internal file paths", async () => {
+  const response = await post({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "json.format", arguments: { input: "{nope" } } } });
+  const body = await response.text();
+  assert.doesNotMatch(body, /stack|\/home\/|node_modules|\.ts:\d+/i);
+});
+
+test("operation schemas reject unknown fields and invalid enum values", async () => {
+  await assert.rejects(executeOperation("encoding.transform", { mode: "base64", direction: "encode", input: "x", extra: true }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("encoding.transform", { mode: "made-up", direction: "encode", input: "x" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("json.format", { input: '{"ok":true}', indent: 99 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("developer.format", { operation: "sql", input: "select 1", mode: "execute" }), { code: "INVALID_INPUT" });
+});
+
+test("bounded workflows execute typed sequential operations and return a result manifest", async () => {
+  const result = await executeWorkflow({
+    schemaVersion: 1,
+    steps: [
+      { id: "format", operationId: "json.format", arguments: { input: '{"ok":true}', indent: 2 } },
+      { id: "trim", operationId: "text.transform", arguments: { operation: "trim", input: { $ref: "format.result" } } }
+    ]
+  });
+  assert.equal(result.success, true);
+  assert.equal(result.steps.length, 2);
+  assert.equal(result.result, '{\n  "ok": true\n}');
+  assert.ok(result.totalOutputBytes > 0);
+});
+test("workflow rejects forward, missing, object, and non-text references", async () => {
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"first",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"later.result"}}},
+    {id:"later",operationId:"json.format",arguments:{input:"{}"}}
+  ]}), {code:"INVALID_INPUT"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"check",operationId:"json.validate",arguments:{input:"{}"}},
+    {id:"use",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"check.result"}}}
+  ]}), {code:"INVALID_INPUT"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"first",operationId:"text.transform",arguments:{operation:"trim",input:{nested:{$ref:"first.result"}}}}
+  ]}), {code:"INVALID_INPUT"});
+});
+test("workflow enforces schema, step, reference, deadline and cancellation limits", async () => {
+  await assert.rejects(executeWorkflow({schemaVersion:2,steps:[{id:"a",operationId:"json.format",arguments:{input:"{}"}}]}), {code:"INVALID_INPUT"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:Array.from({length:MCP_MAX_WORKFLOW_STEPS+1},(_,i)=>({id:"s"+i,operationId:"text.transform",arguments:{operation:"trim",input:"x"}}))}), {code:"RESOURCE_LIMIT_EXCEEDED"});
+  const controller = new AbortController(); controller.abort();
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[{id:"a",operationId:"json.format",arguments:{input:"{}"}}]},{signal:controller.signal}), {code:"CANCELLED"});
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[{id:"a",operationId:"json.format",arguments:{input:"{}"}}]},{deadlineMs:0}), {code:"INVALID_INPUT"});
+});
+test("MCP execute_workflow tool is discoverable and returns a safe manifest", async () => {
+  const response = await post({jsonrpc:"2.0",id:17,method:"tools/call",params:{name:"execute_workflow",arguments:{schemaVersion:1,steps:[
+    {id:"format",operationId:"json.format",arguments:{input:'{"ok":true}',indent:2}},
+    {id:"trim",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"format.result"}}}
+  ]}}});
+  const payload = await parseProtocolResponse(response);
+  assert.equal(payload.result.structuredContent.success,true);
+  assert.equal(payload.result.structuredContent.steps.length,2);
+});
+
+test("security hash operation distinguishes digest and HMAC and protects keys", async () => {
+  assert.equal(await executeOperation("security.hash", { input: "abc", mode: "digest", algorithm: "SHA-256" }), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  await assert.rejects(executeOperation("security.hash", { input: "abc", mode: "hmac" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("security.hash", { input: "abc", mode: "digest", key: "secret" }), { code: "INVALID_INPUT" });
+});
+test("JWT decoder returns claims without implying signature verification", async () => {
+  const token = Buffer.from(JSON.stringify({alg:"none",typ:"JWT"})).toString("base64url") + "." + Buffer.from(JSON.stringify({sub:"123",exp:1})).toString("base64url") + ".";
+  const result = await executeOperation("security.jwt.decode", { token });
+  assert.equal(result.signatureVerified, false);
+  assert.equal(result.claims.sub, "123");
+  assert.match(result.note, /does not verify/i);
+  await assert.rejects(executeOperation("security.jwt.decode", { token: "not.a.jwt" }), { code: "INVALID_INPUT" });
+});
+test("bounded synthetic data and offline inspection operations work without network access", async () => {
+  const uuid = await executeOperation("generator.sample", { operation: "uuid", count: 2 });
+  assert.equal(uuid.split("\n").length, 2);
+  await assert.rejects(executeOperation("generator.sample", { operation: "uuid", count: 101 }), { code: "INVALID_INPUT" });
+  const parsed = await executeOperation("data.inspect", { operation: "url-parse", input: "https://example.test/path?q=1" });
+  assert.match(parsed, /networkRequestsMade": false/);
+  await assert.rejects(executeOperation("data.inspect", { operation: "url-parse", input: "https://example.test", options: { unexpected: true } }), { code: "INVALID_INPUT" });
+});
+test("date-time operations require explicit offsets and handle UTC arithmetic deterministically", async () => {
+  const converted = await executeOperation("datetime.convert", { mode: "iso-to-epoch", input: "2024-01-01T00:00:00Z" });
+  assert.equal(converted.epochMilliseconds, 1704067200000);
+  const added = await executeOperation("datetime.arithmetic", { input: "2024-01-01T00:00:00Z", amount: 1, unit: "days" });
+  assert.equal(added.result, "2024-01-02T00:00:00.000Z");
+  const compared = await executeOperation("datetime.compare", { left: "2024-01-01T00:00:00Z", right: "2023-12-31T19:00:00-05:00" });
+  assert.equal(compared.relation, "equal");
+  await assert.rejects(executeOperation("datetime.convert", { mode: "format", input: "2024-01-01T00:00:00" }), { code: "INVALID_INPUT" });
+});
+
+test("workflow accepts bounded literal options but rejects nested references", async () => {
+  const result = await executeWorkflow({schemaVersion:1,steps:[
+    {id:"replace",operationId:"text.transform",arguments:{operation:"find-replace",input:"abc",options:{pattern:"b",replacement:"X"}}}
+  ]});
+  assert.equal(JSON.parse(result.result).result,"aXc");
+  await assert.rejects(executeWorkflow({schemaVersion:1,steps:[
+    {id:"first",operationId:"json.format",arguments:{input:"{}"}},
+    {id:"second",operationId:"text.transform",arguments:{operation:"trim",input:"x",options:{nested:{$ref:"first.result"}}}}
+  ]}), {code:"INVALID_INPUT"});
+});
+test("additional MCP capabilities advertise stable schemas and finite limits", () => {
+  const ids = listCapabilities().map(item => item.id);
+  for (const id of ["security.hash","security.jwt.decode","generator.sample","data.inspect","datetime.convert","datetime.arithmetic","datetime.compare"]) assert.ok(ids.includes(id), id);
+});
+
+test("JSON sort, escape, unescape, and bounded search operations are available", async () => {
+  assert.equal(await executeOperation("json.sort-keys", { input: '{"z":1,"a":{"y":2,"b":3}}' }), '{\n  "a": {\n    "b": 3,\n    "y": 2\n  },\n  "z": 1\n}');
+  assert.equal(await executeOperation("json.escape", { input: 'a"b\n' }), 'a\\"b\\n');
+  assert.equal(await executeOperation("json.unescape", { input: 'a\\"b\\n' }), 'a"b\n');
+  const found = await executeOperation("json.find", { input: '{"name":"Alice","nested":{"name":"Bob"}}', query: "name", match: "both" });
+  assert.equal(found.matches.length, 2);
+  assert.equal(found.truncated, false);
+  await assert.rejects(executeOperation("json.find", { input: "{}", query: "" }), { code: "INVALID_INPUT" });
+});
+
+test("request body streams that stall are cancelled after the read deadline", async () => {
+  const stream = new ReadableStream({
+    start(controller) { controller.enqueue(new TextEncoder().encode('{"jsonrpc":"2.0","id":1,"method":"tools/list"}')); }
+  });
+  const request = new Request("http://localhost/api/mcp", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: stream,
+    duplex: "half"
+  });
+  const response = await handleMcpPost(request, token);
+  assert.equal(response.status, 408);
+});
+
+
+test("MCP text operations do not expose regex execution until it is safely bounded", async () => {
+  await assert.rejects(executeOperation("text.transform", { operation: "regex-test", input: "abc", options: { pattern: "(a+)+" } }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("text.transform", { operation: "find-replace", input: "abc", options: { pattern: "a", replacement: "x", regexFind: true } }), { code: "INVALID_INPUT" });
+});
+
+test("image transformations support bounded grayscale, blur, and tonal adjustments", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 8, height: 6, channels: 3, background: "#336699" } }).png().toBuffer();
+  const inputBase64 = png.toString("base64");
+  for (const actionArgs of [{ action: "grayscale" }, { action: "blur", sigma: 1.2 }, { action: "adjust", brightness: 1.1, contrast: 1.2, saturation: 0.8 }]) {
+    const result = await executeOperation("image.transform", { inputBase64, ...actionArgs });
+    assert.equal(result.width, 8);
+    assert.equal(result.height, 6);
+    assert.ok(Buffer.from(result.dataBase64, "base64").byteLength > 0);
+  }
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "blur" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "adjust", brightness: 10 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "grayscale", sigma: 1 }), { code: "INVALID_INPUT" });
+});
+
+test("workflow can select a bounded image data field as its final text output", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 4, height: 3, channels: 3, background: "#336699" } }).png().toBuffer();
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 0, top: 0, width: 3, height: 2 } },
+    { id: "resize", operationId: "image.transform", arguments: { inputBase64: { $ref: "crop.result.dataBase64" }, action: "resize", width: 2, height: 2 } }
+  ], output: { $ref: "resize.result.dataBase64" } });
+  assert.equal(workflow.success, true);
+  assert.equal(typeof workflow.result, "string");
+  assert.ok(Buffer.from(workflow.result, "base64").byteLength > 0);
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [{ id: "validate", operationId: "json.validate", arguments: { input: "{}" } }], output: { $ref: "validate.result.valid" } }), { code: "INVALID_INPUT" });
+});
+
+test("typed image workflow can sample a pixel from an earlier transform and return structured output", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 3, height: 2, channels: 3, background: "#336699" } }).png().toBuffer();
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 0, top: 0, width: 2, height: 2 } },
+    { id: "sample", operationId: "image.sample-pixel", arguments: { inputBase64: { $ref: "crop.result.dataBase64" }, x: 1, y: 1 } }
+  ], output: { $ref: "sample.result" } });
+  assert.equal(workflow.success, true);
+  assert.deepEqual(workflow.result.rgba, { r: 51, g: 102, b: 153, a: 255 });
+  assert.equal(workflow.result.hex, "#336699");
+});
+
+test("image crop and resize can be chained through explicit bounded dataBase64 references", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 4, height: 3, channels: 3, background: "#336699" } }).png().toBuffer();
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 1, top: 1, width: 2, height: 2 } },
+    { id: "resize", operationId: "image.transform", arguments: { inputBase64: { $ref: "crop.result.dataBase64" }, action: "resize", width: 1, height: 1 } }
+  ] });
+  assert.equal(workflow.success, true);
+  assert.equal(workflow.steps.length, 2);
+  assert.equal(workflow.result.width, 1);
+  assert.equal(workflow.result.height, 1);
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "crop", operationId: "image.transform", arguments: { inputBase64: png.toString("base64"), action: "crop", left: 0, top: 0, width: 2, height: 2 } },
+    { id: "bad", operationId: "image.transform", arguments: { inputBase64: { $ref: "crop.result.width" }, action: "resize", width: 1 } }
+  ] }), { code: "INVALID_INPUT" });
+});
+
+test("workflow tool returns schema-conforming structured errors for invalid references", async () => {
+  const response = await post({jsonrpc:"2.0",id:88,method:"tools/call",params:{name:"execute_workflow",arguments:{schemaVersion:1,steps:[
+    {id:"bad",operationId:"text.transform",arguments:{operation:"trim",input:{$ref:"missing.result"}}}
+  ]}}});
+  const payload = await parseProtocolResponse(response);
+  assert.equal(payload.result.isError, true);
+  assert.equal(payload.result.structuredContent.success, false);
+  assert.equal(payload.result.structuredContent.error.code, "INVALID_INPUT");
+});
+
+test("audio.normalize adjusts integer PCM peak toward target dBFS without changing container size", async () => {
+  const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 80;
+  const pcm = Buffer.alloc(frames * 2);
+  for (let i = 0; i < frames; i++) pcm.writeInt16LE(i % 2 === 0 ? 4000 : -4000, i * 2);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const result = await executeOperation("audio.normalize", { inputBase64: wav.toString("base64"), targetDbfs: -6 });
+  assert.equal(result.format, "wav");
+  assert.equal(result.bytes, wav.byteLength);
+  assert.equal(result.targetDbfs, -6);
+  assert.ok(Math.abs(result.peakAfter - Math.pow(10, -6 / 20)) < 0.001);
+  const inspected = await executeOperation("audio.inspect", { inputBase64: result.dataBase64 });
+  assert.equal(inspected.frames, frames);
+  await assert.rejects(executeOperation("audio.normalize", { inputBase64: wav.toString("base64"), targetDbfs: -40 }), { code: "INVALID_INPUT" });
+});
+
+test("workflow preflight rejects invalid later-step arguments before executing earlier steps", async () => {
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "first", operationId: "generator.sample", arguments: { operation: "uuid" } },
+    { id: "later", operationId: "json.format", arguments: { input: "{}", unknownOption: true } }
+  ] }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "later", operationId: "image.print-size", arguments: { width: 0, height: 20, dpi: 300 } }
+  ] }), { code: "INVALID_INPUT" });
+});
+
+test("video.inspect reads bounded ISO BMFF movie and track metadata without decoding", async () => {
+  const box = (type, payload) => { const out = Buffer.alloc(8 + payload.length); out.writeUInt32BE(out.length, 0); out.write(type, 4, "ascii"); payload.copy(out, 8); return out; };
+  const ftypPayload = Buffer.alloc(16); ftypPayload.write("isom", 0, "ascii"); ftypPayload.writeUInt32BE(0, 4); ftypPayload.write("isom", 8, "ascii"); ftypPayload.write("mp42", 12, "ascii");
+  const mvhd = Buffer.alloc(20); mvhd.writeUInt32BE(1000, 12); mvhd.writeUInt32BE(5000, 16);
+  const tkhd = Buffer.alloc(80); tkhd.writeUInt32BE(7, 12); tkhd.writeUInt32BE(1920 * 65536, 72); tkhd.writeUInt32BE(1080 * 65536, 76);
+  const mdhd = Buffer.alloc(20); mdhd.writeUInt32BE(1000, 12); mdhd.writeUInt32BE(5000, 16);
+  const hdlr = Buffer.alloc(12); hdlr.write("vide", 8, "ascii");
+  const stsdPayload = Buffer.alloc(16); stsdPayload.writeUInt32BE(1, 4); stsdPayload.writeUInt32BE(8, 8); stsdPayload.write("avc1", 12, "ascii");
+  const stbl = box("stbl", box("stsd", stsdPayload));
+  const mdia = box("mdia", Buffer.concat([box("mdhd", mdhd), box("hdlr", hdlr), box("minf", stbl)]));
+  const trak = box("trak", Buffer.concat([box("tkhd", tkhd), mdia]));
+  const moov = box("moov", Buffer.concat([box("mvhd", mvhd), trak]));
+  const mp4 = Buffer.concat([box("ftyp", ftypPayload), moov]);
+  const result = await executeOperation("video.inspect", { inputBase64: mp4.toString("base64") });
+  assert.equal(result.format, "iso-bmff");
+  assert.equal(result.majorBrand, "isom");
+  assert.equal(result.durationSeconds, 5);
+  assert.equal(result.trackCount, 1);
+  assert.deepEqual(result.tracks[0], { trackId: 7, kind: "video", handler: "vide", codec: "avc1", width: 1920, height: 1080, durationSeconds: 5 });
+  await assert.rejects(executeOperation("video.inspect", { inputBase64: Buffer.from("not a video").toString("base64") }), { code: "UNSUPPORTED_FORMAT" });
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "metadata", operationId: "video.inspect", arguments: { inputBase64: mp4.toString("base64") } }
+  ], output: { $ref: "metadata.result" } });
+  assert.equal(workflow.result.trackCount, 1);
+});
+
+test("audio.normalize can be invoked through MCP and selected as a workflow binary output", async () => {
+  const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 8;
+  const pcm = Buffer.alloc(frames * 2);
+  for (let i = 0; i < frames; i++) pcm.writeInt16LE(i * 2000, i * 2);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "normalize", operationId: "audio.normalize", arguments: { inputBase64: wav.toString("base64"), targetDbfs: -6 } }
+  ], output: { $ref: "normalize.result.dataBase64" } });
+  assert.equal(workflow.success, true);
+  assert.equal(typeof workflow.result, "string");
+  const normalizedBytes = Buffer.from(workflow.result, "base64");
+  assert.equal(normalizedBytes.toString("ascii", 0, 4), "RIFF");
+  const inspected = await executeOperation("audio.inspect", { inputBase64: workflow.result });
+  assert.equal(inspected.frames, frames);
+});
+
+test("audio.trim extracts frame-aligned PCM WAV segments and chains into audio analysis", async () => {
+  const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 80;
+  const pcm = Buffer.alloc(frames * 2);
+  for (let i = 0; i < frames; i++) pcm.writeInt16LE(i * 200, i * 2);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const trimmed = await executeOperation("audio.trim", { inputBase64: wav.toString("base64"), startSeconds: 0.002, endSeconds: 0.006 });
+  assert.equal(trimmed.format, "wav");
+  assert.equal(trimmed.frames, 32);
+  assert.equal(trimmed.durationSeconds, 0.004);
+  assert.equal(trimmed.bytes, 44 + 32 * 2);
+  const inspected = await executeOperation("audio.inspect", { inputBase64: trimmed.dataBase64 });
+  assert.equal(inspected.frames, 32);
+  await assert.rejects(executeOperation("audio.trim", { inputBase64: wav.toString("base64"), startSeconds: 0.006, endSeconds: 0.002 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("audio.trim", { inputBase64: wav.toString("base64"), startSeconds: 0, endSeconds: 1 }), { code: "INVALID_INPUT" });
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "trim", operationId: "audio.trim", arguments: { inputBase64: wav.toString("base64"), startSeconds: 0, endSeconds: 0.005 } },
+    { id: "analyze", operationId: "audio.analyze", arguments: { inputBase64: { $ref: "trim.result.dataBase64" } } }
+  ], output: { $ref: "analyze.result" } });
+  assert.equal(workflow.success, true);
+  assert.equal(workflow.result.sampleCount, 40);
+});
+
+test("audio.analyze reports normalized peak, RMS, DC offset, and clipping per channel", async () => {
+  const sampleRate = 8000, channels = 2, bitDepth = 16;
+  const pcm = Buffer.alloc(8);
+  pcm.writeInt16LE(-32768, 0); pcm.writeInt16LE(0, 2); pcm.writeInt16LE(16384, 4); pcm.writeInt16LE(32767, 6);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const result = await executeOperation("audio.analyze", { inputBase64: wav.toString("base64") });
+  assert.equal(result.format, "wav");
+  assert.equal(result.sampleRate, 8000);
+  assert.equal(result.channels, 2);
+  assert.equal(result.sampleCount, 4);
+  assert.equal(result.peak, 1);
+  assert.equal(result.clippedSamples, 1);
+  assert.equal(result.channelsSummary.length, 2);
+  assert.equal(result.channelsSummary[0].peak, 1);
+  assert.equal(result.channelsSummary[0].clippedSamples, 1);
+  assert.ok(Math.abs(result.rms - Math.sqrt((1 + 0 + 0.25 + (32767/32768)**2) / 4)) < 1e-7);
+  await assert.rejects(executeOperation("audio.analyze", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
+});
+
+test("audio.inspect parses bounded PCM WAV metadata and rejects unsupported containers", async () => {
+  const sampleRate = 8000, channels = 1, bitDepth = 16, frames = 80;
+  const pcm = Buffer.alloc(frames * channels * bitDepth / 8);
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const result = await executeOperation("audio.inspect", { inputBase64: wav.toString("base64") });
+  assert.equal(result.format, "wav");
+  assert.equal(result.encoding, "pcm");
+  assert.equal(result.sampleRate, 8000);
+  assert.equal(result.channels, 1);
+  assert.equal(result.bitDepth, 16);
+  assert.equal(result.frames, 80);
+  assert.equal(result.durationSeconds, 0.01);
+  await assert.rejects(executeOperation("audio.inspect", { inputBase64: Buffer.from("not audio").toString("base64") }), { code: "UNSUPPORTED_FORMAT" });
+  await assert.rejects(executeOperation("audio.inspect", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
+});
+
+test("image print-size calculator validates DPI and reports explicit physical units", async () => {
+  const result = await executeOperation("image.print-size", { width: 3000, height: 2400, dpi: 300, unit: "cm" });
+  assert.equal(result.widthInches, 10);
+  assert.equal(result.heightInches, 8);
+  assert.equal(result.widthCm, 25.4);
+  assert.equal(result.heightCm, 20.32);
+  assert.equal(result.widthInUnit, 25.4);
+  assert.equal(result.heightInUnit, 20.32);
+  await assert.rejects(executeOperation("image.print-size", { width: 0, height: 100, dpi: 300 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.print-size", { width: 100, height: 100, dpi: 0 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.print-size", { width: 100, height: 100, dpi: 300, unit: "px" }), { code: "INVALID_INPUT" });
+});
+
+test("image text overlay rasterizes escaped text within bounded image limits", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 64, height: 48, channels: 3, background: "#FFFFFF" } }).png().toBuffer();
+  const result = await executeOperation("image.transform", { inputBase64: png.toString("base64"), action: "text-overlay", text: "<tag>&text", x: 2, y: 2, fontSize: 12, color: "#112233" });
+  assert.equal(result.width, 64);
+  assert.equal(result.height, 48);
+  assert.ok(Buffer.from(result.dataBase64, "base64").byteLength > 0);
+  await assert.rejects(executeOperation("image.transform", { inputBase64: png.toString("base64"), action: "text-overlay", text: "hi", x: 65, y: 2, fontSize: 12, color: "#112233" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64: png.toString("base64"), action: "text-overlay", text: "<svg/>", x: 2, y: 2, fontSize: 12, color: "red" }), { code: "INVALID_INPUT" });
+});
+
+test("image inspection and transformations use bounded raster bytes", async () => {
+  const { default: sharp } = await import("sharp");
+  const png = await sharp({ create: { width: 3, height: 2, channels: 3, background: "#336699" } }).png().toBuffer();
+  const inputBase64 = png.toString("base64");
+  const pixel = await executeOperation("image.sample-pixel", { inputBase64, x: 0, y: 0 });
+  assert.equal(pixel.hex, "#336699");
+  assert.deepEqual(pixel.rgba, { r: 51, g: 102, b: 153, a: 255 });
+  await assert.rejects(executeOperation("image.sample-pixel", { inputBase64, x: 3, y: 0 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.sample-pixel", { inputBase64, x: -1, y: 0 }), { code: "INVALID_INPUT" });
+  const inspected = await executeOperation("image.inspect", { inputBase64 });
+  assert.equal(inspected.width, 3);
+  assert.equal(inspected.height, 2);
+  assert.equal(inspected.format, "png");
+  assert.equal(inspected.aspectRatio, 1.5);
+  assert.equal(inspected.pixelCount, 6);
+  assert.match(inspected.dominantColor, /^#[0-9A-F]{6}$/);
+  const cropped = await executeOperation("image.transform", { inputBase64, action: "crop", left: 1, top: 0, width: 2, height: 1 });
+  assert.equal(cropped.width, 2);
+  assert.equal(cropped.height, 1);
+  const normalizedCrop = await executeOperation("image.transform", { inputBase64, action: "crop", leftRatio: 0, topRatio: 0, widthRatio: 2 / 3, heightRatio: 0.5 });
+  assert.equal(normalizedCrop.width, 2);
+  assert.equal(normalizedCrop.height, 1);
+  const transformed = await executeOperation("image.transform", { inputBase64, action: "resize", width: 1 });
+  assert.equal(transformed.width, 1);
+  assert.equal(transformed.height, 1);
+  const contained = await executeOperation("image.transform", { inputBase64, action: "resize", width: 4, height: 4, fit: "contain" });
+  assert.ok(contained.width <= 4 && contained.height <= 4);
+  const filled = await executeOperation("image.transform", { inputBase64, action: "resize", width: 4, height: 4, fit: "fill" });
+  assert.equal(filled.width, 4);
+  assert.equal(filled.height, 4);
+  const covered = await executeOperation("image.transform", { inputBase64, action: "resize", width: 4, height: 4, fit: "cover", position: "northwest" });
+  assert.equal(covered.width, 4);
+  assert.equal(covered.height, 4);
+  assert.ok(Buffer.from(transformed.dataBase64, "base64").length <= 600_000);
+  await assert.rejects(executeOperation("image.inspect", { inputBase64: "not-base64" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 181 }), { code: "INVALID_INPUT" });
+  const angled = await executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 45, background: "#FFFFFF" });
+  assert.ok(angled.width >= 3 && angled.height >= 3);
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 45, background: "url(javascript:alert(1))" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "resize", fit: "inside" }), { code: "INVALID_INPUT" });
+  const jpeg = await executeOperation("image.transform", { inputBase64, action: "convert", format: "jpeg", background: "#F0F0F0" });
+  assert.equal(jpeg.format, "jpeg");
+  assert.ok(Buffer.from(jpeg.dataBase64, "base64").byteLength > 0);
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "convert", format: "png", background: "#FFFFFF" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "resize", width: 2, fit: "stretch" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "grayscale", position: "centre" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "rotate", degrees: 90, width: 1 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "resize", width: 1, quality: 80 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "flip", format: "png" }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", left: 2, top: 0, width: 2, height: 1 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", left: -1, top: 0, width: 1, height: 1 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", leftRatio: 0.8, topRatio: 0, widthRatio: 0.5, heightRatio: 0.5 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("image.transform", { inputBase64, action: "crop", left: 0, top: 0, width: 1, height: 1, widthRatio: 0.5, heightRatio: 0.5 }), { code: "INVALID_INPUT" });
+});
+
+
+test("audio.waveform returns bounded per-channel min/max/RMS envelopes", async () => {
+  const sampleRate = 8000, channels = 2, bitDepth = 16, frames = 8;
+  const pcm = Buffer.alloc(frames * channels * 2);
+  const left = [-32768, -16384, 0, 16384, 32767, 0, -8192, 8192];
+  const right = [0, 8192, 16384, 24576, 32767, -32768, -16384, 0];
+  for (let frame = 0; frame < frames; frame++) {
+    pcm.writeInt16LE(left[frame], frame * 4);
+    pcm.writeInt16LE(right[frame], frame * 4 + 2);
+  }
+  const wav = Buffer.alloc(44 + pcm.length);
+  wav.write("RIFF", 0, "ascii"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii"); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24); wav.writeUInt32LE(sampleRate * channels * bitDepth / 8, 28);
+  wav.writeUInt16LE(channels * bitDepth / 8, 32); wav.writeUInt16LE(bitDepth, 34);
+  wav.write("data", 36, "ascii"); wav.writeUInt32LE(pcm.length, 40); pcm.copy(wav, 44);
+  const result = await executeOperation("audio.waveform", { inputBase64: wav.toString("base64"), bucketCount: 4 });
+  assert.equal(result.format, "wav");
+  assert.equal(result.bucketCount, 4);
+  assert.equal(result.channelWaveforms.length, 2);
+  assert.equal(result.channelWaveforms[0].buckets.length, 4);
+  assert.equal(result.channelWaveforms[0].buckets[0].min, -1);
+  assert.equal(result.channelWaveforms[0].buckets[1].max, 0.5);
+  assert.equal(result.channelWaveforms[1].buckets[2].min, -1);
+  assert.ok(result.channelWaveforms[0].buckets.every(bucket => bucket.rms >= 0 && bucket.rms <= 1));
+  const defaultResult = await executeOperation("audio.waveform", { inputBase64: wav.toString("base64") });
+  assert.equal(defaultResult.bucketCount, frames);
+  await assert.rejects(executeOperation("audio.waveform", { inputBase64: wav.toString("base64"), bucketCount: 1001 }), { code: "INVALID_INPUT" });
+  await assert.rejects(executeOperation("audio.waveform", { inputBase64: "not-base64", bucketCount: 10 }), { code: "INVALID_INPUT" });
+  const mcpCall = await post({ jsonrpc: "2.0", id: 91, method: "tools/call", params: { name: "execute_operation", arguments: { operationId: "audio.waveform", arguments: { inputBase64: wav.toString("base64"), bucketCount: 2 } } } });
+  const mcpResult = await parseProtocolResponse(mcpCall);
+  assert.equal(mcpResult.result.structuredContent.success, true);
+  assert.equal(mcpResult.result.structuredContent.result.bucketCount, 2);
+  const workflow = await executeWorkflow({ schemaVersion: 1, steps: [
+    { id: "waveform", operationId: "audio.waveform", arguments: { inputBase64: wav.toString("base64"), bucketCount: 2 } }
+  ], output: { $ref: "waveform.result" } });
+  assert.equal(workflow.success, true);
+  assert.equal(workflow.result.bucketCount, 2);
+});

@@ -8,6 +8,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { DateTimeWorkbench } from "@/components/datetime-workbench";
 import { useResizableFeatureSheet } from "@/components/use-resizable-feature-sheet";
 import { useI18n } from "@/components/i18n-provider";
+import { McpHelp } from "@/components/mcp-help";
 import { localeDirections } from "@/lib/i18n/messages";
 import { FeatureMenuNoResults, FeatureMenuSearch } from "@/components/feature-menu-search";
 import { matchesFeatureSearch, useFeatureMenuSearch } from "@/lib/feature-menu-search";
@@ -141,6 +142,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
       }
     };
     const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest('[aria-labelledby="mcp-help-title"]')) return;
       if (event.target instanceof Node && !commandBarRef.current?.contains(event.target)) setMenuOpen(null);
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -245,6 +247,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               </div>}
             </div>)}
           </div>
+          <div className="hidden lg:block"><McpHelp title="Date & Time" compact iconOnly /></div>
           <button type="button" aria-expanded={menuOpen === "Features"} className={"inline-flex h-9 items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden " + (menuOpen === "Features" ? "bg-accent" : "")} onClick={(event) => { lastMenuTriggerRef.current = event.currentTarget; setMenuOpen(menuOpen === "Features" ? null : "Features"); }}><SlidersHorizontal className="h-4 w-4" /><span>Features</span></button>
         </div>
         {menuOpen === "Features" && <div data-testid="datetime-feature-menu" className="absolute end-3 top-full z-50 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(70dvh,520px)] overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-lg border border-border bg-popover p-1.5 shadow-xl sm:end-6 lg:hidden">
@@ -257,6 +260,7 @@ export function DateTimeEditor({ initialFeature }: { initialFeature?: string }) 
               return <section key={group} aria-label={group + " features"}><p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</p>{items.map((feature) => { const FeatureIcon = featureIcons[feature.slug] ?? CalendarDays; return <button type="button" key={feature.slug} onClick={() => selectFeature(feature.slug)} aria-pressed={activeFeature === feature.slug} className={"flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-start hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (activeFeature === feature.slug ? "bg-accent" : "")}><FeatureIcon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span className="min-w-0 flex-1"><span className="block text-sm leading-5">{feature.title}</span><span className="block text-xs leading-4 text-muted-foreground">{feature.description}</span></span></button>; })}</section>;
             })}
           </div>
+          <div className="border-t border-border px-3 py-2"><McpHelp title="Date & Time" compact /></div>
         </div>}
       </nav>
 
