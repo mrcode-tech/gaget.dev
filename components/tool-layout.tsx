@@ -3,6 +3,7 @@
 import { ChevronRight, Home } from "lucide-react";
 import { LocaleLink } from "@/components/locale-link";
 import { useI18n } from "@/components/i18n-provider";
+import { McpHelp } from "@/components/mcp-help";
 
 export function ToolLayout({
   category,
@@ -46,6 +47,7 @@ export function ToolLayout({
         </p>
       </header>}
 
+      {workspace ? <div className="fixed bottom-4 end-4 z-30"><McpHelp title={title} compact iconOnly /></div> : <McpHelp title={title} />}
       {children}
     </main>
   );

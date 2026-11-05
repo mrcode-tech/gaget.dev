@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Heart, Home, Sparkles, X, Wrench, PanelLeftClose, PanelLeftOpen, Image as ImageIcon, Music, Film, Clock3 } from "lucide-react";
+import { Heart, Home, Sparkles, X, Wrench, PanelLeftClose, PanelLeftOpen, Image as ImageIcon, Music, Film, Clock3, Workflow, PlugZap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -64,6 +64,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               return <NavLink key={workspace.href} href={workspace.href} label={label} active={isActive(workspace.href)} icon={<Icon className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />;
             })}</div>
             <NavLink href="/tools" label={devToolsLabel} active={devToolsActive} icon={<Wrench className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
+            <NavLink href="/workflow/pipeline" label={locale === "fa" ? "محیط دسته‌ای" : locale === "ar" ? "مساحة العمل المجمّعة" : "Batch Workbench"} active={isActive("/workflow/pipeline")} icon={<Workflow className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
+            <NavLink href="/mcp" label={locale === "fa" ? "MCP و یکپارچه‌سازی‌ها" : locale === "ar" ? "MCP والتكاملات" : "MCP & Integrations"} active={isActive("/mcp")} icon={<PlugZap className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
           </div>
         </nav>
         {mobile && <section aria-label="Preferences" className="mt-3 space-y-1 border-t border-border px-1 pt-2">

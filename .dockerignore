@@ -1,0 +1,26 @@
+# Git metadata and local developer state
+.git
+.github
+.vscode
+.idea
+
+# Installed dependencies and generated build output
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+
+# Tests and evidence are not required in the production image
+tests
+test-results
+playwright-report
+artifacts
+specification
+
+# Local-only configuration and logs
+.env*
+!.env.example
+*.log
+.DS_Store

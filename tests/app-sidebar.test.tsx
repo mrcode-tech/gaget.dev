@@ -35,6 +35,8 @@ describe("AppSidebar", () => {
     render(<SidebarHarness />);
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Dev Tools" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Batch Workbench" }).getAttribute("href")).toBe("/workflow/pipeline");
+    expect(screen.getByRole("link", { name: "MCP & Integrations" }).getAttribute("href")).toBe("/mcp");
     expect(screen.getByRole("link", { name: "Video" }).getAttribute("href")).toBe("/video/editor");
     expect(screen.getByRole("link", { name: "Photo" }).getAttribute("href")).toBe("/images/editor");
     expect(screen.getByRole("link", { name: "Audio" }).getAttribute("href")).toBe("/audio/editor");
@@ -49,15 +51,17 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("Dev Tools")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }));
     expect(screen.getByRole("link", { name: "Dev Tools" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Batch Workbench" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "MCP & Integrations" })).toBeTruthy();
     expect(screen.getByText("Workspaces")).toBeTruthy();
   });
 
-  it("places Dev Tools immediately after the Date & Time workspace", () => {
+  it("places Batch Workbench directly below Dev Tools and MCP & Integrations after it", () => {
     render(<SidebarHarness />);
     const navigation = within(screen.getByRole("navigation", { name: "Main navigation" }));
     const hrefs = navigation.getAllByRole("link").map((link) => link.getAttribute("href"));
-    expect(hrefs.slice(hrefs.indexOf("/images/editor"), hrefs.indexOf("/tools") + 1)).toEqual([
-      "/images/editor", "/audio/editor", "/video/editor", "/datetime/editor", "/tools",
+    expect(hrefs.slice(hrefs.indexOf("/images/editor"), hrefs.indexOf("/mcp") + 1)).toEqual([
+      "/images/editor", "/audio/editor", "/video/editor", "/datetime/editor", "/tools", "/workflow/pipeline", "/mcp",
     ]);
   });
 

@@ -12,7 +12,8 @@
     "test:component": "vitest run",
     "test": "npm run test:unit && npm run test:component",
     "test:e2e": "playwright test",
-    "capture:design-baseline": "node scripts/capture-design-baseline.mjs"
+    "capture:design-baseline": "node scripts/capture-design-baseline.mjs",
+    "test:mcp": "node --experimental-strip-types --test tests/mcp-runtime.test.mjs tests/mcp-protocol-security.test.mjs tests/mcp-sdk-client.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.2.10",
@@ -27,7 +28,9 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^2.6.0",
-    "zod": "^3.24.2"
+    "zod": "^4.6.7",
+    "@modelcontextprotocol/server": "2.4.0",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -37,7 +40,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.19.0",
     "eslint-config-next": "15.4.6",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.23",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
     "@testing-library/react": "^16.3.0",
@@ -46,6 +49,10 @@
     "vitest": "^3.2.4",
     "@axe-core/playwright": "^4.10.2",
     "@playwright/test": "1.64.0",
-    "playwright-core": "1.64.0"
+    "playwright-core": "1.64.0",
+    "@modelcontextprotocol/client": "2.4.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.23"
   }
 }

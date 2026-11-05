@@ -58,4 +58,5 @@ GaGet.dev is a Next.js App Router application using React, TypeScript, Tailwind 
 - Keep authored target assets grouped by product/feature and state. Generated screenshot manifests should record build identifier, route, viewport, theme, state and generation date.
 - Do not commit generated screenshot churn by default. Use the baseline workflow artifacts for review unless a deliberate, reviewed decision makes a stable screenshot fixture valuable.
 
+- [MCP Compatibility and Shared Runtime Specification](./mcp/README.md) — proposed MCP adapter, shared operation contract, browser/server separation, tool exposure map, workflow engine, privacy/security, Docker, contextual help, acceptance tests and dedicated CI design. Proposal only until implementation and CI evidence prove each phase.
 - [Developer Tools Expansion Package](./new-feature/README.md) — source-traced inventory, detailed category/tool contracts, reusable component proposals, target wireframes and the authoritative phased implementation roadmap. This package is planning documentation, not an implementation claim.

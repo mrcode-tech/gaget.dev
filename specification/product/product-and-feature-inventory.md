@@ -26,6 +26,19 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 | Theme | `next-themes` provider and toggle | Light/dark theme variables are defined in CSS. Verify contrast in both themes. |
 | SEO/technical routes | `app/robots.ts`, `app/sitemap.ts`, route metadata | Canonical/alternate metadata exists in route modules; check locale behavior before changing indexability. |
 
+## Proposed cross-cutting MCP compatibility initiative
+
+See specification/mcp/README.md. This is a proposal, not evidence that MCP server execution is implemented.
+
+The proposal evaluates operations from standalone developer tools, JSON Workspace, Date & Time, Image, Audio, and Video for future MCP exposure. It does not change navigation or merge workspaces into Dev Tools. This document remains the canonical route/tool inventory; MCP runtime mode, exposure status, schemas, limits, and prerequisites belong in specification/mcp/tool-catalog.md.
+
+- **Browser-local:** current UI executes on the user's device where verified.
+- **Server-compatible:** server implementation and dependencies audited and tested.
+- **MCP-exposed:** approved operation is registered and callable by a compatible MCP client.
+- **Verified:** exact implementation passes relevant operation, MCP, privacy, E2E, and CI checks.
+
+No tool becomes MCP-exposed merely because it has a route, registry entry, or browser implementation. Media operations require a separate server-runtime and binary-transfer assessment.
+
 ## Implemented standalone tools
 
 | Route | Capability | Important boundaries |

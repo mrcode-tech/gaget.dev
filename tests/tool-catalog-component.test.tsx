@@ -26,6 +26,7 @@ describe("ToolCatalog", () => {
     expect(screen.getByRole("link", { name: /JSON Workspace/ }).getAttribute("href")).toBe("/json/formatter");
     expect(screen.getByRole("link", { name: /JWT Decoder/ }).getAttribute("href")).toBe("/security/jwt-decoder");
     expect(screen.getByRole("link", { name: /Encoding & Decoding/ }).getAttribute("href")).toBe("/encoding/url");
+    expect(screen.queryByRole("link", { name: /Batch Workbench/ })).toBeNull();
     expect(screen.queryByRole("link", { name: /Base64 Encoder \/ Decoder/ })).toBeNull();
   });
 
@@ -36,6 +37,8 @@ describe("ToolCatalog", () => {
     expect(screen.getByText("No tools match your search.")).toBeTruthy();
     expect(screen.queryByRole("heading", { level: 2, name: "JSON" })).toBeNull();
     expect(screen.queryByText("Photo Editor")).toBeNull();
+    fireEvent.change(search, { target: { value: "batch workbench" } });
+    expect(screen.getByText("No tools match your search.")).toBeTruthy();
 
     fireEvent.change(search, { target: { value: "jwt" } });
     expect(screen.getByRole("heading", { level: 2, name: "Security" })).toBeTruthy();

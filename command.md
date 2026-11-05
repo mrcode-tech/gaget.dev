@@ -67,6 +67,22 @@ The agent must inspect relevant documentation and code, cite concrete paths and 
 
 The agent must inspect the actual current status, diffs, tests, CI, and documentation; identify unfinished or unverified work; complete only the in-scope work; and provide an evidence-based handoff. Do not assume a prior task or CI run succeeded.
 
+### 8. Plan and implement MCP compatibility
+
+> Based on command.md, **MCP compatibility**: implement the approved plan in specification/mcp/ phase by phase, refactor the app to the shared operation contract, keep browser and MCP adapters independent, add contextual MCP help, tests, Docker support where scheduled, and verify through main CI plus dedicated MCP CI.
+
+Read specification/mcp/README.md and follow the roadmap and architecture, operation contract, tool catalog, workflow, security/privacy, deployment, UI help, testing, acceptance, and CI documents as relevant. First complete Phase 0 audit. Do not mass-refactor or expose every registry item before verifying server compatibility, privacy, schemas, limits, dependencies, and tests. Keep the web UI browser-local by default and MCP transport/server code out of UI components. Update statuses only with exact-revision evidence.
+
+### 10. MCP landing page, demo, and Batch Workbench
+
+> Based on command.md, **MCP web experience**: implement and verify the MCP & Integrations landing page, truthful interactive workflow demo, and a separate Batch Workbench navigation item immediately below Dev Tools. Include hosted and self-hosted/on-premises guidance, accessibility, responsive layouts, localization/RTL, privacy disclosures, tests, and CI evidence.
+
+Read `specification/mcp/README.md`, `specification/mcp/web-ui-help-and-wireframes.md`, `specification/mcp/wireframes/mcp-landing-page-and-workflow-demo.svg`, `specification/mcp/implementation-roadmap.md`, and `specification/mcp/IMPLEMENTATION_PROMPT.md`. Audit actual routes and server-exposed operations first. A demo may be described as live only if it calls the real MCP adapter and allowlisted runtime; otherwise explicitly label it a guided example that was not executed. Never embed privileged tokens in browser code or expose unsupported operations. Hosted/on-premises claims must match verified auth, data flow, retention, network, and deployment behavior. Implement, test, and verify the experience; do not stop at updating the proposal.
+
+### 9. MCP specification or audit only
+
+> Based on command.md, **MCP spec/audit**: audit specification/mcp/ against source, registry, tests, runtime dependencies, CI, and privacy behavior; update the specification and traceability without implementing application code unless explicitly requested.
+
 ## Required rules for every command
 
 - Follow `specification/AI_INSTRUCTIONS.md` and the relevant foundation documents.

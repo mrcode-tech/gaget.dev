@@ -1,0 +1,294 @@
+name: GaGet.dev MCP CI
+
+on:
+  # Validate MCP work on its dedicated feature branch.
+  push:
+    branches:
+      - mcp-compatible
+    paths:
+      - ".github/workflows/mcp-ci.yml"
+      - "src/**"
+      - "app/**"
+      - "lib/**"
+      - "components/**"
+      - "server/**"
+      - "mcp/**"
+      - "tests/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vitest.config.*"
+      - "playwright.config.*"
+      - "Dockerfile*"
+      - ".dockerignore"
+      - "docker-compose*.yml"
+      - "compose*.yml"
+      - "specification/mcp/**"
+  pull_request:
+    branches:
+      - mcp-compatible
+      - stage
+      - main
+    paths:
+      - ".github/workflows/mcp-ci.yml"
+      - "src/**"
+      - "app/**"
+      - "lib/**"
+      - "components/**"
+      - "server/**"
+      - "mcp/**"
+      - "tests/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vitest.config.*"
+      - "playwright.config.*"
+      - "Dockerfile*"
+      - ".dockerignore"
+      - "docker-compose*.yml"
+      - "compose*.yml"
+      - "specification/mcp/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: MCP contracts, tests, lint, typecheck, build, and security checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      CI_TESTED_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      CI_TESTED_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+    steps:
+      - name: Check out exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify commit identity
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          expected="$CI_TESTED_COMMIT"
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::Expected $expected but checked out $actual"
+            exit 1
+          fi
+          {
+            echo "tested_commit=$actual"
+            echo "tested_branch=$CI_TESTED_BRANCH"
+          } >> "$GITHUB_OUTPUT"
+          echo "Verified exact tested commit: $actual"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies from the committed lockfile
+        id: install
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/mcp-ci
+          npm ci --no-audit --no-fund 2>&1 | tee install.log
+          cp package-lock.json artifacts/mcp-ci/package-lock.verified.json
+          if ! git diff --quiet -- package-lock.json; then
+            echo "::error::npm ci unexpectedly changed package-lock.json."
+            exit 1
+          fi
+
+      - name: Record project scripts and MCP file inventory
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          mkdir -p artifacts/mcp-ci
+          node -e 'const p=require("./package.json"); console.log(JSON.stringify({scripts:p.scripts,dependencies:p.dependencies,devDependencies:p.devDependencies},null,2))' > artifacts/mcp-ci/package-inventory.json
+          git ls-files | grep -Ei '(^|/)(mcp|server)(/|\.|$)|mcp|workflow-pipeline|operation-contract' > artifacts/mcp-ci/mcp-file-inventory.txt || true
+          printf 'tested_commit=%s\ntested_branch=%s\nworkflow_run_id=%s\nworkflow_attempt=%s\n' "$CI_TESTED_COMMIT" "$CI_TESTED_BRANCH" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > artifacts/mcp-ci/evidence-manifest.txt
+
+      - name: Run unit and contract tests
+        id: unit-tests
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts/mcp-ci
+          if node -e 'process.exit(require("./package.json").scripts?.["test:unit"] ? 0 : 1)'; then
+            npm run test:unit 2>&1 | tee artifacts/mcp-ci/unit-and-contract-tests.log
+          else
+            echo "BLOCKED: package.json has no test:unit script." | tee artifacts/mcp-ci/unit-and-contract-tests.log
+            exit 1
+          fi
+
+      - name: Run component tests
+        id: component-tests
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts/mcp-ci
+          if node -e 'process.exit(require("./package.json").scripts?.["test:component"] ? 0 : 1)'; then
+            npm run test:component 2>&1 | tee artifacts/mcp-ci/component-tests.log
+          else
+            echo "BLOCKED: package.json has no test:component script." | tee artifacts/mcp-ci/component-tests.log
+            exit 1
+          fi
+
+      - name: Run MCP-specific tests when present
+        id: mcp-tests
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts/mcp-ci
+          mapfile -t test_files < <(find tests -type f \( -iname '*mcp*.test.*' -o -iname '*mcp*.spec.*' -o -path '*/mcp/*' \) 2>/dev/null | sort)
+          if (("${#test_files[@]}" == 0)); then
+            echo "BLOCKED: No MCP-specific test files found. Add protocol, server-runtime, operation-exposure, workflow-budget, and security regression tests." | tee artifacts/mcp-ci/mcp-specific-tests.log
+            exit 1
+          fi
+          printf 'MCP test files:\n%s\n' "${test_files[@]}" | tee artifacts/mcp-ci/mcp-specific-tests.log
+          node --experimental-strip-types --test "${test_files[@]}" 2>&1 | tee -a artifacts/mcp-ci/mcp-specific-tests.log
+
+      - name: Run lint
+        id: lint
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: set -o pipefail; npm run lint 2>&1 | tee artifacts/mcp-ci/lint.log
+
+      - name: Run TypeScript typecheck
+        id: typecheck
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: set -o pipefail; npm run typecheck 2>&1 | tee artifacts/mcp-ci/typecheck.log
+
+      - name: Run production build
+        id: build
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: set -o pipefail; npm run build 2>&1 | tee artifacts/mcp-ci/build.log
+
+      - name: Audit production dependency vulnerabilities
+        id: audit
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: set -o pipefail; npm audit --omit=dev --audit-level=high 2>&1 | tee artifacts/mcp-ci/npm-audit.log
+
+      - name: Build and smoke-test the production Docker image
+        id: docker
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/mcp-ci
+          log_file=artifacts/mcp-ci/docker.log
+          container_name="gaget-mcp-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test_token="mcp-ci-only-0123456789abcdef0123456789abcdef-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            docker logs "$container_name" >> "$log_file" 2>&1 || true
+            docker rm -f "$container_name" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          if [[ ! -f Dockerfile ]]; then
+            echo "::error::Dockerfile is required by the MCP release gate."
+            echo "BLOCKED: Dockerfile is missing; Docker is not verified." | tee "$log_file"
+            exit 1
+          fi
+          docker build --pull --tag "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" . 2>&1 | tee "$log_file"
+          docker run --detach --name "$container_name" \
+            --memory=1g --cpus=2 --pids-limit=256 \
+            --publish 127.0.0.1:3000:3000 \
+            --env NODE_ENV=production --env PORT=3000 --env HOSTNAME=0.0.0.0 \
+            --env MCP_AUTH_TOKEN="$test_token" \
+            "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$log_file"
+          ready=0
+          for attempt in $(seq 1 30); do
+            status="$(curl --connect-timeout 1 --max-time 3 --silent --output /dev/null --write-out '%{http_code}' \
+              --header 'Content-Type: application/json' --data '{}' http://127.0.0.1:3000/api/mcp || true)"
+            if [[ "$status" == "401" ]]; then ready=1; break; fi
+            sleep 1
+          done
+          if [[ "$ready" != 1 ]]; then
+            echo "::error::MCP endpoint did not enforce authentication within 90 seconds."
+            exit 1
+          fi
+          uid="$(docker exec "$container_name" node -p 'process.getuid()')"
+          if [[ "$uid" == "0" ]]; then
+            echo "::error::Container must not run as root."
+            exit 1
+          fi
+          unauth_status="$(curl --connect-timeout 1 --max-time 3 --silent --output /dev/null --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+            http://127.0.0.1:3000/api/mcp)"
+          if [[ "$unauth_status" != "401" ]]; then
+            echo "::error::Expected unauthenticated MCP requests to return 401, got $unauth_status."
+            exit 1
+          fi
+          curl --connect-timeout 1 --max-time 10 --silent --show-error --fail \
+            --header "Authorization: Bearer $test_token" \
+            --header 'Content-Type: application/json' \
+            --header 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            http://127.0.0.1:3000/api/mcp > artifacts/mcp-ci/docker-mcp-tools.json
+          node -e 'const fs=require("fs"); const raw=fs.readFileSync("./artifacts/mcp-ci/docker-mcp-tools.json","utf8"); const data=raw.split("\n").filter(l=>l.startsWith("data:")).map(l=>l.slice(5).trim()).at(-1); const r=JSON.parse(data||raw); if(!Array.isArray(r.result?.tools)||r.result.tools.length<2) process.exit(1); console.log("Authenticated MCP discovery succeeded with "+r.result.tools.length+" tools.")' | tee -a "$log_file"
+          echo "Docker build, startup, non-root, auth enforcement, and MCP discovery smoke checks passed." | tee -a "$log_file"
+      - name: Generate verification summary
+        if: always()
+        shell: bash
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          UNIT_OUTCOME: ${{ steps.unit-tests.outcome }}
+          COMPONENT_OUTCOME: ${{ steps.component-tests.outcome }}
+          MCP_OUTCOME: ${{ steps.mcp-tests.outcome }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TYPECHECK_OUTCOME: ${{ steps.typecheck.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+          DOCKER_OUTCOME: ${{ steps.docker.outcome }}
+        run: |
+          mkdir -p artifacts/mcp-ci
+          {
+            echo "# MCP CI verification summary"
+            echo
+            echo "- Repository: $GITHUB_REPOSITORY"
+            echo "- Branch: $CI_TESTED_BRANCH"
+            echo "- Tested commit: $CI_TESTED_COMMIT"
+            echo "- Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo "| Check | Outcome |"
+            echo "|---|---|"
+            echo "| Dependency installation | $INSTALL_OUTCOME |"
+            echo "| Unit/contract tests | $UNIT_OUTCOME |"
+            echo "| Component tests | $COMPONENT_OUTCOME |"
+            echo "| MCP-specific tests | $MCP_OUTCOME |"
+            echo "| Lint | $LINT_OUTCOME |"
+            echo "| Typecheck | $TYPECHECK_OUTCOME |"
+            echo "| Production build | $BUILD_OUTCOME |"
+            echo "| Production dependency audit | $AUDIT_OUTCOME |"
+            echo "| Docker build | $DOCKER_OUTCOME |"
+            echo
+            echo "A skipped, blocked, or failed check is not a passing check."
+          } | tee artifacts/mcp-ci/summary.md
+
+      - name: Upload MCP CI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-ci-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mcp-ci/
+          if-no-files-found: warn
+          retention-days: 30
+
