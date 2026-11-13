@@ -160,7 +160,7 @@ test("sitemap lists canonical indexable routes without duplicate or redirect ali
     "/encoding/base64",
     "/generators/uuid",
     "/json/diff",
-    "/api/",
+    "/api/mcp",
     "/ci/",
     "/categories/images",
     "/categories/date-time",
