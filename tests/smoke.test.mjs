@@ -137,7 +137,7 @@ test("sitemap lists canonical indexable routes without duplicate or redirect ali
   const response = await fetch(new URL("/sitemap.xml", baseUrl));
   assert.equal(response.status, 200);
   const xml = await response.text();
-  const locations = [...xml.matchAll(/<loc>(.*?)<\\/loc>/g)].map((match) => match[1]);
+    const locations = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
   assert.ok(locations.length > 0, "sitemap should contain URLs");
   assert.equal(new Set(locations).size, locations.length, "sitemap URLs should be unique");
 
