@@ -18,6 +18,7 @@
 - `/tools` is the Dev Tools catalog.
 - `/categories/[slug]` is a category landing page.
 - Tool registry metadata drives search, catalog categories, featured/favorite experiences and tool links. The sidebar orders Photo, Audio, Video, and Date & Time workspaces followed immediately by Dev Tools. The `/tools` catalog includes only standalone developer utilities and the JSON workspace, grouped into non-empty functional categories; it excludes media and date/time workspaces. Tool entries declare stable IDs, explicit availability status, and standalone/workspace kind; workspace entries declare their canonical workspace ID. A registry entry is not proof that a destination exists or that a capability works. See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-architecture.md) for the category/workspace model and verification contract.
+- `/sitemap.xml` is generated from canonical public routes, available registry tools, non-empty non-redirecting categories, the MCP landing page, the four main workspaces, and canonical Date & Time feature URLs. Planned tools, redirects, duplicate aliases, API endpoints, internal CI harnesses, and non-indexable localized routes are excluded. Entries do not invent `lastModified` dates.
 
 ### Main workspaces
 - `/images/editor`: unified image/photo workspace. Legacy image slugs redirect to the editor. Source includes canvas-based image adjustments, crop/resize, transforms, text layers, and format/quality export controls; verify each active path before making broader capability claims.
@@ -73,7 +74,7 @@ Broader capability families in the developer-tools proposal (full format parsers
 
 ## Required follow-up before declaring conformance
 
-1. Reconcile App Router routes and redirects against `lib/tools/registry.ts`, feature slugs, sitemap and smoke/E2E tests.
+1. Keep App Router routes, redirects, registry entries, feature slugs, sitemap and smoke/E2E tests synchronized whenever routes or tool availability change.
 2. Inspect each route and shared component with its consumers and tests; maintain an evidence-based route/component coverage matrix.
 3. Add canonical feature contracts and editable target wireframes where expected behavior is missing. New designs remain proposals until approved.
 4. Reproduce the dependency-install issue and run unit/component tests, lint, typecheck, build, smoke and Playwright checks on the evaluated build.

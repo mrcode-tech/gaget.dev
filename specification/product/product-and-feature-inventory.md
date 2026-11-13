@@ -24,7 +24,7 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 | Shared shell | App header + sidebar | Collapsible desktop sidebar, mobile/tablet navigation drawer, search suggestions, theme and language controls. |
 | Locale handling | Locale provider and locale links | Locale metadata includes English, Persian, Arabic, Spanish, Chinese variants, Portuguese (Brazil), French, German, Japanese, Hindi, Russian, Indonesian, Korean and Italian. Translation completeness varies; English is the only approved indexable locale. Persian and Arabic use RTL direction. |
 | Theme | `next-themes` provider and toggle | Light/dark theme variables are defined in CSS. Verify contrast in both themes. |
-| SEO/technical routes | `app/robots.ts`, `app/sitemap.ts`, route metadata | Canonical/alternate metadata exists in route modules; check locale behavior before changing indexability. |
+| SEO/technical routes | `app/robots.ts`, `app/sitemap.ts`, route metadata | The XML sitemap is generated from canonical public routes, available registry tools, non-empty non-redirecting categories, the MCP landing page, the four main workspaces, and canonical Date & Time feature URLs. It excludes planned tools, redirects, duplicate aliases, API endpoints, internal CI harnesses, and non-indexable localized routes. Entries omit fabricated modification dates. English is the only approved indexable locale. |
 
 ## Proposed cross-cutting MCP compatibility initiative
 
