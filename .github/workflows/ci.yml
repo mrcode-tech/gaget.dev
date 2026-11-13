@@ -8,6 +8,7 @@ on:
   # Validate proposed changes to the protected integration branches.
   pull_request:
     branches:
+      - mcp-compatible
       - stage
       - main
   # Use manual dispatch for deliberate diagnosis outside an active push or pull request.
@@ -59,14 +60,13 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
+      - name: Install dependencies from the committed lockfile
         id: install-dependencies
-        # Bootstrap the stale lockfile once; commit the generated lockfile, then use npm ci.
         shell: bash
         run: |
           mkdir -p artifacts/ci-logs
           set -o pipefail
-          npm install --no-audit --no-fund 2>&1 | tee artifacts/ci-logs/dependency-install.log
+          npm ci --no-audit --no-fund 2>&1 | tee artifacts/ci-logs/dependency-install.log
 
       - name: Verify preinstalled Playwright browser and capture refreshed lockfile
         id: verify-playwright
@@ -90,6 +90,15 @@ jobs:
           mkdir -p artifacts/ci-logs
           set -o pipefail
           npm run test:unit 2>&1 | tee artifacts/ci-logs/unit-tests.log
+
+      - name: Run MCP protocol and security tests
+        id: mcp-tests
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm run test:mcp 2>&1 | tee artifacts/ci-logs/mcp-tests.log
 
       - name: Run focused Photo Editor and sidebar regression tests
         id: focused-regressions
@@ -117,6 +126,15 @@ jobs:
           mkdir -p artifacts/ci-logs
           set -o pipefail
           npm run lint 2>&1 | tee artifacts/ci-logs/lint.log
+
+      - name: Audit production dependency vulnerabilities
+        id: dependency-audit
+        if: always() && steps.install-dependencies.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci-logs
+          set -o pipefail
+          npm audit --omit=dev --audit-level=high 2>&1 | tee artifacts/ci-logs/npm-audit.log
 
       - name: Check TypeScript
         id: typecheck
@@ -205,6 +223,8 @@ jobs:
           CI_DEPENDENCY_INSTALL: ${{ steps.install-dependencies.outcome }}
           CI_BROWSER_INSTALL: ${{ steps.verify-playwright.outcome }}
           CI_UNIT_TESTS: ${{ steps.unit-tests.outcome }}
+          CI_MCP_TESTS: ${{ steps.mcp-tests.outcome }}
+          CI_DEPENDENCY_AUDIT: ${{ steps.dependency-audit.outcome }}
           CI_FOCUSED_REGRESSIONS: ${{ steps.focused-regressions.outcome }}
           CI_COMPONENT_TESTS: ${{ steps.component-tests.outcome }}
           CI_LINT: ${{ steps.lint.outcome }}
@@ -233,4 +253,82 @@ jobs:
             test-results/
             playwright-report/
           if-no-files-found: error
+          retention-days: 30
+
+  mcp-docker:
+    name: MCP production Docker security and discovery smoke test
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Build and smoke-test the production Docker image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/mcp-docker
+          log_file=artifacts/mcp-docker/docker.log
+          container_name="gaget-mcp-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test_token="mcp-ci-only-0123456789abcdef0123456789abcdef-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            docker logs "$container_name" >> "$log_file" 2>&1 || true
+            docker rm -f "$container_name" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          if [[ ! -f Dockerfile ]]; then
+            echo "::error::Dockerfile is required by the MCP release gate."
+            exit 1
+          fi
+          docker build --pull --tag "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" . 2>&1 | tee "$log_file"
+          docker run --detach --name "$container_name" \
+            --memory=1g --cpus=2 --pids-limit=256 \
+            --publish 127.0.0.1:3000:3000 \
+            --env NODE_ENV=production --env PORT=3000 --env HOSTNAME=0.0.0.0 \
+            --env MCP_AUTH_TOKEN="$test_token" \
+            "gaget-mcp-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$log_file"
+          ready=0
+          for attempt in $(seq 1 90); do
+            status="$(curl --connect-timeout 1 --max-time 3 --silent --output /dev/null --write-out '%{http_code}' \
+              --header 'Content-Type: application/json' --data '{}' http://127.0.0.1:3000/api/mcp || true)"
+            if [[ "$status" == "401" ]]; then ready=1; break; fi
+            sleep 1
+          done
+          if [[ "$ready" != 1 ]]; then
+            echo "::error::MCP endpoint did not enforce authentication within 90 seconds."
+            exit 1
+          fi
+          uid="$(docker exec "$container_name" node -p 'process.getuid()')"
+          if [[ "$uid" == "0" ]]; then
+            echo "::error::Container must not run as root."
+            exit 1
+          fi
+          unauth_status="$(curl --connect-timeout 1 --max-time 3 --silent --output /dev/null --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+            http://127.0.0.1:3000/api/mcp)"
+          if [[ "$unauth_status" != "401" ]]; then
+            echo "::error::Expected unauthenticated MCP requests to return 401, got $unauth_status."
+            exit 1
+          fi
+          curl --connect-timeout 1 --max-time 10 --silent --show-error --fail \
+            --header "Authorization: Bearer $test_token" \
+            --header 'Content-Type: application/json' \
+            --header 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            http://127.0.0.1:3000/api/mcp > artifacts/mcp-docker/docker-mcp-tools.json
+          node -e 'const fs=require("fs"); const raw=fs.readFileSync("./artifacts/mcp-docker/docker-mcp-tools.json","utf8"); const data=raw.split("\\n").filter(l=>l.startsWith("data:")).map(l=>l.slice(5).trim()).at(-1); const r=JSON.parse(data||raw); if(!Array.isArray(r.result?.tools)||r.result.tools.length<2) process.exit(1); console.log("Authenticated MCP discovery succeeded with "+r.result.tools.length+" tools.")' | tee -a "$log_file"
+          echo "Docker build, startup, non-root, auth enforcement, and MCP discovery smoke checks passed." | tee -a "$log_file"
+
+      - name: Upload MCP Docker evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-docker-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mcp-docker/
+          if-no-files-found: warn
           retention-days: 30

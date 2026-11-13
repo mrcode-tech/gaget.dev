@@ -133,3 +133,39 @@ for (const route of rtlRoutes) {
   });
 }
 
+test("sitemap lists canonical indexable routes without duplicate or redirect aliases", async () => {
+  const response = await fetch(new URL("/sitemap.xml", baseUrl));
+  assert.equal(response.status, 200);
+  const xml = await response.text();
+    const locations = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
+  assert.ok(locations.length > 0, "sitemap should contain URLs");
+  assert.equal(new Set(locations).size, locations.length, "sitemap URLs should be unique");
+
+  for (const expected of [
+    "https://gaget.dev/",
+    "https://gaget.dev/tools",
+    "https://gaget.dev/mcp",
+    "https://gaget.dev/images/editor",
+    "https://gaget.dev/audio/editor",
+    "https://gaget.dev/video/editor",
+    "https://gaget.dev/datetime/editor",
+    "https://gaget.dev/datetime/editor?feature=world-clock",
+    "https://gaget.dev/json/formatter",
+    "https://gaget.dev/workflow/pipeline",
+  ]) {
+    assert.ok(locations.includes(expected), `sitemap should include ${expected}`);
+  }
+
+  for (const excluded of [
+    "/encoding/base64",
+    "/generators/uuid",
+    "/json/diff",
+    "/api/mcp",
+    "/ci/",
+    "/categories/images",
+    "/categories/date-time",
+  ]) {
+    assert.ok(!locations.some((location) => location.includes(excluded)), `sitemap should exclude ${excluded}`);
+  }
+});
+
