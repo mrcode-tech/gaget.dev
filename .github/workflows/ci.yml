@@ -8,6 +8,7 @@ on:
   # Validate proposed changes to the protected integration branches.
   pull_request:
     branches:
+      - mcp-compatible
       - stage
       - main
   # Use manual dispatch for deliberate diagnosis outside an active push or pull request.
