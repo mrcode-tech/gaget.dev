@@ -49,7 +49,7 @@ export function DesignShell({ children, locale, stylesList }: Props) {
         <div className={styles.main}>
           <header className={styles.topbar}>
             <span className={styles.breadcrumb}>GaGet.dev <span aria-hidden="true">/</span> Design</span>
-            <Link className={styles.backLink} href={href("/")}>← {labels.back}</Link>
+            <Link className={styles.backLink} href={href("/")} aria-label={labels.back}>← {labels.back}</Link>
           </header>
           <main className={styles.content}>{children}</main>
         </div>
