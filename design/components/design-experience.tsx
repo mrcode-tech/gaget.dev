@@ -38,10 +38,10 @@ export function DesignLanding({ stylesList, href }: { stylesList: DesignStyle[];
 
 export function PortfolioPreview({ styleId }: { styleId: string }) {
   return (
-    <section className={styles.preview} data-style={styleId} aria-label={`Sample portfolio rendered in ${styleId} style`}>
+    <section className={styles.preview} data-style={styleId} dir="ltr" aria-label={`Sample portfolio rendered in ${styleId} style`}>
       <div className={styles.previewNav}>
         <span className={styles.previewBrand}>{samplePortfolio.name}</span>
-        <div className={styles.previewLinks}><span>Work</span><span>About</span><span>Contact</span></div>
+        <nav className={styles.previewLinks} aria-label="Sample portfolio"><a href="#projects">Work</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
         <span>{samplePortfolio.location}</span>
       </div>
       <div className={styles.previewHero}>
@@ -53,7 +53,7 @@ export function PortfolioPreview({ styleId }: { styleId: string }) {
         </div>
         <div className={styles.previewArtwork} aria-label="Abstract geometric portfolio artwork" role="img" />
       </div>
-      <div className={styles.previewProjects}>
+      <div className={styles.previewProjects} id="projects">
         <div className={styles.previewProjectHead}><span>Selected projects</span><span>2024 — 2025</span></div>
         <div className={styles.projectGrid}>
           {samplePortfolio.projects.map((project) => (
@@ -65,7 +65,8 @@ export function PortfolioPreview({ styleId }: { styleId: string }) {
           ))}
         </div>
       </div>
-      <div className={styles.previewFooter}><span>{samplePortfolio.availability}</span><span>{samplePortfolio.contact}</span></div>
+      <section className={styles.previewAbout} id="about"><h3>A little about the practice</h3><p>{samplePortfolio.biography}</p></section>
+      <div className={styles.previewFooter} id="contact"><span>{samplePortfolio.availability}</span><a href={`mailto:${samplePortfolio.contact}`}>{samplePortfolio.contact}</a></div>
     </section>
   );
 }
