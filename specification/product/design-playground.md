@@ -1,6 +1,6 @@
 # Design Playground
 
-**Status:** Initial implementation in progress
+**Status:** Partial — initial implementation added; runtime verification pending
 **Route:** `/design`
 **Architecture:** Feature module inside the existing GaGet.dev Next.js application
 **Scope:** A self-contained design-learning and visual-comparison experience.
@@ -111,12 +111,12 @@ Visual changes may alter hierarchy, layout, typography, color, imagery treatment
 ## 9. Delivery phases
 
 ### Phase 1 — Foundation and first usable experience
-- [ ] Add the isolated Design route and shell.
-- [ ] Add the GaGet sidebar entry.
-- [ ] Add the Design landing page and style catalogue.
-- [ ] Define one shared fictional portfolio data source.
-- [ ] Implement initial complete style previews and learning sections.
-- [ ] Add responsive, accessibility, and route tests.
+- [x] Add the isolated Design route and shell.
+- [x] Add the GaGet sidebar entry.
+- [x] Add the Design landing page and style catalogue.
+- [x] Define one shared fictional portfolio data source.
+- [x] Implement initial complete style previews and learning sections.
+- [x] Add responsive, accessibility, and route tests (execution pending).
 
 ### Phase 2 — Learning depth
 - [ ] Improve historical context and source-backed educational content.
@@ -153,6 +153,7 @@ Implementation and verification results must be added after they are run. Do not
 | Check | Result | Evidence |
 |---|---|---|
 | Branch creation from main | Completed | GitHub branch ref |
+| Source implementation | Added | Feature module, routes, sidebar integration, sitemap and tests |
 | Lint | Not run | — |
 | Typecheck | Not run | — |
 | Unit/component tests | Not run | — |
