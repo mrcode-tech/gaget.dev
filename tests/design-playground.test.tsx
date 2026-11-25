@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import type { AnchorHTMLAttributes } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DesignLanding, PortfolioPreview, DesignStylePage } from "@/design/components/design-experience";
 import { DesignShell } from "@/design/components/design-shell";
@@ -6,7 +7,7 @@ import { designStyles, getDesignStyle } from "@/design/data/styles";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/design/bauhaus" }));
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+  default: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
     <a href={href} {...props}>{children}</a>
   ),
 }));
