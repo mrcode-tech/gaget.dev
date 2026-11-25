@@ -85,7 +85,12 @@
 .projectImage span { color: var(--p-accent); font-family: var(--p-display); font-size: 26px; font-weight: 700; }
 .projectName { margin: 10px 0 3px; font-size: 13px; font-weight: 750; }
 .projectCategory { margin: 0; color: var(--p-muted); font-size: 10px; }
+.previewAbout { display: grid; grid-template-columns: minmax(120px,.65fr) minmax(0,1.35fr); gap: 24px; align-items: start; padding: 26px 7%; border-top: 1px solid var(--p-line); }
+.previewAbout h3 { margin: 0; font-family: var(--p-display); font-size: 18px; }
+.previewAbout p { max-width: 620px; margin: 0; color: var(--p-muted); font-size: 12px; line-height: 1.8; }
 .previewFooter { display: flex; justify-content: space-between; gap: 16px; padding: 16px 7%; border-top: 1px solid var(--p-line); color: var(--p-muted); font-size: 10px; }
+.previewFooter a, .previewLinks a { color: inherit; text-decoration: none; }
+.previewFooter a:hover, .previewLinks a:hover { text-decoration: underline; }
 .detailHeader { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
 .period { color: var(--dp-muted); font-size: 12px; }
 .learningGrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 24px; }
@@ -119,6 +124,7 @@
   .previewProjects { padding: 0 6% 6%; }
   .projectGrid { grid-template-columns: 1fr; }
   .projectImage { min-height: 140px; }
+  .previewAbout { grid-template-columns: 1fr; }
   .previewFooter { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) {
