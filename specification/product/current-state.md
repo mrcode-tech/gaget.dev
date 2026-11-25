@@ -80,3 +80,11 @@ Broader capability families in the developer-tools proposal (full format parsers
 4. Reproduce the dependency-install issue and run unit/component tests, lint, typecheck, build, smoke and Playwright checks on the evaluated build.
 5. Inspect rendered screenshots from the exact evaluated build, including empty/loaded/error/active states, short viewports, themes, RTL, keyboard/focus, menu anchoring and scroll ownership.
 6. Update this page only when durable implementation facts or verification status change. Keep task progress and build-specific evidence in pull requests and CI artifacts, not as a rolling audit diary.
+
+
+### Design Playground
+- `/design` is an initial Design learning module hosted within the existing Next.js application. The route uses a Design-owned shell and a module under `design/`; the existing GaGet shell bypasses its sidebar/header on Design routes.
+- The GaGet sidebar links to Design after the existing MCP destination; the existing workspace, Dev Tools, Batch Workbench, and MCP order is preserved.
+- Initial style routes: `/design/bauhaus`, `/design/swiss`, `/design/minimalism`, `/design/art-deco`, and `/design/de-stijl`. All render one shared fictional portfolio data source.
+- Design-specific styles are namespaced in a CSS Module. The app still uses one root Tailwind configuration; Tailwind configuration is not independently scoped per source folder.
+- **Status: Partial; source added, runtime/visual verification pending.** Do not treat route existence or source inspection as proof of a verified browser experience.
