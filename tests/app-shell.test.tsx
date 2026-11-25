@@ -63,6 +63,18 @@ describe("AppShell", () => {
     expect(spacer).toBeTruthy();
   });
 
+  it("hands Design routes to the Design-owned shell without GaGet navigation", () => {
+    navigation.pathname = "/design/bauhaus";
+    render(
+      <I18nProvider locale="en">
+        <AppShell><main data-testid="design-route-content">Design experience</main></AppShell>
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId("design-route-content")).toBeTruthy();
+    expect(screen.queryByRole("navigation", { name: "Main navigation" })).toBeNull();
+    expect(document.querySelector("header")).toBeNull();
+  });
+
   it("keeps the shared navbar and hamburger fixed on ordinary routes", () => {
     navigation.pathname = "/tools";
     render(
