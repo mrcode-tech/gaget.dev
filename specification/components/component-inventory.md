@@ -43,3 +43,13 @@ A component's existence does not imply that all its states or consumers have bee
 - `components/developer-tool-workbench.tsx` composes existing Button, Input, Textarea and Card primitives for the seven standalone developer-tool routes. Its operation contract and current layout are documented in `specification/new-feature/shared-components/developer-tool-workbench.md` and `specification/new-feature/wireframes/developer-tool-workbench.md`.
 
 - components/encoding-workbench.tsx provides the unified Encoding & Decoding selector and uses lib/tools/encoding-operations.ts for pure transforms. Contract: specification/new-feature/shared-components/encoding-workbench.md; wireframe: specification/new-feature/wireframes/encoding-workbench.md.
+
+
+## Design Playground module components
+
+| Area | Source | Responsibility | Audit notes |
+|---|---|---|---|
+| Design application shell | `design/components/design-shell.tsx` | Owns Design navigation, route context and return-to-GaGet link | Rendered instead of the GaGet AppShell on `/design/*`; responsive and keyboard behavior pending browser verification. |
+| Design learning views | `design/components/design-experience.tsx` | Design landing catalogue, shared sample portfolio preview, and style documentation | All styles consume the same canonical sample portfolio; visual QA pending. |
+| Design visual system | `design/styles/design.module.css` | Namespaced Design-only layout, tokens, style variants and responsive rules | CSS Module; avoid global selectors and do not alter GaGet global tokens. |
+| Design content | `design/data/sample-portfolio.ts`, `design/data/styles.ts` | Canonical fictional portfolio and educational style metadata | Data must remain shared across all style previews. |
