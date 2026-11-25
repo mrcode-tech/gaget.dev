@@ -91,7 +91,7 @@ export function DesignStylePage({ style }: { style: DesignStyle }) {
         <article className={styles.learningCard}><h3>Layout & composition</h3><p>{style.layout}</p></article>
         <article className={styles.learningCard}><h3>Iconography</h3><p>{style.iconography}</p></article>
         <article className={styles.learningCard}><h3>Components & interaction</h3><p>{style.components}</p></article>
-        <article className={styles.learningCard}><h3>Implementation notes</h3><p>{style.implementation}</p><div className={styles.codeNote}>/* Keep the visual system scoped */\n.design-example &#123;\n  color: var(--style-ink);\n  background: var(--style-paper);\n&#125;</div></article>
+        <article className={styles.learningCard}><h3>Implementation notes</h3><p>{style.implementation}</p><pre className={styles.codeNote}>{"/* Keep the visual system scoped */\n.design-example {\n  color: var(--style-ink);\n  background: var(--style-paper);\n}"}</pre></article>
       </div>
     </>
   );
