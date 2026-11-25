@@ -23,7 +23,7 @@ for (const style of styles) {
     await expect(page.getByRole("heading", { name: "Historical context" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Color palette" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Typography" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Northline Journal" })).toBeVisible();
+    await expect(page.getByText("Northline Journal", { exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Design styles" })).toBeVisible();
   });
 }
