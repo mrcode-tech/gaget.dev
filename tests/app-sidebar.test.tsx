@@ -65,6 +65,14 @@ describe("AppSidebar", () => {
     ]);
   });
 
+  it("adds Design after the existing primary destinations without reordering them", () => {
+    render(<SidebarHarness />);
+    const navigation = within(screen.getByRole("navigation", { name: "Main navigation" }));
+    const hrefs = navigation.getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(navigation.getByRole("link", { name: "Design Playground" }).getAttribute("href")).toBe("/design");
+    expect(hrefs[hrefs.indexOf("/design") - 1]).toBe("/mcp");
+  });
+
   it("shows language and appearance as separately captioned rows in the mobile drawer", () => {
     render(<SidebarHarness />);
     expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull();
