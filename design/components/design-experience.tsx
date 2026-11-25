@@ -1,4 +1,3 @@
-import Link from "next/link";
 import styles from "@/design/styles/design.module.css";
 import { samplePortfolio } from "@/design/data/sample-portfolio";
 import type { DesignStyle } from "@/design/data/styles";
