@@ -8,6 +8,12 @@ const commit = (process.env.CI_TESTED_COMMIT ?? process.env.DESIGN_BASELINE_COMM
 const commitSlug = commit.slice(0, 12);
 const routes = [
   { name: "home", path: "/" },
+  { name: "design-playground", path: "/design" },
+  { name: "design-bauhaus", path: "/design/bauhaus" },
+  { name: "design-swiss", path: "/design/swiss" },
+  { name: "design-minimalism", path: "/design/minimalism" },
+  { name: "design-art-deco", path: "/design/art-deco" },
+  { name: "design-de-stijl", path: "/design/de-stijl" },
   { name: "tools", path: "/tools" },
   { name: "json-formatter", path: "/json/formatter" },
   { name: "url-encoder", path: "/encoding/url" },
