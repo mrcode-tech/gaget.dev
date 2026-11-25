@@ -15,6 +15,7 @@
 - [Reusable Design Specification Template](./templates/design-specification-template.md)
 
 ### Level 2 — GaGet.dev product design
+- [Design Playground](./product/design-playground.md) — isolated design-learning module at `/design`, shared sample portfolio, visual-style experiences, architecture and phased delivery contract.
 - [Current-State Product Baseline](./product/current-state.md)
 - [Product and Feature Inventory](./product/product-and-feature-inventory.md)
 - [Tool Catalog and Workspace Architecture](./product/tool-catalog-and-workspace-architecture.md) — category taxonomy, tool/workspace boundaries, availability and verification contract.
