@@ -124,7 +124,7 @@ describe("website builder domain", () => {
   });
 
   it("calculates WCAG contrast and marks incomplete exports", async () => {
-    const { confirmFinalReview, contrastRatio, exportBlueprint, exportReadiness, setMissionStatus } = await import("@/lib/website-builder/model");
+    const { confirmFinalReview, contrastRatio, exportBlueprint, exportReadiness } = await import("@/lib/website-builder/model");
     expect(contrastRatio("#000000", "#ffffff")).toBe(21);
     expect(contrastRatio("not-a-color", "#ffffff")).toBeNull();
     let project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
