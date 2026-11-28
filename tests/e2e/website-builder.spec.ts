@@ -14,6 +14,7 @@ test("website builder supports a real session project composition and JSON hando
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
   await expect(page.getByText("Editorial split", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Add", exact: true }).first().click();
+  await page.getByRole("button").filter({ hasText: "Objects made to be lived with" }).first().click();
   await expect(page.getByText("Editorial split", { exact: true })).toBeVisible();
 
   await page.getByLabel("Title", { exact: true }).fill("Design with purpose");
