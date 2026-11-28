@@ -39,9 +39,25 @@ export const PALETTES: Identity[] = [
  {palette:"Midnight",primary:"#334d68",background:"#edf0f3",surface:"#ffffff",text:"#202a35",accent:"#bd9469",font:"Georgia"},
  {palette:"Modern mono",primary:"#303030",background:"#f1f1ef",surface:"#ffffff",text:"#171717",accent:"#9b9b91",font:"Arial"}
 ];
-export function createProject(input:{name:string;businessType:string;purpose:string;audience:string}):Project {
- const page:Page={id:"page-home",name:"Home",slug:"/",instances:[],layouts:{desktop:{order:[],hidden:[]},tablet:{order:[],hidden:[]},mobile:{order:[],hidden:[]}}};
- return {id:"project-"+Date.now(),...input,pages:[page],activePageId:page.id,identity:PALETTES[0],missions:DEFAULT_MISSIONS.map(m=>({...m})),completedLevels:[],finalReviewConfirmed:false};
+export type ProjectInput = { name: string; purpose: string; businessType?: string; audience?: string };
+
+export function validateProjectInput(input: Pick<ProjectInput, "name" | "purpose">): string[] {
+ const errors: string[] = [];
+ if (!input.name.trim()) errors.push("Add a project name to continue.");
+ if (!input.purpose.trim()) errors.push("Describe the website purpose to continue.");
+ return errors;
+}
+
+function createId(prefix: string): string {
+ const random = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Math.random().toString(36).slice(2, 12);
+ return prefix + "-" + random;
+}
+
+export function createProject(input: ProjectInput): Project {
+ const errors = validateProjectInput(input);
+ if (errors.length) throw new Error(errors.join(" "));
+ const page: Page = { id: createId("page"), name: "Home", slug: "/", instances: [], layouts: { desktop: { order: [], hidden: [] }, tablet: { order: [], hidden: [] }, mobile: { order: [], hidden: [] } } };
+ return { id: createId("project"), name: input.name.trim(), purpose: input.purpose.trim(), businessType: input.businessType?.trim() || "General website", audience: input.audience?.trim() || "", pages: [page], activePageId: page.id, identity: { ...PALETTES[0] }, missions: DEFAULT_MISSIONS.map(m => ({ ...m })), completedLevels: [], finalReviewConfirmed: false };
 }
 export function activePage(project:Project):Page { return project.pages.find(p=>p.id===project.activePageId) ?? project.pages[0]; }
 export function insertSample(page:Page,sample:Sample,index=page.instances.length):Page {
