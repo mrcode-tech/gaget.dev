@@ -132,3 +132,29 @@ Users may edit only the content fields and finite options exposed by a sample, i
 Desktop is the structural source: adding, removing, or replacing a high-level component on desktop updates the shared component collection across desktop, tablet, and mobile. Tablet/mobile cannot independently add, remove, or replace high-level components; they can independently reorder existing components, hide/show them, and adjust supported responsive presentation. Shared content and sample configuration synchronize across all three canvases.
 
 The three responsive canvases remain visible side by side. Narrow workspaces use horizontal scrolling or workspace zoom. The approved detailed behavior is specified in [M02](../milestones/M02-ux-architecture/README.md).
+
+## Approved M03 visual design requirements
+
+### Separate visual systems
+- The builder application interface (System A) and the website component sample portfolio (System B) have distinct visual responsibilities.
+- System A has a distinctive professional creative-workspace identity, not a generic GPT/AI-dashboard aesthetic.
+- System B supports meaningful visual diversity across predefined component samples while sharing technical and content-slot conventions.
+
+### Builder visual foundations
+- Provide a neutral foundation, restrained semantic colors, and a distinctive brand accent.
+- Support light and dark themes from the beginning.
+- Use functional sans-serif typography with a clear hierarchy.
+- Balance compact navigation/controls with generous canvas and sample previews.
+- Use subtle purposeful motion and accessible feedback.
+
+### Component portfolio foundations
+- Define a generic component taxonomy and expand the sample portfolio progressively.
+- Support visual gallery browsing, filters, adjustable density, comparison, enlarged preview, and contextual page preview.
+- Render selected samples realistically with placeholders for missing content.
+- Require intentional desktop/tablet/mobile presentation for each sample.
+- Preserve the M02 restriction to supported content fields and finite sample options; do not introduce arbitrary styling or pixel-level editing.
+
+### Professional design quality
+- Apply professional visual design, UX, website-pattern, design-system, frontend, responsive, accessibility, research, and critique practices.
+- Maintain a practical design-quality checklist for review; do not convert it into subjective user scoring or game rewards.
+- Keep the existing application repository as the source of truth; Figma is optional and complementary.
