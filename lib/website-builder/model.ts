@@ -76,7 +76,7 @@ export function reviewProject(project:Project):{severity:"error"|"warning";messa
  for(const page of project.pages) for(const instance of page.instances) {
   const sample=CATALOGUE.find(s=>s.id===instance.sampleId);if(!sample)continue;
   for(const f of sample.fields)if(f.required&&!String(instance.content[f.id]??"").trim())findings.push({severity:"error",message:"Required field missing: "+f.label,pageId:page.id,instanceId:instance.id});
-  for(const f of sample.fields)if(f.kind==="image"&&instance.content[f.id]&&!/^https?:\\/\\//i.test(instance.content[f.id]))findings.push({severity:"warning",message:"Image reference should be an http(s) URL or an attached session file.",pageId:page.id,instanceId:instance.id});
+  for(const f of sample.fields)if(f.kind==="image"&&instance.content[f.id]&&!instance.content[f.id].startsWith("http://")&&!instance.content[f.id].startsWith("https://"))findings.push({severity:"warning",message:"Image reference should be an http(s) URL or an attached session file.",pageId:page.id,instanceId:instance.id});
  }
  for(const page of project.pages)for(const bp of ["desktop","tablet","mobile"] as Breakpoint[]) {
   const layout=page.layouts[bp],ids=page.instances.map(i=>i.id);
