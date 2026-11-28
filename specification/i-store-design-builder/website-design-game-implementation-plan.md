@@ -270,38 +270,38 @@ Do not confuse product-development milestones with user-facing levels.
 
 ## 5. User design journey
 
-### Level 0 — Define the project
+### Level 0 — Define the website
 The user describes the website, its purpose, audience, offering/subject, and desired visitor outcome. The brief remains editable.
 
 ### Level 1 — Explore visual direction
 The user explores examples and chooses a visual direction if desired. Examples explain choices; they do not recommend or select a preferred option.
 
-### Level 2 — Choose the shared frame
+### Level 2 — Build shared website frame
 The user browses header, navigation, and footer patterns, chooses what to include, configures options, and sets the order/content.
 
-### Level 3 — Compose the introduction
+### Level 3 — Design homepage introduction
 The user browses hero/introduction patterns, chooses one, configures it, and enters real or placeholder text. Image regions remain placeholders unless the user attaches a reference.
 
-### Level 4 — Compose main content
+### Level 4 — Build homepage content
 The user browses the component library, selects the sections they want, chooses patterns, configures options, and arranges the order.
 
-### Level 5 — Add closing information
+### Level 5 — Complete homepage
 The user decides whether to include contact, call to action, location, booking information, social links, or other relevant elements.
 
-### Level 6 — Review homepage wireframe
-The user reviews structure and order, completes required mission decisions, and explores responsive patterns.
+### Level 6 — Design responsive behavior
+The user works with desktop, tablet, and mobile canvases. Desktop may be composed first, but tablet and mobile have independent layouts. The user can independently reorder components, hide/show them, and customize supported presentation options in each breakpoint.
 
-### Level 7 — Define additional pages
+### Level 7 — Plan additional pages
 The user decides which additional pages are needed and creates/organizes them.
 
-### Level 8 — Compose additional pages
+### Level 8 — Design additional pages
 The user chooses components and patterns for each page and arranges them independently.
 
-### Level 9 — Review the website
+### Level 9 — Review website
 The user reviews pages, navigation, component order, responsive choices, and placeholders. The product checks mission completion, not aesthetic quality.
 
-### Level 10 — Complete or hand off
-If required missions are complete, present the complete visual website wireframe/design. Otherwise preserve a useful partial design and handoff summary of intent, choices, placeholders, and remaining work.
+### Level 10 — Complete design and handoff
+If all applicable required missions are complete and the user confirms the final review, present the complete visual website wireframe/design. Otherwise preserve a useful incomplete design and handoff summary of intent, choices, placeholders, unfinished missions, and remaining work.
 
 ## 6. Repeatable level interaction
 
