@@ -88,3 +88,36 @@ The product helps a non-designer create a wireframe-oriented visual design for a
 ## Requirement traceability
 
 Every implemented requirement maps to a milestone and feature ID, a user/system story, acceptance criteria, and automated or documented verification evidence. Detailed interactions and technical contracts belong in their relevant milestones.
+
+## Approved M01 journey and progression requirements
+
+The 11-level journey is: Define the website; Explore visual direction; Build shared website frame; Design homepage introduction; Build homepage content; Complete homepage; Design responsive behavior; Plan additional pages; Design additional pages; Review website; Complete design and handoff. The first complete example is store-focused, but the builder remains generic for other website purposes.
+
+### Mission and level progress
+- All levels are accessible from the beginning; users can navigate freely and leave unfinished missions without interruption.
+- Each level defines its own required and optional missions.
+- Users can explicitly select Not needed where applicable.
+- Missions complete automatically when objective requirements are satisfied.
+- Mission statuses are Not started, In progress, Complete, and Needs review.
+- Users may explicitly mark a level complete while missions remain unfinished; this does not waive or change mission statuses.
+- Overall design completion requires all applicable required missions and explicit final-review confirmation.
+- Show both level status and mission completion percentage; do not add rewards, scores, or competitive mechanics.
+- When earlier decisions change, preserve existing work, mark affected missions Needs review, and show the dependencies.
+
+### Component insertion and responsive workspace
+- Insert a component after the user confirms its pattern and options; allow a chosen insertion position or append-to-bottom.
+- Support free drag-and-drop and reordering without progression restrictions.
+- Provide desktop, tablet, and mobile canvases for the same website.
+- Share component identity, content, and shared configuration across breakpoints while keeping layout state independent.
+- Let users independently reorder and hide/show components in tablet and mobile without deleting the shared component or changing other breakpoints.
+- Let users customize supported layout and presentation options independently per breakpoint, using high-level controls rather than CSS terminology.
+
+### Placeholder configuration
+- Components may contain generic image or file placeholders.
+- After adding a component, users can configure each placeholder's purpose and optionally provide their own image or file content.
+- Unfilled placeholders remain valid unless a relevant level explicitly requires the content.
+
+### Review and handoff
+- Users may export at any time; the output must clearly identify Complete or Incomplete status.
+- Overall completion requires all applicable required missions and final user confirmation.
+- Incomplete output preserves purpose, decisions, page/component structure, placeholders, unfinished missions, and decisions needing attention.
