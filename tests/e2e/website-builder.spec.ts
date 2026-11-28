@@ -31,7 +31,7 @@ test("builder entry, required project definition, empty canvases, and independen
   await expect(page.getByRole("dialog", { name: "Editorial split" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Editorial split" })).toBeVisible();
   await page.keyboard.press("Shift+Tab");
-  await expect(page.getByRole("button", { name: "Add this design" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Choose this design" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(previewTrigger).toBeFocused();
@@ -108,4 +108,80 @@ test("builder workspace remains viewport-contained across mobile, tablet, and de
       await page.screenshot({ path: testInfo.outputPath(`website-builder-workspace-mobile-${width}x900-light.png`), fullPage: true });
     }
   }
+});
+
+
+test("catalogue comparison and explicit insertion preserve user control", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("North Studio");
+  await page.getByLabel("Website purpose").fill("Introduce the studio and its work.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+
+  await page.getByLabel("Component category").selectOption({ label: "Introduction" });
+  await page.getByLabel("Component type").selectOption("hero");
+  await page.getByLabel("Compare Editorial split").check();
+  await page.getByLabel("Compare Bold centered").check();
+  await expect(page.getByText(/Design comparison · 2/)).toBeVisible();
+  await expect(page.getByText(/Pairs a strong editorial headline/)).toBeVisible();
+
+  const preview = page.getByRole("button", { name: "Preview", exact: true }).first();
+  await preview.click();
+  await expect(page.getByRole("dialog", { name: "Editorial split" })).toBeVisible();
+  await page.getByLabel("Preview at").selectOption("mobile");
+  await expect(page.getByText("Responsive sample preview")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByText("0 sections", { exact: false })).toBeVisible();
+
+  await preview.click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await expect(page.getByRole("dialog", { name: "Add Editorial split" })).toBeVisible();
+  await page.getByLabel("Insertion position").selectOption("end");
+  await page.getByRole("button", { name: "Insert section" }).click();
+  await expect(page.getByText("1 sections", { exact: false })).toBeVisible();
+
+  await page.getByLabel("Title", { exact: true }).fill("Design with intention");
+  await expect(page.getByText("Design with intention", { exact: true })).toHaveCount(3);
+});
+
+test("replacement is same-type, previewed, cancellable, and confirmation preserves the instance", async ({ page }) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Field Notes");
+  await page.getByLabel("Website purpose").fill("Show selected writing and projects.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+
+  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await page.getByRole("button", { name: "Insert section" }).click();
+  await expect(page.getByRole("heading", { name: "Editorial split" })).toBeVisible();
+
+  await page.getByLabel("Replace design").selectOption("hero-bold");
+  await expect(page.getByRole("dialog", { name: "Replace with Bold centered" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel replacement" }).click();
+  await expect(page.getByRole("heading", { name: "Editorial split" })).toBeVisible();
+
+  await page.getByLabel("Replace design").selectOption("hero-bold");
+  await page.getByRole("button", { name: "Confirm replacement" }).click();
+  await expect(page.getByRole("heading", { name: "Bold centered" })).toBeVisible();
+  await expect(page.getByText(/Design replaced/)).toBeVisible();
+});
+
+test("composition supports independent duplicate, accessible move, and confirmed removal", async ({ page }) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Field Notes");
+  await page.getByLabel("Website purpose").fill("Build a simple landing page.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await page.getByRole("button", { name: "Insert section" }).click();
+  await page.getByRole("button", { name: "Duplicate" }).click();
+  await expect(page.getByText("2 sections", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "↓ Move down" }).click();
+  await page.getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByRole("alertdialog", { name: "Remove this section?" })).toBeVisible();
+  await page.getByRole("button", { name: "Keep section" }).click();
+  await expect(page.getByText("2 sections", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Remove" }).click();
+  await page.getByRole("button", { name: "Remove section" }).click();
+  await expect(page.getByText("1 sections", { exact: false })).toBeVisible();
 });
