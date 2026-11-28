@@ -60,7 +60,7 @@ This inventory describes the approved product scope and future opportunities. Pr
 - P1: version history and project duplication.
 
 ## 9. Review and handoff
-- P0: complete visual wireframe/design when all required levels are completed.
+- P0: complete visual wireframe/design only after all applicable required missions are complete and the user confirms the final review.
 - P0: useful partial project representation at any point.
 - P0: project purpose and intended outcome preserved for developer understanding.
 - P0: explicit list of selected elements, placeholders, and unfinished work.
