@@ -1,28 +1,29 @@
-# M01 — Game and Progression Architecture
+# M01 — Journey and Progression Architecture
 
 ## Strategic purpose
 
-Turn website design into a coherent, motivating, reversible player journey.
+Translate the approved user-directed design process into a clear, reversible sequence of levels and missions.
 
 ## Objective
 
-Define levels, missions, game loop, progression, unlocks, completion, feedback, and player control.
+Define the journey, level map, mission anatomy, objective completion rules, progress states, free navigation, and revision behavior.
 
 ## Scope
 
-- End-to-end journey
-- level map
-- mission anatomy
-- dependency graph
-- completion rules
-- progress states
-- revision rules
-- reward principles
-- tutorial strategy.
+- End-to-end user journey.
+- Level and mission map.
+- Mission objectives and completion criteria.
+- Level progress states.
+- Forward/backward navigation.
+- Revision and recovery rules.
+- Guidance, examples, and help.
+- How levels introduce component families without restricting user access.
 
 ## Out of scope
 
-Visual styling and implementation of the mission engine.
+- Points, badges, prizes, achievements, leaderboards, timers, competitive challenges, or reward systems.
+- AI-generated or AI-selected design decisions.
+- Visual styling and implementation of the mission runtime.
 
 ## Dependencies
 
@@ -30,41 +31,33 @@ M00.
 
 ## Acceptance criteria
 
-Every mission has a purpose, player action, expected result, completion rule, and recovery/revision path; no core decision permanently traps the player.
+- Every mission has a clear purpose, user action, expected result, and objective completion rule.
+- Completion reflects required decisions only, not subjective aesthetic quality.
+- Users can navigate to any level and revisit completed work.
+- No normal component or design capability is locked behind level completion.
+- Levels introduce and explain choices; the user remains responsible for selecting and ordering components.
+- Incomplete progress is preserved.
 
 ## Deliverables
 
-Game architecture and player journey specification.
+Approved journey map, level definitions, mission model, and progress rules.
 
 ## Required supporting specifications
 
-Create or expand the following documents when the milestone is prepared for implementation. Do not create empty documents merely to satisfy a template.
-
-- `objectives-and-scope.md` — measurable goals, boundaries, assumptions, and exclusions.
-- `feature-specification.md` — feature behavior, requirements, and edge cases.
-- `user-stories.md` — user/system stories with traceable identifiers.
-- `interaction-specification.md` — screens, states, flows, and interaction rules where applicable.
-- `technical-design.md` — architecture, module boundaries, and implementation approach.
-- `data-contracts.md` — entities, schemas, events, and API contracts where applicable.
-- `acceptance-criteria.md` — testable milestone completion criteria.
-- `testing-strategy.md` — unit, integration, component, accessibility, and end-to-end verification.
-- `implementation-tasks.md` — dependency-ordered, reviewable engineering tasks.
+Create detailed objectives, feature specifications, user stories, interaction rules, data contracts, acceptance criteria, testing strategy, and implementation tasks when M01 is refined for implementation. Do not create empty documents merely to satisfy a template.
 
 ## Definition of done
 
-- [ ] Scope, assumptions, and exclusions are agreed.
-- [ ] Dependencies are satisfied or explicitly resolved.
-- [ ] Feature requirements and user stories are traceable.
-- [ ] UX and technical decisions are documented where relevant.
-- [ ] Implementation tasks are small enough to review and verify.
-- [ ] Acceptance criteria pass.
-- [ ] Relevant automated and manual verification evidence is recorded.
-- [ ] Known limitations and follow-up work are documented.
-- [ ] The roadmap and feature inventory reflect any approved scope changes.
+- [ ] Level and mission sequence is agreed.
+- [ ] Mission completion is objective and testable.
+- [ ] Free navigation and revision rules are explicit.
+- [ ] No reward or capability-gating mechanics remain.
+- [ ] Partial progress and handoff behavior are covered.
+- [ ] Acceptance criteria and test evidence are recorded.
 
 ## Open decisions
 
-Record unresolved product or technical questions here. Each decision should eventually be resolved or moved to the shared `decisions/` area with rationale and consequences.
+Detailed level order and exact mission content are refined in M01.
 
 ## Status
 
