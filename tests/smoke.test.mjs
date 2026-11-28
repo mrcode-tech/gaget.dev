@@ -22,6 +22,7 @@ const routes = [
   "/data/binary-math",
   "/inspection/network-file",
   "/workflow/pipeline",
+  "/website-builder",
   "/api/mcp/capabilities",
   "/mcp",
   "/images/editor",
