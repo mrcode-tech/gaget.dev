@@ -55,6 +55,7 @@ This directory defines the product strategy, player journey, milestones, and sup
 - Level completion records progress; it does not award points, badges, prizes, or competitive scores.
 - An incomplete project remains useful: preserve the user's purpose, choices, current wireframe, and unfinished items for developer handoff.
 - Keep the module isolated from the existing GaGet application shell and visual system.
+- Website composition is sample-based and high-level: users select predefined component designs, arrange component instances, and edit only supported content and finite options. It is not a Figma-like detailed editor.
 
 ## Document governance
 
@@ -69,33 +70,18 @@ These are planning specifications, not a claim that the listed functionality has
 ## Milestone status
 
 - **M00 — Product strategy:** Approved.
-- **M01 — Journey and Progression Architecture:** Approved — journey baseline complete. See [M01 specification](milestones/M01-game-architecture/README.md).
+- **M01 — Journey and Progression Architecture:** Approved — journey baseline complete. See [M01 specification](milestones/M01-game-architecture/README.md). Approval covers the journey, progression and responsive composition product rules, not implementation.
 
-M01 approval covers product decisions and planning specifications only. It does not claim application implementation or downstream testing is complete.
+- **M02 — UX Architecture and Interaction Design:** Approved. See [M02 specification](milestones/M02-ux-architecture/README.md). M02 defines a sample-based high-level composition builder, not a Figma-like detailed editor. Users select predefined component samples, customize supported content, and arrange high-level components. Desktop owns shared structure; tablet/mobile customize ordering, visibility, and supported responsive presentation. All three canvases remain visible simultaneously. M02's provisional history expectations are superseded for the MVP by the later-approved M04/M05 runtime boundary.
 
+- **M03 — Product Visual Design System:** Approved. See [M03 specification](milestones/M03-visual-design-system/README.md), including the approved visual identity, component portfolio rules, professional design framework, and quality checklist. The builder interface and website component portfolio are distinct visual systems. The component portfolio uses curated, progressively expanding samples with meaningful visual diversity, shared technical/content-slot conventions, isolated and contextual previews, and intentional responsive presentations. M03 approval covers the design baseline and documentation only.
 
-- **M02 — UX Architecture and Interaction Design:** Approved. See [M02 specification](milestones/M02-ux-architecture/README.md) and its feature, interaction, and acceptance specifications.
+- **M04 — Domain Model and Persistence:** Approved. See [M04 specification](milestones/M04-domain-model-and-persistence/README.md). M04 establishes a browser-only, temporary, in-memory JSON model for the MVP. Persistence, authentication, autosave, history, import/export and collaboration are deferred. Approval covers the conceptual model and specification only.
 
-M02 clarifies that the product is a sample-based high-level website composition builder, not a Figma-like detailed visual editor. Users select predefined component samples, customize supported content, and arrange high-level sections. Desktop owns shared structure; tablet/mobile customize ordering, visibility, and supported responsive presentation. All three canvases are visible simultaneously.
+- **M05 — Application Foundation and Workspace:** Approved — specification baseline complete. See [M05 specification](milestones/M05-application-foundation-and-workspace/README.md). M05 defines a portable, isolated builder module hosted temporarily in GaGet, project creation, workspace/canvas foundations, a synthetic sample catalogue, independent previews, typed runtime state, rendering boundaries, styling, accessibility and verification requirements. Implementation and verification remain future work.
 
-M02 approval covers UX/product planning only. It does not claim application implementation or testing is complete.
+- **M06 — Website Composition Engine:** Approved — specification baseline complete. See [M06 specification](milestones/M06-composition-engine/README.md). M06 defines explicit sample selection/preview/confirmation/insertion, relative placement, high-level instance ordering, compatible sample replacement, confirmed removal, independent duplication, sample-defined content/configuration, responsive ordering and visibility, purpose-aware placeholders, structural validation, command boundaries and immediate three-canvas previews. It preserves the temporary in-memory runtime and excludes detailed visual editing, persistence/history, advanced asset infrastructure, and AI capabilities. Implementation and verification remain future work.
 
-- **M03 — Product Visual Design System:** Approved. See [M03 specification](milestones/M03-visual-design-system/README.md), including the approved visual identity, component portfolio rules, professional design framework, and quality checklist.
+## Governance boundary
 
-M03 approval covers the design baseline and documentation only; application implementation and visual verification remain future work.
-
-## M03 approval baseline
-
-**M03 — Product Visual Design System: Approved.** The builder interface and website component portfolio are specified as two distinct visual systems. The approved direction is a distinctive professional creative-tool identity, neutral foundation with a restrained brand accent, light/dark themes, functional typography, balanced workspace density, and purposeful motion. The component portfolio uses curated, progressively expanding samples with meaningful visual diversity, shared technical/content-slot conventions, isolated and contextual previews, and intentional responsive presentations.
-
-M03 also establishes a professional design knowledge framework and practical quality checklist for visual design, UX, website patterns, design-system engineering, frontend implementation, responsive design, accessibility, and design research. The product must avoid defaulting to generic GPT/AI-dashboard styling. See [M03 specification](milestones/M03-visual-design-system/README.md).
-
-M03 approval covers the visual/product design baseline and documentation only. It does not claim that application styles, tokens, interactive showcase, or component samples have been implemented or visually verified.
-
-
-- **M04 — Domain Model and Persistence:** Approved. See [M04 specification](milestones/M04-domain-model-and-persistence/README.md). M04 establishes a browser-only, temporary, in-memory JSON model for the MVP. Persistence, authentication, autosave, history, import/export and collaboration are deferred.
-
-M04 approval covers the conceptual model and specification only. It does not claim application implementation or testing is complete.
-
-
-- **M05 — Application Foundation and Workspace:** Approved — specification baseline complete. See [M05 specification](milestones/M05-application-foundation-and-workspace/README.md). M05 defines a portable, isolated builder module hosted temporarily in GaGet for specification development and the first MVP. It establishes project creation, workspace/canvas foundations, a synthetic sample catalogue, independent previews, typed runtime state, rendering boundaries, styling, accessibility and verification requirements. Implementation and verification remain future work.
+Approval of a milestone means its product/specification baseline is approved. It does not mean the feature has been implemented, tested, deployed, merged, or extracted into a standalone codebase.
