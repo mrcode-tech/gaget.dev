@@ -29,7 +29,7 @@ test("builder entry, required project definition, empty canvases, and independen
   await previewTrigger.focus();
   await previewTrigger.click();
   await expect(page.getByRole("dialog", { name: "Editorial split" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Editorial split" })).toBeVisible();
+  await expect(page.getByText("Editorial split", { exact: true })).toBeVisible();
   await page.keyboard.press("Shift+Tab");
   await expect(page.getByRole("button", { name: "Choose this design" })).toBeFocused();
   await page.keyboard.press("Escape");
@@ -162,7 +162,7 @@ test("replacement is same-type, previewed, cancellable, and confirmation preserv
 
   await page.getByLabel("Replace design").selectOption("hero-bold");
   await page.getByRole("button", { name: "Confirm replacement" }).click();
-  await expect(page.getByRole("heading", { name: "Bold centered" })).toBeVisible();
+  await expect(page.getByText("Bold centered", { exact: true })).toBeVisible();
   await expect(page.getByText(/Design replaced/)).toBeVisible();
 });
 

@@ -5,7 +5,7 @@ import {
   duplicateInstance, reviewProject, serializeProject, markdownHandoff, setMissionStatus,
   validateProjectInput, validateSampleDefinition, validatePageComposition, searchCatalogue,
   replaceSample, resolveReplacementContent, prepareReplacement, updateInstanceContent,
-  updateInstanceConfiguration, insertComponentCommand, confirmFinalReview, contrastRatio,
+  updateInstanceConfiguration, updateInstancePlaceholder, insertComponentCommand, confirmFinalReview, contrastRatio,
   exportBlueprint, exportReadiness, completeLevel, markMissionsForReview, createAdditionalPage,
   removePage, validateInternalNavigation
 } from "@/lib/website-builder/model";
@@ -135,6 +135,20 @@ describe("website builder domain", () => {
     const configured = updateInstanceConfiguration(page, instance.id, "columns", "2");
     expect(configured.ok).toBe(true);
     expect(updateInstanceConfiguration(page, instance.id, "columns", "99")).toMatchObject({ ok: false });
+  });
+
+  it("edits purpose-aware image placeholders without changing component identity", () => {
+    let page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
+    const instance = page.instances[0];
+    const updated = updateInstancePlaceholder(page, instance.id, "image", "A wide image showing the studio interior");
+    expect(updated.ok).toBe(true);
+    if (updated.ok) {
+      page = updated.value;
+      expect(page.instances[0].placeholders.image.purpose).toBe("A wide image showing the studio interior");
+      expect(page.instances[0].id).toBe(instance.id);
+    }
+    expect(updateInstancePlaceholder(page, instance.id, "title", "Not an image slot")).toMatchObject({ ok: false });
+    expect(updateInstancePlaceholder(page, instance.id, "image", " ")).toMatchObject({ ok: false });
   });
 
   it("replaces only within the same component type and preserves the instance identity", () => {

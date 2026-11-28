@@ -334,6 +334,18 @@ export function updateInstanceContent(page: Page, instanceId: string, fieldId: s
     ? { ...item, content: { ...item.content, [fieldId]: value } } : item) } };
 }
 
+export function updateInstancePlaceholder(page: Page, instanceId: string, slotId: string, purpose: string): CommandResult<Page> {
+  const instance = page.instances.find(item => item.id === instanceId);
+  if (!instance) return { ok: false, error: "The selected section no longer exists." };
+  const sample = getSampleById(instance.sampleId);
+  const slot = sample?.fields.find(field => field.id === slotId && field.kind === "image");
+  if (!slot) return { ok: false, error: "This image placeholder is not supported by the selected design." };
+  if (!purpose.trim() || purpose.trim().length > 120) return { ok: false, error: "Image purpose must contain between 1 and 120 characters." };
+  return { ok: true, value: { ...page, instances: page.instances.map(item => item.id === instanceId
+    ? { ...item, placeholders: { ...item.placeholders, [slotId]: { ...item.placeholders[slotId], purpose: purpose.trim() } } }
+    : item) } };
+}
+
 export function updateInstanceConfiguration(page: Page, instanceId: string, key: string, value: string): CommandResult<Page> {
   const instance = page.instances.find(item => item.id === instanceId);
   if (!instance) return { ok: false, error: "The selected section no longer exists." };
@@ -354,6 +366,11 @@ export function validatePageComposition(page: Page): string[] {
     if (instance.type !== sample.type) errors.push("A component type does not match its sample.");
     if (instance.sampleVersion !== sample.version) errors.push("A component sample version is unavailable.");
     errors.push(...validateInstanceContent(sample, instance.content));
+    for (const [slotId, placeholder] of Object.entries(instance.placeholders)) {
+      const field = sample.fields.find(item => item.id === slotId && item.kind === "image");
+      if (!field) errors.push("A placeholder references an unsupported image slot.");
+      if (!placeholder.purpose.trim()) errors.push("Image placeholder purpose cannot be empty.");
+    }
     for (const [key, value] of Object.entries(instance.configuration)) {
       const option = sample.configuration?.find(item => item.id === key);
       if (!option || !option.options.includes(value)) errors.push("Unsupported configuration value: " + key + ".");
