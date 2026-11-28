@@ -105,4 +105,4 @@ Responsive workspace rules:
 - Shared content and sample configuration synchronize across all canvases.
 - Narrow workspaces use horizontal scrolling or workspace zoom to preserve the three-canvas arrangement.
 
-The MVP workspace also includes a visual component portfolio, contextual content properties, collapsible mission guidance, autosave feedback, undo/redo, and a dedicated review experience. Version history is a later enhancement unless separately prioritized.
+The MVP workspace also includes a visual component portfolio, contextual content properties, collapsible mission guidance, autosave feedback, undo/redo, and a dedicated review experience. Version history with safe full-project restoration is part of the approved MVP UX.
