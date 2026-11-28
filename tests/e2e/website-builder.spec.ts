@@ -65,7 +65,8 @@ test("builder theme follows the host theme provider without rendering the GaGet 
   await page.getByLabel("Project name").fill("Night Studio");
   await page.getByLabel("Website purpose").fill("Create a calm dark-themed workspace preview.");
   await page.getByRole("button", { name: /Create my website/ }).click();
-  await expect(page.locator("main").first()).toHaveClass(/bg-\[#17201d\]/);
+  await expect(page.locator("main").first()).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({ path: testInfo.outputPath("website-builder-workspace-dark-desktop-1440x900.png"), fullPage: true });
   await expect(page.getByRole("button", { name: "Light mode" })).toBeVisible();
   await page.getByRole("button", { name: "Light mode" }).click();
   await expect(page.getByRole("button", { name: "Dark mode" })).toBeVisible();
