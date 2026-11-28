@@ -56,3 +56,17 @@ A milestone is complete only when its scope and exclusions are explicit, depende
 ## Change control
 
 New requests are classified P0/P1/P2, assigned to a milestone, checked against the product guardrails, and reflected in this roadmap and feature inventory. Any future AI feature requires a separate explicit product decision and must not silently change user-directed design.
+
+## M01 approval baseline
+
+**M01 — Journey and Progression Architecture: Approved.** The 11-level journey, mission/level/overall completion model, free navigation, dependency review, mission statuses, responsive canvas synchronization, placeholder behavior, and complete/incomplete handoff rules are documented in [M01](../milestones/M01-game-architecture/README.md).
+
+Downstream ownership:
+- M02 defines detailed screens and interactions for the approved journey.
+- M04 defines shared component data and independent breakpoint layout state, plus distinct mission/level/design completion data.
+- M06 implements user-directed component composition.
+- M08 implements mission and level progress behavior.
+- M11 specifies detailed responsive patterns and breakpoint behavior.
+- M13 and M14 define final review and handoff details.
+
+The first complete journey example is store-focused; the product itself remains generic.
