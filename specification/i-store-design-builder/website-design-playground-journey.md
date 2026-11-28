@@ -1,118 +1,97 @@
-# Website Design Playground — Guided Website Builder Game
+# Website Design Builder — User Journey
 
 ## Product concept
-A guided, game-like website composition experience for people with limited design knowledge. Users assemble a website from high-level visual sections on a constrained canvas; they do not manipulate low-level UI components, CSS, arbitrary sizing, or an infinite artboard.
 
-The experience is generic: users define their own website, business, audience and goals. Scenarios such as an artist portfolio, jewelry business, restaurant, pizza shop, lighting store, boutique or other small business are examples—not baked-in assumptions.
+A user-directed, game-like website design experience for people who do not have professional design skills. Users create a wireframe-oriented website by choosing high-level components and patterns, configuring the available options, and arranging the components in their own order.
 
-**Primary outcome:** a completed, structured website blueprint that can later be handed to a developer or AI implementation workflow.
+The product teaches and guides through levels, explanations, and visual examples. It does not choose the design, generate content, or recommend a preferred layout on the user's behalf. There are no points, prizes, badges, achievements, leaderboards, or competitive scores.
 
-## Start a project — Level 0: Define the website
-Before the canvas journey, users create their project:
-- Website/project name
-- Business or organization type (free text plus suggestions)
-- What the business offers
-- Target audience and primary purpose
-- Desired website outcome (sell products, showcase work, bookings, inquiries, information, etc.)
-- Optional inspiration or style words
+The experience is generic: users define their own business, profession, organization, or project. Any business scenario used in examples is illustrative only.
 
-Keep this onboarding approachable and conversational. Avoid technical vocabulary.
+## Project setup — define the website
 
-## Core editor shell
-- **Canvas:** one page at a time, constrained to a preview frame; section-based composition and reorder/insert/remove.
-- **Canvas visibility:** show the website canvas from the beginning of the journey, including during the early identity levels. As the player completes levels, the canvas progressively gains its visual identity, shared frame, and page sections. Do not hide the canvas until a later level.
-- **Library sidebar:** contextual section and variation choices, revealed progressively by journey level.
-- **Canvas header:** project/page name, undo/redo, save state, and three device preview modes.
-- **Device views:** Desktop (primary), Tablet, Mobile. Shared configuration cascades to all views; optional responsive overrides are available per view.
-- **Selection:** selecting a section opens a small, contextual configuration surface rather than a professional inspector panel.
-- **Progression:** gentle guided levels. Unlocks teach and recommend, but do not permanently prevent experimentation or revisiting completed levels.
+Users provide:
+- Project/website name.
+- What the website is about and what it offers or communicates.
+- Intended audience.
+- Main website purpose and desired visitor outcome.
+- Optional notes, inspiration, or existing brand context.
 
-## Journey / levels
+Users may provide available content upfront or enter it as they progress. Do not require final copy or imagery before starting.
 
-### Level 1 — Visual identity and design foundations
-**Goal:** establish a visual direction.
-- Mood/style choices guided by business type and audience
-- Primary, secondary, accent, background and text colors; suggested palette proportions
-- Typography pairing and preview of heading/body hierarchy
-- Image style guidance (photography, illustration, product imagery, editorial, etc.)
-- Optional logo upload or placeholder
-**Outcome:** a visual identity starter kit.
+## Core workspace
 
-### Level 2 — Shared website frame and navigation
-**Goal:** choose the site-wide frame.
-- Header/navbar variations (logo placement, navigation arrangement, menu behavior)
-- Navigation labels and primary links
-- Optional announcement strip
-- Footer pattern and basic links (may be refined later)
-- Shared shell preview across Desktop, Tablet and Mobile
-**Outcome:** shared navigation and framing.
+- **Canvas:** bounded preview of the website page, visible from the first workspace visit.
+- **Component library:** categorized high-level website components and patterns. Users choose what to add.
+- **Configuration:** selecting a component exposes only the options supported by its chosen pattern.
+- **Ordering:** users add, remove, replace, and reorder components freely.
+- **Levels:** missions explain design concepts and help users work through the decisions in a useful sequence.
+- **Navigation:** users may move forward or backward at any time and revisit any decision.
+- **Progress:** completion indicates whether required mission decisions have been made; it is not a reward and does not unlock ordinary editing capabilities.
+- **Device preview:** desktop, tablet, and mobile previews with guided responsive patterns.
+- **Content:** text can be supplied, drafted, or explicitly left as a placeholder.
+- **Images:** image regions are wireframe placeholders by default. Users may optionally attach their own photos, logo, or reference imagery, but final images are not required.
+- **Handoff:** the project preserves intent and current design whether complete or incomplete.
 
-### Level 3 — Home page hero
-**Goal:** make the first impression.
-- Hero variations: image-led, split image/text, centered, editorial, promotion
-- Image or media placeholder
-- Headline, supporting text and primary action
-- Compact/comfortable/spacious choices and a few layout options
-**Outcome:** first home-page section.
+## Proposed player levels
 
-### Level 4 — Home page content and discovery
-**Goal:** introduce the business and help visitors explore.
-A contextual section library, with choices appropriate to the project:
-- Featured products, services, work or collections
-- Category/service tiles
-- Gallery, portfolio or product grid
-- Featured collection carousel or horizontal gallery
-- Promotional or editorial banner
-- Story/about section
-- Benefits, trust or service highlights
-- Testimonials/reviews (optional)
-- FAQ/accordion (optional)
-- Newsletter signup (optional)
-Users choose and arrange sections; not every section is required.
-**Outcome:** a coherent home-page sequence.
+### Level 0 — Define the project
+Describe the website, purpose, audience, offer/subject, and desired visitor outcome. The user can edit this brief later.
 
-### Level 5 — Home page closing and completion
-**Goal:** finish the page.
-- Contact, inquiry, booking or location section appropriate to the business
-- Footer
-- Social links and secondary navigation
-- Review the page in all three device views
-- Lightweight completeness checks (missing content/images, overflow, sections without mobile behavior)
-**Outcome:** completed first page blueprint.
+### Level 1 — Explore visual direction
+Explore visual examples and choose a direction if desired. The examples teach vocabulary; the user makes the selection. The initial wireframe canvas remains visible.
 
-### Level 6 — Additional page types
-Introduce page templates based on the project's goals, not a universal mandatory list:
-- Product or service listing/category
-- Product/service detail
-- Portfolio/gallery detail
-- About / brand story
-- Contact / location / form
-- FAQ / help
-- Campaign / landing page
-- Booking, cart or other specialized pages where relevant
-- Optional custom page assembled from unlocked sections
-**Outcome:** a connected collection of page blueprints.
+### Level 2 — Choose the shared website frame
+Browse header, navigation, and footer components. Select patterns, configure their available options, and decide the content/links. Users may revisit these choices later.
 
-## Final stage — Website blueprint review and handoff
-- Site-wide identity tokens and typography
-- Shared header/footer
-- Page list and navigation relationships
-- Section order, variants, content placeholders and assets
-- Desktop/tablet/mobile settings and overrides
-- Lightweight validation/review checklist
-- Export or generate a structured specification for an implementation request
+### Level 3 — Compose the homepage introduction
+Browse hero/introduction patterns. Choose one, configure its options, enter a headline or placeholder, define the intended visual region, and place it in the page.
 
-## MVP boundary
-Prototype the editor shell and drag/drop first with synthetic content for a generic sample business:
-1. Project setup with website name and business type.
-2. Constrained canvas and section insertion/reordering.
-3. Library sidebar with a small set of high-level blocks.
-4. Section selection and contextual settings.
-5. Desktop / Tablet / Mobile switch.
-6. Shared defaults and simple responsive rules.
-7. Undo/redo and persistence can follow once interaction is validated.
+### Level 4 — Add the website's main sections
+Browse all relevant component families such as offerings, services, featured work, categories, benefits, story, process, gallery, testimonials, FAQ, or other available sections. Choose which sections to use and arrange them in the desired order. No section is mandatory merely because it exists.
 
-Do not begin with arbitrary positioning, a full professional layer tree, custom component authoring, unrestricted CSS controls, infinite canvas, or complete ecommerce functionality.
+### Level 5 — Add closing information and actions
+Choose whether the page needs contact details, a call to action, location, booking information, social links, or other closing content. Configure and order these components independently.
+
+### Level 6 — Review the homepage wireframe
+Review the page structure and user-selected component order. Complete required mission fields or explicitly leave optional content as placeholders. Preview desktop, tablet, and mobile using guided responsive choices.
+
+### Level 7 — Define additional pages
+Decide whether the website needs other pages. Choose page types, names, and navigation relationships. The user can add, remove, rename, and reorder pages.
+
+### Level 8 — Compose additional pages
+Build each page by choosing and arranging components from the library. Reuse shared elements where the user chooses to do so.
+
+### Level 9 — Review the whole website
+Review pages, component order, navigation, responsive patterns, content placeholders, and image placement. Checks report missing required mission decisions and structural omissions only; the product does not judge subjective design quality.
+
+### Level 10 — Complete or hand off the current design
+If all required missions are complete, present the complete visual website wireframe/design. If some missions remain incomplete, preserve a partial design and a clear handoff summary describing the project goal, decisions already made, current structure, placeholders, and remaining work.
+
+## Content and asset behavior
+
+- Users may enter text/content upfront or when a level asks for it.
+- Real text, draft text, and explicit placeholders are all supported.
+- Image regions are represented as labeled placeholders (for example, “main project photo”, “product image”, or “team portrait”).
+- Users may optionally attach their own reference images, photos, or logo to clarify intended placement.
+- The initial product is not an image-generation or stock-image selection tool.
+- Replacing placeholders with production images is expected to happen later in the implementation workflow.
+
+## Responsive design
+
+Desktop is the primary composition view. Tablet and mobile previews are available throughout the relevant design work. The user chooses from curated responsive patterns and simple options such as stacking, image placement, and navigation presentation. Avoid technical breakpoint controls.
+
+## Product rules
+
+1. The canvas is visible from the beginning.
+2. The user makes all creative decisions.
+3. The component library is browsable; levels teach but do not lock capabilities.
+4. Users can move between levels and revise choices freely.
+5. Mission completion is objective and does not assess aesthetic quality.
+6. There are no reward or competitive game mechanics.
+7. The initial experience has no AI generation or recommendation.
+8. A partial design is preserved and useful to a developer.
 
 ## Design principle
-The experience should feel like assembling a visual puzzle and making guided choices—not operating a simplified professional design tool. Progression should teach; it should not frustrate or unnecessarily lock users out. The scenario and content should adapt to the project the user defines.
+
+The experience should feel like a guided visual construction journey—not a conventional game economy, an AI designer, or a simplified professional design editor. The user is assembling their own website from understandable high-level choices.
