@@ -17,4 +17,11 @@ describe("website builder sample renderer registry", () => {
     const markup = renderToStaticMarkup(<SampleRendererView sample={unknown} content={{}} identity={{ ...({ palette: "test", primary: "#000000", background: "#ffffff", surface: "#ffffff", text: "#000000", accent: "#777777", font: "sans-serif" }) }} />);
     expect(markup).toContain("preview is currently unavailable");
   });
+  it("contains renderer failures inside the preview surface", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    function BrokenRenderer() { throw new Error("broken renderer"); }
+    render(<SampleRendererErrorBoundary><BrokenRenderer /></SampleRendererErrorBoundary>);
+    expect(screen.getByRole("alert").textContent).toContain("preview could not be rendered");
+    consoleError.mockRestore();
+  });
 });

@@ -58,7 +58,7 @@ test("builder creation validation preserves entered values and communicates sess
   await expect(page.getByText(/exist only in this browser session/i)).toBeVisible();
 });
 
-test("builder theme follows the host theme provider without rendering the GaGet shell", async ({ page }) => {
+test("builder theme follows the host theme provider without rendering the GaGet shell", async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/website-builder");
   await expect(page.getByRole("button", { name: "Light mode" })).toBeVisible();
@@ -69,6 +69,7 @@ test("builder theme follows the host theme provider without rendering the GaGet 
   await expect(page.getByRole("button", { name: "Light mode" })).toBeVisible();
   await page.getByRole("button", { name: "Light mode" }).click();
   await expect(page.getByRole("button", { name: "Dark mode" })).toBeVisible();
+  await expect(page.locator("main").first()).toHaveAttribute("data-theme", "light");
 });
 
 test("localized builder route preserves RTL document direction and its own shell", async ({ page }) => {
@@ -77,4 +78,14 @@ test("localized builder route preserves RTL document direction and its own shell
   await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Main navigation" })).toHaveCount(0);
 });
-\ntest("project state is intentionally not restored after a page refresh", async ({ page }) => {\n  await page.goto("/website-builder");\n  await page.getByLabel("Project name").fill("Session Only Studio");\n  await page.getByLabel("Website purpose").fill("A temporary in-memory website project.");\n  await page.getByRole("button", { name: /Create my website/ }).click();\n  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();\n  await page.reload();\n  await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();\n  await expect(page.getByLabel("Project name")).toHaveValue("");\n});\n
+
+test("project state is intentionally not restored after a page refresh", async ({ page }) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Session Only Studio");
+  await page.getByLabel("Website purpose").fill("A temporary in-memory website project.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
+  await expect(page.getByLabel("Project name")).toHaveValue("");
+});

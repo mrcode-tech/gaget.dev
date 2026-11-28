@@ -47,7 +47,7 @@ export default function WebsiteBuilderWorkspace(){
     <div className="mx-auto max-w-3xl">
      <div className="mb-10 flex items-center gap-3">
       <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--wb-accent)] text-xl text-white" aria-hidden="true">✳</div>
-      <div className="flex-1"><p className="text-xs uppercase tracking-[.24em] text-[var(--wb-muted)]">Website design workspace</p><h1 className="text-2xl font-semibold">Website Design Builder</h1></div><button type="button" onClick={()=>setTheme(dark?"light":"dark")} className="rounded-full border border-current/20 px-3 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{dark?"Light":"Dark"} mode</button>
+      <div dir="auto" className="flex-1"><p className="text-xs uppercase tracking-[.24em] text-[var(--wb-muted)]">Website design workspace</p><h1 className="text-2xl font-semibold">Website Design Builder</h1></div><button type="button" onClick={()=>setTheme(dark?"light":"dark")} className="rounded-full border border-current/20 px-3 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{dark?"Light":"Dark"} mode</button>
      </div>
      <div className="rounded-[2rem] bg-[var(--wb-surface)] p-7 text-[var(--wb-text)] shadow-sm md:p-10">
       <p className="text-sm font-medium uppercase tracking-[.18em] text-[var(--wb-kicker)]">Start with a purpose</p>
@@ -55,14 +55,14 @@ export default function WebsiteBuilderWorkspace(){
       <p dir="auto" className="mt-4 max-w-xl leading-7 text-[var(--wb-muted)]">Choose the building blocks and visual direction. You stay in control of every section and page.</p>
       <form noValidate className="mt-9 space-y-5" onSubmit={event=>{event.preventDefault();const errors=validateProjectInput(draft);if(errors.length){setNotice(errors[0]);return;}try{setProject(createProject(draft));setNotice("");}catch(error){setNotice(error instanceof Error?error.message:"The project could not be initialized. Please try again.");}}}>
        <label dir="auto" htmlFor="website-project-name" className="block text-sm font-medium">Project name
-        <input dir="auto" id="website-project-name" name="name" required aria-required="true" value={draft.name} onChange={event=>setDraft({...draft,name:event.target.value})} placeholder="e.g. North Studio" className="mt-2 w-full rounded-xl border border-[var(--wb-border)] bg-[var(--wb-control)] px-4 py-3 outline-none focus:border-[#829184] focus-visible:ring-2 focus-visible:ring-[#829184]"/>
+        <input dir="auto" id="website-project-name" name="name" required aria-required="true" value={draft.name} onChange={event=>setDraft({...draft,name:event.target.value})} placeholder="e.g. North Studio" className="mt-2 w-full rounded-xl border border-[var(--wb-border)] bg-[var(--wb-control)] px-4 py-3 outline-none focus:border-[var(--wb-focus)] focus-visible:ring-2 focus-visible:ring-[var(--wb-focus)]"/>
        </label>
        <label dir="auto" htmlFor="website-project-purpose" className="block text-sm font-medium">Website purpose
-        <textarea dir="auto" id="website-project-purpose" name="purpose" required aria-required="true" value={draft.purpose} onChange={event=>setDraft({...draft,purpose:event.target.value})} rows={4} placeholder="What should this website help people understand or do?" className="mt-2 w-full rounded-xl border border-[#e5e2dc] bg-[#fbfaf7] px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-[#829184]"/>
+        <textarea dir="auto" id="website-project-purpose" name="purpose" required aria-required="true" value={draft.purpose} onChange={event=>setDraft({...draft,purpose:event.target.value})} rows={4} placeholder="What should this website help people understand or do?" className="mt-2 w-full rounded-xl border border-[var(--wb-border)] bg-[var(--wb-control)] px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--wb-focus)]"/>
        </label>
        <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
         <p dir="auto" className="max-w-md text-xs leading-5 text-[var(--wb-muted)]">Your project and selected media exist only in this browser session. Export your work before refreshing or closing this page.</p>
-        <button type="submit" className="rounded-full bg-[var(--wb-accent)] px-7 py-3 text-sm font-semibold text-[var(--wb-accent-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#31463d]">Create my website ↗</button>
+        <button type="submit" className="rounded-full bg-[var(--wb-accent)] px-7 py-3 text-sm font-semibold text-[var(--wb-accent-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--wb-focus)]">Create my website ↗</button>
        </div>
        {notice&&<p role="alert" className="text-sm text-[var(--wb-error)]">{notice}</p>}
       </form>

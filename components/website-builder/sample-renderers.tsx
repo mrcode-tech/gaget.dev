@@ -84,7 +84,15 @@ export function getSampleRenderer(sample: Sample): ComponentType<SampleRendererP
   return rendererRegistry[sample.id] ?? null;
 }
 
-export class SampleRendererErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {\n  state = { failed: false };\n  static getDerivedStateFromError() { return { failed: true }; }\n  render() {\n    if (this.state.failed) return <div role="alert" className="p-6 text-center text-sm text-amber-700">This preview could not be rendered. Choose another design.</div>;\n    return this.props.children;\n  }\n}\nexport function SampleRendererView(props: SampleRendererProps) {
+export class SampleRendererErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() {
+    if (this.state.failed) return <div role="alert" className="p-6 text-center text-sm text-amber-700">This preview could not be rendered. Choose another design.</div>;
+    return this.props.children;
+  }
+}
+export function SampleRendererView(props: SampleRendererProps) {
   const Renderer = getSampleRenderer(props.sample);
   if (!Renderer) return <div role="status" className="p-6 text-center text-sm text-amber-700">This sample preview is currently unavailable.</div>;
   return <SampleRendererErrorBoundary key={props.sample.id}><Renderer {...props} /></SampleRendererErrorBoundary>;
