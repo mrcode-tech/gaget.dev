@@ -85,3 +85,27 @@ This inventory describes the approved product scope and future opportunities. Pr
 ## Cross-cutting constraints
 
 The product remains industry-neutral, user-directed, wireframe-first, reversible, and useful even when incomplete. The existing GaGet shell must remain unaffected.
+
+## Approved M01 additions
+
+### Journey and progression
+- P0: approved 11-level journey from website definition through complete design and handoff.
+- P0: all levels accessible from the beginning, with unrestricted navigation and revision.
+- P0: per-level required/optional missions, explicit Not needed choices where applicable, and automatic objective mission completion.
+- P0: separate level-completion state, mission-completion state, and overall design-completion state.
+- P0: mission statuses Not started, In progress, Complete, and Needs review.
+- P0: preserve work and flag affected missions when earlier decisions change; reveal dependencies at that time.
+- P0: show level status and mission completion percentage without reward mechanics.
+
+### Responsive composition
+- P0: desktop, tablet, and mobile canvases for the same website.
+- P0: shared component identity, content, and shared configuration across breakpoints.
+- P0: independent breakpoint layouts, including independent component ordering and visibility.
+- P0: hide/show a component per breakpoint without deleting it or affecting other breakpoints.
+
+### Content and handoff
+- P0: generic image/file placeholders configurable after component insertion, with purpose descriptions and optional user-supplied content.
+- P0: export at any time with explicit Complete or Incomplete status.
+- P0: final design completion requires all applicable required missions and user confirmation of the final review.
+
+The initial complete example is an online store; the reusable builder remains generic and industry-neutral.
