@@ -249,3 +249,8 @@ The builder is desktop-first. On small screens, provide a simplified experience 
 - [x] Downstream milestone ownership is identified.
 
 **Planning status:** Approved. Application implementation and verification remain in their respective milestones.
+
+
+## Later runtime decision superseding provisional save/history UX
+
+M02's autosave, undo/redo, save feedback, and version-history descriptions record the earlier UX proposal only. They are not MVP C implementation requirements. M04/M05's temporary in-memory runtime, as amended by the explicit MVP C decision, is authoritative: no durable save, autosave, browser storage, undo/redo, history, or recovery. M14 provides explicit JSON/Markdown export and optional ZIP handoff only.
