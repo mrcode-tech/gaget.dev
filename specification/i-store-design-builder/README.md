@@ -80,6 +80,10 @@ M02 clarifies that the product is a sample-based high-level website composition 
 
 M02 approval covers UX/product planning only. It does not claim application implementation or testing is complete.
 
+- **M03 — Product Visual Design System:** Approved. See [M03 specification](milestones/M03-visual-design-system/README.md), including the approved visual identity, component portfolio rules, professional design framework, and quality checklist.
+
+M03 approval covers the design baseline and documentation only; application implementation and visual verification remain future work.
+
 ## M03 approval baseline
 
 **M03 — Product Visual Design System: Approved.** The builder interface and website component portfolio are specified as two distinct visual systems. The approved direction is a distinctive professional creative-tool identity, neutral foundation with a restrained brand accent, light/dark themes, functional typography, balanced workspace density, and purposeful motion. The component portfolio uses curated, progressively expanding samples with meaningful visual diversity, shared technical/content-slot conventions, isolated and contextual previews, and intentional responsive presentations.
