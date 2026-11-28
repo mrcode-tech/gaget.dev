@@ -29,6 +29,19 @@ test("website builder supports a real session project composition and JSON hando
   await expect(page.getByRole("heading", { name: "About" })).toBeVisible();
   await expect(page.getByText("/about", { exact: true })).toBeVisible();
 
+  const levels = [
+    "Define website", "Explore visual direction", "Build shared website frame",
+    "Design homepage introduction", "Build homepage content", "Complete homepage",
+    "Design responsive behavior", "Plan additional pages", "Design additional pages",
+    "Review website", "Complete design and handoff"
+  ];
+  for (const level of levels) {
+    await page.getByRole("button", { name: new RegExp(level) }).first().click();
+    await page.getByRole("button", { name: "Complete mission" }).click();
+  }
+  await page.getByRole("button", { name: /Review ·/ }).click();
+  await page.getByRole("button", { name: "Confirm final review" }).click();
+
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export JSON", exact: true }).click();
   const file = await download;
