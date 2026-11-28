@@ -71,7 +71,7 @@ The product helps a non-designer create a wireframe-oriented visual design for a
 - Show the current design even when some levels are incomplete.
 - Summarize the user's purpose, selected pages/components, patterns, order, content, and placeholders.
 - Identify unfinished decisions and remaining work without scoring subjective design quality.
-- Produce a complete visual design when all required levels are complete.
+- Produce a complete visual design only when all applicable required missions are complete and the user confirms the final review.
 - Preserve a useful partial design/handoff at any earlier point.
 
 ## Non-functional requirements
