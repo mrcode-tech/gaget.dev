@@ -59,6 +59,7 @@ test("builder creation validation preserves entered values and communicates sess
 });
 
 test("builder theme follows the host theme provider without rendering the GaGet shell", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/website-builder");
   await expect(page.getByRole("button", { name: "Light mode" })).toBeVisible();
