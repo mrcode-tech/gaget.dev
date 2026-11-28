@@ -388,30 +388,39 @@ export function prepareReplacement(page: Page, instanceId: string, nextSample: S
   return { ok: true, value: { original, candidate: result.page.instances.find(instance => instance.id === instanceId)!, result } };
 }
 
+export function resolveReplacementContent(currentSample: Sample, currentContent: Record<string, string>, nextSample: Sample): {
+  content: Record<string, string>; preservedFields: string[]; resetFields: string[]; removedFields: string[];
+} {
+  const content: Record<string, string> = {};
+  const preservedFields: string[] = [];
+  const resetFields: string[] = [];
+  const removedFields: string[] = [];
+  const targetFields = new Map(nextSample.fields.map(field => [field.id, field]));
+  for (const field of nextSample.fields) {
+    const oldField = currentSample.fields.find(item => item.id === field.id);
+    const existing = currentContent[field.id];
+    if (oldField && oldField.kind === field.kind && existing !== undefined && !validateFieldValue(field, existing)) {
+      content[field.id] = existing;
+      preservedFields.push(field.id);
+    } else {
+      content[field.id] = field.defaultValue;
+      resetFields.push(field.id);
+    }
+  }
+  for (const field of currentSample.fields) if (!targetFields.has(field.id)) removedFields.push(field.id);
+  return { content, preservedFields, resetFields, removedFields };
+}
+
 export function replaceSample(page: Page, instanceId: string, nextSample: Sample): ReplaceResult {
   const current = page.instances.find(instance => instance.id === instanceId);
   const fail = (error: string): ReplaceResult => ({ page, preservedFields: [], resetFields: [], removedFields: [], ok: false, error });
   if (!current) return fail("The selected section no longer exists.");
   if (current.type !== nextSample.type) return fail("Replacement must use the same component type.");
   if (nextSample.lifecycle !== "published" || validateSampleDefinition(nextSample).length) return fail("This design is not available.");
-  const nextContent: Record<string, string> = {};
-  const preservedFields: string[] = [];
-  const resetFields: string[] = [];
-  const removedFields: string[] = [];
   const currentSample = getSampleById(current.sampleId);
-  const targetFields = new Map(nextSample.fields.map(field => [field.id, field]));
-  for (const field of nextSample.fields) {
-    const oldField = currentSample?.fields.find(item => item.id === field.id);
-    const existing = current.content[field.id];
-    if (oldField && oldField.kind === field.kind && existing !== undefined && !validateFieldValue(field, existing)) {
-      nextContent[field.id] = existing;
-      preservedFields.push(field.id);
-    } else {
-      nextContent[field.id] = field.defaultValue;
-      resetFields.push(field.id);
-    }
-  }
-  for (const field of currentSample?.fields ?? []) if (!targetFields.has(field.id)) removedFields.push(field.id);
+  if (!currentSample) return fail("The current sample definition is unavailable.");
+  const compatibility = resolveReplacementContent(currentSample, current.content, nextSample);
+  const { content: nextContent, preservedFields, resetFields, removedFields } = compatibility;
   const nextConfiguration: Record<string, string> = {};
   for (const option of nextSample.configuration ?? []) {
     const oldOption = currentSample?.configuration?.find(item => item.id === option.id);
