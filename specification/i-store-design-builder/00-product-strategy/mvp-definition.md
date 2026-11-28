@@ -2,59 +2,67 @@
 
 ## MVP goal
 
-Prove that a non-designer can describe a project, make guided design decisions, see a coherent homepage progressively appear on the canvas, and preserve/export the resulting structured design.
+Prove that a non-designer can independently create a coherent website wireframe/design by choosing high-level components and patterns, configuring their available options, and arranging them through a guided but freely navigable design journey.
+
+The user—not AI or the application—makes every creative decision.
 
 ## MVP user journey
 
-1. Create a project and describe its purpose, audience, and offering.
+1. Create a project and describe its purpose, audience, offering/subject, and intended outcome.
 2. Enter the workspace and see the bounded website canvas immediately.
-3. Discover a visual direction using curated mood choices.
-4. Select a palette, typography pairing, and image direction.
-5. Apply a shared header/navigation and footer.
-6. Choose and configure a hero.
-7. Add a small set of relevant homepage sections.
-8. Configure a clear visitor next step.
-9. Preview desktop, tablet, and mobile with basic responsive behavior.
-10. Review the result and save the structured design.
+3. Explore the levels and understand the decisions involved.
+4. Choose the website components and patterns they want to use.
+5. Configure available options and arrange/reorder components freely.
+6. Provide content upfront or progressively; use draft text or placeholders where content is not ready.
+7. Place image placeholders and optionally attach reference photos, a logo, or other user-provided imagery.
+8. Preview the wireframe at desktop, tablet, and mobile sizes using guided responsive patterns.
+9. Move between levels freely, complete required missions, and revise earlier choices.
+10. Review the current design and its completion state.
+11. Preserve a complete design if all required levels are completed, or a useful partial design and handoff summary if work remains.
 
 ## MVP capabilities
 
-- Project profile and adaptable project purpose.
-- Guided mission sequence and progress persistence.
-- Visible-from-start website canvas.
-- Curated visual identity choices.
-- Schema-driven page and section renderer.
-- Small but extensible section library.
-- Add, remove, reorder, choose variant, and configure section.
-- Shared global design tokens.
-- Desktop/tablet/mobile preview with sensible defaults.
-- Basic undo/redo and ability to revisit prior choices.
-- Autosave or reliable save/recovery appropriate to the chosen persistence architecture.
-- Basic completeness and consistency review.
-- Structured internal project representation suitable for later export.
+- Generic project profile and intended outcome.
+- Guided levels with plain-language explanations, examples, and objective completion criteria.
+- Free forward/backward navigation and unrestricted revision.
+- No points, badges, prizes, leaderboards, timers, or competitive scoring.
+- No AI generation, recommendations, or automatic design choices.
+- Bounded canvas visible from the beginning.
+- Categorized high-level component and pattern library.
+- User-selected components, variants, options, and ordering.
+- Add, remove, replace, reorder, and configure operations.
+- Wireframe rendering with content slots and image placeholders.
+- User content can be entered upfront or progressively.
+- Optional user-provided reference imagery; no required final assets or stock-image library.
+- Desktop/tablet/mobile preview with curated responsive choices.
+- Project save/recovery appropriate to MVP architecture.
+- Mission completion tracking based on required decisions, not subjective design quality.
+- Complete and partial design summary that communicates user intent and remaining work.
 
 ## Explicitly deferred
 
-- Full multi-page editing beyond the initial essential flow.
-- Full CMS, e-commerce, booking, membership, and payment processing.
+- AI-generated designs, copy, images, or AI recommendations.
+- Automatic component selection, ranking, or page ordering.
+- Production code generation, hosting, publishing, and domain management.
+- Required final photography or a stock-image library.
+- Full CMS, ecommerce checkout, payments, booking, and membership backends.
 - Arbitrary CSS, unrestricted pixel placement, and infinite canvas.
-- Advanced AI generation and competitor research.
-- Real-time collaboration and comments.
-- Subscription billing and marketplace.
-- Production hosting, domain management, and code generation.
-- Advanced analytics and experimentation.
+- Advanced animation and interaction authoring.
+- Real-time collaboration, subscriptions, and marketplace.
 
 ## MVP success measures
 
-- A new user can complete the guided homepage journey without design terminology.
-- The canvas visibly reflects each committed choice.
-- Users can revise earlier decisions without losing unrelated work.
-- The resulting homepage is coherent at supported viewport sizes.
-- Project data can be saved, restored, validated, and interpreted deterministically.
-- A meaningful proportion of test users reach the review step without facilitator intervention.
+- A new user can understand the level-based process without design terminology.
+- Users understand that they—not the product—choose components and their order.
+- Users can add, configure, remove, replace, and reorder patterns without technical knowledge.
+- The canvas visibly reflects every committed choice.
+- Users can revisit levels and revise choices without losing unrelated work.
+- Users can create a meaningful wireframe without supplying final images.
+- A developer can understand the purpose and current state of both complete and incomplete projects.
+- Mission completion is clear and objective; users are not judged on subjective aesthetics.
 
 Quantitative targets should be established after baseline usability testing rather than invented in advance.
 
 ## MVP release gate
 
-Do not call the MVP complete until critical journey tests, responsive checks, accessibility fundamentals, persistence/recovery tests, and the acceptance criteria in the relevant milestone specifications pass.
+Do not call the MVP complete until the core journey, component operations, responsive wireframe previews, persistence/recovery, accessibility fundamentals, complete/partial handoff, and milestone acceptance criteria pass.
