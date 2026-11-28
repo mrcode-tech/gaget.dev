@@ -57,7 +57,8 @@ This inventory describes the approved product scope and future opportunities. Pr
 - P0: free navigation between levels.
 - P0: revise previous decisions without losing unrelated work.
 - P0: persistence and recovery appropriate to MVP.
-- P1: version history and project duplication.
+- P0: version history with safe full-project restoration.
+- P1: project duplication.
 
 ## 9. Review and handoff
 - P0: complete visual wireframe/design only after all applicable required missions are complete and the user confirms the final review.
