@@ -166,7 +166,7 @@ test("replacement is same-type, previewed, cancellable, and confirmation preserv
 
   await page.getByLabel("Replace design").selectOption("hero-bold");
   await page.getByRole("button", { name: "Confirm replacement" }).click();
-  await expect(page.getByText("Bold centered", { exact: true })).toBeVisible();
+  await expect(page.getByText("Bold centered", { exact: true }).last()).toBeVisible();
   await expect(page.getByText(/Design replaced/)).toBeVisible();
 });
 

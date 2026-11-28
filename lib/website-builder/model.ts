@@ -183,6 +183,12 @@ export function validateSampleDefinition(sample: Sample): string[] {
     if (field.kind === "enum" && (!field.options?.length || !field.options.includes(field.defaultValue))) errors.push("Enum field defaults must be declared options.");
     if (field.minLength !== undefined && field.maxLength !== undefined && field.minLength > field.maxLength) errors.push("Field minimum length cannot exceed its maximum.");
   }
+  for (const breakpoint of ["desktop", "tablet", "mobile"] as const) {
+    if (!sample.responsive[breakpoint]?.trim()) errors.push("Every sample needs an intentional " + breakpoint + " presentation.");
+  }
+  for (const key of sample.responsive.supportedOverrides) {
+    if (!(sample.configuration ?? []).some(option => option.id === key)) errors.push("Responsive overrides must reference declared sample configuration options.");
+  }
   for (const option of sample.configuration ?? []) {
     if (!option.options.length || !option.options.includes(option.defaultValue)) errors.push("Configuration defaults must be declared options.");
   }
@@ -392,7 +398,18 @@ export function validatePageComposition(page: Page): string[] {
     const layout = page.layouts[bp];
     if (layout.order.length !== ids.length || new Set(layout.order).size !== ids.length ||
         layout.order.some(id => !ids.includes(id))) errors.push(bp + " layout must contain every shared component exactly once.");
+    if (new Set(layout.hidden).size !== layout.hidden.length) errors.push(bp + " visibility contains duplicate component references.");
     if (layout.hidden.some(id => !ids.includes(id))) errors.push(bp + " visibility references an unknown component.");
+    for (const [instanceId, overrides] of Object.entries(layout.presentation ?? {})) {
+      const instance = page.instances.find(item => item.id === instanceId);
+      const sample = instance ? getSampleById(instance.sampleId) : undefined;
+      if (!sample) { errors.push(bp + " presentation references an unknown component."); continue; }
+      for (const [key, value] of Object.entries(overrides)) {
+        if (!sample.responsive.supportedOverrides.includes(key)) errors.push(bp + " uses an unsupported responsive presentation option.");
+        const option = sample.configuration?.find(item => item.id === key);
+        if (!option || !option.options.includes(value)) errors.push(bp + " uses an invalid responsive presentation value.");
+      }
+    }
     for (const id of Object.keys(layout.presentation ?? {})) {
       if (!ids.includes(id)) errors.push(bp + " presentation references an unknown component.");
     }
@@ -476,6 +493,20 @@ export function reorderInstanceToIndex(page: Page, breakpoint: Breakpoint, insta
   const next = reorderToIndex(page, breakpoint, instanceId, targetIndex);
   if (next === page) return { ok: false, error: "The requested component move is invalid or has no effect." };
   return { ok: true, value: next };
+}
+
+export function updateResponsivePresentation(page: Page, breakpoint: Breakpoint, instanceId: string, key: string, value: string): CommandResult<Page> {
+  const instance = page.instances.find(item => item.id === instanceId);
+  if (!instance) return { ok: false, error: "The selected section no longer exists." };
+  const sample = getSampleById(instance.sampleId);
+  const option = sample?.configuration?.find(item => item.id === key);
+  if (!sample?.responsive.supportedOverrides.includes(key) || !option || !option.options.includes(value)) {
+    return { ok: false, error: "This design does not support that responsive presentation option." };
+  }
+  const layout = page.layouts[breakpoint];
+  return { ok: true, value: { ...page, layouts: { ...page.layouts, [breakpoint]: {
+    ...layout, presentation: { ...(layout.presentation ?? {}), [instanceId]: { ...(layout.presentation?.[instanceId] ?? {}), [key]: value } },
+  } } } };
 }
 
 export function removeComponentCommand(page: Page, instanceId: string): CommandResult<Page> {

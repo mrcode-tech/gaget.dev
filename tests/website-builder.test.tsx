@@ -5,7 +5,7 @@ import {
   duplicateInstance, reviewProject, serializeProject, markdownHandoff, setMissionStatus,
   validateProjectInput, validateSampleDefinition, validatePageComposition, searchCatalogue,
   replaceSample, resolveReplacementContent, prepareReplacement, updateInstanceContent,
-  updateInstanceConfiguration, updateInstancePlaceholder, insertComponentCommand, confirmFinalReview, contrastRatio,
+  updateInstanceConfiguration, updateInstancePlaceholder, updateResponsivePresentation, insertComponentCommand, confirmFinalReview, contrastRatio,
   exportBlueprint, exportReadiness, completeLevel, markMissionsForReview, createAdditionalPage,
   removePage, validateInternalNavigation
 } from "@/lib/website-builder/model";
@@ -137,6 +137,13 @@ describe("website builder domain", () => {
     const configured = updateInstanceConfiguration(page, instance.id, "columns", "2");
     expect(configured.ok).toBe(true);
     expect(updateInstanceConfiguration(page, instance.id, "columns", "99")).toMatchObject({ ok: false });
+  });
+
+  it("rejects unsupported responsive presentation options atomically", () => {
+    const page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
+    const instance = page.instances[0];
+    expect(updateResponsivePresentation(page, "mobile", instance.id, "columns", "2")).toMatchObject({ ok: false });
+    expect(validatePageComposition(page)).toEqual([]);
   });
 
   it("edits purpose-aware image placeholders without changing component identity", () => {
