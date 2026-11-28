@@ -6,8 +6,9 @@ test("Design Playground landing page links to every registered style", async ({ 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/design");
   await expect(page.getByRole("heading", { level: 1, name: "Explore the ideas that shape what you see." })).toBeVisible();
+  const styleNavigation = page.getByRole("navigation", { name: "Design styles" });
   for (const style of styles) {
-    await expect(page.getByRole("link", { name: new RegExp(style === "art-deco" ? "Art Deco" : style === "de-stijl" ? "De Stijl" : style, "i") })).toHaveAttribute("href", `/design/${style}`);
+    await expect(styleNavigation.getByRole("link", { name: new RegExp(style === "art-deco" ? "Art Deco" : style === "de-stijl" ? "De Stijl" : style, "i") })).toHaveAttribute("href", `/design/${style}`);
   }
   await expect(page.getByRole("navigation", { name: "Design styles" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to GaGet" })).toHaveAttribute("href", "/");
