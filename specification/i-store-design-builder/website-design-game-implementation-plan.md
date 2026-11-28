@@ -412,3 +412,21 @@ The following details are refined in later milestones:
 9. Add multi-page composition.
 10. Add complete/partial design review and handoff.
 11. Verify accessibility, usability, persistence, and regression isolation.
+
+## M01 approved journey and progression baseline
+
+The detailed user-facing journey and completion semantics are approved in [M01 — Journey and Progression Architecture](milestones/M01-game-architecture/README.md). Implementation planning must preserve these rules:
+
+- The 11 levels are: Define the website; Explore visual direction; Build shared website frame; Design homepage introduction; Build homepage content; Complete homepage; Design responsive behavior; Plan additional pages; Design additional pages; Review website; Complete design and handoff.
+- All levels are accessible immediately. Users can navigate freely, skip, pause, revisit, and leave unfinished missions without interruption.
+- Each level defines its own required and optional missions. Users may explicitly select Not needed where applicable.
+- Missions complete automatically when objective requirements are satisfied. Mission statuses are Not started, In progress, Complete, and Needs review.
+- Users may mark a level complete even with unfinished missions. This does not change or waive those mission statuses.
+- Overall design completion requires all applicable required missions and the user's final-review confirmation.
+- Earlier decision changes preserve existing work, mark affected missions Needs review, and reveal the relevant dependencies.
+- Progress shows both level status and mission completion percentage, without rewards or scores.
+- The responsive workspace uses shared component identity/content and independent desktop, tablet, and mobile layouts. Tablet/mobile support independent reordering and visibility.
+- Image/file placeholders are generic initially and configurable with purpose and optional user-supplied content after component insertion.
+- Export is available at any time and identifies the design as complete or incomplete.
+
+The first complete journey example should demonstrate an online store, while all project definitions and reusable product capabilities remain generic.
