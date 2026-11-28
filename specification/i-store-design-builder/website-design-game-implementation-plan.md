@@ -430,3 +430,30 @@ The detailed user-facing journey and completion semantics are approved in [M01 â
 - Export is available at any time and identifies the design as complete or incomplete.
 
 The first complete journey example should demonstrate an online store, while all project definitions and reusable product capabilities remain generic.
+
+
+## M02-approved interaction model and implementation guardrails
+
+The implementation must follow the approved [M02 UX architecture](milestones/M02-ux-architecture/README.md).
+
+### Sample-driven composition
+- Implement a growing, categorized portfolio of predefined high-level component samples.
+- Each sample declares its supported content slots and finite options.
+- Users browse, preview, select, and explicitly insert a sample; never auto-select or auto-insert.
+- Users compose pages by ordering high-level sections.
+- Content editing is limited to supported sample fields such as titles, text, labels, links, item data, and image slots.
+- Do not implement Figma-like internal visual editing, arbitrary styling, freeform nested-element movement, CSS controls, or pixel-level geometry.
+
+### Responsive composition
+- Render desktop, tablet, and mobile canvases simultaneously side by side.
+- Desktop is the structural source for high-level add/remove/replace operations.
+- Structural changes update the shared component collection in all three canvases.
+- Tablet/mobile permit independent reorder, visibility, and supported responsive presentation; they cannot independently add/remove/replace high-level components.
+- Shared content and sample configuration synchronize across breakpoints.
+- Preserve the side-by-side canvas arrangement in narrow workspaces with horizontal scrolling or workspace zoom.
+
+### Workspace and persistence
+- Use the flexible left library/navigation, center canvases, and right contextual properties layout.
+- Provide contextual mission guidance, compact progress, and page management.
+- Autosave with clear state feedback; implement undo/redo for supported user operations.
+- Version history and safe restoration follow the M02 specification and should be represented in the persistence design before implementation.
