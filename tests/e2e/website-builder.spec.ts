@@ -122,7 +122,11 @@ test("catalogue comparison and explicit insertion preserve user control", async 
   await page.getByLabel("Component type").selectOption("hero");
   await page.getByLabel("Compare Editorial split").check();
   await page.getByLabel("Compare Bold centered").check();
-  await expect(page.getByText(/Design comparison · 2/)).toBeVisible();
+  await expect(page.getByText("2 designs selected for comparison")).toBeVisible();
+  await page.getByRole("button", { name: "Compare selected designs" }).click();
+  await expect(page.getByRole("dialog", { name: "Compare selected designs" })).toBeVisible();
+  await expect(page.getByText("Bold centered", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Close comparison" }).click();
   await expect(page.getByText(/Pairs a strong editorial headline/)).toBeVisible();
 
   const preview = page.getByRole("button", { name: "Preview", exact: true }).first();
