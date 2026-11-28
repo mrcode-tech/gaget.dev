@@ -71,7 +71,7 @@ function inferScreenshotMetadata(filePath) {
   const file = path.basename(filePath).toLowerCase();
   const locale = file.startsWith("fa-") ? "fa" : file.startsWith("ar-") ? "ar" : "en";
   const direction = locale === "en" ? "ltr" : "rtl";
-  const theme = file.includes("-dark-") ? "dark" : file.includes("-light-") ? "light" : undefined;
+  const theme = file.includes("-dark-") || file.endsWith("-dark.png") ? "dark" : file.includes("-light-") || file.endsWith("-light.png") ? "light" : undefined;
   let route;
   if (file.startsWith("website-builder-")) route = locale === "en" ? "/website-builder" : "/" + locale + "/website-builder";
   else if (file.startsWith("feature-search-threshold-")) route = "/ci/feature-menu-search";
