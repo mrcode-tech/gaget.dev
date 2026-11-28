@@ -3,7 +3,7 @@ import {
   CATALOGUE, TAXONOMY, SAMPLE_STYLES, WEBSITE_PURPOSES, createProject, activePage,
   insertSample, insertSampleAt, reorder, reorderToIndex, toggleHidden, removeInstance,
   duplicateInstance, reviewProject, serializeProject, markdownHandoff, setMissionStatus,
-  validateProjectInput, validateSampleDefinition, validatePageComposition, searchCatalogue,
+  validateProjectInput, validateSampleDefinition, validatePageComposition, validateFieldValue, searchCatalogue,
   replaceSample, resolveReplacementContent, prepareReplacement, updateInstanceContent,
   updateInstanceConfiguration, updateInstancePlaceholder, updateResponsivePresentation, clearResponsivePresentation, insertComponentCommand, confirmFinalReview, contrastRatio,
   exportBlueprint, exportReadiness, completeLevel, markMissionsForReview, createAdditionalPage,
@@ -249,6 +249,33 @@ describe("website builder domain", () => {
     project = { ...project, pages: project.pages.map(item => item.id === page.id ? page : item) };
     expect(validateInternalNavigation(project)).toHaveLength(1);
     expect(removePage(project, about.id).pages).toHaveLength(1);
+  });
+
+
+
+  it("validates bounded, repeatable, structured, URL, and enum field values", () => {
+    expect(validateFieldValue({ id: "links", label: "Links", kind: "list", defaultValue: "", repeatable: true, minItems: 2, maxItems: 3 }, "one")).toContain("at least 2");
+    expect(validateFieldValue({ id: "items", label: "Items", kind: "structured", defaultValue: "", repeatable: true, minItems: 1 }, "{\"one\":1}")).toContain("JSON array");
+    expect(validateFieldValue({ id: "items", label: "Items", kind: "structured", defaultValue: "", repeatable: true }, "[{\"one\":1}]")).toBeNull();
+    expect(validateFieldValue({ id: "url", label: "Link", kind: "link", defaultValue: "" }, "not-a-link")).toContain("web, email, phone, or internal page link");
+    expect(validateFieldValue({ id: "url", label: "Link", kind: "link", defaultValue: "" }, "page:about")).toBeNull();
+    expect(validateFieldValue({ id: "choice", label: "Choice", kind: "enum", defaultValue: "a", options: ["a", "b"] }, "c")).toContain("Choose a valid");
+  });
+
+  it("requires every declared image placeholder and sample configuration", () => {
+    const page = insertSample(activePage(createProject(projectInput)), CATALOGUE.find(sample => sample.id === "product-grid-editorial")!);
+    const instance = page.instances[0];
+    const invalid = { ...page, instances: [{ ...instance, placeholders: {}, configuration: {} }] };
+    expect(validatePageComposition(invalid)).toContain("An image field is missing its purpose placeholder.");
+    expect(validatePageComposition(invalid)).toContain("A component is missing configuration: columns.");
+  });
+
+  it("keeps desktop on shared configuration and restricts overrides to tablet and mobile", () => {
+    const page = insertSample(activePage(createProject(projectInput)), CATALOGUE.find(sample => sample.id === "product-grid-editorial")!);
+    const instance = page.instances[0];
+    expect(updateResponsivePresentation(page, "desktop", instance.id, "columns", "2")).toMatchObject({ ok: false });
+    expect(clearResponsivePresentation(page, "desktop", instance.id, "columns")).toMatchObject({ ok: false });
+    expect(validatePageComposition(page)).toEqual([]);
   });
 
   it("calculates contrast and prevents complete handoff while content is invalid", () => {

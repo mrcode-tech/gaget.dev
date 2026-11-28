@@ -2,7 +2,7 @@
   --wb-background: #f2efe9;
   --wb-surface: #ffffff;
   --wb-text: #282a25;
-  --wb-muted: #70766e;
+  --wb-muted: #59665c;
   --wb-border: #e5e2dc;
   --wb-control: #fbfaf7;
   --wb-accent: #31463d;
@@ -10,7 +10,7 @@
   --wb-accent-text: #ffffff;
   --wb-focus: #829184;
   --wb-error: #9a5b43;
-  --wb-kicker: #9a674d;
+  --wb-kicker: #80533c;
 }
 
 .root[data-theme="dark"] {

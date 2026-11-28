@@ -17,7 +17,7 @@ test("builder entry, required project definition, empty canvases, and independen
   await page.getByLabel("Website purpose").fill("Introduce the studio and explain its services.");
   await page.getByRole("button", { name: /Create my website/ }).click();
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-  await expect(page.getByText("North Studio", { exact: true })).toBeVisible();
+  await expect(page.getByText("North Studio", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("note")).toContainText("refreshing or closing this page may discard unexported work");
   await page.screenshot({ path: testInfo.outputPath("website-builder-workspace-desktop-1440x1000-light.png"), fullPage: true });
 
@@ -126,7 +126,7 @@ test("catalogue comparison and explicit insertion preserve user control", async 
   await expect(page.getByText("2 designs selected for comparison")).toBeVisible();
   await page.getByRole("button", { name: "Compare selected designs" }).click();
   await expect(page.getByRole("dialog", { name: "Compare selected designs" })).toBeVisible();
-  await expect(page.getByText("Bold centered", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bold centered" })).toBeVisible();
   await page.getByRole("button", { name: "Close comparison" }).click();
   await expect(page.getByText(/Pairs a strong editorial headline/)).toBeVisible();
 
@@ -158,7 +158,7 @@ test("replacement is same-type, previewed, cancellable, and confirmation preserv
   await page.getByRole("button", { name: "Preview", exact: true }).first().click();
   await page.getByRole("button", { name: "Choose this design" }).click();
   await page.getByRole("button", { name: "Insert section" }).click();
-  await expect(page.getByRole("heading", { name: "Editorial split" })).toBeVisible();
+  await expect(page.getByText("Editorial split", { exact: true }).last()).toBeVisible();
 
   await page.getByLabel("Replace design").selectOption("hero-bold");
   await expect(page.getByRole("dialog", { name: "Replace with Bold centered" })).toBeVisible();
@@ -212,7 +212,7 @@ test("insertion positions and drag-and-drop ordering update the active breakpoin
   await expect(page.getByText("2 sections", { exact: false })).toBeVisible();
 
   const desktop = page.getByRole("region", { name: "Desktop website canvas" });
-  await page.getByLabel("Reorder Bold centered").dragTo(page.getByLabel("Reorder Editorial split"));
+  await desktop.getByLabel("Reorder Bold centered").dragTo(desktop.getByLabel("Reorder Editorial split"));
   await expect(desktop.locator("button").first()).toContainText("Make room for better ideas");
   const tablet = page.getByRole("region", { name: "Tablet website canvas" });
   await expect(tablet.locator("button").first()).toContainText("Objects made to be lived with");
@@ -258,9 +258,26 @@ test("sample-defined responsive options affect only the selected breakpoint", as
   await page.getByRole("button", { name: "Mobile" }).first().click();
   await expect(page.getByLabel("Columns on Mobile")).toHaveValue("__shared__");
   await page.getByRole("button", { name: "Desktop" }).first().click();
-  await expect(page.getByLabel("Columns", { exact: true })).toHaveValue("3");
+  await expect(page.getByRole("combobox", { name: "Columns", exact: true })).toHaveValue("3");
 });
 
+
+
+
+test("image fields and purpose placeholders update every shared canvas preview", async ({ page }) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Image Studio");
+  await page.getByLabel("Website purpose").fill("Present the studio with an editorial image.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await page.getByRole("button", { name: "Insert section" }).click();
+  await page.getByLabel("Image purpose").fill("Wide photograph of the studio workspace");
+  await expect(page.getByRole("img", { name: "Wide photograph of the studio workspace" })).toHaveCount(3);
+  const imageUrl = "https://images.example.test/studio-workspace.jpg";
+  await page.getByLabel("Image", { exact: true }).fill(imageUrl);
+  await expect(page.locator('img[src="' + imageUrl + '"]')).toHaveCount(3);
+});
 
 test("all published component previews pass WCAG accessibility smoke checks", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -285,7 +302,7 @@ test("all published component previews pass WCAG accessibility smoke checks", as
       id: violation.id,
       impact: violation.impact,
       description: violation.help,
-      nodes: violation.nodes.map(node => node.target),
+      nodes: violation.nodes.map(node => ({ target: node.target, failureSummary: node.failureSummary })),
     })), "Sample preview accessibility for catalogue item " + index).toEqual([]);
     await page.keyboard.press("Escape");
   }

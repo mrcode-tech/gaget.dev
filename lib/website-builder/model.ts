@@ -185,6 +185,8 @@ export function validateSampleDefinition(sample: Sample): string[] {
     if (!field.id.trim() || !field.label.trim()) errors.push("Every sample field needs an identifier and label.");
     if (field.kind === "enum" && (!field.options?.length || !field.options.includes(field.defaultValue))) errors.push("Enum field defaults must be declared options.");
     if (field.minLength !== undefined && field.maxLength !== undefined && field.minLength > field.maxLength) errors.push("Field minimum length cannot exceed its maximum.");
+    if (field.repeatable && field.kind !== "list" && field.kind !== "structured") errors.push("Only list and structured fields may be repeatable.");
+    if (field.minItems !== undefined && field.maxItems !== undefined && field.minItems > field.maxItems) errors.push("Field minimum item count cannot exceed its maximum.");
   }
   for (const breakpoint of ["desktop", "tablet", "mobile"] as const) {
     if (!sample.responsive[breakpoint]?.trim()) errors.push("Every sample needs an intentional " + breakpoint + " presentation.");
@@ -212,10 +214,25 @@ export function validateFieldValue(field: FieldDefinition, value: string): strin
       !/^(https?:\/\/|mailto:|tel:)/i.test(value)) return field.label + " must be a web, email, phone, or internal page link.";
   if (field.kind === "image" && value && !/^(https?:\/\/|asset:)/i.test(value)) return field.label + " must reference a web image or selected session asset.";
   if (field.kind === "boolean" && value && value !== "true" && value !== "false") return field.label + " must be true or false.";
-  if (field.kind === "list" && value && value.split("\n").length > 50) return field.label + " can contain at most 50 items.";
+  if (field.kind === "list" && value) {
+    const items = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+    const minItems = field.minItems ?? 0;
+    const maxItems = field.maxItems ?? 50;
+    if (items.length < minItems) return field.label + " needs at least " + minItems + " items.";
+    if (items.length > maxItems) return field.label + " can contain at most " + maxItems + " items.";
+  }
   if (field.kind === "structured" && value) {
-    try { if (!Array.isArray(JSON.parse(value)) && typeof JSON.parse(value) !== "object") return field.label + " must contain structured JSON."; }
-    catch { return field.label + " must contain valid JSON."; }
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (parsed === null || typeof parsed !== "object") return field.label + " must contain structured JSON.";
+      if (field.repeatable && !Array.isArray(parsed)) return field.label + " must contain a JSON array.";
+      if (Array.isArray(parsed)) {
+        const minItems = field.minItems ?? 0;
+        const maxItems = field.maxItems ?? 50;
+        if (parsed.length < minItems) return field.label + " needs at least " + minItems + " items.";
+        if (parsed.length > maxItems) return field.label + " can contain at most " + maxItems + " items.";
+      }
+    } catch { return field.label + " must contain valid JSON."; }
   }
   return null;
 }
@@ -389,6 +406,8 @@ export function validatePageComposition(page: Page): string[] {
     if (instance.type !== sample.type) errors.push("A component type does not match its sample.");
     if (instance.sampleVersion !== sample.version) errors.push("A component sample version is unavailable.");
     errors.push(...validateInstanceContent(sample, instance.content));
+    for (const field of sample.fields.filter(item => item.kind === "image")) if (!instance.placeholders[field.id]) errors.push("An image field is missing its purpose placeholder.");
+    for (const option of sample.configuration ?? []) if (instance.configuration[option.id] === undefined) errors.push("A component is missing configuration: " + option.id + ".");
     for (const [slotId, placeholder] of Object.entries(instance.placeholders)) {
       const field = sample.fields.find(item => item.id === slotId && item.kind === "image");
       if (!field) errors.push("A placeholder references an unsupported image slot.");
@@ -405,6 +424,7 @@ export function validatePageComposition(page: Page): string[] {
         layout.order.some(id => !ids.includes(id))) errors.push(bp + " layout must contain every shared component exactly once.");
     if (new Set(layout.hidden).size !== layout.hidden.length) errors.push(bp + " visibility contains duplicate component references.");
     if (layout.hidden.some(id => !ids.includes(id))) errors.push(bp + " visibility references an unknown component.");
+    if (bp === "desktop" && Object.keys(layout.presentation ?? {}).length > 0) errors.push("Desktop presentation must use shared sample configuration.");
     for (const [instanceId, overrides] of Object.entries(layout.presentation ?? {})) {
       const instance = page.instances.find(item => item.id === instanceId);
       const sample = instance ? getSampleById(instance.sampleId) : undefined;
@@ -516,6 +536,7 @@ export function reorderInstanceToIndex(page: Page, breakpoint: Breakpoint, insta
 }
 
 export function updateResponsivePresentation(page: Page, breakpoint: Breakpoint, instanceId: string, key: string, value: string): CommandResult<Page> {
+  if (breakpoint === "desktop") return { ok: false, error: "Desktop uses shared sample configuration; responsive overrides are for tablet and mobile." };
   const instance = page.instances.find(item => item.id === instanceId);
   if (!instance) return { ok: false, error: "The selected section no longer exists." };
   const sample = getSampleById(instance.sampleId);
@@ -530,6 +551,7 @@ export function updateResponsivePresentation(page: Page, breakpoint: Breakpoint,
 }
 
 export function clearResponsivePresentation(page: Page, breakpoint: Breakpoint, instanceId: string, key: string): CommandResult<Page> {
+  if (breakpoint === "desktop") return { ok: false, error: "Desktop uses shared sample configuration; responsive overrides are for tablet and mobile." };
   const instance = page.instances.find(item => item.id === instanceId);
   if (!instance) return { ok: false, error: "The selected section no longer exists." };
   const sample = getSampleById(instance.sampleId);

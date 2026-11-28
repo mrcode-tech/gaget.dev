@@ -6,7 +6,14 @@ const field = (
   kind: FieldDefinition["kind"],
   defaultValue: string,
   options: Partial<FieldDefinition> = {},
-): FieldDefinition => ({ id, label, kind, defaultValue, ...options });
+): FieldDefinition => {
+  const defaults: Partial<FieldDefinition> =
+    kind === "text" ? { maxLength: 100 } :
+    kind === "textarea" ? { maxLength: 2000 } :
+    kind === "url" || kind === "link" || kind === "image" ? { maxLength: 2048 } :
+    kind === "list" || kind === "structured" ? { maxItems: 50 } : {};
+  return { id, label, kind, defaultValue, ...defaults, ...options };
+};
 
 const responsiveFor = (layout: Sample["layout"]): Sample["responsive"] => {
   if (layout === "hero") return {
