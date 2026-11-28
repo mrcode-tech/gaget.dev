@@ -6,6 +6,8 @@ test("builder entry, required project definition, empty canvases, and independen
   await page.getByRole("link", { name: "Website Design Builder" }).click();
   await expect(page).toHaveURL(new RegExp("/website-builder$"));
   await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Main navigation" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Search tools" })).toHaveCount(0);
 
   await page.getByLabel("Project name").fill("North Studio");
   await page.getByRole("button", { name: /Create my website/ }).click();
@@ -21,10 +23,16 @@ test("builder entry, required project definition, empty canvases, and independen
   }
   await expect(page.getByText("0 sections", { exact: false })).toBeVisible();
 
-  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  const previewTrigger = page.getByRole("button", { name: "Preview", exact: true }).first();
+  await previewTrigger.focus();
+  await previewTrigger.click();
   await expect(page.getByRole("dialog", { name: "Editorial split" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Editorial split" })).toBeVisible();
-  await page.getByRole("button", { name: "Close preview" }).click();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("button", { name: "Add this design" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(previewTrigger).toBeFocused();
   await expect(page.getByText("0 sections", { exact: false })).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -45,4 +53,24 @@ test("builder creation validation preserves entered values and communicates sess
   await expect(page.getByRole("alert")).toContainText("Describe the website purpose");
   await expect(page.getByLabel("Project name")).toHaveValue("Field Notes");
   await expect(page.getByText(/exist only in this browser session/i)).toBeVisible();
+});
+
+test("builder theme follows the host theme provider without rendering the GaGet shell", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/website-builder");
+  await expect(page.getByRole("button", { name: "Light mode" })).toBeVisible();
+  await page.getByLabel("Project name").fill("Night Studio");
+  await page.getByLabel("Website purpose").fill("Create a calm dark-themed workspace preview.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await expect(page.locator("main").first()).toHaveClass(/bg-\[#17201d\]/);
+  await expect(page.getByRole("button", { name: "Light mode" })).toBeVisible();
+  await page.getByRole("button", { name: "Light mode" }).click();
+  await expect(page.getByRole("button", { name: "Dark mode" })).toBeVisible();
+});
+
+test("localized builder route preserves RTL document direction and its own shell", async ({ page }) => {
+  await page.goto("/fa/website-builder");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Main navigation" })).toHaveCount(0);
 });
