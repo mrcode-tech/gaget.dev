@@ -11,7 +11,7 @@ test("builder entry, required project definition, empty canvases, and independen
 
   await page.getByLabel("Project name").fill("North Studio");
   await page.getByRole("button", { name: /Create my website/ }).click();
-  await expect(page.getByRole("alert")).toContainText("Describe the website purpose");
+  await expect(page.locator('p[role="alert"]')).toContainText("Describe the website purpose");
 
   await page.getByLabel("Website purpose").fill("Introduce the studio and explain its services.");
   await page.getByRole("button", { name: /Create my website/ }).click();
@@ -47,10 +47,10 @@ test("builder entry, required project definition, empty canvases, and independen
 test("builder creation validation preserves entered values and communicates session-only state", async ({ page }) => {
   await page.goto("/website-builder");
   await page.getByRole("button", { name: /Create my website/ }).click();
-  await expect(page.getByRole("alert")).toContainText("Add a project name");
+  await expect(page.locator('p[role="alert"]')).toContainText("Add a project name");
   await page.getByLabel("Project name").fill("Field Notes");
   await page.getByRole("button", { name: /Create my website/ }).click();
-  await expect(page.getByRole("alert")).toContainText("Describe the website purpose");
+  await expect(page.locator('p[role="alert"]')).toContainText("Describe the website purpose");
   await expect(page.getByLabel("Project name")).toHaveValue("Field Notes");
   await expect(page.getByText(/exist only in this browser session/i)).toBeVisible();
 });
