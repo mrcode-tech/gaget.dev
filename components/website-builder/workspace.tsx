@@ -5,10 +5,12 @@ import { useTheme } from "next-themes";
 import { SampleRendererView } from "@/components/website-builder/sample-renderers";
 import styles from "@/components/website-builder/website-builder.module.css";
 import {
- activePage, CATALOGUE, completeLevel, confirmFinalReview, createProject, duplicateInstance,
- exportBlueprint, exportReadiness, insertSampleAt, LEVELS, markdownHandoff, PALETTES,
- removeInstance, reorder, replaceSample, setMissionStatus, toggleHidden,
- type Breakpoint, type Page, type Project, type Sample, validateProjectInput
+ activePage, CATALOGUE, TAXONOMY, SAMPLE_STYLES, WEBSITE_PURPOSES, completeLevel, confirmFinalReview,
+ createProject, duplicateInstance, exportBlueprint, exportReadiness, insertSampleAt, LEVELS,
+ markdownHandoff, PALETTES, prepareReplacement, removeInstance, reorder, reorderToIndex,
+ replaceSample, searchCatalogue, setMissionStatus, toggleHidden, updateInstanceContent,
+ updateInstanceConfiguration, validateFieldValue, type Breakpoint, type Page, type Project,
+ type Sample, type ReplacementDraft, type InsertPosition, validateProjectInput
 } from "@/lib/website-builder/model";
 
 const labels:Record<Breakpoint,string>={desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"};
@@ -20,10 +22,14 @@ export default function WebsiteBuilderWorkspace(){
  const [project,setProject]=useState<Project|null>(null);
  const [draft,setDraft]=useState({name:"",purpose:""});
  const [bp,setBp]=useState<Breakpoint>("desktop"),[query,setQuery]=useState(""),[category,setCategory]=useState("All");
+ const [typeFilter,setTypeFilter]=useState("All"),[styleFilter,setStyleFilter]=useState("All"),[purposeFilter,setPurposeFilter]=useState("All");
  const [selected,setSelected]=useState<string|null>(null),[level,setLevel]=useState(0);
  const [showLibrary,setShowLibrary]=useState(true),[guide,setGuide]=useState(false),[notice,setNotice]=useState("");
  const [compare,setCompare]=useState<string[]>([]),[pageName,setPageName]=useState("");
  const [pagesOpen,setPagesOpen]=useState(false),[reviewOpen,setReviewOpen]=useState(false);
+ const [insertionSample,setInsertionSample]=useState<Sample|null>(null),[insertPosition,setInsertPosition]=useState<InsertPosition["placement"]>("end"),[insertRelativeId,setInsertRelativeId]=useState("");
+ const [replacementDraft,setReplacementDraft]=useState<ReplacementDraft|null>(null),[replacementError,setReplacementError]=useState("");
+ const [previewBreakpoint,setPreviewBreakpoint]=useState<Breakpoint>("desktop"),[dragging,setDragging]=useState<string|null>(null),[removeTarget,setRemoveTarget]=useState<string|null>(null);
  const { resolvedTheme, setTheme } = useTheme();
  const dark = resolvedTheme === "dark";
  const page=project?activePage(project):null;
@@ -38,8 +44,10 @@ export default function WebsiteBuilderWorkspace(){
  const changeField=(id:string,key:string,value:string)=>changePage(p=>({...p,instances:p.instances.map(i=>i.id===id?{...i,content:{...i.content,[key]:value}}:i)}));
  const mission=(n:number,status:"Complete"|"In progress"|"Not needed")=>setProject(old=>old?{...setMissionStatus(old,n,status==="Not needed"?"Complete":status,status==="Not needed"),finalReviewConfirmed:false}:old);
  const markLevel=(n:number,complete:boolean)=>setProject(old=>old?completeLevel(old,n,complete):old);
- const add=(s:Sample)=>{changePage(p=>insertSampleAt(p,s,{placement:"end"}));setNotice(s.name+" added to the page.");};
- const replaceSelected=(sampleId:string)=>{if(!selected)return;const target=CATALOGUE.find(item=>item.id===sampleId);if(!target)return;changePage(p=>replaceSample(p,selected,target).page);setNotice("Section design replaced. Compatible content was preserved.");};
+ const add=(s:Sample)=>{setInsertionSample(s);setInsertPosition("end");setInsertRelativeId("");setNotice("");};
+ const insertConfirmed=()=>{if(!insertionSample||!page)return;const position:InsertPosition={placement:insertPosition,...((insertPosition==="before"||insertPosition==="after")?{relativeToId:insertRelativeId}:{})};const next=insertSampleAt(page,insertionSample,position);if(next===page){setNotice("Choose a valid insertion position.");return;}const created=next.instances.find(instance=>!page.instances.some(existing=>existing.id===instance.id));if(!created){setNotice("The section could not be inserted.");return;}changePage(()=>next);setSelected(created.id);setInsertionSample(null);setNotice(insertionSample.name+" was added to the page.");};
+ const replaceSelected=(sampleId:string)=>{if(!selected||!page)return;const target=CATALOGUE.find(item=>item.id===sampleId);if(!target)return;const prepared=prepareReplacement(page,selected,target);if(!prepared.ok){setReplacementError(prepared.error);return;}setReplacementError("");setReplacementDraft(prepared.value);};
+ const confirmReplacement=()=>{if(!replacementDraft)return;const target=CATALOGUE.find(item=>item.id===replacementDraft.candidate.sampleId);if(!target){setReplacementError("The selected design is no longer available.");return;}const result=replaceSample(page!,replacementDraft.original.id,target);if(!result.ok){setReplacementError(result.error??"The replacement could not be applied.");return;}changePage(()=>result.page);setSelected(replacementDraft.original.id);setNotice("Design replaced. Compatible content was preserved; reset fields: "+(result.resetFields.join(", ")||"none")+".");setReplacementDraft(null);};
  const addPage=()=>{if(!project||!pageName.trim())return;const id="page-"+Math.random().toString(36).slice(2,9);const p:Page={id,name:pageName.trim(),slug:"/"+pageName.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),instances:[],layouts:{desktop:{order:[],hidden:[]},tablet:{order:[],hidden:[]},mobile:{order:[],hidden:[]}}};setProject({...project,pages:[...project.pages,p],activePageId:id,finalReviewConfirmed:false});setPageName("");setPagesOpen(false);};
  if (!project) {
   return (
