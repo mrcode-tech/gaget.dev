@@ -8,7 +8,7 @@ The product guides the process through levels, missions, explanations, and examp
 
 The initial product is not AI-powered. It does not generate content, recommend preferred designs, automatically choose components, or arrange pages. Optional AI capabilities may be considered in the future through a separate product decision.
 
-The result is a complete visual website wireframe/design when all required levels are complete. If the user stops earlier, the saved partial design must still communicate the project goal, selected components, page structure, content placeholders, image intent, and remaining work to a developer or later implementation workflow.
+The result is a complete visual website wireframe/design only when all applicable required missions are complete and the user confirms the final review. If the user stops earlier, the saved partial design must still communicate the project goal, selected components, page structure, content placeholders, image intent, and remaining work to a developer or later implementation workflow.
 
 ## 2. Product principles
 
@@ -242,7 +242,7 @@ Do not confuse product-development milestones with user-facing levels.
 - Identify incomplete missions and decisions still outstanding.
 - Distinguish missing required decisions from optional content.
 - Produce a human-readable and structured design summary suitable for a developer.
-- If all required levels are complete, mark the visual website design complete; do not imply it is a production website.
+- Mark the visual website design complete only when all applicable required missions are complete and the user confirms the final review; do not imply it is a production website.
 
 **Deliverables**
 - Complete/partial design review.
