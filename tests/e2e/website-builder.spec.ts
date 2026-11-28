@@ -1,66 +1,48 @@
 import { expect, test } from "@playwright/test";
 
-test("website builder supports a real session project composition and JSON handoff", async ({ page }) => {
+test("builder entry, required project definition, empty canvases, and independent preview", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/website-builder");
-
+  await page.goto("/");
+  await page.getByRole("link", { name: "Website Design Builder" }).click();
+  await expect(page).toHaveURL(/\\/website-builder$/);
   await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
+
   await page.getByLabel("Project name").fill("North Studio");
-  await page.getByLabel("Business or organization").fill("Independent design studio");
-  await page.getByLabel("What should the website achieve?").fill("Introduce the studio and its work.");
-  await page.getByLabel("Who is it for?").fill("Potential clients");
-  await page.getByRole("button", { name: "Create my website" }).click();
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await expect(page.getByRole("alert")).toContainText("Describe the website purpose");
 
+  await page.getByLabel("Website purpose").fill("Introduce the studio and explain its services.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-  await expect(page.getByText("Editorial split", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Add", exact: true }).first().click();
-  await page.getByRole("button").filter({ hasText: "Objects made to be lived with" }).first().click();
-  await expect(page.getByText("Editorial split", { exact: true })).toBeVisible();
+  await expect(page.getByText("North Studio", { exact: true })).toBeVisible();
 
-  await page.getByLabel("Title", { exact: true }).fill("Design with purpose");
-  await expect(page.getByText("Design with purpose", { exact: true })).toBeVisible();
-
-  await page.getByRole("button", { name: "Tablet" }).first().click();
-  await page.getByRole("button", { name: "Hide on Tablet" }).click();
-  await expect(page.getByText("Section design replaced", { exact: false })).not.toBeVisible();
-
-  await page.getByRole("button", { name: /Pages · 1/ }).click();
-  await page.getByPlaceholder("New page name").fill("About");
-  await page.getByRole("button", { name: "+ Add page" }).click();
-  await expect(page.getByRole("heading", { name: "About" })).toBeVisible();
-  await expect(page.getByText("/about", { exact: true })).toBeVisible();
-
-  const levels = [
-    "Define website", "Explore visual direction", "Build shared website frame",
-    "Design homepage introduction", "Build homepage content", "Complete homepage",
-    "Design responsive behavior", "Plan additional pages", "Design additional pages",
-    "Review website", "Complete design and handoff"
-  ];
-  for (const level of levels) {
-    await page.getByRole("button", { name: new RegExp(level) }).first().click();
-    await page.getByRole("button", { name: "Complete mission" }).click();
+  for (const breakpoint of ["Desktop", "Tablet", "Mobile"]) {
+    await expect(page.getByRole("region", { name: breakpoint + " website canvas" })).toBeVisible();
   }
-  await page.getByRole("button", { name: /Review ·/ }).click();
-  await page.getByRole("button", { name: "Confirm final review" }).click();
+  await expect(page.getByText("0 sections", { exact: false })).toBeVisible();
 
-  const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export JSON", exact: true }).click();
-  const file = await download;
-  expect(file.suggestedFilename()).toBe("website-design.json");
-  const stream = await file.createReadStream();
-  expect(stream).not.toBeNull();
-  let json = "";
-  for await (const chunk of stream!) json += chunk.toString();
-  const blueprint = JSON.parse(json);
-  expect(blueprint.schemaVersion).toBe("1.0.0");
-  expect(blueprint.project.name).toBe("North Studio");
-  expect(blueprint.project.pages).toHaveLength(2);
-  expect(blueprint.status).toBe("Complete");
+  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  await expect(page.getByRole("dialog", { name: "Editorial split" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Editorial split" })).toBeVisible();
+  await page.getByRole("button", { name: "Close preview" }).click();
+  await expect(page.getByText("0 sections", { exact: false })).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const canvases = page.getByRole("region", { name: "Responsive website canvases" });
+  await expect(canvases).toBeVisible();
+  expect(await canvases.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
+  for (const breakpoint of ["Desktop", "Tablet", "Mobile"]) {
+    await expect(page.getByRole("region", { name: breakpoint + " website canvas" })).toBeAttached();
+  }
 });
 
-test("website builder blocks an empty project name and exposes session-only behavior", async ({ page }) => {
+test("builder creation validation preserves entered values and communicates session-only state", async ({ page }) => {
   await page.goto("/website-builder");
-  await page.getByRole("button", { name: "Create my website" }).click();
-  await expect(page.getByRole("status")).toContainText("Add a project name");
-  await expect(page.getByText(/exists only in this browser session/i)).toBeVisible();
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await expect(page.getByRole("alert")).toContainText("Add a project name");
+  await page.getByLabel("Project name").fill("Field Notes");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await expect(page.getByRole("alert")).toContainText("Describe the website purpose");
+  await expect(page.getByLabel("Project name")).toHaveValue("Field Notes");
+  await expect(page.getByText(/exist only in this browser session/i)).toBeVisible();
 });
