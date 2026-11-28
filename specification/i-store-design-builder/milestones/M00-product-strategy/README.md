@@ -1,7 +1,5 @@
 # M00 — Product Strategy and Requirements
 
-<badge-placeholder/>
-
 ## Status
 
 **Approved — M00 strategy baseline complete.** This records agreement on product direction and scope; it does not claim that application functionality has been implemented.
@@ -86,4 +84,3 @@ The initial release is not an AI designer. It has no AI-generated content or des
 ## Open decisions
 
 No blocking M00 strategy decisions remain. Detailed component catalogue, exact level structure, responsive options, asset handling, persistence, and handoff format are refined in their dependent milestones.
-
