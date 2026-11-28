@@ -1,0 +1,27 @@
+.preview {
+  width: 100%;
+  min-width: 0;
+}
+
+.preview[data-breakpoint="tablet"] :global(.grid-cols-3) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preview[data-breakpoint="mobile"] :global(.grid-cols-2),
+.preview[data-breakpoint="mobile"] :global(.grid-cols-3) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.preview[data-breakpoint="mobile"] :global(.text-3xl) {
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.preview[data-breakpoint="mobile"] :global(.px-8) {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.preview[data-breakpoint="mobile"] :global(.gap-4) {
+  gap: 0.65rem;
+}

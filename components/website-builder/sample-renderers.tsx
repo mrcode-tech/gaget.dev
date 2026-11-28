@@ -1,5 +1,6 @@
 import { Component, type ComponentType, type ReactNode } from "react";
 import type { Breakpoint, Project, Sample } from "@/lib/website-builder/model";
+import styles from "./sample-renderers.module.css";
 
 export type SampleRendererProps = {
   sample: Sample;
@@ -152,7 +153,15 @@ export class SampleRendererErrorBoundary extends Component<{ children: ReactNode
 }
 export function SampleRendererView(props: SampleRendererProps) {
   const Renderer = getSampleRenderer(props.sample);
-  if (!Renderer) return <div role="status" className="p-6 text-center text-sm text-amber-700">This sample preview is currently unavailable.</div>;
-  if (Renderer === ThreeCards) return <SampleRendererErrorBoundary key={props.sample.id}><ThreeCards {...props} sample={props.sample}/></SampleRendererErrorBoundary>;
-  return <SampleRendererErrorBoundary key={props.sample.id}><Renderer {...props}/></SampleRendererErrorBoundary>;
+  if (!Renderer) {
+    return <div role="status" className="p-6 text-center text-sm text-amber-700">This sample preview is currently unavailable.</div>;
+  }
+  const content = Renderer === ThreeCards
+    ? <ThreeCards {...props} sample={props.sample}/>
+    : <Renderer {...props}/>;
+  return (
+    <div className={styles.preview} data-breakpoint={props.breakpoint ?? "desktop"}>
+      <SampleRendererErrorBoundary key={props.sample.id}>{content}</SampleRendererErrorBoundary>
+    </div>
+  );
 }
