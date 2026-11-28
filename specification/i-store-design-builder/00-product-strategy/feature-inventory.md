@@ -1,86 +1,87 @@
-# Comprehensive Feature Inventory
+# Feature Inventory
 
-This inventory describes the full product opportunity. It is not a commitment to deliver every feature in the MVP. Priority: P0 = MVP/core, P1 = next capability, P2 = future/advanced.
+This inventory describes the approved product scope and future opportunities. Priority: P0 = initial release/core, P1 = later enhancement, P2 = optional future capability. AI is not a dependency of the initial release.
 
-## 1. Project understanding and onboarding
-- P0: project creation, name, description, purpose, audience, offering, desired visitor action.
-- P0: project category as a flexible descriptor, not a fixed template constraint.
-- P0: optional existing brand assets and inspiration.
-- P1: guided website-type and page-structure recommendations.
-- P1: project profile editing and completeness guidance.
-- P2: competitor/reference analysis and multiple projects per account.
+## 1. Project definition
+- P0: create a project with name, purpose, audience, offering/subject, and intended outcome.
+- P0: accept free text and optional structured answers.
+- P0: allow project details to be revised at any time.
+- P1: multiple saved projects and richer project profiles.
 
-## 2. Game experience and progression
-- P0: tutorial, missions, level progress, completion criteria, hints, checkpoints.
-- P0: revisit completed levels, revise choices, undo/redo, non-punitive feedback.
-- P1: progress map, achievements, optional challenges, richer learning content.
-- P2: personalized learning paths and community challenges; no competitive pressure in core.
+## 2. Guided design journey
+- P0: levels and missions with plain-language objectives and completion criteria.
+- P0: explanations and visual examples for design concepts.
+- P0: forward/backward navigation and unrestricted revisiting.
+- P0: visible progress state without reward mechanics or competitive scoring.
+- P1: richer learning material and optional walkthroughs.
 
-## 3. Design education and decision support
-- P0: mood/personality discovery, curated choices, plain-language explanations.
-- P0: color, typography, image direction, layout, and section recommendations.
-- P1: comparisons, compatibility guidance, contextual examples, accessibility hints.
-- P2: advanced recommendation models and personalized design coaching.
+## 3. User-directed component library
+- P0: categorized high-level website component library.
+- P0: multiple curated patterns/variants for core component types.
+- P0: user chooses which components to include and their order.
+- P0: add, remove, replace, reorder, and configure available pattern options.
+- P0: component library remains discoverable; levels introduce concepts but do not gate normal editing.
+- P1: expanded pattern catalogue and additional component families.
+- P2: user-created pattern presets, subject to product simplicity.
 
-## 4. Website visual identity
-- P0: palette, typography pairing, image direction, button and basic component styles.
-- P0: global tokens and live preview.
-- P1: spacing, radii, shadows, iconography, themes, extended component styles.
-- P2: advanced theme variants and brand-system import.
+## 4. Wireframe composition
+- P0: bounded website canvas visible from the beginning.
+- P0: wireframe page and section rendering.
+- P0: text hierarchy, content slots, image placeholders, and clear section boundaries.
+- P0: immediate canvas update after user choices.
+- P1: optional presentation styling and shareable preview modes.
+- P2: advanced visual editing only if it preserves the high-level interaction model.
 
-## 5. Canvas and composition
-- P0: bounded page canvas, visible from first visit, live rendering, section library.
-- P0: add/remove/reorder sections, choose variants, contextual configuration.
-- P0: reusable shared components and global styles.
-- P1: duplicate sections, richer selection states, preview mode, canvas fit/zoom.
-- P2: advanced composition tools, subject to the no-freeform-editor principle.
+## 5. Website structure
+- P0: homepage composition and shared header/footer patterns.
+- P0: user-selected sections and custom section order.
+- P1: additional page templates and connected navigation.
+- P1: reusable shared elements across pages.
+- P2: complex dynamic page types and specialized website functions.
 
-## 6. Website content and page sections
-- P0: header, navigation, hero, primary content, CTA/contact, footer.
-- P0: adaptable section patterns based on project purpose.
-- P1: galleries, products/services, benefits, testimonials, FAQ, story, newsletter, location.
-- P1: page templates and structured content fields.
-- P2: specialized booking, commerce, membership, or integrations where validated by demand.
+## 6. Content and assets
+- P0: content can be entered upfront or progressively.
+- P0: real text, draft text, or explicit content placeholders.
+- P0: image placeholders with user-defined purpose/description.
+- P0: optional user-supplied reference image, logo, or photo.
+- P1: asset library and richer asset management.
+- P2: optional AI-assisted content/image capabilities may be evaluated separately in the future; never assume them.
 
-## 7. Content and assets
-- P0: sample content, text fields, image placeholders, asset references.
-- P1: image upload/library, crop/focal point, alt text, missing-content checks.
-- P1: content guidance and asset reuse.
-- P2: AI-assisted copy, image suggestions, video and rich-media workflows.
+## 7. Responsive design
+- P0: desktop, tablet, and mobile preview.
+- P0: curated responsive patterns and guided user choices.
+- P1: additional responsive variants and more granular per-component options.
 
-## 8. Responsive design and accessibility
-- P0: desktop/tablet/mobile preview and shared defaults.
-- P0: a small set of understandable responsive choices.
-- P1: responsive overrides, navigation adaptation, stacking and image behavior.
-- P1: contrast, keyboard, focus, semantic and alt-text checks.
-- P2: advanced responsive rules and comprehensive accessibility audit.
+## 8. Progress, revision, and save
+- P0: objective mission completion tracking.
+- P0: free navigation between levels.
+- P0: revise previous decisions without losing unrelated work.
+- P0: persistence and recovery appropriate to MVP.
+- P1: version history and project duplication.
 
-## 9. Multi-page structure
-- P0: homepage structure and navigation foundation.
-- P1: page planning, creation, duplication, ordering, internal links, shared frame.
-- P1: purpose-dependent page patterns (about, contact, listing, detail, FAQ, etc.).
-- P2: complex conditional page types and dynamic content models.
+## 9. Review and handoff
+- P0: complete visual wireframe/design when all required levels are completed.
+- P0: useful partial project representation at any point.
+- P0: project purpose and intended outcome preserved for developer understanding.
+- P0: explicit list of selected elements, placeholders, and unfinished work.
+- P1: downloadable structured handoff package and human-readable specification.
+- P2: direct integrations with design/development tools.
 
-## 10. Quality and validation
-- P0: basic completeness and preview review.
-- P1: missing content, navigation, responsive, consistency, and accessibility checks.
-- P1: actionable recommendations and readiness summary.
-- P2: advanced heuristic evaluation and analytics-informed optimization.
+## 10. Platform and operations
+- P0: isolated module in the existing Next.js app.
+- P1: accounts, cloud projects, recovery, sharing.
+- P2: collaboration, templates marketplace, subscriptions, commercial capabilities.
 
-## 11. Export and handoff
-- P0: structured project data that can be reliably read by the app.
-- P1: JSON and Markdown design blueprint, page hierarchy, tokens, section configuration, asset manifest.
-- P1: developer/AI implementation handoff.
-- P2: PDF, Figma handoff, code generation, hosted preview and publishing.
+## Explicit exclusions from initial release
 
-## 12. Platform and operations
-- P0: local/session project persistence appropriate to MVP architecture, error handling.
-- P1: accounts, cloud projects, recovery, version history, sharing.
-- P2: collaboration, roles, templates marketplace, subscriptions, payments, admin analytics.
+- AI choosing, recommending, generating, or arranging design elements.
+- AI-generated copy or images.
+- Points, badges, prizes, leaderboards, timers, or design-quality scores.
+- Automatic component selection or automatic page ordering.
+- Required final images or stock-image selection.
+- Arbitrary CSS, unrestricted pixel placement, or infinite canvas.
+- Production code generation, hosting, and publishing.
 
 ## Cross-cutting constraints
-- Keep the product generic and context-driven.
-- Do not expose arbitrary CSS, unrestricted pixel placement, or an infinite artboard as core workflows.
-- The canvas is visible from the beginning.
-- Users can revise completed decisions.
-- Keep the Design Builder isolated from the existing GaGet shell.
+
+The product remains industry-neutral, user-directed, wireframe-first, reversible, and useful even when incomplete. The existing GaGet shell must remain unaffected.
