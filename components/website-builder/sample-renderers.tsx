@@ -63,6 +63,45 @@ function ThreeCards({ content, identity, sample }: SampleRendererProps & { sampl
   const items = [content.item1, content.item2, content.item3];
   return <div className="px-5 py-7" style={{ background: identity.background, color: identity.text }}><h3 className="text-center text-xl font-semibold">{content.title}</h3><div className="mt-5 grid grid-cols-3 gap-3">{items.map((item, index) => <div key={index} className={sample.rendererKey === "product-grid-compact" ? "rounded-lg bg-white p-2 shadow-sm" : ""}><Placeholder label={(sample.type === "product-grid" ? "Product" : "Category") + " image " + (index + 1)} tone={["#d6c9b7", "#c5cec0", "#d7d0d4"][index]}/><p className="mt-2 text-xs font-medium">{item}</p>{sample.rendererKey === "product-grid-compact" && <p className="mt-1 text-[9px] opacity-60">Explore item</p>}</div>)}</div></div>;
 }
+function CategoryTiles({ content, identity }: SampleRendererProps) {
+  return <div className="px-5 py-7" style={{ background: identity.surface, color: identity.text }}>
+    <h3 className="font-serif text-2xl">{content.title}</h3>
+    <div className="mt-5 grid grid-cols-3 gap-3">{[content.item1, content.item2, content.item3].map((item, index) =>
+      <div key={index} className="relative min-h-32 overflow-hidden rounded-lg p-3 text-white" style={{ background: ["#7d8a78", "#9b806a", "#7b8290"][index] }}>
+        <span className="absolute inset-0 opacity-20" style={{ background: "linear-gradient(145deg, transparent, #111)" }}/>
+        <span className="relative mt-auto block pt-20 text-xs font-semibold">{item}</span>
+      </div>)}</div>
+  </div>;
+}
+function ProductGridEditorial({ content, identity }: SampleRendererProps) {
+  return <div className="px-6 py-8" style={{ background: identity.background, color: identity.text }}>
+    <div className="flex items-end justify-between"><h3 className="max-w-xs font-serif text-2xl">{content.title}</h3><span className="text-[9px] uppercase tracking-widest opacity-50">The collection</span></div>
+    <div className="mt-6 grid grid-cols-3 gap-5">{[content.item1, content.item2, content.item3].map((item, index) =>
+      <div key={index}><Placeholder label={"Product photograph " + (index + 1)} tone={["#d5c7b8", "#c8d0c5", "#d4cfd0"][index]}/><p className="mt-3 font-serif text-sm">{item}</p><p className="mt-1 text-[9px] uppercase tracking-wider opacity-50">Explore details</p></div>)}</div>
+  </div>;
+}
+function ProductGridCompact({ content, identity }: SampleRendererProps) {
+  return <div className="p-5" style={{ background: identity.surface, color: identity.text }}>
+    <h3 className="text-lg font-semibold">{content.title}</h3>
+    <div className="mt-4 grid grid-cols-3 gap-2">{[content.item1, content.item2, content.item3].map((item, index) =>
+      <div key={index} className="rounded-lg border p-2" style={{ borderColor: identity.accent + "66" }}><Placeholder label={"Product " + (index + 1)} tone="#e6e2d9"/><p className="mt-2 text-[10px] font-medium">{item}</p><p className="mt-1 text-[9px] opacity-55">Details and availability</p></div>)}</div>
+  </div>;
+}
+function ServiceCards({ content, identity }: SampleRendererProps) {
+  return <div className="px-6 py-7" style={{ background: identity.background, color: identity.text }}><h3 className="text-xl font-semibold">{content.title}</h3>
+    <div className="mt-5 grid grid-cols-3 gap-3">{[content.item1, content.item2, content.item3].map((item, index)=><article key={index} className="border-t-2 bg-white/60 p-3" style={{ borderColor: identity.primary }}><span className="text-[9px] uppercase tracking-widest opacity-45">Service 0{index+1}</span><h4 className="mt-3 text-xs font-semibold">{item}</h4><p className="mt-2 text-[9px] leading-4 opacity-60">A focused approach shaped around your needs.</p></article>)}</div>
+  </div>;
+}
+function PortfolioGrid({ content, identity }: SampleRendererProps) {
+  return <div className="p-5" style={{ background: identity.surface, color: identity.text }}><div className="flex items-end justify-between"><h3 className="font-serif text-2xl">{content.title}</h3><span className="text-[9px] uppercase tracking-widest opacity-50">Selected projects</span></div>
+    <div className="mt-4 grid grid-cols-3 gap-2">{[content.item1, content.item2, content.item3].map((item,index)=><div key={index}><Placeholder label={"Portfolio work " +(index+1)} tone={["#c7c5b7","#d4c7bc","#c5cfc9"][index]}/><p className="mt-2 text-[10px]">{item}</p></div>)}</div>
+  </div>;
+}
+function TeamGrid({ content, identity }: SampleRendererProps) {
+  return <div className="px-6 py-7" style={{ background: identity.background, color: identity.text }}><h3 className="text-center font-serif text-2xl">{content.title}</h3>
+    <div className="mt-5 grid grid-cols-3 gap-3">{[content.item1,content.item2,content.item3].map((item,index)=><div key={index} className="text-center"><div className="mx-auto h-16 w-16 rounded-full" style={{ background: ["#c9b9aa","#bdc9bd","#c4c3cf"][index] }}/><p className="mt-3 text-[10px] font-medium">{item}</p></div>)}</div>
+  </div>;
+}
 function FeaturedProduct({ content, identity }: SampleRendererProps) {
   return <div className="grid grid-cols-2 gap-4 p-5" style={{ background: identity.surface, color: identity.text }}><Placeholder label="Featured product image" tone="#d7cabb"/><div className="flex flex-col justify-center"><span className="text-[9px] uppercase tracking-widest opacity-50">Featured object</span><h3 className="mt-2 font-serif text-2xl">{content.title}</h3><p className="mt-2 text-xs leading-5 opacity-70">{content.body}</p><p className="mt-3 text-sm font-semibold">{content.price}</p><span className="mt-3 w-fit border-b pb-1 text-xs">{content.button}</span></div></div>;
 }
@@ -113,17 +152,17 @@ const rendererRegistry: Record<string, ComponentType<SampleRendererProps>> = {
   "header-editorial": EditorialHeader,
   "header-minimal": MinimalHeader,
   "header-commerce": CommerceHeader,
-  "category-tiles": ThreeCards,
-  "product-grid-editorial": ThreeCards,
-  "product-grid-compact": ThreeCards,
+  "category-tiles": CategoryTiles,
+  "product-grid-editorial": ProductGridEditorial,
+  "product-grid-compact": ProductGridCompact,
   "featured-product": FeaturedProduct,
   "features-grid": FeatureCards,
   "story-split": StorySplit,
   "story-timeline": StoryTimeline,
   "collection-cards": ThreeCards,
-  "service-cards": ThreeCards,
-  "portfolio-grid": ThreeCards,
-  "team-grid": ThreeCards,
+  "service-cards": ServiceCards,
+  "portfolio-grid": PortfolioGrid,
+  "team-grid": TeamGrid,
   "testimonial-quote": TestimonialQuote,
   "review-strip": ReviewStrip,
   "faq-list": FAQList,

@@ -35,6 +35,7 @@ describe("website builder domain", () => {
     expect(TAXONOMY.length).toBeGreaterThanOrEqual(9);
     expect(CATALOGUE.length).toBeGreaterThanOrEqual(25);
     expect(CATALOGUE.every(sample => validateSampleDefinition(sample).length === 0)).toBe(true);
+    expect(CATALOGUE.every(sample => TAXONOMY.some(category => category.name === sample.category && category.types.some(type => type.id === sample.type)))).toBe(true);
     expect(SAMPLE_STYLES).toContain("Editorial");
     expect(WEBSITE_PURPOSES.some(purpose => purpose.id === "portfolio")).toBe(true);
     expect(TAXONOMY.some(category => category.types.some(type => type.id === "product-grid"))).toBe(true);

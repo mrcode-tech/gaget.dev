@@ -164,6 +164,16 @@ export function validateSampleDefinition(sample: Sample): string[] {
   const errors: string[] = [];
   if (!sample.id.trim() || !sample.version.trim()) errors.push("Sample identity and version are required.");
   if (!sample.type.trim() || !sample.category.trim()) errors.push("Sample category and component type are required.");
+  if (!TAXONOMY.some(category => category.name === sample.category && category.types.some(type => type.id === sample.type))) {
+    errors.push("Sample category and component type must resolve to the approved taxonomy.");
+  }
+  if (!SAMPLE_STYLES.includes(sample.style as typeof SAMPLE_STYLES[number]) ||
+      sample.secondaryStyles.some(style => !SAMPLE_STYLES.includes(style as typeof SAMPLE_STYLES[number]))) {
+    errors.push("Sample visual styles must use the controlled style vocabulary.");
+  }
+  if (sample.purposes.some(purpose => purpose !== "all" && !WEBSITE_PURPOSES.some(item => item.id === purpose))) {
+    errors.push("Sample website purposes must use the controlled purpose vocabulary.");
+  }
   if (!sample.rendererKey.trim()) errors.push("A renderer key is required.");
   if (new Set(sample.fields.map(field => field.id)).size !== sample.fields.length) errors.push("Sample field identifiers must be unique.");
   for (const field of sample.fields) {
