@@ -121,3 +121,14 @@ The 11-level journey is: Define the website; Explore visual direction; Build sha
 - Users may export at any time; the output must clearly identify Complete or Incomplete status.
 - Overall completion requires all applicable required missions and final user confirmation.
 - Incomplete output preserves purpose, decisions, page/component structure, placeholders, unfinished missions, and decisions needing attention.
+
+
+## M02 refinement — sample-based composition boundary
+
+The MVP interaction model is a high-level website composition builder, not a detailed visual design editor. Users browse multiple predefined samples for each high-level component type, choose the sample they want, and compose pages by arranging top-level sections.
+
+Users may edit only the content fields and finite options exposed by a sample, including supported titles, text, labels, links, item data, and image slots. Users do not freely redesign internal visual structure, move nested elements, edit arbitrary styling, or use CSS/pixel-level controls.
+
+Desktop is the structural source: adding, removing, or replacing a high-level component on desktop updates the shared component collection across desktop, tablet, and mobile. Tablet/mobile cannot independently add, remove, or replace high-level components; they can independently reorder existing components, hide/show them, and adjust supported responsive presentation. Shared content and sample configuration synchronize across all three canvases.
+
+The three responsive canvases remain visible side by side. Narrow workspaces use horizontal scrolling or workspace zoom. The approved detailed behavior is specified in [M02](../milestones/M02-ux-architecture/README.md).
