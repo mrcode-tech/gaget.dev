@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("builder entry, required project definition, empty canvases, and independent preview", async ({ page }) => {
+test("builder entry, required project definition, empty canvases, and independent preview", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await page.getByRole("link", { name: "Website Design Builder" }).click();
@@ -17,6 +17,8 @@ test("builder entry, required project definition, empty canvases, and independen
   await page.getByRole("button", { name: /Create my website/ }).click();
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
   await expect(page.getByText("North Studio", { exact: true })).toBeVisible();
+  await expect(page.getByRole("note")).toContainText("refreshing or closing this page may discard unexported work");
+  await page.screenshot({ path: testInfo.outputPath("website-builder-workspace-desktop-1440x1000-light.png"), fullPage: true });
 
   for (const breakpoint of ["Desktop", "Tablet", "Mobile"]) {
     await expect(page.getByRole("region", { name: breakpoint + " website canvas" })).toBeVisible();
@@ -39,6 +41,7 @@ test("builder entry, required project definition, empty canvases, and independen
   const canvases = page.getByRole("region", { name: "Responsive website canvases" });
   await expect(canvases).toBeVisible();
   expect(await canvases.evaluate(element => (element as HTMLElement).scrollWidth > (element as HTMLElement).clientWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("website-builder-workspace-mobile-390x844-light.png"), fullPage: true });
   for (const breakpoint of ["Desktop", "Tablet", "Mobile"]) {
     await expect(page.getByRole("region", { name: breakpoint + " website canvas" })).toBeAttached();
   }
@@ -74,3 +77,4 @@ test("localized builder route preserves RTL document direction and its own shell
   await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Main navigation" })).toHaveCount(0);
 });
+\ntest("project state is intentionally not restored after a page refresh", async ({ page }) => {\n  await page.goto("/website-builder");\n  await page.getByLabel("Project name").fill("Session Only Studio");\n  await page.getByLabel("Website purpose").fill("A temporary in-memory website project.");\n  await page.getByRole("button", { name: /Create my website/ }).click();\n  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();\n  await page.reload();\n  await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();\n  await expect(page.getByLabel("Project name")).toHaveValue("");\n});\n

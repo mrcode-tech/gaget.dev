@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { Component, type ComponentType, type ReactNode } from "react";
 import type { Project, Sample } from "@/lib/website-builder/model";
 
 export type SampleRendererProps = {
@@ -84,8 +84,8 @@ export function getSampleRenderer(sample: Sample): ComponentType<SampleRendererP
   return rendererRegistry[sample.id] ?? null;
 }
 
-export function SampleRendererView(props: SampleRendererProps) {
+export class SampleRendererErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {\n  state = { failed: false };\n  static getDerivedStateFromError() { return { failed: true }; }\n  render() {\n    if (this.state.failed) return <div role="alert" className="p-6 text-center text-sm text-amber-700">This preview could not be rendered. Choose another design.</div>;\n    return this.props.children;\n  }\n}\nexport function SampleRendererView(props: SampleRendererProps) {
   const Renderer = getSampleRenderer(props.sample);
   if (!Renderer) return <div role="status" className="p-6 text-center text-sm text-amber-700">This sample preview is currently unavailable.</div>;
-  return <Renderer {...props} />;
+  return <SampleRendererErrorBoundary key={props.sample.id}><Renderer {...props} /></SampleRendererErrorBoundary>;
 }

@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CATALOGUE } from "@/lib/website-builder/model";
-import { getSampleRenderer, SampleRendererView } from "@/components/website-builder/sample-renderers";
+import { getSampleRenderer, SampleRendererErrorBoundary, SampleRendererView } from "@/components/website-builder/sample-renderers";
 
 describe("website builder sample renderer registry", () => {
   it("registers an isolated renderer for every initial synthetic sample", () => {

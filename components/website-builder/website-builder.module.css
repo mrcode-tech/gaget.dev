@@ -1,0 +1,56 @@
+.root {
+  --wb-background: #f2efe9;
+  --wb-surface: #ffffff;
+  --wb-text: #282a25;
+  --wb-muted: #70766e;
+  --wb-border: #e5e2dc;
+  --wb-control: #fbfaf7;
+  --wb-accent: #31463d;
+  --wb-accent-secondary: #9a5b43;
+  --wb-accent-text: #ffffff;
+  --wb-focus: #829184;
+  --wb-error: #9a5b43;
+  --wb-kicker: #9a674d;
+}
+
+.root[data-theme="dark"] {
+  --wb-background: #17201d;
+  --wb-surface: #202923;
+  --wb-text: #f1eee7;
+  --wb-muted: #c2cbc1;
+  --wb-border: #39463e;
+  --wb-control: #26342d;
+  --wb-accent: #496657;
+  --wb-accent-secondary: #a87961;
+  --wb-accent-text: #ffffff;
+  --wb-focus: #b6c8b8;
+  --wb-error: #ffb49b;
+  --wb-kicker: #e2b294;
+}
+
+.root :is(input, textarea, select) {
+  background-color: var(--wb-control);
+  border-color: var(--wb-border);
+  color: var(--wb-text);
+}
+
+.root :is(input, textarea)::placeholder {
+  color: var(--wb-muted);
+  opacity: 0.85;
+}
+
+.root :is(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid var(--wb-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
