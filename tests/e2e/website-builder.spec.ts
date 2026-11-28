@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test("builder entry, required project definition, empty canvases, and independent preview", async ({ page }, testInfo) => {
@@ -254,7 +255,121 @@ test("sample-defined responsive options affect only the selected breakpoint", as
   await expect(tabletColumns).toHaveValue("__shared__");
   await tabletColumns.selectOption("2");
   await expect(tabletColumns).toHaveValue("2");
+  await page.getByRole("button", { name: "Mobile" }).first().click();
   await expect(page.getByLabel("Columns on Mobile")).toHaveValue("__shared__");
   await page.getByRole("button", { name: "Desktop" }).first().click();
-  await expect(page.getByLabel("Columns on Desktop")).toHaveCount(0);
+  await expect(page.getByLabel("Columns", { exact: true })).toHaveValue("3");
 });
+
+
+test("all published component previews pass WCAG accessibility smoke checks", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Catalogue review");
+  await page.getByLabel("Website purpose").fill("Review all available sample designs.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+
+  const previews = page.getByRole("button", { name: "Preview", exact: true });
+  const count = await previews.count();
+  expect(count).toBeGreaterThanOrEqual(25);
+  for (let index = 0; index < count; index += 1) {
+    await previews.nth(index).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("This sample preview is currently unavailable.")).toHaveCount(0);
+    const accessibility = await new AxeBuilder({ page })
+      .include('[role="dialog"]')
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(accessibility.violations.map(violation => ({
+      id: violation.id,
+      impact: violation.impact,
+      description: violation.help,
+      nodes: violation.nodes.map(node => node.target),
+    })), "Sample preview accessibility for catalogue item " + index).toEqual([]);
+    await page.keyboard.press("Escape");
+  }
+});
+
+test("keyboard users can select, insert, edit, duplicate, move, replace, and remove sections", async ({ page }) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Keyboard Studio");
+  await page.getByLabel("Website purpose").fill("Use the builder without a pointer.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+
+  const preview = page.getByRole("button", { name: "Preview", exact: true }).first();
+  await preview.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: "Editorial split" })).toBeVisible();
+
+  const choose = page.getByRole("button", { name: "Choose this design" });
+  await choose.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: "Add Editorial split" })).toBeVisible();
+
+  const position = page.getByLabel("Insertion position");
+  await position.focus();
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Enter");
+  const insert = page.getByRole("button", { name: "Insert section" });
+  await insert.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("1 sections", { exact: false })).toBeVisible();
+
+  const title = page.getByLabel("Title", { exact: true });
+  await title.focus();
+  await page.keyboard.press("Control+A");
+  await page.keyboard.type("Keyboard composed title");
+  await expect(page.getByText("Keyboard composed title", { exact: true })).toHaveCount(3);
+
+  const duplicate = page.getByRole("button", { name: "Duplicate" });
+  await duplicate.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("2 sections", { exact: false })).toBeVisible();
+
+  const move = page.getByRole("button", { name: "↓ Move down" });
+  await move.focus();
+  await page.keyboard.press("Enter");
+
+  const replacement = page.getByLabel("Replace design");
+  await replacement.focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: "Replace with Bold centered" })).toBeVisible();
+  const confirmReplacement = page.getByRole("button", { name: "Confirm replacement" });
+  await confirmReplacement.focus();
+  await page.keyboard.press("Enter");
+
+  const remove = page.getByRole("button", { name: "Remove" });
+  await remove.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("alertdialog", { name: "Remove this section?" })).toBeVisible();
+  const confirmRemoval = page.getByRole("button", { name: "Remove section" });
+  await confirmRemoval.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("1 sections", { exact: false })).toBeVisible();
+});
+
+for (const viewport of [
+  { width: 1440, height: 900, label: "desktop" },
+  { width: 768, height: 1024, label: "tablet" },
+  { width: 390, height: 844, label: "mobile" },
+]) {
+  test("website builder shell has no WCAG A/AA violations at " + viewport.label, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/website-builder");
+    await page.getByLabel("Project name").fill("Accessibility review");
+    await page.getByLabel("Website purpose").fill("Review the responsive workspace.");
+    await page.getByRole("button", { name: /Create my website/ }).click();
+    const accessibility = await new AxeBuilder({ page })
+      .include("main")
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(accessibility.violations.map(violation => ({
+      id: violation.id,
+      impact: violation.impact,
+      description: violation.help,
+      nodes: violation.nodes.map(node => node.target),
+    })), "Builder shell accessibility at " + viewport.width + "px").toEqual([]);
+  });
+}
