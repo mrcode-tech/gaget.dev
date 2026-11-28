@@ -61,11 +61,13 @@ The product helps a non-designer create a wireframe-oriented visual design for a
 - Let the user decide how selected components adapt at each viewport.
 - Avoid requiring CSS media queries, breakpoint values, or technical measurements.
 
-### Progress and persistence
-- Preserve project state and mission completion.
+### Progress and session runtime
+- Preserve project state and mission completion during the active browser session.
 - Completion is a progress indicator, not a reward or permission gate.
-- Support revision of previous choices without losing unrelated work.
-- Provide reliable save and recovery appropriate to the MVP architecture.
+- Support revision of previous choices without losing unrelated work during the active session.
+- MVP C has no durable save/recovery, autosave, authentication, database, cloud storage, or browser-storage persistence.
+- Provide explicit user-triggered JSON and Markdown export at any time; optional ZIP handoff may include selected available local media.
+- Durable save/recovery, accounts, and version history are post-MVP platform capabilities owned by M15.
 
 ### Review and handoff
 - Show the current design even when some levels are incomplete.
@@ -158,3 +160,8 @@ The three responsive canvases remain visible side by side. Narrow workspaces use
 - Apply professional visual design, UX, website-pattern, design-system, frontend, responsive, accessibility, research, and critique practices.
 - Maintain a practical design-quality checklist for review; do not convert it into subjective user scoring or game rewards.
 - Keep the existing application repository as the source of truth; Figma is optional and complementary.
+
+
+## MVP C release-boundary amendment
+
+This approved decision supersedes any earlier requirement in this document for persistent saving/recovery in the first MVP. The initial release is session-based and may lose unexported project/media data when the browser session ends. Explicit JSON/Markdown export is included; export does not create an online backup or mutate project completion. M14 defines the export package. M15 owns future durable storage and recovery.
