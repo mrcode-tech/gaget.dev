@@ -72,3 +72,10 @@ These are planning specifications, not a claim that the listed functionality has
 - **M01 — Journey and Progression Architecture:** Approved — journey baseline complete. See [M01 specification](milestones/M01-game-architecture/README.md).
 
 M01 approval covers product decisions and planning specifications only. It does not claim application implementation or downstream testing is complete.
+
+
+- **M02 — UX Architecture and Interaction Design:** Approved. See [M02 specification](milestones/M02-ux-architecture/README.md) and its feature, interaction, and acceptance specifications.
+
+M02 clarifies that the product is a sample-based high-level website composition builder, not a Figma-like detailed visual editor. Users select predefined component samples, customize supported content, and arrange high-level sections. Desktop owns shared structure; tablet/mobile customize ordering, visibility, and supported responsive presentation. All three canvases are visible simultaneously.
+
+M02 approval covers UX/product planning only. It does not claim application implementation or testing is complete.
