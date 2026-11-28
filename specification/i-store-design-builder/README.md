@@ -12,6 +12,7 @@ This directory defines the product strategy, player journey, milestones, and sup
 4. [MVP definition](00-product-strategy/mvp-definition.md)
 5. [Player journey](website-design-playground-journey.md)
 6. [Development plan](website-design-game-implementation-plan.md)
+7. [First MVP implementation prompt](implementation/first-mvp-implementation-prompt.md)
 
 ## Milestones
 
@@ -42,6 +43,7 @@ This directory defines the product strategy, player journey, milestones, and sup
 - `design-system/` — product UI system, separate from the user's website design
 - `testing/` — quality strategy and test standards
 - `decisions/` — product and architecture decision records
+- `implementation/` — execution prompts and implementation guidance
 
 ## Product guardrails
 
@@ -89,18 +91,20 @@ These are planning specifications, not a claim that the listed functionality has
 - **M09 — Visual Identity Builder:** Approved — specification baseline complete. See [M09 specification](milestones/M09-visual-identity-builder/README.md). M09 defines a guided, user-directed project website identity with curated visual directions, semantic color roles, typography pairings, image direction, shared styles, spacing/layout presets, responsive previews, explicit confirmation, and sample-declared identity compatibility. It keeps website identity separate from M03 Builder Interface tokens and M07 catalogue definitions, preserves M06 composition/instance invariants, and uses WCAG 2.2 AA contrast checks as explanatory review findings. The initial runtime remains typed in-memory project data; implementation and verification remain future work.
 
 
-## MVP C decision and M10–M15 planning status
+## MVP C decision and M10–M15 approval status
 
 The accepted release boundary is recorded in [ADR-0001](decisions/ADR-0001-lightweight-session-mvp.md): temporary in-memory projects; explicit local JSON and Markdown export; optional ZIP handoff with selected available session media; no accounts, cloud persistence, autosave, browser-storage persistence, undo/redo, history, import, or backend asset library. This decision supersedes conflicting earlier save/recovery expectations for the first MVP.
 
-- **M10 — Homepage and Section Library:** Prepared baseline — ready for consolidated review. Defines generic homepage section families, user-selected samples, visitor-action intent, shared-frame references, and homepage validation. [M10 specification](milestones/M10-homepage-builder/README.md)
-- **M11 — Responsive Design:** Prepared baseline — ready for consolidated review. Defines three simultaneous device canvases, inherited defaults, bounded sample-declared overrides, independent tablet/mobile ordering and visibility, and responsive validation. [M11 specification](milestones/M11-responsive-design/README.md)
-- **M12 — Multi-page Website Builder:** Prepared baseline — ready for consolidated review. Defines page planning/lifecycle, optional user-selected starters, shared site elements, stable internal navigation references, route validation, and connected-site preview. [M12 specification](milestones/M12-multi-page-builder/README.md)
-- **M13 — Content, Media, and Website Quality:** Prepared baseline — ready for consolidated review. Defines sample-driven content states, placeholders, session-only user-selected local images, asset metadata, alt text, cross-milestone validation, and actionable readiness findings. [M13 specification](milestones/M13-content-and-quality/README.md)
-- **M14 — Export and Implementation Handoff:** Prepared baseline — ready for consolidated review. Defines canonical versioned JSON, readable Markdown, optional ZIP packaging with selected available session media, explicit Complete/Incomplete status, deterministic output, and local-only processing. [M14 specification](milestones/M14-export-and-handoff/README.md)
-- **M15 — Platform Readiness and Growth:** Prepared future-platform baseline — post-MVP. Defines standalone extraction, staged accounts/cloud persistence/recovery, asset hosting, sharing, operations, analytics, and conditional monetization. [M15 specification](milestones/M15-platform-and-growth/README.md)
+- **M10 — Homepage and Section Library:** Approved — specification baseline complete. Defines generic homepage section families, user-selected samples, visitor-action intent, shared-frame references, and homepage validation. [M10 specification](milestones/M10-homepage-builder/README.md)
+- **M11 — Responsive Design:** Approved — specification baseline complete. Defines three simultaneous device canvases, inherited defaults, bounded sample-declared overrides, independent tablet/mobile ordering and visibility, and responsive validation. [M11 specification](milestones/M11-responsive-design/README.md)
+- **M12 — Multi-page Website Builder:** Approved — specification baseline complete. Defines page planning/lifecycle, optional user-selected starters, shared site elements, stable internal navigation references, route validation, and connected-site preview. [M12 specification](milestones/M12-multi-page-builder/README.md)
+- **M13 — Content, Media, and Website Quality:** Approved — specification baseline complete. Defines sample-driven content states, placeholders, session-only user-selected local images, asset metadata, alt text, cross-milestone validation, and actionable readiness findings. [M13 specification](milestones/M13-content-and-quality/README.md)
+- **M14 — Export and Implementation Handoff:** Approved — specification baseline complete. Defines canonical versioned JSON, readable Markdown, optional ZIP packaging with selected available session media, explicit Complete/Incomplete status, deterministic output, and local-only processing. [M14 specification](milestones/M14-export-and-handoff/README.md)
+- **M15 — Platform Readiness and Growth:** Approved future-platform baseline — post-MVP scope. Defines standalone extraction, staged accounts/cloud persistence/recovery, asset hosting, sharing, operations, analytics, and conditional monetization. [M15 specification](milestones/M15-platform-and-growth/README.md)
 
-M10–M15 specifications are planning artifacts, not implementation or verification evidence. Their status is prepared for consolidated user review, not individually approved implementation authorization.
+M10–M15 specifications are approved planning artifacts, not implementation or verification evidence. All milestones M00–M15 have been approved as specification baselines. Approval authorizes implementation against the approved scope; it does not mean the features have already been implemented, tested, deployed, or merged.
+
+The [First MVP implementation prompt](implementation/first-mvp-implementation-prompt.md) consolidates the approved scope, implementation sequence, architectural boundaries, verification expectations, and Definition of Done for the first end-to-end MVP.
 
 ## Governance boundary
 
