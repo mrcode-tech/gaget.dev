@@ -4,7 +4,7 @@ test("builder entry, required project definition, empty canvases, and independen
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await page.getByRole("link", { name: "Website Design Builder" }).click();
-  await expect(page).toHaveURL(/\\/website-builder$/);
+  await expect(page).toHaveURL(new RegExp("/website-builder$"));
   await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
 
   await page.getByLabel("Project name").fill("North Studio");
@@ -30,7 +30,7 @@ test("builder entry, required project definition, empty canvases, and independen
   await page.setViewportSize({ width: 390, height: 844 });
   const canvases = page.getByRole("region", { name: "Responsive website canvases" });
   await expect(canvases).toBeVisible();
-  expect(await canvases.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
+  expect(await canvases.evaluate(element => (element as HTMLElement).scrollWidth > (element as HTMLElement).clientWidth)).toBe(true);
   for (const breakpoint of ["Desktop", "Tablet", "Mobile"]) {
     await expect(page.getByRole("region", { name: breakpoint + " website canvas" })).toBeAttached();
   }
