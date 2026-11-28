@@ -18,7 +18,7 @@ The user—not AI or the application—makes every creative decision.
 8. Preview the wireframe at desktop, tablet, and mobile sizes using guided responsive patterns.
 9. Move between levels freely, complete required missions, and revise earlier choices.
 10. Review the current design and its completion state.
-11. Preserve a complete design if all required levels are completed, or a useful partial design and handoff summary if work remains.
+11. Preserve a complete design only when all applicable required missions are complete and the user confirms the final review; otherwise preserve a useful partial design and handoff summary.
 
 ## MVP capabilities
 
