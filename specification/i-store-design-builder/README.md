@@ -79,3 +79,11 @@ M01 approval covers product decisions and planning specifications only. It does 
 M02 clarifies that the product is a sample-based high-level website composition builder, not a Figma-like detailed visual editor. Users select predefined component samples, customize supported content, and arrange high-level sections. Desktop owns shared structure; tablet/mobile customize ordering, visibility, and supported responsive presentation. All three canvases are visible simultaneously.
 
 M02 approval covers UX/product planning only. It does not claim application implementation or testing is complete.
+
+## M03 approval baseline
+
+**M03 — Product Visual Design System: Approved.** The builder interface and website component portfolio are specified as two distinct visual systems. The approved direction is a distinctive professional creative-tool identity, neutral foundation with a restrained brand accent, light/dark themes, functional typography, balanced workspace density, and purposeful motion. The component portfolio uses curated, progressively expanding samples with meaningful visual diversity, shared technical/content-slot conventions, isolated and contextual previews, and intentional responsive presentations.
+
+M03 also establishes a professional design knowledge framework and practical quality checklist for visual design, UX, website patterns, design-system engineering, frontend implementation, responsive design, accessibility, and design research. The product must avoid defaulting to generic GPT/AI-dashboard styling. See [M03 specification](milestones/M03-visual-design-system/README.md).
+
+M03 approval covers the visual/product design baseline and documentation only. It does not claim that application styles, tokens, interactive showcase, or component samples have been implemented or visually verified.
