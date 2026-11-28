@@ -147,3 +147,23 @@ The initial complete example is an online store; the reusable builder remains ge
 - P1: deeper reference library and additional sample families prioritized by user needs.
 
 M03 does not add AI-generated designs, AI recommendations, arbitrary visual editing, subjective design scoring, or changes to the M02 content-only customization boundary.
+
+
+## MVP C release-boundary amendment — authoritative priority correction
+
+This section supersedes conflicting P0/P1 labels above for the first MVP release.
+
+### P0 — MVP C
+- Session-only in-memory project state; no account, backend/database, cloud persistence, autosave, browser-storage persistence, undo/redo, version history, or recovery.
+- User-triggered JSON and Markdown export at any time, with explicit Complete/Incomplete status.
+- Optional ZIP handoff package containing JSON, Markdown, manifest, and user-selected available session media.
+- User-selected local image references are session-only; no hosted asset library or stock provider.
+- Core M10 homepage/section composition, M11 responsive behavior, M12 multi-page composition, M13 content/quality review, and M14 export/handoff are within the complete design-builder journey.
+
+### P1 — Post-MVP platform stages (M15)
+- Accounts, durable cloud projects, autosave, recovery, version history, and project dashboard.
+- Hosted asset library and persistent media lifecycle.
+- Sharing/collaboration, analytics, feature flags, support/admin tools, and starter-project expansion.
+
+### P2 — Separately validated future capabilities
+- Subscriptions/payments, marketplace, production code generation, publishing/hosting, and AI assistance. Each requires separate approval.
