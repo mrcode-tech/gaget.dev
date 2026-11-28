@@ -133,3 +133,17 @@ The initial complete example is an online store; the reusable builder remains ge
 - P0: autosave with saving/saved/error states and undo/redo for supported operations.
 - P1: version history with safe restoration of the complete project state.
 - P0: dedicated review with links back to workspace locations and complete/incomplete handoff status.
+
+## Approved M03 visual design system additions
+
+- P0: distinctive professional builder interface visual identity, separate from the website component portfolio.
+- P0: semantic design-token architecture and light/dark theme foundations for the builder.
+- P0: curated visual sample gallery with adjustable density, filtering, comparison, and enlarged/contextual previews.
+- P0: shared technical/content-slot conventions with independent visual identities for samples.
+- P0: intentional desktop/tablet/mobile presentation requirements for each sample.
+- P0: professional design knowledge framework and practical quality checklist.
+- P0: repository as the authoritative design-system source of truth.
+- P1: progressively expanded component catalogue and interactive design-system showcase.
+- P1: deeper reference library and additional sample families prioritized by user needs.
+
+M03 does not add AI-generated designs, AI recommendations, arbitrary visual editing, subjective design scoring, or changes to the M02 content-only customization boundary.
