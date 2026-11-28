@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   CATALOGUE, createProject, activePage, insertSample, reorder, toggleHidden,
-  removeInstance, duplicateInstance, reviewProject, serializeProject, markdownHandoff
+  removeInstance, duplicateInstance, reviewProject, serializeProject, markdownHandoff, setMissionStatus, validateProjectInput
 } from "@/lib/website-builder/model";
 
 describe("website builder domain", () => {
+  it("requires both a project name and a website purpose before initialization", () => {
+    expect(validateProjectInput({ name: "  ", purpose: "  " })).toEqual([
+      "Add a project name to continue.",
+      "Describe the website purpose to continue."
+    ]);
+    expect(() => createProject({ name: "Studio", purpose: " " })).toThrow("Describe the website purpose to continue.");
+  });
+
   it("creates a session project with one empty page and three breakpoint layouts", () => {
     const project = createProject({ name: "Studio", businessType: "Design studio", purpose: "Show work", audience: "Clients" });
     expect(project.pages).toHaveLength(1);
@@ -15,7 +23,7 @@ describe("website builder domain", () => {
   });
 
   it("inserts a unique instance into all responsive layouts", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     const page = insertSample(activePage(project), CATALOGUE[0]);
     expect(page.instances).toHaveLength(1);
     const id = page.instances[0].id;
@@ -25,7 +33,7 @@ describe("website builder domain", () => {
   });
 
   it("keeps tablet and mobile ordering independent", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     let page = insertSample(activePage(project), CATALOGUE[0]);
     page = insertSample(page, CATALOGUE[1]);
     const [first, second] = page.instances;
@@ -36,7 +44,7 @@ describe("website builder domain", () => {
   });
 
   it("hides a component at a breakpoint without removing membership", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     let page = insertSample(activePage(project), CATALOGUE[0]);
     const id = page.instances[0].id;
     page = toggleHidden(page, "mobile", id);
@@ -46,7 +54,7 @@ describe("website builder domain", () => {
   });
 
   it("duplicates independently and removes shared membership across breakpoints", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     let page = insertSample(activePage(project), CATALOGUE[0]);
     const original = page.instances[0];
     page = duplicateInstance(page, original.id);
@@ -60,7 +68,7 @@ describe("website builder domain", () => {
   });
 
   it("reports required content and exports a versioned blueprint and readable handoff", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     const page = insertSample(activePage(project), CATALOGUE[0]);
     const invalid = { ...project, pages: [{ ...page, instances: page.instances.map(i => ({ ...i, content: { ...i.content, title: "" } })) }] };
     expect(reviewProject(invalid).some(f => f.message.includes("Title"))).toBe(true);
@@ -71,7 +79,7 @@ describe("website builder domain", () => {
   
   it("inserts before and after a selected section and rejects missing anchors", async () => {
     const { insertSampleAt } = await import("@/lib/website-builder/model");
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     let page = insertSample(activePage(project), CATALOGUE[0]);
     page = insertSampleAt(page, CATALOGUE[1], { placement: "start" });
     const [first, second] = page.instances;
@@ -82,7 +90,7 @@ describe("website builder domain", () => {
 
   it("replaces a sample while preserving compatible content and initializing new fields", async () => {
     const { replaceSample } = await import("@/lib/website-builder/model");
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     let page = insertSample(activePage(project), CATALOGUE[0]);
     const instance = page.instances[0];
     page = { ...page, instances: [{ ...instance, content: { ...instance.content, title: "My title", body: "My copy" } }] };
@@ -98,7 +106,7 @@ describe("website builder domain", () => {
 
   it("keeps level completion separate from mission completion and supports review propagation", async () => {
     const { completeLevel, markMissionsForReview } = await import("@/lib/website-builder/model");
-    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     project = setMissionStatus(project, 2, "Complete");
     project = completeLevel(project, 2, true);
     project = setMissionStatus(project, 3, "Not started", true);
@@ -111,7 +119,7 @@ describe("website builder domain", () => {
 
   it("enforces page lifecycle and validates stable internal navigation references", async () => {
     const { createAdditionalPage, removePage, validateInternalNavigation } = await import("@/lib/website-builder/model");
-    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     project = createAdditionalPage(project, "About", "/about");
     const about = project.pages[1];
     expect(project.activePageId).toBe(about.id);
@@ -127,7 +135,7 @@ describe("website builder domain", () => {
     const { confirmFinalReview, contrastRatio, exportBlueprint, exportReadiness } = await import("@/lib/website-builder/model");
     expect(contrastRatio("#000000", "#ffffff")).toBe(21);
     expect(contrastRatio("not-a-color", "#ffffff")).toBeNull();
-    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
+    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
     const page = insertSample(activePage(project), CATALOGUE[0]);
     project = { ...project, pages: [{ ...page, instances: [{ ...page.instances[0], content: { ...page.instances[0].content, title: "" } }] }] };
     expect(exportReadiness(project).status).toBe("Incomplete");
