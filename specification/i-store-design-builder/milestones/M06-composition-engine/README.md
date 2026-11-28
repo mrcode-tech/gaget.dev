@@ -1,73 +1,115 @@
 # M06 — Website Composition Engine
 
-## Strategic purpose
-
-Make structured design choices render as a real website preview.
+**Status: Approved baseline — specification complete.** This milestone defines the user-directed, sample-based high-level composition engine. Approval covers the product and technical specifications only; it does not claim application implementation or verification is complete.
 
 ## Objective
 
-Build the schema-driven page renderer and editing operations that transform project data into a website.
+Extend the M05 catalogue and workspace foundation into a functional page-composition experience. Users select predefined samples, preview them independently, explicitly insert them into an active page, arrange high-level component instances, and edit only the content and finite configuration options declared by each sample.
 
-## Scope
+**Product boundary:** this is a high-level website composition builder, not a Figma-like detailed editor. Users do not author internal component structure, arbitrary CSS, pixel geometry, or unrestricted nested layouts.
 
-- Page renderer
-- section registry
-- component contracts
-- variants
-- insertion/removal/reordering
-- contextual configuration
-- shared components
-- token application
-- live preview
-- selection state
-- renderer validation.
+## Architectural context
 
-## Out of scope
+GaGet is the temporary environment for specifications and the first MVP. The builder remains an isolated, portable module that can later be extracted into a standalone codebase. M06 must preserve M04's conceptual model and M05's typed runtime, command boundaries, sample catalogue, and renderer registry.
 
-Full mission progression, content AI, publishing, and unrestricted freeform editing.
+The MVP remains browser-only, temporary, in-memory JSON. No backend, database, authentication, browser-storage persistence, autosave, undo/redo, history, or recovery guarantee is introduced.
 
-## Dependencies
+## Approved decisions
 
-M03–M05.
+| ID | Area | Decision |
+|---|---|---|
+| M06-01 | Composition | High-level component instances only; no internal freeform editing |
+| M06-02 | Insertion | Select, independently preview, confirm, choose position, then insert |
+| M06-03 | Position | Choose before/after an existing component or append |
+| M06-04 | Ordering | Drag/drop plus accessible non-drag move controls |
+| M06-05 | Replacement | Replace with a sample of the same component type; preserve compatible content |
+| M06-06 | Removal | Confirmation identifying the component before removal |
+| M06-07 | Content | Edit sample-defined typed content fields only |
+| M06-08 | Configuration | Finite sample-defined options; no arbitrary styling or geometry |
+| M06-09 | Identity | Every inserted instance has independent identity and data |
+| M06-10 | Duplication | Create a new independent instance |
+| M06-11 | Visibility | Breakpoint-specific visibility |
+| M06-12 | Ordering | Independent ordering for desktop, tablet, and mobile |
+| M06-13 | Shared content | Shared content/configuration across breakpoints except explicitly supported responsive overrides |
+| M06-14 | Placeholders | Purpose-aware placeholders and optional user asset references |
+| M06-15 | Sample change | Replace sample within the existing instance, preserving compatible content |
+| M06-16 | Page scope | Edit one active page at a time |
+| M06-17 | Validation | Structural and schema validation |
+| M06-18 | Feedback | Immediate preview updates after valid operations |
+| M06-19 | History | No undo/redo or history infrastructure in this MVP |
+| M06-20 | Scope | Core composition engine; advanced assets and extensive styling excluded |
 
-## Acceptance criteria
+## Key interaction flows
 
-A deterministic project model renders correctly; players can add, configure, reorder, and remove supported sections and see immediate canvas updates.
+### Insert
 
-## Deliverables
+Browse catalogue → select sample → independent preview → confirm sample → choose insertion position → create instance → update all three canvases.
 
-Functional composition engine and component contracts.
+Previewing never mutates composition. No insertion occurs without explicit confirmation and position selection.
 
-## Required supporting specifications
+### Replace
 
-Create or expand the following documents when the milestone is prepared for implementation. Do not create empty documents merely to satisfy a template.
+Choose another sample of the same component type → preview candidate → compare schemas → preserve compatible values and default incompatible/new fields → preview replacement → confirm → update the existing instance atomically.
 
-- `objectives-and-scope.md` — measurable goals, boundaries, assumptions, and exclusions.
-- `feature-specification.md` — feature behavior, requirements, and edge cases.
-- `user-stories.md` — user/system stories with traceable identifiers.
-- `interaction-specification.md` — screens, states, flows, and interaction rules where applicable.
-- `technical-design.md` — architecture, module boundaries, and implementation approach.
-- `data-contracts.md` — entities, schemas, events, and API contracts where applicable.
-- `acceptance-criteria.md` — testable milestone completion criteria.
-- `testing-strategy.md` — unit, integration, component, accessibility, and end-to-end verification.
-- `implementation-tasks.md` — dependency-ordered, reviewable engineering tasks.
+Cancellation leaves the original unchanged. Replacement preserves instance identity and valid responsive state.
 
-## Definition of done
+### Remove and duplicate
 
-- [ ] Scope, assumptions, and exclusions are agreed.
-- [ ] Dependencies are satisfied or explicitly resolved.
-- [ ] Feature requirements and user stories are traceable.
-- [ ] UX and technical decisions are documented where relevant.
-- [ ] Implementation tasks are small enough to review and verify.
-- [ ] Acceptance criteria pass.
-- [ ] Relevant automated and manual verification evidence is recorded.
-- [ ] Known limitations and follow-up work are documented.
-- [ ] The roadmap and feature inventory reflect any approved scope changes.
+Removal requires a clear confirmation and removes shared membership from all three responsive layouts. Hiding is a separate breakpoint-specific operation.
 
-## Open decisions
+Duplication creates a new identity with copied values and independent subsequent edits.
 
-Record unresolved product or technical questions here. Each decision should eventually be resolved or moved to the shared `decisions/` area with rationale and consequences.
+## Responsive composition
 
-## Status
+The page has one shared component collection and three responsive layouts. Desktop is the membership surface for insert, remove, replace, and duplicate. Tablet and mobile cannot change shared membership; they can independently reorder, hide/show, and adjust sample-declared responsive presentation options.
 
-**Planning.** This document defines intended scope; it does not claim implementation is complete.
+Shared content changes update all three previews. Breakpoint-specific changes affect only the target canvas. All three canvases remain simultaneously available; narrow workspaces use horizontal scrolling or zoom.
+
+## Validation and rendering
+
+All domain mutations pass through explicit command boundaries and validate before commit. Invalid operations return controlled failures and leave the prior valid state unchanged. Extend the M05 renderer registry; sample renderers receive validated definitions, instance content/configuration, and responsive presentation inputs, and never mutate project state.
+
+## Scope exclusions
+
+- Figma-like detailed editing, arbitrary CSS, freeform geometry, and unrestricted nested elements.
+- User-authored component templates.
+- Backend, database, authentication, persistence, autosave, undo/redo, history, or recovery.
+- Collaboration, import/export, or asset-management infrastructure.
+- AI recommendations or generation, stock imagery, or image generation.
+- Cross-page component movement or simultaneous multi-page editing.
+
+## Documents
+
+- [Composition domain model](composition-domain-model.md)
+- [Insertion and ordering](insertion-and-ordering.md)
+- [Replacement, removal, and duplication](replacement-removal-and-duplication.md)
+- [Content and configuration](content-and-configuration.md)
+- [Responsive composition](responsive-composition.md)
+- [Placeholders and user assets](placeholders-and-assets.md)
+- [Commands, validation, and rendering](commands-validation-and-rendering.md)
+- [Verification and acceptance](verification-and-acceptance.md)
+
+## Relationship to earlier milestones
+
+- **M00:** generic, user-directed product strategy and guardrails.
+- **M01:** free navigation, user-directed composition, shared component collection, independent responsive layouts, placeholders.
+- **M02:** sample-based high-level editing boundary and three-canvas workspace.
+- **M03:** builder visual system and progressive website component portfolio.
+- **M04:** conceptual entities, sample/instance separation, typed content, responsive data model, and temporary in-memory runtime.
+- **M05:** isolated workspace, typed runtime, static sample catalogue, independent preview, and renderer registry.
+
+M06 refines composition operations without silently changing earlier approved decisions. M04/M05's later-approved deferral of persistence and history governs over earlier provisional M02 expectations for autosave/undo/redo.
+
+## Completion status
+
+- [x] M06 decisions reviewed and approved.
+- [x] Composition model and lifecycle operations specified.
+- [x] Responsive behavior and validation rules specified.
+- [x] Content, configuration, and placeholder boundaries specified.
+- [x] Verification strategy and acceptance criteria documented.
+- [ ] Application implementation — future work.
+- [ ] Automated and manual implementation verification — future work.
+
+## Governance
+
+Use synthetic project and sample data in specifications and tests. Keep specification approval distinct from implementation and test completion. Do not modify GaGet global behavior or couple the module to GaGet-specific business logic.
