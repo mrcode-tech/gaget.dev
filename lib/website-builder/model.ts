@@ -88,9 +88,6 @@ export const LEVELS = [
   "Design additional pages", "Review website", "Complete design and handoff",
 ] as const;
 
-const field = (id: string, label: string, kind: FieldKind, defaultValue: string, required = false): FieldDefinition =>
-  ({ id, label, kind, defaultValue, required });
-
 export const DEFAULT_MISSIONS: Mission[] = LEVELS.map((title, level) => ({
   id: "level-" + level, title, level, status: "Not started", notNeeded: false,
 }));
@@ -331,7 +328,7 @@ export function updateInstanceContent(page: Page, instanceId: string, fieldId: s
   if (!sample) return { ok: false, error: "The selected sample definition is unavailable." };
   const field = sample.fields.find(item => item.id === fieldId);
   if (!field) return { ok: false, error: "This field is not supported by the selected design." };
-  const error = validateFieldValue(field, value);
+  const error = validateFieldValue({ ...field, required: false }, value);
   if (error) return { ok: false, error };
   return { ok: true, value: { ...page, instances: page.instances.map(item => item.id === instanceId
     ? { ...item, content: { ...item.content, [fieldId]: value } } : item) } };
