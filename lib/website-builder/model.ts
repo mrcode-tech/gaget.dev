@@ -529,6 +529,20 @@ export function updateResponsivePresentation(page: Page, breakpoint: Breakpoint,
   } } } };
 }
 
+export function clearResponsivePresentation(page: Page, breakpoint: Breakpoint, instanceId: string, key: string): CommandResult<Page> {
+  const instance = page.instances.find(item => item.id === instanceId);
+  if (!instance) return { ok: false, error: "The selected section no longer exists." };
+  const sample = getSampleById(instance.sampleId);
+  if (!sample?.responsive.supportedOverrides.includes(key)) return { ok: false, error: "This design does not support that responsive presentation option." };
+  const layout = page.layouts[breakpoint];
+  const presentation = { ...(layout.presentation ?? {}) };
+  const overrides = { ...(presentation[instanceId] ?? {}) };
+  delete overrides[key];
+  if (Object.keys(overrides).length) presentation[instanceId] = overrides;
+  else delete presentation[instanceId];
+  return { ok: true, value: { ...page, layouts: { ...page.layouts, [breakpoint]: { ...layout, presentation } } } };
+}
+
 export function removeComponentCommand(page: Page, instanceId: string): CommandResult<Page> {
   if (!page.instances.some(instance => instance.id === instanceId)) return { ok: false, error: "The selected section no longer exists." };
   return { ok: true, value: removeInstance(page, instanceId) };

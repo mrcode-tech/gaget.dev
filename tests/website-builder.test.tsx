@@ -5,7 +5,7 @@ import {
   duplicateInstance, reviewProject, serializeProject, markdownHandoff, setMissionStatus,
   validateProjectInput, validateSampleDefinition, validatePageComposition, searchCatalogue,
   replaceSample, resolveReplacementContent, prepareReplacement, updateInstanceContent,
-  updateInstanceConfiguration, updateInstancePlaceholder, updateResponsivePresentation, insertComponentCommand, confirmFinalReview, contrastRatio,
+  updateInstanceConfiguration, updateInstancePlaceholder, updateResponsivePresentation, clearResponsivePresentation, insertComponentCommand, confirmFinalReview, contrastRatio,
   exportBlueprint, exportReadiness, completeLevel, markMissionsForReview, createAdditionalPage,
   removePage, validateInternalNavigation
 } from "@/lib/website-builder/model";
@@ -107,6 +107,19 @@ describe("website builder domain", () => {
     expect(toggleHidden(page, "desktop", id)).toBe(page);
   });
 
+  it("duplicates configuration, placeholder metadata, and responsive overrides independently", () => {
+    let page = insertSample(activePage(createProject(projectInput)), CATALOGUE.find(sample => sample.id === "product-grid-editorial")!);
+    const original = page.instances[0];
+    const changed = updateResponsivePresentation(page, "tablet", original.id, "columns", "2");
+    if (changed.ok) page = changed.value;
+    page = duplicateInstance(page, original.id);
+    const copy = page.instances.find(instance => instance.id !== original.id)!;
+    expect(copy.configuration).toEqual(original.configuration);
+    expect(copy.configuration).not.toBe(original.configuration);
+    expect(page.layouts.tablet.presentation?.[copy.id]).toEqual({ columns: "2" });
+    expect(page.layouts.tablet.presentation?.[copy.id]).not.toBe(page.layouts.tablet.presentation?.[original.id]);
+  });
+
   it("duplicates independent content and removes shared membership across all layouts", () => {
     let page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
     const original = page.instances[0];
@@ -139,10 +152,19 @@ describe("website builder domain", () => {
     expect(updateInstanceConfiguration(page, instance.id, "columns", "99")).toMatchObject({ ok: false });
   });
 
-  it("rejects unsupported responsive presentation options atomically", () => {
-    const page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
+  it("supports only declared responsive options and can reset an override to shared", () => {
+    let page = insertSample(activePage(createProject(projectInput)), CATALOGUE.find(sample => sample.id === "product-grid-editorial")!);
     const instance = page.instances[0];
-    expect(updateResponsivePresentation(page, "mobile", instance.id, "columns", "2")).toMatchObject({ ok: false });
+    const updated = updateResponsivePresentation(page, "tablet", instance.id, "columns", "2");
+    expect(updated.ok).toBe(true);
+    if (updated.ok) page = updated.value;
+    expect(page.layouts.tablet.presentation?.[instance.id].columns).toBe("2");
+    expect(page.layouts.desktop.presentation?.[instance.id]).toBeUndefined();
+    expect(updateResponsivePresentation(page, "mobile", instance.id, "unsupported", "2")).toMatchObject({ ok: false });
+    const cleared = clearResponsivePresentation(page, "tablet", instance.id, "columns");
+    expect(cleared.ok).toBe(true);
+    if (cleared.ok) page = cleared.value;
+    expect(page.layouts.tablet.presentation?.[instance.id]).toBeUndefined();
     expect(validatePageComposition(page)).toEqual([]);
   });
 

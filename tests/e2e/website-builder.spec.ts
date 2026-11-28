@@ -236,3 +236,25 @@ test("shared membership changes are disabled outside the desktop canvas", async 
   await expect(page.getByRole("button", { name: "Remove" })).toBeDisabled();
   await expect(page.getByLabel("Replace design")).toBeDisabled();
 });
+
+
+test("sample-defined responsive options affect only the selected breakpoint", async ({ page }) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Common Ground");
+  await page.getByLabel("Website purpose").fill("Present a considered product collection.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await page.getByLabel("Component category").selectOption({ label: "Products and services" });
+  await page.getByLabel("Component type").selectOption("product-grid");
+  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await page.getByRole("button", { name: "Insert section" }).click();
+
+  await page.getByRole("button", { name: "Tablet" }).first().click();
+  const tabletColumns = page.getByLabel("Columns on Tablet");
+  await expect(tabletColumns).toHaveValue("__shared__");
+  await tabletColumns.selectOption("2");
+  await expect(tabletColumns).toHaveValue("2");
+  await expect(page.getByLabel("Columns on Mobile")).toHaveValue("__shared__");
+  await page.getByRole("button", { name: "Desktop" }).first().click();
+  await expect(page.getByLabel("Columns on Desktop")).toHaveCount(0);
+});
