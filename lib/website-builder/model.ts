@@ -88,7 +88,8 @@ export function serializeProject(project:Project):string {
  return JSON.stringify({schemaVersion:"1.0.0",exportedAt:"",project},null,2);
 }
 export function markdownHandoff(project:Project):string {
- return ["# "+project.name,"","> Session-only design blueprint. This document describes the composition; it is not a published website.","","## Website definition","- Business: "+project.businessType,"- Purpose: "+project.purpose,"- Audience: "+project.audience,"","## Visual identity","- Direction: "+project.identity.palette,"- Primary: "+project.identity.primary,"- Background: "+project.identity.background,"- Typography: "+project.identity.font,"","## Pages",...project.pages.flatMap(p=>["### "+p.name+" ("+p.slug+")",...p.instances.map(i=>{const s=CATALOGUE.find(x=>x.id===i.sampleId);return "- "+(s?.name??i.sampleId)+": "+(i.content.title??i.content.quote??"");}),""]),"## Responsive behavior","Desktop, tablet and mobile layouts are maintained independently for order and visibility."].join("\n");
+ return ["# "+project.name,"","> Session-only design blueprint. This document describes the composition; it is not a published website.","","## Website definition","- Business: "+project.businessType,"- Purpose: "+project.purpose,"- Audience: "+project.audience,"","## Visual identity","- Direction: "+project.identity.palette,"- Primary: "+project.identity.primary,"- Background: "+project.identity.background,"- Typography: "+project.identity.font,"","## Pages",...project.pages.flatMap(p=>["### "+p.name+" ("+p.slug+")",...p.instances.map(i=>{const s=CATALOGUE.find(x=>x.id===i.sampleId);return "- "+(s?.name??i.sampleId)+": "+(i.content.title??i.content.quote??"");}),""]),"## Responsive behavior","Desktop, tablet and mobile layouts are maintained independently for order and visibility."].join("
+");
 }
 
 
@@ -217,13 +218,18 @@ export function reviewIdentity(identity: Identity): { role: string; ratio: numbe
       passesAA: (contrastRatio(identity.primary, identity.background) ?? 0) >= 3 }];
 }
 
-export function confirmFinalReview(project: Project, confirmed: boolean): Project {\n  return { ...project, finalReviewConfirmed: confirmed };\n}\n\nexport function exportReadiness(project: Project): ExportReadiness {
+export function confirmFinalReview(project: Project, confirmed: boolean): Project {
+  return { ...project, finalReviewConfirmed: confirmed };
+}
+
+export function exportReadiness(project: Project): ExportReadiness {
   const findings = [...reviewProject(project)];
   for (const page of project.pages) {
     if (!page.name.trim() || !page.slug.startsWith("/")) findings.push({ severity: "error", message: "Page name and absolute internal route are required.", pageId: page.id });
   }
   for (const issue of validateInternalNavigation(project)) findings.push({ severity: "error", message: issue.message, pageId: issue.pageId, instanceId: issue.instanceId });
-  const allApplicableMissionsComplete = project.missions.every(mission => mission.status === "Complete");\n  return { status: allApplicableMissionsComplete && project.finalReviewConfirmed ? "Complete" : "Incomplete", findings };
+  const allApplicableMissionsComplete = project.missions.every(mission => mission.status === "Complete");
+  return { status: allApplicableMissionsComplete && project.finalReviewConfirmed ? "Complete" : "Incomplete", findings };
 }
 
 export function exportBlueprint(project: Project, assets: AssetRecord[] = []): string {
