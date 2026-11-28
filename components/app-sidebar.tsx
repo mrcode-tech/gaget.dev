@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Heart, Home, Sparkles, X, Wrench, PanelLeftClose, PanelLeftOpen, Image as ImageIcon, Music, Film, Clock3, Workflow, PlugZap, Palette } from "lucide-react";
+import { Heart, Home, Sparkles, X, Wrench, PanelLeftClose, PanelLeftOpen, Image as ImageIcon, Music, Film, Clock3, Workflow, PlugZap, Palette, Blocks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -67,6 +67,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             <NavLink href="/workflow/pipeline" label={locale === "fa" ? "محیط دسته‌ای" : locale === "ar" ? "مساحة العمل المجمّعة" : "Batch Workbench"} active={isActive("/workflow/pipeline")} icon={<Workflow className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
             <NavLink href="/mcp" label={locale === "fa" ? "MCP و یکپارچه‌سازی‌ها" : locale === "ar" ? "MCP والتكاملات" : "MCP & Integrations"} active={isActive("/mcp")} icon={<PlugZap className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
             <NavLink href="/design" label={locale === "fa" ? "آزمایشگاه طراحی" : locale === "ar" ? "مختبر التصميم" : "Design Playground"} active={isActive("/design")} icon={<Palette className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
+            <NavLink href="/website-builder" label={locale === "fa" ? "سازنده طراحی وب‌سایت" : locale === "ar" ? "منشئ تصميم المواقع" : "Website Design Builder"} active={isActive("/website-builder")} icon={<Blocks className="h-4 w-4" />} collapsed={isCollapsed} onClick={mobile ? () => setMobileOpen(false) : undefined} />
           </div>
         </nav>
         {mobile && <section aria-label="Preferences" className="mt-3 space-y-1 border-t border-border px-1 pt-2">
