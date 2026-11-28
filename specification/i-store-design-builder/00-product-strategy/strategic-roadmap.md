@@ -86,3 +86,16 @@ Downstream ownership:
 - M07 authors and expands the component sample portfolio and learning examples.
 - M10–M12 deliver homepage, responsive, and multi-page composition.
 - M13–M14 deliver content review and handoff.
+
+## M03 approval baseline
+
+**M03 — Product Visual Design System: Approved.** M03 defines separate visual systems for the builder interface and the website component design portfolio, plus a professional design knowledge and quality framework. The builder's identity is distinctive, professional, and creative rather than a generic GPT/AI dashboard. The component portfolio is curated and progressively expanded, with independent sample visual identities and shared technical/content-slot conventions.
+
+Downstream ownership:
+- M04 defines stable design data contracts for samples, supported content slots/options, and responsive presentation metadata.
+- M05 implements the isolated builder workspace using the approved System A visual foundations.
+- M06 implements sample-driven composition and rendering boundaries.
+- M07 authors, documents, and expands the System B component portfolio using the professional framework and quality checklist.
+- M10–M12 apply responsive sample guidance to homepage and multi-page composition.
+
+M03 approval is a planning/design baseline, not implementation or visual verification evidence.
