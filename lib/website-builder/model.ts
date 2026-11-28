@@ -8,8 +8,8 @@ export type Sample = {
 export type Instance = { id: string; sampleId: string; content: Record<string,string> };
 export type ResponsiveLayout = { order: string[]; hidden: string[] };
 export type Page = { id: string; name: string; slug: string; instances: Instance[]; layouts: Record<Breakpoint,ResponsiveLayout> };
-export type MissionStatus = "Not started" | "In progress" | "Complete" | "Needs review" | "Not needed";
-export type Mission = { id: string; title: string; level: number; status: MissionStatus };
+export type MissionStatus = "Not started" | "In progress" | "Complete" | "Needs review";
+export type Mission = { id: string; title: string; level: number; status: MissionStatus; notNeeded: boolean };
 export type Identity = { palette: string; primary: string; background: string; surface: string; text: string; accent: string; font: string };
 export type Project = {
   id: string; name: string; businessType: string; purpose: string; audience: string;
@@ -32,7 +32,7 @@ export const CATALOGUE: Sample[] = [
  {id:"contact-banner",type:"contact",category:"Conversion",name:"Contact callout",description:"A focused invitation to take the next step.",accent:"#6b7e65",layout:"banner",fields:[field("title","Title","text","Have a project in mind?",true),field("body","Description","textarea","Tell us what you are looking for."),field("button","Button label","text","Get in touch")]},
  {id:"footer-simple",type:"footer",category:"Shared elements",name:"Simple footer",description:"A compact closing section with useful links.",accent:"#3e4a43",layout:"footer",fields:[field("brand","Brand","text","Your brand"),field("note","Closing note","text","Thoughtfully made."),field("copyright","Copyright","text","© 2026")]},
 ];
-export const DEFAULT_MISSIONS: Mission[] = LEVELS.map((title,level)=>({id:"level-"+level,title,level,status:"Not started"}));
+export const DEFAULT_MISSIONS: Mission[] = LEVELS.map((title,level)=>({id:"level-"+level,title,level,status:"Not started",notNeeded:false}));
 export const PALETTES: Identity[] = [
  {palette:"Warm studio",primary:"#9a5b43",background:"#f4efe8",surface:"#fffdf9",text:"#282522",accent:"#c69b68",font:"Georgia"},
  {palette:"Botanical",primary:"#536b55",background:"#eff1e9",surface:"#fbfcf8",text:"#252d27",accent:"#b98d62",font:"Arial"},
