@@ -106,3 +106,11 @@ Responsive workspace rules:
 - Narrow workspaces use horizontal scrolling or workspace zoom to preserve the three-canvas arrangement.
 
 The MVP workspace also includes a visual component portfolio, contextual content properties, collapsible mission guidance, autosave feedback, undo/redo, and a dedicated review experience. Version history with safe full-project restoration is part of the approved MVP UX.
+
+## Approved M03 visual design baseline
+
+The MVP visual direction is governed by [M03](../milestones/M03-visual-design-system/README.md). The builder interface and website component portfolio are separate visual systems. The builder uses a distinctive professional creative-workspace identity, neutral foundation with a restrained accent, light/dark themes, functional typography, balanced density, and subtle purposeful motion. It must not default to generic GPT/AI-dashboard styling.
+
+The component portfolio starts with a curated set and expands progressively across a defined generic taxonomy. Samples may have distinct visual identities while sharing technical conventions and explicit content-slot contracts. Each sample provides isolated and contextual previews and intentional desktop/tablet/mobile presentations. Users retain the M02 high-level composition and bounded content-customization model.
+
+The professional design framework and quality checklist guide design and review. They are not subjective user scores, rewards, or automatic design recommendations.
