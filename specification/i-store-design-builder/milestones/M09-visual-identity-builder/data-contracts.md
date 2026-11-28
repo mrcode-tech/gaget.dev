@@ -10,6 +10,8 @@ Catalogue definitions, project identity values, and component instance data rema
 
 A project has zero or one active website identity in the initial MVP.
 
+This refines M04's conceptual `ProjectSettings.visualDirection` into a richer project-level website identity contract. Implementations must not create two independent sources of truth for the same website visual direction; the approved identity is the authoritative representation, while any legacy field is either mapped into it or retired within the typed project model.
+
 Conceptual fields:
 
 | Field | Meaning |
