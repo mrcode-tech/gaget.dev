@@ -65,3 +65,10 @@ M00 is the approved product-strategy baseline. Later milestones may refine detai
 ## Status
 
 These are planning specifications, not a claim that the listed functionality has been implemented.
+
+## Milestone status
+
+- **M00 — Product strategy:** Approved.
+- **M01 — Journey and Progression Architecture:** Approved — journey baseline complete. See [M01 specification](milestones/M01-game-architecture/README.md).
+
+M01 approval covers product decisions and planning specifications only. It does not claim application implementation or downstream testing is complete.
