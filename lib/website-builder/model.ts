@@ -217,7 +217,7 @@ export function reviewIdentity(identity: Identity): { role: string; ratio: numbe
       passesAA: (contrastRatio(identity.primary, identity.background) ?? 0) >= 3 }];
 }
 
-export function exportReadiness(project: Project): ExportReadiness {
+export function confirmFinalReview(project: Project, confirmed: boolean): Project {\n  return { ...project, finalReviewConfirmed: confirmed };\n}\n\nexport function exportReadiness(project: Project): ExportReadiness {
   const findings = [...reviewProject(project)];
   for (const page of project.pages) {
     if (!page.name.trim() || !page.slug.startsWith("/")) findings.push({ severity: "error", message: "Page name and absolute internal route are required.", pageId: page.id });
