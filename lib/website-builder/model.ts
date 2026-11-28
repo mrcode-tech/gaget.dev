@@ -669,6 +669,4 @@ export function exportBlueprint(project: Project, assets: AssetRecord[] = []): s
   return JSON.stringify({ schemaVersion: "1.0.0", status: readiness.status, project, assets: assetManifest, findings: readiness.findings }, null, 2);
 }
 
-export function serializeProject(project: Project): string {
-  return JSON.stringify({ schemaVersion: "1.0.0", exportedAt: "", project }, null, 2);
-}
+

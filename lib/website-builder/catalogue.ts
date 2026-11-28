@@ -41,18 +41,30 @@ const responsiveFor = (layout: Sample["layout"]): Sample["responsive"] => {
   };
 };
 
+const inferLayout = (type: string): Sample["layout"] => {
+  if (type === "hero") return "hero";
+  if (type === "header" || type === "contact" || type === "newsletter") return "banner";
+  if (type === "story" || type === "featured-product" || type === "article" || type === "contact-details") return "split";
+  if (type === "footer") return "footer";
+  return "cards";
+};
+
 const sample = (
-  definition: Omit<Sample, "version" | "lifecycle" | "secondaryStyles" | "purposes" | "keywords" | "configuration" | "responsive"> &
-    Partial<Pick<Sample, "secondaryStyles" | "purposes" | "keywords" | "configuration" | "responsive">>,
-): Sample => ({
-  version: "1.0.0",
-  lifecycle: "published",
-  secondaryStyles: [],
-  purposes: ["general-business"],
-  keywords: [],
-  responsive: responsiveFor(definition.layout),
-  ...definition,
-});
+  definition: Omit<Sample, "version" | "lifecycle" | "secondaryStyles" | "purposes" | "keywords" | "configuration" | "responsive" | "layout"> &
+    Partial<Pick<Sample, "secondaryStyles" | "purposes" | "keywords" | "configuration" | "responsive" | "layout">>,
+): Sample => {
+  const layout = definition.layout ?? inferLayout(definition.type);
+  return {
+    version: "1.0.0",
+    lifecycle: "published",
+    secondaryStyles: [],
+    purposes: ["general-business"],
+    keywords: [],
+    responsive: responsiveFor(layout),
+    ...definition,
+    layout,
+  };
+};
 
 export const TAXONOMY: TaxonomyCategory[] = [
   { id: "navigation", name: "Navigation", description: "Help visitors understand where they are and move around the website.", types: [
@@ -179,7 +191,7 @@ export const CATALOGUE: Sample[] = [
   sample({ id: "contact-details", type: "contact-details", category: "Information", subcategory: "Contact", rendererKey: "contact-details", name: "Contact details", description: "A practical contact block with email, phone, and location.", rationale: "Makes essential contact routes easy to find and use.", style: "Classic", accent: "#7c887c", purposes: ["organization", "services", "general-business"], keywords: ["contact", "email", "phone", "address"], fields: [
     field("title", "Title", "text", "Visit or get in touch", { required: true }), field("email", "Email", "url", "mailto:hello@example.test"), field("phone", "Phone", "text", "+44 20 0000 0000"), field("location", "Location", "text", "London, United Kingdom"),
   ] }),
-  sample({ id: "newsletter-panel", type: "newsletter", category: "Conversion and actions", subcategory: "Newsletter", rendererKey: "newsletter-panel", name: "Newsletter invitation", description: "A compact signup invitation with supporting copy.", rationale: "Offers a low-pressure way to stay connected after a visit.", style: "Organic", accent: "#7a8a72", purposes: ["creator", "publication", "store"], keywords: ["newsletter", "updates", "subscribe"], fields: [
+  sample({ id: "newsletter-panel", type: "newsletter", category: "Conversion and actions", subcategory: "Newsletter", rendererKey: "newsletter-panel", name: "Newsletter invitation", description: "A compact signup invitation with supporting copy.", rationale: "Offers a low-pressure way to stay connected after a visit.", style: "Organic", accent: "#7a8a72", purposes: ["creator", "store"], keywords: ["newsletter", "updates", "subscribe"], fields: [
     field("title", "Title", "text", "A note from the studio", { required: true }), field("body", "Description", "textarea", "Occasional updates, new work, and things worth sharing."), field("button", "Button label", "text", "Join the list"),
   ] }),
   sample({ id: "trust-strip", type: "trust", category: "Social proof", subcategory: "Trust indicators", rendererKey: "trust-strip", name: "Service assurances", description: "A row of practical assurances or credentials.", rationale: "Surfaces useful confidence-building information without a large section.", style: "Geometric", accent: "#6b7e65", purposes: ["store", "services"], keywords: ["trust", "delivery", "guarantee"], fields: [
@@ -191,7 +203,7 @@ export const CATALOGUE: Sample[] = [
   sample({ id: "process-steps", type: "process", category: "Content", subcategory: "Process", rendererKey: "process-steps", name: "A clear process", description: "Three steps that explain what happens next.", rationale: "Reduces uncertainty around a service or multi-step experience.", style: "Minimal", accent: "#728576", purposes: ["services", "organization"], keywords: ["process", "steps", "how it works"], fields: [
     field("title", "Title", "text", "How we work together", { required: true }), field("item1", "Step one", "text", "Start with a conversation"), field("item2", "Step two", "text", "Shape a clear plan"), field("item3", "Step three", "text", "Make it happen"),
   ] }),
-  sample({ id: "article-feature", type: "article", category: "Content", subcategory: "Editorial", rendererKey: "article-feature", name: "Featured story", description: "A publication-style feature with a lead image and excerpt.", rationale: "Gives one story a strong entry point within an editorial website.", style: "Editorial", accent: "#8b7465", purposes: ["publication", "creator", "organization"], keywords: ["article", "journal", "publication"], fields: [
+  sample({ id: "article-feature", type: "article", category: "Content", subcategory: "Editorial", rendererKey: "article-feature", name: "Featured story", description: "A publication-style feature with a lead image and excerpt.", rationale: "Gives one story a strong entry point within an editorial website.", style: "Editorial", accent: "#8b7465", purposes: ["creator", "organization"], keywords: ["article", "journal", "publication"], fields: [
     field("eyebrow", "Category", "text", "Field notes"), field("title", "Article title", "text", "The value of making time", { required: true }), field("body", "Excerpt", "textarea", "A short reflection on attention, craft, and the everyday."), field("author", "Author", "text", "The editorial team"), field("image", "Lead image", "image", "", { placeholderPurpose: "Landscape image for the featured story" }),
   ] }),
   sample({ id: "footer-simple", type: "footer", category: "Footer and closing", subcategory: "Footer", rendererKey: "footer-simple", name: "Simple footer", description: "A compact closing section with useful links.", rationale: "Closes the page with a recognizable identity and a small amount of useful detail.", style: "Minimal", accent: "#3e4a43", purposes: ["all"], keywords: ["footer", "brand", "closing"], fields: [
