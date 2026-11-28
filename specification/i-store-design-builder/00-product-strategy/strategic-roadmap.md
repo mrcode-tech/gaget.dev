@@ -70,3 +70,19 @@ Downstream ownership:
 - M13 and M14 define final review and handoff details.
 
 The first complete journey example is store-focused; the product itself remains generic.
+
+
+## M02 approval baseline
+
+**M02 — UX Architecture and Interaction Design: Approved.** The approved workspace, sample-based composition model, editing boundary, three-canvas responsive behavior, persistence expectations, review experience, and accessibility requirements are documented in [M02](../milestones/M02-ux-architecture/README.md).
+
+Key product boundary: users build websites by selecting and arranging predefined high-level component samples and editing supported content fields. This is not a Figma-like detailed visual editor. Desktop owns shared structural composition; tablet and mobile provide independent ordering, visibility, and supported responsive presentation. All three canvases remain visible side by side.
+
+Downstream ownership:
+- M03 defines the builder UI visual system and component-sample presentation conventions.
+- M04 defines component/sample/content and per-breakpoint layout/history contracts.
+- M05 implements the isolated workspace shell and panels.
+- M06 implements sample-driven composition and bounded rendering.
+- M07 authors and expands the component sample portfolio and learning examples.
+- M10–M12 deliver homepage, responsive, and multi-page composition.
+- M13–M14 deliver content review and handoff.
