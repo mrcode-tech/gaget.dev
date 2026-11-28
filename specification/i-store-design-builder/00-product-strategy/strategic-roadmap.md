@@ -2,63 +2,57 @@
 
 ## Strategy
 
-Deliver user value in dependency order: define the product, design the game experience, establish the data and application foundation, make website composition work, then add intelligence, progression, richer website capabilities, validation, and handoff.
+First define a user-directed, wireframe-first design experience. Then design its levels and workspace, establish the project model, build the composition engine and component library, and deliver responsive previews, multi-page design, and developer handoff.
+
+The product does not depend on AI. Design guidance is authored into levels, explanations, examples, and curated component documentation. The user chooses the design.
 
 ## Strategic workstreams
 
-1. Product definition and requirements.
-2. Game experience and progression.
+1. Product strategy and requirements.
+2. Player journey, level completion, and progress.
 3. UX architecture and interaction design.
 4. Product visual design system.
-5. Domain model and persistence.
-6. Website composition engine.
-7. Design intelligence and education.
-8. Responsive and multi-page website capabilities.
-9. Content, media, quality, and validation.
-10. Export, platform readiness, and growth.
+5. Project and website design data model.
+6. Wireframe composition engine and component library.
+7. Design education and component documentation.
+8. Responsive and multi-page website design.
+9. Content placeholders and design review.
+10. Design summary and developer handoff.
+11. Optional future platform capabilities, including separately evaluated AI assistance.
 
 ## Milestone sequence
 
 | ID | Milestone | Strategic outcome | Depends on |
 |---|---|---|---|
 | M00 | Product strategy | Approved vision, requirements, scope | — |
-| M01 | Game architecture | Defined player journey and game loop | M00 |
+| M01 | Journey architecture | Defined levels, missions, and completion rules | M00 |
 | M02 | UX architecture | Defined screens and interactions | M00–M01 |
 | M03 | Visual design system | Consistent product UI language | M02 |
 | M04 | Domain model | Stable project and design data model | M00–M02 |
 | M05 | Application foundation | Working isolated workspace | M02–M04 |
-| M06 | Composition engine | Structured website rendering and editing | M03–M05 |
-| M07 | Design intelligence | Contextual recommendations and explanations | M00, M04, M06 |
-| M08 | Game progression | Playable mission and unlock system | M01, M04–M06 |
-| M09 | Visual identity builder | Reusable website identity | M06–M08 |
-| M10 | Homepage builder | Complete homepage composition | M06–M09 |
-| M11 | Responsive design | Device-adaptive website preview | M06, M09–M10 |
-| M12 | Multi-page builder | Complete navigable website | M06, M08–M11 |
-| M13 | Content and quality | Content-rich, reviewed design | M09–M12 |
-| M14 | Export and handoff | Implementation-ready blueprint | M04, M06, M09–M13 |
-| M15 | Platform and growth | Reliable product operations and expansion | M05–M14 |
+| M06 | Composition engine | Structured wireframe rendering and editing | M03–M05 |
+| M07 | Design guidance and component library | Clear examples and documentation for user choices | M00, M04, M06 |
+| M08 | Journey progress | Objective mission completion and free navigation | M01, M04–M06 |
+| M09 | Visual identity builder | Optional visual direction and shared identity choices | M06–M08 |
+| M10 | Homepage builder | Complete user-composed homepage | M06–M09 |
+| M11 | Responsive design | User-directed responsive patterns and previews | M06, M09–M10 |
+| M12 | Multi-page builder | Complete user-composed website | M06, M08–M11 |
+| M13 | Content and design review | Content slots, placeholders, and completion review | M09–M12 |
+| M14 | Design handoff | Useful complete or partial developer handoff | M04, M06, M09–M13 |
+| M15 | Platform and growth | Reliable operations and validated future expansion | M05–M14 |
 
 ## Suggested release groupings
 
-- **Release A — Foundations:** M00–M05. Product definition, experience design, data foundation, and working shell.
-- **Release B — First playable design:** M06, M08, M09, and the essential slice of M10. A player can make choices and see a homepage take shape.
-- **Release C — Complete website design:** M07, remaining M10, M11, M12, and M13.
-- **Release D — Handoff:** M14.
-- **Release E — Product growth:** M15 and future advanced capabilities.
-
-The milestone sequence is a dependency guide, not a rigid waterfall. UX, data, and visual design can be refined iteratively. Do not begin dependent implementation before its contracts and acceptance criteria are agreed.
+- **Release A — Foundations:** M00–M05. Product definition, experience design, data foundation, and isolated workspace shell.
+- **Release B — First usable design journey:** M06, M07, M08, M09, and essential M10. A user can select and arrange wireframe components and see the homepage take shape.
+- **Release C — Complete website design:** remaining M10, M11, M12, and M13.
+- **Release D — Handoff:** M14, including complete and partial design summaries.
+- **Release E — Platform growth:** M15 and future optional capabilities.
 
 ## Definition of milestone completion
 
-A milestone is complete only when:
-- Scope and exclusions are explicit.
-- Dependencies are satisfied.
-- Specifications and decisions are recorded.
-- Implementation tasks are traceable.
-- Acceptance criteria pass.
-- Relevant automated tests and manual review evidence are recorded.
-- Remaining limitations are documented.
+A milestone is complete only when its scope and exclusions are explicit, dependencies are satisfied, specifications are approved, acceptance criteria pass, and evidence is recorded. Planning-document completion must not be confused with application implementation completion.
 
 ## Change control
 
-New feature requests must be classified as P0/P1/P2, assigned to a milestone, checked for dependency impact, and reflected in this roadmap and feature inventory.
+New requests are classified P0/P1/P2, assigned to a milestone, checked against the product guardrails, and reflected in this roadmap and feature inventory. Any future AI feature requires a separate explicit product decision and must not silently change user-directed design.
