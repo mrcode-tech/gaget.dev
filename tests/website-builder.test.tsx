@@ -124,7 +124,7 @@ describe("website builder domain", () => {
   });
 
   it("calculates WCAG contrast and marks incomplete exports", async () => {
-    const { contrastRatio, exportBlueprint, exportReadiness } = await import("@/lib/website-builder/model");
+    const { confirmFinalReview, contrastRatio, exportBlueprint, exportReadiness, setMissionStatus } = await import("@/lib/website-builder/model");
     expect(contrastRatio("#000000", "#ffffff")).toBe(21);
     expect(contrastRatio("not-a-color", "#ffffff")).toBeNull();
     let project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
@@ -132,7 +132,7 @@ describe("website builder domain", () => {
     project = { ...project, pages: [{ ...page, instances: [{ ...page.instances[0], content: { ...page.instances[0].content, title: "" } }] }] };
     expect(exportReadiness(project).status).toBe("Incomplete");
     expect(JSON.parse(exportBlueprint(project)).schemaVersion).toBe("1.0.0");
-    expect(JSON.parse(exportBlueprint(project)).status).toBe("Incomplete");
+    expect(JSON.parse(exportBlueprint(project)).status).toBe("Incomplete");\n    project = { ...project, missions: project.missions.map(mission => ({ ...mission, status: "Complete" as const })) };\n    project = confirmFinalReview(project, true);\n    expect(exportReadiness(project).status).toBe("Complete");\n    expect(JSON.parse(exportBlueprint(project)).status).toBe("Complete");
   });
 
 });
