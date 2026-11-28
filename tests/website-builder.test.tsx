@@ -1,125 +1,200 @@
 import { describe, expect, it } from "vitest";
 import {
-  CATALOGUE, createProject, activePage, insertSample, reorder, toggleHidden,
-  removeInstance, duplicateInstance, reviewProject, serializeProject, markdownHandoff, setMissionStatus, validateProjectInput
+  CATALOGUE, TAXONOMY, SAMPLE_STYLES, WEBSITE_PURPOSES, createProject, activePage,
+  insertSample, insertSampleAt, reorder, reorderToIndex, toggleHidden, removeInstance,
+  duplicateInstance, reviewProject, serializeProject, markdownHandoff, setMissionStatus,
+  validateProjectInput, validateSampleDefinition, validatePageComposition, searchCatalogue,
+  replaceSample, resolveReplacementContent, prepareReplacement, updateInstanceContent,
+  updateInstanceConfiguration, insertComponentCommand, confirmFinalReview, contrastRatio,
+  exportBlueprint, exportReadiness, completeLevel, markMissionsForReview, createAdditionalPage,
+  removePage, validateInternalNavigation
 } from "@/lib/website-builder/model";
 
+const projectInput = { name: "Studio", purpose: "Explain the studio and its work", businessType: "Studio", audience: "Clients" };
+
 describe("website builder domain", () => {
-  it("requires both a project name and a website purpose before initialization", () => {
+  it("requires a project name and purpose and validates their documented limits", () => {
     expect(validateProjectInput({ name: "  ", purpose: "  " })).toEqual([
-      "Add a project name to continue.",
-      "Describe the website purpose to continue."
+      "Add a project name to continue.", "Describe the website purpose to continue."
     ]);
+    expect(validateProjectInput({ name: "x".repeat(81), purpose: "purpose" })).toContain("Project name must be 80 characters or fewer.");
     expect(() => createProject({ name: "Studio", purpose: " " })).toThrow("Describe the website purpose to continue.");
   });
 
-  it("creates a session project with one empty page and three breakpoint layouts", () => {
-    const project = createProject({ name: "Studio", businessType: "Design studio", purpose: "Show work", audience: "Clients" });
+  it("creates one temporary project, one empty page, and three responsive layouts", () => {
+    const project = createProject(projectInput);
     expect(project.pages).toHaveLength(1);
     expect(activePage(project).layouts.desktop.order).toEqual([]);
     expect(activePage(project).layouts.tablet.order).toEqual([]);
     expect(activePage(project).layouts.mobile.order).toEqual([]);
     expect(project.missions).toHaveLength(11);
+    expect(project.finalReviewConfirmed).toBe(false);
   });
 
-  it("inserts a unique instance into all responsive layouts", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
-    const page = insertSample(activePage(project), CATALOGUE[0]);
+  it("publishes a broad generic taxonomy and a validated synthetic portfolio", () => {
+    expect(TAXONOMY.length).toBeGreaterThanOrEqual(9);
+    expect(CATALOGUE.length).toBeGreaterThanOrEqual(25);
+    expect(CATALOGUE.every(sample => validateSampleDefinition(sample).length === 0)).toBe(true);
+    expect(SAMPLE_STYLES).toContain("Editorial");
+    expect(WEBSITE_PURPOSES.some(purpose => purpose.id === "portfolio")).toBe(true);
+    expect(TAXONOMY.some(category => category.types.some(type => type.id === "product-grid"))).toBe(true);
+    expect(TAXONOMY.some(category => category.types.some(type => type.id === "portfolio-grid"))).toBe(true);
+  });
+
+  it("searches by category, component type, visual style, purpose, and sample metadata", () => {
+    expect(searchCatalogue({ category: "Navigation" }).map(sample => sample.id)).toContain("header-commerce");
+    expect(searchCatalogue({ type: "hero" })).toHaveLength(3);
+    expect(searchCatalogue({ style: "Editorial" }).length).toBeGreaterThan(1);
+    expect(searchCatalogue({ purpose: "portfolio" }).some(sample => sample.id === "portfolio-grid")).toBe(true);
+    expect(searchCatalogue({ query: "milestone" }).map(sample => sample.id)).toContain("story-timeline");
+    expect(searchCatalogue({ query: "does-not-exist" })).toEqual([]);
+  });
+
+  it("inserts unique instances into all breakpoint layouts", () => {
+    const page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
     expect(page.instances).toHaveLength(1);
-    const id = page.instances[0].id;
-    expect(page.layouts.desktop.order).toEqual([id]);
-    expect(page.layouts.tablet.order).toEqual([id]);
-    expect(page.layouts.mobile.order).toEqual([id]);
+    const instance = page.instances[0];
+    expect(instance.sampleVersion).toBe(CATALOGUE[0].version);
+    expect(instance.type).toBe(CATALOGUE[0].type);
+    expect(page.layouts.desktop.order).toEqual([instance.id]);
+    expect(page.layouts.tablet.order).toEqual([instance.id]);
+    expect(page.layouts.mobile.order).toEqual([instance.id]);
+    expect(validatePageComposition(page)).toEqual([]);
   });
 
-  it("keeps tablet and mobile ordering independent", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
+  it("preserves the relative order of tablet and mobile when inserting at a desktop position", () => {
+    const project = createProject(projectInput);
     let page = insertSample(activePage(project), CATALOGUE[0]);
     page = insertSample(page, CATALOGUE[1]);
-    const [first, second] = page.instances;
-    page = reorder(page, "tablet", second.id, -1);
-    expect(page.layouts.tablet.order).toEqual([second.id, first.id]);
-    expect(page.layouts.desktop.order).toEqual([first.id, second.id]);
-    expect(page.layouts.mobile.order).toEqual([first.id, second.id]);
+    page = insertSample(page, CATALOGUE[2]);
+    const [first, second, third] = page.instances;
+    page = reorder(page, "tablet", third.id, -2);
+    page = insertSampleAt(page, CATALOGUE.find(sample => sample.id === "header-editorial")!, { placement: "after", relativeToId: first.id });
+    const inserted = page.instances.find(instance => instance.sampleId === "header-editorial")!;
+    expect(page.layouts.desktop.order.indexOf(inserted.id)).toBe(page.layouts.desktop.order.indexOf(first.id) + 1);
+    expect(page.layouts.tablet.order).toEqual([third.id, first.id, inserted.id, second.id]);
+    expect(page.layouts.mobile.order).toEqual([first.id, inserted.id, second.id, third.id]);
   });
 
-  it("hides a component at a breakpoint without removing membership", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
-    let page = insertSample(activePage(project), CATALOGUE[0]);
+  it("rejects invalid insertion anchors without changing the page", () => {
+    const page = activePage(createProject(projectInput));
+    expect(insertSampleAt(page, CATALOGUE[0], { placement: "before", relativeToId: "missing" })).toBe(page);
+    expect(insertComponentCommand(page, CATALOGUE[0], { placement: "before", relativeToId: "missing" })).toMatchObject({ ok: false });
+  });
+
+  it("supports independent breakpoint ordering and valid drag destination operations", () => {
+    let page = activePage(createProject(projectInput));
+    page = insertSample(page, CATALOGUE[0]);
+    page = insertSample(page, CATALOGUE[1]);
+    page = insertSample(page, CATALOGUE[2]);
+    const [first, second, third] = page.instances;
+    page = reorderToIndex(page, "desktop", third.id, 0);
+    expect(page.layouts.desktop.order).toEqual([third.id, first.id, second.id]);
+    expect(page.layouts.tablet.order).toEqual([first.id, second.id, third.id]);
+    expect(reorderToIndex(page, "mobile", "unknown", 0)).toBe(page);
+    expect(reorderToIndex(page, "desktop", first.id, 1).layouts.desktop.order).toEqual([third.id, first.id, second.id]);
+  });
+
+  it("hides a component at a breakpoint without removing shared membership", () => {
+    let page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
     const id = page.instances[0].id;
     page = toggleHidden(page, "mobile", id);
     expect(page.layouts.mobile.hidden).toContain(id);
     expect(page.instances).toHaveLength(1);
     expect(page.layouts.desktop.order).toContain(id);
+    expect(toggleHidden(page, "desktop", id)).toBe(page);
   });
 
-  it("duplicates independently and removes shared membership across breakpoints", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
-    let page = insertSample(activePage(project), CATALOGUE[0]);
+  it("duplicates independent content and removes shared membership across all layouts", () => {
+    let page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
     const original = page.instances[0];
     page = duplicateInstance(page, original.id);
     expect(page.instances).toHaveLength(2);
-    expect(page.instances[0].id).not.toBe(page.instances[1].id);
+    const duplicate = page.instances[1];
+    expect(duplicate.id).not.toBe(original.id);
+    expect(duplicate.content).toEqual(original.content);
+    expect(duplicate.content).not.toBe(original.content);
     page = removeInstance(page, original.id);
     expect(page.instances).toHaveLength(1);
-    expect(page.layouts.desktop.order).toEqual([page.instances[0].id]);
-    expect(page.layouts.tablet.order).toEqual([page.instances[0].id]);
-    expect(page.layouts.mobile.order).toEqual([page.instances[0].id]);
+    for (const breakpoint of ["desktop", "tablet", "mobile"] as const) {
+      expect(page.layouts[breakpoint].order).toEqual([duplicate.id]);
+    }
   });
 
-  it("reports required content and exports a versioned blueprint and readable handoff", () => {
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
+  it("validates schema-defined fields and configuration through atomic commands", () => {
+    let page = insertSample(activePage(createProject(projectInput)), CATALOGUE.find(sample => sample.id === "product-grid-editorial")!);
+    const instance = page.instances[0];
+    const valid = updateInstanceContent(page, instance.id, "title", "Objects for everyday life");
+    expect(valid.ok).toBe(true);
+    if (valid.ok) page = valid.value;
+    const invalid = updateInstanceContent(page, instance.id, "unknown-field", "value");
+    expect(invalid).toMatchObject({ ok: false });
+    expect(invalid.ok ? invalid.value : page).toBe(page);
+    const overlong = updateInstanceContent(page, instance.id, "title", "x".repeat(120));
+    expect(overlong).toMatchObject({ ok: false });
+    const configured = updateInstanceConfiguration(page, instance.id, "columns", "2");
+    expect(configured.ok).toBe(true);
+    expect(updateInstanceConfiguration(page, instance.id, "columns", "99")).toMatchObject({ ok: false });
+  });
+
+  it("replaces only within the same component type and preserves the instance identity", () => {
+    let page = insertSample(activePage(createProject(projectInput)), CATALOGUE[0]);
+    const instance = page.instances[0];
+    page = { ...page, instances: [{ ...instance, content: { ...instance.content, title: "My title", body: "My copy" } }] };
+    const prepared = prepareReplacement(page, instance.id, CATALOGUE[1]);
+    expect(prepared.ok).toBe(true);
+    const result = replaceSample(page, instance.id, CATALOGUE[1]);
+    expect(result.ok).toBe(true);
+    expect(result.page.instances[0].id).toBe(instance.id);
+    expect(result.page.instances[0].content.title).toBe("My title");
+    expect(result.preservedFields).toContain("title");
+    const incompatible = replaceSample(page, instance.id, CATALOGUE.find(sample => sample.type === "product-grid")!);
+    expect(incompatible.ok).toBe(false);
+    expect(incompatible.page).toBe(page);
+  });
+
+  it("resets incompatible and new fields while retaining compatible content by field identity and type", () => {
+    const current = CATALOGUE[0];
+    const candidate = {
+      ...current,
+      id: "hero-compatibility-test",
+      fields: [
+        ...current.fields.map(field => field.id === "title" ? { ...field, kind: "number" as const, defaultValue: "12" } : field),
+        { id: "caption", label: "Caption", kind: "text" as const, defaultValue: "New caption" }
+      ]
+    };
+    const result = resolveReplacementContent(current, { title: "Keep this?", body: "Preserve copy", eyebrow: "Hello" }, candidate);
+    expect(result.content.title).toBe("12");
+    expect(result.content.caption).toBe("New caption");
+    expect(result.content.body).toBe("Preserve copy");
+    expect(result.resetFields).toContain("title");
+    expect(result.resetFields).toContain("caption");
+    expect(result.preservedFields).toContain("body");
+  });
+
+  it("reports required content and provides a versioned JSON and Markdown handoff", () => {
+    const project = createProject(projectInput);
     const page = insertSample(activePage(project), CATALOGUE[0]);
-    const invalid = { ...project, pages: [{ ...page, instances: page.instances.map(i => ({ ...i, content: { ...i.content, title: "" } })) }] };
-    expect(reviewProject(invalid).some(f => f.message.includes("Title"))).toBe(true);
+    const invalid = { ...project, pages: [{ ...page, instances: page.instances.map(instance => ({ ...instance, content: { ...instance.content, title: "" } })) }] };
+    expect(reviewProject(invalid).some(finding => finding.message.includes("Title"))).toBe(true);
     expect(JSON.parse(serializeProject(project)).schemaVersion).toBe("1.0.0");
     expect(markdownHandoff(project)).toContain("# Studio");
   });
 
-  
-  it("inserts before and after a selected section and rejects missing anchors", async () => {
-    const { insertSampleAt } = await import("@/lib/website-builder/model");
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
-    let page = insertSample(activePage(project), CATALOGUE[0]);
-    page = insertSampleAt(page, CATALOGUE[1], { placement: "start" });
-    const [first, second] = page.instances;
-    page = insertSampleAt(page, CATALOGUE[2], { placement: "after", relativeToId: first.id });
-    expect(page.instances.map(item => item.sampleId)).toEqual([first.sampleId, CATALOGUE[2].id, second.sampleId]);
-    expect(insertSampleAt(page, CATALOGUE[0], { placement: "before", relativeToId: "missing" })).toBe(page);
-  });
-
-  it("replaces a sample while preserving compatible content and initializing new fields", async () => {
-    const { replaceSample } = await import("@/lib/website-builder/model");
-    const project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
-    let page = insertSample(activePage(project), CATALOGUE[0]);
-    const instance = page.instances[0];
-    page = { ...page, instances: [{ ...instance, content: { ...instance.content, title: "My title", body: "My copy" } }] };
-    const next = { ...CATALOGUE[0], id: "hero-replacement", fields: [
-      ...CATALOGUE[0].fields, { id: "caption", label: "Caption", kind: "text" as const, defaultValue: "New caption" }
-    ] };
-    const result = replaceSample(page, instance.id, next);
-    expect(result.page.instances[0].content.title).toBe("My title");
-    expect(result.page.instances[0].content.caption).toBe("New caption");
-    expect(result.preservedFields).toContain("title");
-    expect(result.resetFields).toContain("caption");
-  });
-
-  it("keeps level completion separate from mission completion and supports review propagation", async () => {
-    const { completeLevel, markMissionsForReview } = await import("@/lib/website-builder/model");
-    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
+  it("keeps level completion separate from mission completion and supports review propagation", () => {
+    let project = createProject(projectInput);
     project = setMissionStatus(project, 2, "Complete");
     project = completeLevel(project, 2, true);
     project = setMissionStatus(project, 3, "Not started", true);
     expect(project.completedLevels).toEqual([2]);
-    expect(project.missions.find(m => m.level === 3)).toMatchObject({ status: "Complete", notNeeded: true });
+    expect(project.missions.find(mission => mission.level === 3)).toMatchObject({ status: "Complete", notNeeded: true });
     project = markMissionsForReview(project, [2, 3]);
-    expect(project.missions.find(m => m.level === 2)?.status).toBe("Needs review");
-    expect(project.missions.find(m => m.level === 3)?.status).toBe("Complete");
+    expect(project.missions.find(mission => mission.level === 2)?.status).toBe("Needs review");
+    expect(project.missions.find(mission => mission.level === 3)?.status).toBe("Complete");
   });
 
-  it("enforces page lifecycle and validates stable internal navigation references", async () => {
-    const { createAdditionalPage, removePage, validateInternalNavigation } = await import("@/lib/website-builder/model");
-    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
+  it("enforces page lifecycle and validates stable internal navigation references", () => {
+    let project = createProject(projectInput);
     project = createAdditionalPage(project, "About", "/about");
     const about = project.pages[1];
     expect(project.activePageId).toBe(about.id);
@@ -131,20 +206,19 @@ describe("website builder domain", () => {
     expect(removePage(project, about.id).pages).toHaveLength(1);
   });
 
-  it("calculates WCAG contrast and marks incomplete exports", async () => {
-    const { confirmFinalReview, contrastRatio, exportBlueprint, exportReadiness } = await import("@/lib/website-builder/model");
+  it("calculates contrast and prevents complete handoff while content is invalid", () => {
     expect(contrastRatio("#000000", "#ffffff")).toBe(21);
     expect(contrastRatio("not-a-color", "#ffffff")).toBeNull();
-    let project = createProject({ name: "Studio", businessType: "Studio", purpose: "Explain the studio and its work", audience: "" });
+    let project = createProject(projectInput);
     const page = insertSample(activePage(project), CATALOGUE[0]);
     project = { ...project, pages: [{ ...page, instances: [{ ...page.instances[0], content: { ...page.instances[0].content, title: "" } }] }] };
     expect(exportReadiness(project).status).toBe("Incomplete");
-    expect(JSON.parse(exportBlueprint(project)).schemaVersion).toBe("1.0.0");
-    expect(JSON.parse(exportBlueprint(project)).status).toBe("Incomplete");
     project = { ...project, missions: project.missions.map(mission => ({ ...mission, status: "Complete" as const })) };
     project = confirmFinalReview(project, true);
+    expect(exportReadiness(project).status).toBe("Incomplete");
+    const validPage = { ...page, instances: page.instances.map(instance => ({ ...instance, content: { ...instance.content, title: "A complete title" } })) };
+    project = { ...project, pages: [validPage] };
     expect(exportReadiness(project).status).toBe("Complete");
     expect(JSON.parse(exportBlueprint(project)).status).toBe("Complete");
   });
-
 });
