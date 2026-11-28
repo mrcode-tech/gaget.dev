@@ -10,3 +10,5 @@ Approved principles:
 - Completed levels can be revisited and revised.
 - Guided, bounded editing rather than unrestricted freeform design.
 - Feature remains isolated from the existing GaGet shell.
+
+- [ADR-0001 — Lightweight session-based MVP with explicit export](ADR-0001-lightweight-session-mvp.md): accepted MVP C release boundary; supersedes conflicting persistence/history requirements for the first release.
