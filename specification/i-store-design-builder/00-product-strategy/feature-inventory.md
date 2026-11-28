@@ -109,3 +109,26 @@ The product remains industry-neutral, user-directed, wireframe-first, reversible
 - P0: final design completion requires all applicable required missions and user confirmation of the final review.
 
 The initial complete example is an online store; the reusable builder remains generic and industry-neutral.
+
+
+## Approved M02 UX additions
+
+### Sample-based website composition
+- P0: visual portfolio of high-level component types, with multiple predefined design samples per type.
+- P0: explicit user selection and insertion of samples; no automatic sample choice or insertion.
+- P0: content-only customization through fields supported by each sample (for example titles, text, labels, links, item data, and image slots).
+- P0: no Figma-like detailed visual editing, arbitrary styling, freeform nested-element movement, CSS, or pixel-level layout controls.
+- P1: progressively expand the authored portfolio with additional component types and samples.
+
+### Responsive workspace
+- P0: desktop, tablet, and mobile canvases visible simultaneously side by side.
+- P0: desktop-originated add/remove/replace operations update the shared high-level component collection across all canvases.
+- P0: tablet/mobile independently support reordering, hide/show, and supported responsive presentation only.
+- P0: shared content and sample configuration synchronize across all canvases.
+- P0: narrow workspaces retain side-by-side canvases using horizontal scrolling or workspace zoom.
+
+### Workspace and recovery
+- P0: hybrid workspace with collapsible/resizable left library/navigation, center canvases, right contextual properties, and collapsible mission guidance.
+- P0: autosave with saving/saved/error states and undo/redo for supported operations.
+- P1: version history with safe restoration of the complete project state.
+- P0: dedicated review with links back to workspace locations and complete/incomplete handoff status.
