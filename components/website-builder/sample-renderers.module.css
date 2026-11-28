@@ -3,12 +3,14 @@
   min-width: 0;
 }
 
-.preview[data-breakpoint="tablet"] :global(.grid-cols-3) {
+.preview[data-breakpoint="tablet"]:not([data-responsive-columns]) :global(.grid-cols-3),
+.preview[data-breakpoint="tablet"]:not([data-responsive-columns]) :global(.grid-cols-4) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.preview[data-breakpoint="mobile"] :global(.grid-cols-2),
-.preview[data-breakpoint="mobile"] :global(.grid-cols-3) {
+.preview[data-breakpoint="mobile"]:not([data-responsive-columns]) :global(.grid-cols-2),
+.preview[data-breakpoint="mobile"]:not([data-responsive-columns]) :global(.grid-cols-3),
+.preview[data-breakpoint="mobile"]:not([data-responsive-columns]) :global(.grid-cols-4) {
   grid-template-columns: minmax(0, 1fr);
 }
 

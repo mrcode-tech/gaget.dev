@@ -1,5 +1,5 @@
 import { Component, type ComponentType, type ReactNode } from "react";
-import type { Breakpoint, Project, Sample } from "@/lib/website-builder/model";
+import { CATALOGUE, type Breakpoint, type Project, type Sample } from "@/lib/website-builder/model";
 import styles from "./sample-renderers.module.css";
 
 export type SampleRendererProps = {
@@ -9,6 +9,7 @@ export type SampleRendererProps = {
   breakpoint?: Breakpoint;
   configuration?: Record<string, string>;
   presentation?: Record<string, string>;
+  placeholders?: Record<string, { purpose: string; assetId?: string }>;
 };
 
 function Placeholder({ label, tone = "#d8d2c7" }: { label: string; tone?: string }) {
@@ -16,10 +17,10 @@ function Placeholder({ label, tone = "#d8d2c7" }: { label: string; tone?: string
 }
 function Text({ children }: { children?: string }) { return <span>{children ?? ""}</span>; }
 
-function EditorialHero({ content, identity }: SampleRendererProps) {
+function EditorialHero({ content, identity, placeholders }: SampleRendererProps) {
   return <div className="grid min-h-52 grid-cols-2" style={{ background: identity.surface, color: identity.text }}>
     <div className="flex flex-col justify-center p-5"><span className="text-[10px] uppercase tracking-[.2em] opacity-60">{content.eyebrow}</span><h3 className="mt-3 text-2xl font-semibold leading-tight">{content.title}</h3><p className="mt-3 text-sm opacity-70">{content.body}</p><span className="mt-5 w-fit rounded-full px-4 py-2 text-xs text-white" style={{ background: identity.primary }}>{content.button}</span></div>
-    <div className="p-3"><Placeholder label="Editorial image placeholder" tone="#d8c7b7" /></div>
+    <div className="p-3"><Placeholder label={placeholders?.image?.purpose ?? "Editorial image placeholder"} tone="#d8c7b7" /></div>
   </div>;
 }
 function BoldHero({ content, identity }: SampleRendererProps) {
@@ -51,9 +52,9 @@ function FeatureCards({ content, identity }: SampleRendererProps) {
     <h3 className="text-center text-xl font-semibold">{content.title}</h3><div className="mt-6 grid grid-cols-3 gap-4">{[content.item1, content.item2, content.item3].map((item, index) => <div key={index} className="border-t-2 pt-3" style={{ borderColor: identity.accent }}><span className="text-xs font-semibold" style={{ color: identity.primary }}>0{index + 1}</span><p className="mt-2 text-sm font-medium">{item}</p></div>)}</div>
   </div>;
 }
-function StorySplit({ content, identity }: SampleRendererProps) {
+function StorySplit({ content, identity, placeholders }: SampleRendererProps) {
   return <div className="grid min-h-48 grid-cols-2" style={{ background: identity.surface, color: identity.text }}>
-    <div className="p-4"><Placeholder label="Story image placeholder" tone="#c7c2b4" /></div><div className="flex flex-col justify-center p-5"><span className="text-[9px] uppercase tracking-[.2em] opacity-50">Our story</span><h3 className="mt-2 text-lg font-semibold">{content.title}</h3><p className="mt-3 text-xs leading-5 opacity-70">{content.body}</p></div>
+    <div className="p-4"><Placeholder label={placeholders?.image?.purpose ?? "Story image placeholder"} tone="#c7c2b4" /></div><div className="flex flex-col justify-center p-5"><span className="text-[9px] uppercase tracking-[.2em] opacity-50">Our story</span><h3 className="mt-2 text-lg font-semibold">{content.title}</h3><p className="mt-3 text-xs leading-5 opacity-70">{content.body}</p></div>
   </div>;
 }
 function StoryTimeline({ content, identity }: SampleRendererProps) {
@@ -73,17 +74,21 @@ function CategoryTiles({ content, identity }: SampleRendererProps) {
       </div>)}</div>
   </div>;
 }
-function ProductGridEditorial({ content, identity }: SampleRendererProps) {
+function ProductGridEditorial({ content, identity, configuration, presentation }: SampleRendererProps) {
+  const columns = presentation?.columns ?? configuration?.columns ?? "3";
+  const gridColumns = columns === "1" ? "grid-cols-1" : columns === "2" ? "grid-cols-2" : "grid-cols-3";
   return <div className="px-6 py-8" style={{ background: identity.background, color: identity.text }}>
     <div className="flex items-end justify-between"><h3 className="max-w-xs font-serif text-2xl">{content.title}</h3><span className="text-[9px] uppercase tracking-widest opacity-50">The collection</span></div>
-    <div className="mt-6 grid grid-cols-3 gap-5">{[content.item1, content.item2, content.item3].map((item, index) =>
+    <div className={"mt-6 grid gap-5 " + gridColumns}>{[content.item1, content.item2, content.item3].map((item, index) =>
       <div key={index}><Placeholder label={"Product photograph " + (index + 1)} tone={["#d5c7b8", "#c8d0c5", "#d4cfd0"][index]}/><p className="mt-3 font-serif text-sm">{item}</p><p className="mt-1 text-[9px] uppercase tracking-wider opacity-50">Explore details</p></div>)}</div>
   </div>;
 }
-function ProductGridCompact({ content, identity }: SampleRendererProps) {
+function ProductGridCompact({ content, identity, configuration, presentation }: SampleRendererProps) {
+  const columns = presentation?.columns ?? configuration?.columns ?? "3";
+  const gridColumns = columns === "1" ? "grid-cols-1" : columns === "2" ? "grid-cols-2" : columns === "4" ? "grid-cols-4" : "grid-cols-3";
   return <div className="p-5" style={{ background: identity.surface, color: identity.text }}>
     <h3 className="text-lg font-semibold">{content.title}</h3>
-    <div className="mt-4 grid grid-cols-3 gap-2">{[content.item1, content.item2, content.item3].map((item, index) =>
+    <div className={"mt-4 grid gap-2 " + gridColumns}>{[content.item1, content.item2, content.item3].map((item, index) =>
       <div key={index} className="rounded-lg border p-2" style={{ borderColor: identity.accent + "66" }}><Placeholder label={"Product " + (index + 1)} tone="#e6e2d9"/><p className="mt-2 text-[10px] font-medium">{item}</p><p className="mt-1 text-[9px] opacity-55">Details and availability</p></div>)}</div>
   </div>;
 }
@@ -102,8 +107,8 @@ function TeamGrid({ content, identity }: SampleRendererProps) {
     <div className="mt-5 grid grid-cols-3 gap-3">{[content.item1,content.item2,content.item3].map((item,index)=><div key={index} className="text-center"><div className="mx-auto h-16 w-16 rounded-full" style={{ background: ["#c9b9aa","#bdc9bd","#c4c3cf"][index] }}/><p className="mt-3 text-[10px] font-medium">{item}</p></div>)}</div>
   </div>;
 }
-function FeaturedProduct({ content, identity }: SampleRendererProps) {
-  return <div className="grid grid-cols-2 gap-4 p-5" style={{ background: identity.surface, color: identity.text }}><Placeholder label="Featured product image" tone="#d7cabb"/><div className="flex flex-col justify-center"><span className="text-[9px] uppercase tracking-widest opacity-50">Featured object</span><h3 className="mt-2 font-serif text-2xl">{content.title}</h3><p className="mt-2 text-xs leading-5 opacity-70">{content.body}</p><p className="mt-3 text-sm font-semibold">{content.price}</p><span className="mt-3 w-fit border-b pb-1 text-xs">{content.button}</span></div></div>;
+function FeaturedProduct({ content, identity, placeholders }: SampleRendererProps) {
+  return <div className="grid grid-cols-2 gap-4 p-5" style={{ background: identity.surface, color: identity.text }}><Placeholder label={placeholders?.image?.purpose ?? "Featured product image"} tone="#d7cabb"/><div className="flex flex-col justify-center"><span className="text-[9px] uppercase tracking-widest opacity-50">Featured object</span><h3 className="mt-2 font-serif text-2xl">{content.title}</h3><p className="mt-2 text-xs leading-5 opacity-70">{content.body}</p><p className="mt-3 text-sm font-semibold">{content.price}</p><span className="mt-3 w-fit border-b pb-1 text-xs">{content.button}</span></div></div>;
 }
 function TestimonialQuote({ content, identity }: SampleRendererProps) {
   return <div className="px-8 py-10 text-center" style={{ background: identity.surface, color: identity.text }}><span className="font-serif text-5xl leading-none" style={{ color: identity.accent }}>“</span><blockquote className="mx-auto max-w-lg font-serif text-xl leading-relaxed">{content.quote}</blockquote><p className="mt-5 text-xs font-semibold uppercase tracking-[.16em] opacity-60">{content.author}</p></div>;
@@ -135,8 +140,8 @@ function StatsBand({ content, identity }: SampleRendererProps) {
 function ProcessSteps({ content, identity }: SampleRendererProps) {
   return <div className="px-6 py-7" style={{ background: identity.surface, color: identity.text }}><h3 className="text-xl font-semibold">{content.title}</h3><div className="mt-5 grid grid-cols-3 gap-3">{[content.item1,content.item2,content.item3].map((item,i)=><div key={i}><span className="font-serif text-3xl opacity-35">0{i+1}</span><p className="mt-2 text-xs">{item}</p></div>)}</div></div>;
 }
-function ArticleFeature({ content, identity }: SampleRendererProps) {
-  return <div className="grid grid-cols-2 gap-4 p-5" style={{ background: identity.surface, color: identity.text }}><Placeholder label="Featured article image" tone="#d7cfc2"/><div className="flex flex-col justify-center"><span className="text-[9px] uppercase tracking-widest opacity-50">{content.eyebrow}</span><h3 className="mt-2 font-serif text-xl">{content.title}</h3><p className="mt-2 text-[10px] leading-4 opacity-70">{content.body}</p><p className="mt-3 text-[9px] opacity-50">{content.author}</p></div></div>;
+function ArticleFeature({ content, identity, placeholders }: SampleRendererProps) {
+  return <div className="grid grid-cols-2 gap-4 p-5" style={{ background: identity.surface, color: identity.text }}><Placeholder label={placeholders?.image?.purpose ?? "Featured article image"} tone="#d7cfc2"/><div className="flex flex-col justify-center"><span className="text-[9px] uppercase tracking-widest opacity-50">{content.eyebrow}</span><h3 className="mt-2 font-serif text-xl">{content.title}</h3><p className="mt-2 text-[10px] leading-4 opacity-70">{content.body}</p><p className="mt-3 text-[9px] opacity-50">{content.author}</p></div></div>;
 }
 function FooterSimple({ content }: SampleRendererProps) {
   return <footer className="flex flex-wrap items-center justify-between gap-4 bg-[#202923] px-6 py-7 text-white"><div><strong className="text-sm">{content.brand}</strong><p className="mt-1 text-[10px] text-white/60">{content.note}</p></div><div className="text-right"><p className="text-xs text-white/75">About　 Contact　 Help</p><p className="mt-2 text-[10px] text-white/50">{content.copyright}</p></div></footer>;
@@ -179,7 +184,8 @@ const rendererRegistry: Record<string, ComponentType<SampleRendererProps>> = {
 };
 
 export function getSampleRenderer(sample: Sample): ComponentType<SampleRendererProps> | null {
-  return rendererRegistry[sample.rendererKey] ?? null;
+  const registered = CATALOGUE.find(item => item.id === sample.id && item.version === sample.version && item.rendererKey === sample.rendererKey);
+  return registered ? rendererRegistry[registered.rendererKey] ?? null : null;
 }
 
 export class SampleRendererErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -199,7 +205,7 @@ export function SampleRendererView(props: SampleRendererProps) {
     ? <ThreeCards {...props} sample={props.sample}/>
     : <Renderer {...props}/>;
   return (
-    <div className={styles.preview} data-breakpoint={props.breakpoint ?? "desktop"}>
+    <div className={styles.preview} data-breakpoint={props.breakpoint ?? "desktop"} data-responsive-columns={props.presentation?.columns}>
       <SampleRendererErrorBoundary key={props.sample.id}>{content}</SampleRendererErrorBoundary>
     </div>
   );

@@ -2,7 +2,7 @@ import { CATALOGUE, TAXONOMY, SAMPLE_STYLES, WEBSITE_PURPOSES } from "./catalogu
 export { CATALOGUE, TAXONOMY, SAMPLE_STYLES, WEBSITE_PURPOSES };
 
 export type Breakpoint = "desktop" | "tablet" | "mobile";
-export type FieldKind = "text" | "textarea" | "url" | "image" | "number" | "boolean" | "enum" | "list" | "structured";
+export type FieldKind = "text" | "textarea" | "url" | "link" | "image" | "number" | "boolean" | "enum" | "list" | "structured";
 export type FieldDefinition = {
   id: string;
   label: string;
@@ -18,6 +18,9 @@ export type FieldDefinition = {
   placeholder?: string;
   helpText?: string;
   placeholderPurpose?: string;
+  repeatable?: boolean;
+  minItems?: number;
+  maxItems?: number;
 };
 export type ConfigurationDefinition = { id: string; label: string; defaultValue: string; options: string[] };
 export type TaxonomyType = { id: string; name: string; description: string };
@@ -66,7 +69,7 @@ export type Project = {
 export type ProjectInput = { name: string; purpose: string; businessType?: string; audience?: string };
 export type InsertPosition = { placement: "start" | "end" | "before" | "after"; relativeToId?: string };
 export type ReplaceResult = {
-  page: Page; preservedFields: string[]; resetFields: string[]; removedFields: string[];
+  page: Page; preservedFields: string[]; resetFields: string[]; removedFields: string[]; resetResponsiveOverrides: string[];
   ok: boolean; error?: string;
 };
 export type ReplacementDraft = { original: Instance; candidate: Instance; result: ReplaceResult };
@@ -205,7 +208,7 @@ export function validateFieldValue(field: FieldDefinition, value: string): strin
     return field.label + " must be a valid number within the allowed range.";
   }
   if (field.kind === "enum" && value && !field.options?.includes(value)) return "Choose a valid " + field.label.toLowerCase() + ".";
-  if (field.kind === "url" && value && !/^page:[a-zA-Z0-9_-]+$/.test(value) &&
+  if ((field.kind === "url" || field.kind === "link") && value && !/^page:[a-zA-Z0-9_-]+$/.test(value) &&
       !/^(https?:\/\/|mailto:|tel:)/i.test(value)) return field.label + " must be a web, email, phone, or internal page link.";
   if (field.kind === "image" && value && !/^(https?:\/\/|asset:)/i.test(value)) return field.label + " must reference a web image or selected session asset.";
   if (field.kind === "boolean" && value && value !== "true" && value !== "false") return field.label + " must be true or false.";
@@ -334,7 +337,9 @@ export function duplicateInstance(page: Page, id: string): Page {
     const order = [...page.layouts[bp].order];
     const index = order.indexOf(id);
     if (index >= 0) order.splice(index + 1, 0, copy.id);
-    return [bp, { ...page.layouts[bp], order }];
+    const presentation = { ...(page.layouts[bp].presentation ?? {}) };
+    if (presentation[id]) presentation[copy.id] = { ...presentation[id] };
+    return [bp, { ...page.layouts[bp], order, presentation }];
   })) as Record<Breakpoint, ResponsiveLayout>;
   return { ...page, instances, layouts };
 }
@@ -459,7 +464,7 @@ export function resolveReplacementContent(currentSample: Sample, currentContent:
 
 export function replaceSample(page: Page, instanceId: string, nextSample: Sample): ReplaceResult {
   const current = page.instances.find(instance => instance.id === instanceId);
-  const fail = (error: string): ReplaceResult => ({ page, preservedFields: [], resetFields: [], removedFields: [], ok: false, error });
+  const fail = (error: string): ReplaceResult => ({ page, preservedFields: [], resetFields: [], removedFields: [], resetResponsiveOverrides: [], ok: false, error });
   if (!current) return fail("The selected section no longer exists.");
   if (current.type !== nextSample.type) return fail("Replacement must use the same component type.");
   if (nextSample.lifecycle !== "published" || validateSampleDefinition(nextSample).length) return fail("This design is not available.");
@@ -483,10 +488,25 @@ export function replaceSample(page: Page, instanceId: string, nextSample: Sample
         { purpose: field.placeholderPurpose ?? field.label }];
     })),
   };
-  const nextPage = { ...page, instances: page.instances.map(item => item.id === instanceId ? nextInstance : item) };
+  const resetResponsiveOverrides: string[] = [];
+  const layouts = Object.fromEntries((["desktop", "tablet", "mobile"] as Breakpoint[]).map(bp => {
+    const layout = page.layouts[bp];
+    const presentation = { ...(layout.presentation ?? {}) };
+    const existingOverrides = presentation[instanceId] ?? {};
+    const kept: Record<string, string> = {};
+    for (const [key, value] of Object.entries(existingOverrides)) {
+      const option = nextSample.configuration?.find(item => item.id === key);
+      if (nextSample.responsive.supportedOverrides.includes(key) && option?.options.includes(value)) kept[key] = value;
+      else resetResponsiveOverrides.push(bp + "." + key);
+    }
+    if (Object.keys(kept).length) presentation[instanceId] = kept;
+    else delete presentation[instanceId];
+    return [bp, { ...layout, presentation }];
+  })) as Record<Breakpoint, ResponsiveLayout>;
+  const nextPage = { ...page, instances: page.instances.map(item => item.id === instanceId ? nextInstance : item), layouts };
   const errors = validatePageComposition(nextPage);
   if (errors.length) return fail(errors[0]);
-  return { page: nextPage, preservedFields, resetFields, removedFields, ok: true };
+  return { page: nextPage, preservedFields, resetFields, removedFields, resetResponsiveOverrides, ok: true };
 }
 
 export function reorderInstanceToIndex(page: Page, breakpoint: Breakpoint, instanceId: string, targetIndex: number): CommandResult<Page> {
