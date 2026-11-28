@@ -1,28 +1,34 @@
-# M07 — Design Intelligence and Recommendations
+# M07 — Design Guidance and Component Library
 
 ## Strategic purpose
 
-Reduce decision overload with contextual, explainable guidance.
+Make design choices understandable without making choices on the user's behalf.
 
 ## Objective
 
-Recommend website structures, visual choices, and section patterns using project context and design constraints.
+Provide a well-organized library of high-level website components and patterns, with plain-language explanations and visual examples that support independent user decisions.
 
 ## Scope
 
-- Project-purpose interpretation
-- page/section suggestions
-- curated palette/type/layout suggestions
-- recommendation rules
-- explanations
-- alternatives
-- compatibility checks
-- accessibility-aware guidance
-- feedback capture.
+- Component taxonomy and categories.
+- Component and pattern descriptions.
+- Visual examples and comparisons.
+- Available options for each pattern.
+- Plain-language explanation of each component's purpose.
+- Search, browse, and discoverability within the library.
+- Clear distinction between required and optional mission decisions.
+- Curated responsive pattern documentation where relevant.
+
+## Explicit product constraints
+
+- No AI recommendations or AI-generated patterns in the initial release.
+- No automatic component selection, ranking, insertion, or ordering.
+- The library is user-directed; levels introduce concepts but do not permanently gate access.
+- Context may organize examples or explain relevance, but must not silently decide what the user should choose.
 
 ## Out of scope
 
-Autonomous AI generation and external competitor crawling unless separately approved.
+Autonomous design generation, personalized AI coaching, competitor analysis, and automatic layout decisions.
 
 ## Dependencies
 
@@ -30,41 +36,28 @@ M00, M04, M06.
 
 ## Acceptance criteria
 
-Recommendations are relevant to the stated project, explain why they are suggested, remain optional, and can be changed by the player.
+Users can browse and understand available component families and patterns, compare their presentation, choose independently, and configure the options exposed by a selected pattern. No system-generated recommendation is presented as a decision.
 
 ## Deliverables
 
-Recommendation rules and guidance experience.
+Component taxonomy, pattern catalogue, explanations, and library interaction specification.
 
 ## Required supporting specifications
 
-Create or expand the following documents when the milestone is prepared for implementation. Do not create empty documents merely to satisfy a template.
-
-- `objectives-and-scope.md` — measurable goals, boundaries, assumptions, and exclusions.
-- `feature-specification.md` — feature behavior, requirements, and edge cases.
-- `user-stories.md` — user/system stories with traceable identifiers.
-- `interaction-specification.md` — screens, states, flows, and interaction rules where applicable.
-- `technical-design.md` — architecture, module boundaries, and implementation approach.
-- `data-contracts.md` — entities, schemas, events, and API contracts where applicable.
-- `acceptance-criteria.md` — testable milestone completion criteria.
-- `testing-strategy.md` — unit, integration, component, accessibility, and end-to-end verification.
-- `implementation-tasks.md` — dependency-ordered, reviewable engineering tasks.
+Create detailed objectives, feature specifications, user stories, interaction rules, technical design, data contracts, acceptance criteria, testing strategy, and implementation tasks when M07 is refined for implementation. Do not create empty documents merely to satisfy a template.
 
 ## Definition of done
 
-- [ ] Scope, assumptions, and exclusions are agreed.
-- [ ] Dependencies are satisfied or explicitly resolved.
-- [ ] Feature requirements and user stories are traceable.
-- [ ] UX and technical decisions are documented where relevant.
-- [ ] Implementation tasks are small enough to review and verify.
-- [ ] Acceptance criteria pass.
-- [ ] Relevant automated and manual verification evidence is recorded.
-- [ ] Known limitations and follow-up work are documented.
-- [ ] The roadmap and feature inventory reflect any approved scope changes.
+- [ ] Component families and patterns are catalogued.
+- [ ] Each pattern has an understandable purpose and example.
+- [ ] User selection and configuration are explicit.
+- [ ] No AI recommendation or automatic selection is required.
+- [ ] Library access is not artificially gated by level progression.
+- [ ] Acceptance criteria and test evidence are recorded.
 
 ## Open decisions
 
-Record unresolved product or technical questions here. Each decision should eventually be resolved or moved to the shared `decisions/` area with rationale and consequences.
+Exact component families, pattern counts, and discovery interactions are refined in M07.
 
 ## Status
 
