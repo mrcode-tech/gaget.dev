@@ -42,11 +42,11 @@ export default function WebsiteBuilderWorkspace(){
  const addPage=()=>{if(!project||!pageName.trim())return;const id="page-"+Math.random().toString(36).slice(2,9);const p:Page={id,name:pageName.trim(),slug:"/"+pageName.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),instances:[],layouts:{desktop:{order:[],hidden:[]},tablet:{order:[],hidden:[]},mobile:{order:[],hidden:[]}}};setProject({...project,pages:[...project.pages,p],activePageId:id,finalReviewConfirmed:false});setPageName("");setPagesOpen(false);};
  if (!project) {
   return (
-   <main className="min-h-screen bg-[#f2efe9] px-5 py-12 text-[#262722]">
+   <main className="min-h-screen bg-[#f2efe9] px-5 py-12 text-[#262722] dark:bg-[#17201d] dark:text-[#f1eee7]">
     <div className="mx-auto max-w-3xl">
      <div className="mb-10 flex items-center gap-3">
       <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#31463d] text-xl text-white" aria-hidden="true">✳</div>
-      <div><p className="text-xs uppercase tracking-[.24em] text-[#718076]">Website design workspace</p><h1 className="text-2xl font-semibold">Website Design Builder</h1></div>
+      <div className="flex-1"><p className="text-xs uppercase tracking-[.24em] text-[#718076] dark:text-[#aab7aa]">Website design workspace</p><h1 className="text-2xl font-semibold">Website Design Builder</h1></div><button type="button" onClick={()=>setTheme(dark?"light":"dark")} className="rounded-full border border-current/20 px-3 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{dark?"Light":"Dark"} mode</button>
      </div>
      <div className="rounded-[2rem] bg-white p-7 text-[#262722] shadow-sm dark:bg-[#202923] dark:text-[#f1eee7] md:p-10">
       <p className="text-sm font-medium uppercase tracking-[.18em] text-[#9a674d]">Start with a purpose</p>
