@@ -90,3 +90,146 @@ export function serializeProject(project:Project):string {
 export function markdownHandoff(project:Project):string {
  return ["# "+project.name,"","> Session-only design blueprint. This document describes the composition; it is not a published website.","","## Website definition","- Business: "+project.businessType,"- Purpose: "+project.purpose,"- Audience: "+project.audience,"","## Visual identity","- Direction: "+project.identity.palette,"- Primary: "+project.identity.primary,"- Background: "+project.identity.background,"- Typography: "+project.identity.font,"","## Pages",...project.pages.flatMap(p=>["### "+p.name+" ("+p.slug+")",...p.instances.map(i=>{const s=CATALOGUE.find(x=>x.id===i.sampleId);return "- "+(s?.name??i.sampleId)+": "+(i.content.title??i.content.quote??"");}),""]),"## Responsive behavior","Desktop, tablet and mobile layouts are maintained independently for order and visibility."].join("\n");
 }
+
+
+/**
+ * Composition commands shared by the workspace and tests. These are pure
+ * transformations so the in-memory Project remains the single source of truth.
+ */
+export type InsertPosition = { placement: "start" | "end" | "before" | "after"; relativeToId?: string };
+export type ReplaceResult = { page: Page; preservedFields: string[]; resetFields: string[] };
+export type AssetRecord = {
+  id: string; fileName: string; mimeType: string; size: number;
+  altText: string; dataUrl: string; pageId?: string; instanceId?: string;
+};
+export type NavigationReference = { pageId: string; label: string };
+export type ExportReadiness = { status: "Complete" | "Incomplete"; findings: ReturnType<typeof reviewProject> };
+export type WebsiteIdentityOptions = {
+  direction: string; headingFont: string; bodyFont: string; typeScale: "compact" | "balanced" | "expressive";
+  imageDirection: string; buttonStyle: "solid" | "outline" | "text"; spacing: "compact" | "comfortable" | "spacious";
+  secondary: string; mutedText: string; border: string;
+};
+
+export function insertSampleAt(page: Page, sample: Sample, position: InsertPosition): Page {
+  let index = page.instances.length;
+  if (position.placement === "start") index = 0;
+  if (position.placement === "before" || position.placement === "after") {
+    const target = page.instances.findIndex(item => item.id === position.relativeToId);
+    if (target < 0) return page;
+    index = target + (position.placement === "after" ? 1 : 0);
+  }
+  return insertSample(page, sample, index);
+}
+
+export function replaceSample(page: Page, instanceId: string, nextSample: Sample): ReplaceResult {
+  const current = page.instances.find(item => item.id === instanceId);
+  if (!current) return { page, preservedFields: [], resetFields: [] };
+  const nextContent: Record<string, string> = {};
+  const preservedFields: string[] = [];
+  const resetFields: string[] = [];
+  for (const field of nextSample.fields) {
+    if (Object.prototype.hasOwnProperty.call(current.content, field.id)) {
+      nextContent[field.id] = current.content[field.id];
+      preservedFields.push(field.id);
+    } else {
+      nextContent[field.id] = field.defaultValue;
+      resetFields.push(field.id);
+    }
+  }
+  return {
+    page: { ...page, instances: page.instances.map(item => item.id === instanceId
+      ? { ...item, sampleId: nextSample.id, content: nextContent } : item) },
+    preservedFields, resetFields
+  };
+}
+
+export function setMissionStatus(project: Project, level: number, status: MissionStatus, notNeeded = false): Project {
+  const missions = project.missions.map(mission => mission.level === level
+    ? { ...mission, status: notNeeded ? "Complete" as const : status, notNeeded }
+    : mission);
+  return { ...project, missions };
+}
+
+export function completeLevel(project: Project, level: number, complete: boolean): Project {
+  const levels = new Set(project.completedLevels);
+  if (complete) levels.add(level); else levels.delete(level);
+  return { ...project, completedLevels: [...levels].sort((a, b) => a - b) };
+}
+
+export function markMissionsForReview(project: Project, affectedLevels: number[]): Project {
+  const affected = new Set(affectedLevels);
+  return { ...project, missions: project.missions.map(mission =>
+    affected.has(mission.level) && mission.status === "Complete" && !mission.notNeeded
+      ? { ...mission, status: "Needs review" } : mission) };
+}
+
+export function createAdditionalPage(project: Project, name: string, slug: string): Project {
+  const normalized = slug.startsWith("/") ? slug : "/" + slug;
+  if (!name.trim() || !normalized.slice(1) || project.pages.some(page => page.slug === normalized)) return project;
+  const id = "page-" + Math.random().toString(36).slice(2, 10);
+  const page: Page = { id, name: name.trim(), slug: normalized, instances: [],
+    layouts: { desktop: { order: [], hidden: [] }, tablet: { order: [], hidden: [] }, mobile: { order: [], hidden: [] } } };
+  return { ...project, pages: [...project.pages, page], activePageId: id };
+}
+
+export function removePage(project: Project, pageId: string): Project {
+  if (project.pages.length <= 1 || !project.pages.some(page => page.id === pageId)) return project;
+  const pages = project.pages.filter(page => page.id !== pageId);
+  return { ...project, pages, activePageId: project.activePageId === pageId ? pages[0].id : project.activePageId };
+}
+
+export function setActivePage(project: Project, pageId: string): Project {
+  return project.pages.some(page => page.id === pageId) ? { ...project, activePageId: pageId } : project;
+}
+
+export function validateInternalNavigation(project: Project): { pageId: string; instanceId: string; fieldId: string; message: string }[] {
+  const validIds = new Set(project.pages.map(page => page.id));
+  const errors: { pageId: string; instanceId: string; fieldId: string; message: string }[] = [];
+  for (const page of project.pages) for (const instance of page.instances) {
+    for (const [fieldId, value] of Object.entries(instance.content)) {
+      const match = value.match(/^page:([a-zA-Z0-9_-]+)$/);
+      if (match && !validIds.has(match[1])) errors.push({ pageId: page.id, instanceId: instance.id, fieldId, message: "This link points to a page that no longer exists." });
+    }
+  }
+  return errors;
+}
+
+function linearChannel(hex: string): number {
+  const channel = parseInt(hex, 16) / 255;
+  return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+}
+export function contrastRatio(foreground: string, background: string): number | null {
+  const valid = /^#?([\da-f]{6})$/i;
+  const fg = foreground.match(valid)?.[1], bg = background.match(valid)?.[1];
+  if (!fg || !bg) return null;
+  const luminance = (color: string) => {
+    const r = linearChannel(color.slice(0, 2)), g = linearChannel(color.slice(2, 4)), b = linearChannel(color.slice(4, 6));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const values = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
+  return Number(((values[0] + 0.05) / (values[1] + 0.05)).toFixed(2));
+}
+
+export function reviewIdentity(identity: Identity): { role: string; ratio: number | null; passesAA: boolean }[] {
+  const ratio = contrastRatio(identity.text, identity.background);
+  return [{ role: "Body text on background", ratio, passesAA: ratio !== null && ratio >= 4.5 },
+    { role: "Primary text on background", ratio: contrastRatio(identity.primary, identity.background),
+      passesAA: (contrastRatio(identity.primary, identity.background) ?? 0) >= 3 }];
+}
+
+export function exportReadiness(project: Project): ExportReadiness {
+  const findings = [...reviewProject(project)];
+  for (const page of project.pages) {
+    if (!page.name.trim() || !page.slug.startsWith("/")) findings.push({ severity: "error", message: "Page name and absolute internal route are required.", pageId: page.id });
+  }
+  for (const issue of validateInternalNavigation(project)) findings.push({ severity: "error", message: issue.message, pageId: issue.pageId, instanceId: issue.instanceId });
+  return { status: findings.some(item => item.severity === "error") ? "Incomplete" : "Complete", findings };
+}
+
+export function exportBlueprint(project: Project, assets: AssetRecord[] = []): string {
+  const readiness = exportReadiness(project);
+  const assetManifest = assets.map(asset => ({ id: asset.id, fileName: asset.fileName, mimeType: asset.mimeType,
+    size: asset.size, altText: asset.altText, embedded: false, note: "Binary media is not embedded in standalone JSON." }));
+  return JSON.stringify({ schemaVersion: "1.0.0", status: readiness.status, project, assets: assetManifest,
+    findings: readiness.findings }, null, 2);
+}
