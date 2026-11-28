@@ -87,9 +87,35 @@ export function reviewProject(project:Project):{severity:"error"|"warning";messa
 export function serializeProject(project:Project):string {
  return JSON.stringify({schemaVersion:"1.0.0",exportedAt:"",project},null,2);
 }
-export function markdownHandoff(project:Project):string {
- return ["# "+project.name,"","> Session-only design blueprint. This document describes the composition; it is not a published website.","","## Website definition","- Business: "+project.businessType,"- Purpose: "+project.purpose,"- Audience: "+project.audience,"","## Visual identity","- Direction: "+project.identity.palette,"- Primary: "+project.identity.primary,"- Background: "+project.identity.background,"- Typography: "+project.identity.font,"","## Pages",...project.pages.flatMap(p=>["### "+p.name+" ("+p.slug+")",...p.instances.map(i=>{const s=CATALOGUE.find(x=>x.id===i.sampleId);return "- "+(s?.name??i.sampleId)+": "+(i.content.title??i.content.quote??"");}),""]),"## Responsive behavior","Desktop, tablet and mobile layouts are maintained independently for order and visibility."].join("
-");
+export function markdownHandoff(project: Project): string {
+  return [
+    "# " + project.name,
+    "",
+    "> Session-only design blueprint. This document describes the composition; it is not a published website.",
+    "",
+    "## Website definition",
+    "- Business: " + project.businessType,
+    "- Purpose: " + project.purpose,
+    "- Audience: " + project.audience,
+    "",
+    "## Visual identity",
+    "- Direction: " + project.identity.palette,
+    "- Primary: " + project.identity.primary,
+    "- Background: " + project.identity.background,
+    "- Typography: " + project.identity.font,
+    "",
+    "## Pages",
+    ...project.pages.flatMap(page => [
+      "### " + page.name + " (" + page.slug + ")",
+      ...page.instances.map(instance => {
+        const sample = CATALOGUE.find(item => item.id === instance.sampleId);
+        return "- " + (sample?.name ?? instance.sampleId) + ": " + (instance.content.title ?? instance.content.quote ?? "");
+      }),
+      ""
+    ]),
+    "## Responsive behavior",
+    "Desktop, tablet and mobile layouts are maintained independently for order and visibility."
+  ].join(String.fromCharCode(10));
 }
 
 
