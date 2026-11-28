@@ -97,7 +97,7 @@ describe("website builder domain", () => {
   });
 
   it("keeps level completion separate from mission completion and supports review propagation", async () => {
-    const { completeLevel, markMissionsForReview, setMissionStatus } = await import("@/lib/website-builder/model");
+    const { completeLevel, markMissionsForReview } = await import("@/lib/website-builder/model");
     let project = createProject({ name: "Studio", businessType: "Studio", purpose: "", audience: "" });
     project = setMissionStatus(project, 2, "Complete");
     project = completeLevel(project, 2, true);
@@ -132,7 +132,11 @@ describe("website builder domain", () => {
     project = { ...project, pages: [{ ...page, instances: [{ ...page.instances[0], content: { ...page.instances[0].content, title: "" } }] }] };
     expect(exportReadiness(project).status).toBe("Incomplete");
     expect(JSON.parse(exportBlueprint(project)).schemaVersion).toBe("1.0.0");
-    expect(JSON.parse(exportBlueprint(project)).status).toBe("Incomplete");\n    project = { ...project, missions: project.missions.map(mission => ({ ...mission, status: "Complete" as const })) };\n    project = confirmFinalReview(project, true);\n    expect(exportReadiness(project).status).toBe("Complete");\n    expect(JSON.parse(exportBlueprint(project)).status).toBe("Complete");
+    expect(JSON.parse(exportBlueprint(project)).status).toBe("Incomplete");
+    project = { ...project, missions: project.missions.map(mission => ({ ...mission, status: "Complete" as const })) };
+    project = confirmFinalReview(project, true);
+    expect(exportReadiness(project).status).toBe("Complete");
+    expect(JSON.parse(exportBlueprint(project)).status).toBe("Complete");
   });
 
 });
