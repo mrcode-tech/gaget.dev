@@ -89,3 +89,20 @@ Responsive MVP behavior:
 - Let users review and customize tablet/mobile after composing desktop.
 
 After component insertion, users can configure generic image/file placeholders, specify their purpose, and optionally supply their own content. Export remains available at any time and clearly identifies complete or incomplete status.
+
+
+## Approved M02 UX and editing boundary
+
+The MVP uses a sample-based composition model. Users browse multiple predefined designs for each high-level component type, select the sample they want, and arrange the resulting sections into a website. The component portfolio grows over time.
+
+Users can customize only the content fields and finite options supported by the selected sample, such as titles, text, button labels, links, item data, and image slots. They cannot freely redesign internal visual structure, move nested elements, edit arbitrary styling, use CSS controls, or perform pixel-level editing. The product is not a Figma-like detailed design editor.
+
+Responsive workspace rules:
+- Desktop, tablet, and mobile canvases are visible simultaneously side by side.
+- Desktop is the structural source. Add/remove/replace of high-level components updates the shared collection across all three views.
+- Tablet/mobile cannot independently add, remove, or replace high-level components.
+- Tablet/mobile can independently reorder existing components, hide/show them, and adjust supported responsive presentation.
+- Shared content and sample configuration synchronize across all canvases.
+- Narrow workspaces use horizontal scrolling or workspace zoom to preserve the three-canvas arrangement.
+
+The MVP workspace also includes a visual component portfolio, contextual content properties, collapsible mission guidance, autosave feedback, undo/redo, and a dedicated review experience. Version history is a later enhancement unless separately prioritized.
