@@ -132,3 +132,21 @@ Use guided patterns and plain-language controls. Do not require CSS, media queri
 ## Design principle
 
 The experience should feel like a guided visual construction journey—not a conventional game economy, an AI designer, or a simplified professional design editor. The user is assembling their own website from understandable high-level choices.
+
+
+## M02 refinement — sample-based composition and three-canvas workspace
+
+The detailed UX model approved in [M02](milestones/M02-ux-architecture/README.md) refines the general composition behavior described above.
+
+### Build from predefined samples
+Users build the website by browsing multiple predefined design samples within each high-level component type, selecting a sample, and adding it to the page. The component portfolio grows progressively as the product adds more component types and samples.
+
+Users may edit the content fields supported by a selected sample—such as titles, text, button labels, links, product data, and images. They do not redesign the sample's internal visual structure, freely move nested elements, or edit arbitrary styling. This is a high-level website composition builder, not a Figma-like detailed visual editor.
+
+### Desktop-originated shared structure
+Desktop is the primary structural composition surface. Adding, removing, or replacing a high-level component on desktop updates the shared component collection in desktop, tablet, and mobile. Tablet and mobile cannot independently add, remove, or replace high-level components.
+
+Tablet and mobile can independently reorder existing components, hide/show them, and adjust supported responsive presentation. Shared content and sample configuration remain synchronized across all three views.
+
+### Simultaneous responsive canvases
+Desktop, tablet, and mobile are displayed simultaneously side by side. If the workspace is too narrow, users scroll horizontally or zoom the workspace presentation; the interface does not switch to a single-device tab as its default arrangement.
