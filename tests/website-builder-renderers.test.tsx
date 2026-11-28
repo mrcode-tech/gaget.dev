@@ -19,7 +19,7 @@ describe("website builder sample renderer registry", () => {
   });
   it("contains renderer failures inside the preview surface", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    function BrokenRenderer() { throw new Error("broken renderer"); }
+    function BrokenRenderer(): null { throw new Error("broken renderer"); }
     render(<SampleRendererErrorBoundary><BrokenRenderer /></SampleRendererErrorBoundary>);
     expect(screen.getByRole("alert").textContent).toContain("preview could not be rendered");
     consoleError.mockRestore();
