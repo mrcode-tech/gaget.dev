@@ -13,7 +13,7 @@ export type Mission = { id: string; title: string; level: number; status: Missio
 export type Identity = { palette: string; primary: string; background: string; surface: string; text: string; accent: string; font: string };
 export type Project = {
   id: string; name: string; businessType: string; purpose: string; audience: string;
-  pages: Page[]; activePageId: string; identity: Identity; missions: Mission[]; completedLevels: number[];
+  pages: Page[]; activePageId: string; identity: Identity; missions: Mission[]; completedLevels: number[]; finalReviewConfirmed: boolean;
 };
 export const LEVELS = [
   "Define website","Explore visual direction","Build shared website frame","Design homepage introduction",
@@ -41,7 +41,7 @@ export const PALETTES: Identity[] = [
 ];
 export function createProject(input:{name:string;businessType:string;purpose:string;audience:string}):Project {
  const page:Page={id:"page-home",name:"Home",slug:"/",instances:[],layouts:{desktop:{order:[],hidden:[]},tablet:{order:[],hidden:[]},mobile:{order:[],hidden:[]}}};
- return {id:"project-"+Date.now(),...input,pages:[page],activePageId:page.id,identity:PALETTES[0],missions:DEFAULT_MISSIONS.map(m=>({...m})),completedLevels:[]};
+ return {id:"project-"+Date.now(),...input,pages:[page],activePageId:page.id,identity:PALETTES[0],missions:DEFAULT_MISSIONS.map(m=>({...m})),completedLevels:[],finalReviewConfirmed:false};
 }
 export function activePage(project:Project):Page { return project.pages.find(p=>p.id===project.activePageId) ?? project.pages[0]; }
 export function insertSample(page:Page,sample:Sample,index=page.instances.length):Page {
@@ -223,7 +223,7 @@ export function exportReadiness(project: Project): ExportReadiness {
     if (!page.name.trim() || !page.slug.startsWith("/")) findings.push({ severity: "error", message: "Page name and absolute internal route are required.", pageId: page.id });
   }
   for (const issue of validateInternalNavigation(project)) findings.push({ severity: "error", message: issue.message, pageId: issue.pageId, instanceId: issue.instanceId });
-  return { status: findings.some(item => item.severity === "error") ? "Incomplete" : "Complete", findings };
+  const allApplicableMissionsComplete = project.missions.every(mission => mission.status === "Complete");\n  return { status: allApplicableMissionsComplete && project.finalReviewConfirmed ? "Complete" : "Incomplete", findings };
 }
 
 export function exportBlueprint(project: Project, assets: AssetRecord[] = []): string {
