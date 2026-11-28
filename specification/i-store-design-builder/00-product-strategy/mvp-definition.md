@@ -66,3 +66,26 @@ Quantitative targets should be established after baseline usability testing rath
 ## MVP release gate
 
 Do not call the MVP complete until the core journey, component operations, responsive wireframe previews, persistence/recovery, accessibility fundamentals, complete/partial handoff, and milestone acceptance criteria pass.
+
+## Approved M01 journey and responsive behavior
+
+The MVP journey uses 11 levels: Define the website; Explore visual direction; Build shared website frame; Design homepage introduction; Build homepage content; Complete homepage; Design responsive behavior; Plan additional pages; Design additional pages; Review website; Complete design and handoff.
+
+The first complete example should be an online store, while the builder supports other website purposes generically.
+
+Progression rules:
+- All levels are accessible from the beginning. Users may move freely and leave unfinished missions.
+- Each level defines required and optional missions; users may explicitly select Not needed where applicable.
+- Missions complete automatically when objective requirements are satisfied and use Not started, In progress, Complete, and Needs review statuses.
+- Users may mark a level complete with unfinished missions; this does not waive or change mission statuses.
+- Overall design completion requires all applicable required missions and explicit final-review confirmation.
+- Earlier decision changes preserve work and mark affected missions Needs review.
+- Show level status and mission completion percentage, without rewards or scores.
+
+Responsive MVP behavior:
+- Provide desktop, tablet, and mobile canvases for one shared website.
+- Share component identity/content/configuration while maintaining independent layout state per breakpoint.
+- Support independent tablet/mobile reordering and component visibility; hiding never deletes a component or affects other breakpoints.
+- Let users review and customize tablet/mobile after composing desktop.
+
+After component insertion, users can configure generic image/file placeholders, specify their purpose, and optionally supply their own content. Export remains available at any time and clearly identifies complete or incomplete status.
