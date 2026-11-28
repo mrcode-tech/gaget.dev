@@ -20,6 +20,7 @@ See [Tool Catalog and Workspace Architecture](./tool-catalog-and-workspace-archi
 |---|---|---|
 | `/` | Home discovery page | Search, featured/popular tools, favorites, all-tools section, benefit messaging. |
 | `/tools` | Dev Tools catalog | Search filters only developer utilities; registry categories render as sections and empty categories are omitted. Planned tools remain visibly planned and non-launchable. |
+| `/website-builder` | Generic Website Design Builder (internal route) | Feature-owned shell; noindex; session-only Phase 1 foundation. The full first MVP is not yet complete; see the approved milestone package. |
 | `/categories/[slug]` | Category landing | Filters the central registry by category. Empty categories are possible. |
 | Shared shell | App header + sidebar | Collapsible desktop sidebar, mobile/tablet navigation drawer, search suggestions, theme and language controls. |
 | Locale handling | Locale provider and locale links | Locale metadata includes English, Persian, Arabic, Spanish, Chinese variants, Portuguese (Brazil), French, German, Japanese, Hindi, Russian, Indonesian, Korean and Italian. Translation completeness varies; English is the only approved indexable locale. Persian and Arabic use RTL direction. |
@@ -132,3 +133,10 @@ The Date & Time workspace exposes Gregorian, Persian Solar Hijri, Islamic, Islam
 - The same canonical fictional portfolio content is reused across styles for meaningful visual comparison.
 - The module is hosted by the existing Next.js app, with feature-owned code under `design/` and route adapters under `app/design/`. It is separate from the Dev Tools catalog and does not register as a browser utility.
 - Status: **Partial — implementation added; CI/browser verification pending.**
+
+## Website Design Builder
+
+- `/website-builder` is a separate product workspace, not a Dev Tools utility and not a store-only feature. Users will choose their business context and compose a website from curated high-level component designs.
+- The current implementation is limited to the verified Phase 1 foundation: session project setup, an isolated shell, initial catalogue/sample previews, responsive canvas scaffolding, and project-state foundations.
+- Project state is in memory only. No account, cloud/database persistence, autosave, local-storage/IndexedDB project persistence, import, publishing, deployment, collaboration, or AI-generated recommendations are included.
+- **Status: Phase 1 verified; Phases 2–10 remain in progress/not yet accepted.** Follow [the approved milestone specifications and implementation prompt](../i-store-design-builder/README.md) for the authoritative scope and acceptance criteria.

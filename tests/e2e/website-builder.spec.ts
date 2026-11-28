@@ -91,3 +91,21 @@ test("project state is intentionally not restored after a page refresh", async (
   await expect(page.getByRole("heading", { name: "Website Design Builder" })).toBeVisible();
   await expect(page.getByLabel("Project name")).toHaveValue("");
 });
+
+test("builder workspace remains viewport-contained across mobile, tablet, and desktop widths", async ({ page }, testInfo) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Responsive Studio");
+  await page.getByLabel("Website purpose").fill("Verify the builder layout across target viewport sizes.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+  for (const width of [320, 360, 375, 390, 430, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(page.locator("main").first()).toBeVisible();
+    const metrics = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
+    expect(metrics.document).toBeLessThanOrEqual(metrics.viewport + 1);
+    expect(metrics.body).toBeLessThanOrEqual(metrics.viewport + 1);
+    if (width === 320 || width === 430) {
+      await page.screenshot({ path: testInfo.outputPath(`website-builder-workspace-mobile-${width}x900-light.png`), fullPage: true });
+    }
+  }
+});

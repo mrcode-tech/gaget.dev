@@ -88,3 +88,11 @@ Broader capability families in the developer-tools proposal (full format parsers
 - Initial style routes: `/design/bauhaus`, `/design/swiss`, `/design/minimalism`, `/design/art-deco`, and `/design/de-stijl`. All render one shared fictional portfolio data source.
 - Design-specific styles are namespaced in a CSS Module. The app still uses one root Tailwind configuration; Tailwind configuration is not independently scoped per source folder.
 - **Status: Partial; source added, runtime/visual verification pending.** Do not treat route existence or source inspection as proof of a verified browser experience.
+
+## Website Design Builder
+
+- `/website-builder` is an internal, non-indexable route for the Generic Website Design Builder. The route renders a feature-owned workspace instead of the shared GaGet header/sidebar; the GaGet sidebar provides the entry point.
+- The Phase 1 foundation includes session-only project creation, a typed in-memory project/page model, an isolated workspace shell, a data-driven initial sample catalogue, a sample renderer registry with local failure handling, responsive canvas scaffolding, scoped light/dark design tokens, reduced-motion handling, and explicit session-loss guidance.
+- The project is intentionally not persisted. Refreshing or closing the page may discard unexported project state. No account, database, cloud storage, autosave, local-storage project persistence, import, publish, or deployment capability is part of this foundation.
+- Phase 1 verification is tied to the GitHub Actions evidence for the tested `feature-design` commit. This status does not imply that the catalogue/composition, full progression, identity, homepage, responsive, multi-page, content/media, export, or final acceptance phases are complete.
+- **Status: Phase 1 foundation verified; Phases 2–10 remain open.**
