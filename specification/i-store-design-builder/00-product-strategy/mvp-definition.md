@@ -35,7 +35,7 @@ The user—not AI or the application—makes every creative decision.
 - User content can be entered upfront or progressively.
 - Optional user-provided reference imagery; no required final assets or stock-image library.
 - Desktop/tablet/mobile preview with curated responsive choices.
-- Project save/recovery appropriate to MVP architecture.
+- Explicit user-triggered JSON and Markdown export at any time; no durable project save/recovery in MVP C.
 - Mission completion tracking based on required decisions, not subjective design quality.
 - Complete and partial design summary that communicates user intent and remaining work.
 
@@ -65,7 +65,7 @@ Quantitative targets should be established after baseline usability testing rath
 
 ## MVP release gate
 
-Do not call the MVP complete until the core journey, component operations, responsive wireframe previews, persistence/recovery, accessibility fundamentals, complete/partial handoff, and milestone acceptance criteria pass.
+Do not call the MVP complete until the core journey, component operations, responsive wireframe previews, accessibility fundamentals, JSON/Markdown handoff export, and milestone acceptance criteria pass. Durable persistence/recovery is a post-MVP platform capability.
 
 ## Approved M01 journey and responsive behavior
 
@@ -105,7 +105,7 @@ Responsive workspace rules:
 - Shared content and sample configuration synchronize across all canvases.
 - Narrow workspaces use horizontal scrolling or workspace zoom to preserve the three-canvas arrangement.
 
-The MVP workspace also includes a visual component portfolio, contextual content properties, collapsible mission guidance, autosave feedback, undo/redo, and a dedicated review experience. Version history with safe full-project restoration is part of the approved MVP UX.
+The MVP workspace includes a visual component portfolio, contextual content properties, collapsible mission guidance, and a dedicated review experience. Autosave, undo/redo, version history, and safe full-project restoration are deferred to post-MVP platform stages.
 
 ## Approved M03 visual design baseline
 
@@ -114,3 +114,8 @@ The MVP visual direction is governed by [M03](../milestones/M03-visual-design-sy
 The component portfolio starts with a curated set and expands progressively across a defined generic taxonomy. Samples may have distinct visual identities while sharing technical conventions and explicit content-slot contracts. Each sample provides isolated and contextual previews and intentional desktop/tablet/mobile presentations. Users retain the M02 high-level composition and bounded content-customization model.
 
 The professional design framework and quality checklist guide design and review. They are not subjective user scores, rewards, or automatic design recommendations.
+
+
+## Approved MVP C release-boundary amendment
+
+The user's MVP decision C supersedes earlier M00 wording that implied persistent saving/recovery was required for the first release. MVP C is a lightweight, session-based product: project data remains in browser memory and may be lost on refresh or browser close. There is no account, database, cloud persistence, autosave, browser-storage persistence, undo/redo, or version history. Users can explicitly export JSON and Markdown at any time; an optional ZIP handoff may include selected, currently available user media. Local media references are session-only and are represented by an asset manifest when binary media is not included. M15 defines persistence/recovery as post-MVP.
