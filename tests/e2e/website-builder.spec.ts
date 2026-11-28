@@ -189,3 +189,30 @@ test("composition supports independent duplicate, accessible move, and confirmed
   await page.getByRole("button", { name: "Remove section" }).click();
   await expect(page.getByText("1 sections", { exact: false })).toBeVisible();
 });
+
+
+test("insertion positions and drag-and-drop ordering update the active breakpoint only", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Studio Portfolio");
+  await page.getByLabel("Website purpose").fill("Show selected work and services.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+
+  const previews = page.getByRole("button", { name: "Preview", exact: true });
+  await previews.nth(0).click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await page.getByRole("button", { name: "Insert section" }).click();
+
+  await page.getByRole("button", { name: "Preview", exact: true }).nth(1).click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await page.getByLabel("Insertion position").selectOption("after");
+  await page.getByLabel("Reference section").selectOption({ label: "Editorial split" });
+  await page.getByRole("button", { name: "Insert section" }).click();
+  await expect(page.getByText("2 sections", { exact: false })).toBeVisible();
+
+  const desktop = page.getByRole("region", { name: "Desktop website canvas" });
+  await page.getByLabel("Reorder Bold centered").dragTo(page.getByLabel("Reorder Editorial split"));
+  await expect(desktop.locator("button").first()).toContainText("Make room for better ideas");
+  const tablet = page.getByRole("region", { name: "Tablet website canvas" });
+  await expect(tablet.locator("button").first()).toContainText("Objects made to be lived with");
+});
