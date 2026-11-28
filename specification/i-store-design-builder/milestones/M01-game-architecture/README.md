@@ -224,3 +224,18 @@ This milestone defines product behavior. It does not replace the detailed techni
 - [x] M00 product guardrails remain intact.
 
 **Planning status:** Approved. Application implementation and downstream verification remain in their respective milestones.
+
+
+## M02 refinement — responsive structure and sample-based editing
+
+M02 refines the responsive workspace decisions above and takes precedence where this subsection is more specific:
+
+- The website has one shared high-level component collection, structurally authored from the desktop canvas.
+- Adding, removing, or replacing a high-level component on desktop updates the shared collection shown in desktop, tablet, and mobile.
+- Tablet and mobile cannot independently add, remove, or replace high-level components.
+- Tablet and mobile can independently reorder existing components, hide/show them, and adjust supported responsive presentation.
+- Shared content and supported sample configuration remain synchronized across all three views.
+- The three canvases are visible simultaneously side by side. Narrow workspaces use horizontal scrolling or workspace zoom rather than switching to a single-canvas tab.
+- Components are selected from a portfolio of predefined samples. Users customize supported content fields, such as titles, text, labels, links, and images; they do not freely redesign the internal visual structure of a sample.
+
+This refinement does not change the M01 rules for free level navigation, mission/level completion, user agency, or complete/incomplete handoff.
