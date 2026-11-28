@@ -1,6 +1,6 @@
 # M04 — Domain Model and Persistence
 
-**Status: Approved baseline.** This milestone specifies a browser-only, temporary MVP project model. It does not authorize implementation of persistence, authentication, import/export or collaboration.
+**Status: Approved baseline, amended by MVP C decision.** This milestone specifies a browser-only, temporary MVP project model. It does not authorize persistence, authentication, import, or collaboration. Explicit JSON/Markdown export is approved later by the user's MVP C decision and specified in M14.
 
 ## Objective
 Define a coherent model for generic, user-directed website composition. Validate selection of predefined samples, high-level composition, bounded content editing and three responsive layouts.
@@ -17,10 +17,10 @@ Define a coherent model for generic, user-directed website composition. Validate
 - Placeholder metadata and optional asset references; no asset-management infrastructure.
 - Progression conceptually separate from composition.
 - Technology-neutral conceptual future model.
-- Future persistence, history, recovery, export/import, collaboration and auth are deferred.
+- Durable persistence, history, recovery, import, collaboration, and auth are deferred. Explicit JSON/Markdown export is an approved M14 exception; it is a local download, not persistence.
 
 ## MVP scope
-Temporary in-memory session. Refresh or browser close may discard work. No autosave, permanent storage, import/export, cloud assets or backend.
+Temporary in-memory session. Refresh or browser close may discard work. No autosave, permanent storage, import, cloud assets or backend. M14 adds explicit local JSON/Markdown export and optional ZIP packaging of currently available user-selected media without changing the in-memory-only runtime.
 
 ## Documents
 - [Domain model](domain-model.md)
@@ -33,3 +33,8 @@ Temporary in-memory session. Refresh or browser close may discard work. No autos
 - [Acceptance criteria](acceptance-criteria.md)
 
 Generic website support, user-directed sample selection, bounded content editing and isolation from the existing GaGet shell remain guardrails. This is not a detailed visual editor.
+
+
+## Approved MVP C clarification
+
+M04's original export deferral is narrowed: M14 is authorized to implement explicit user-triggered JSON and Markdown export, plus optional ZIP handoff packaging. This does not authorize project import, persistent storage, browser storage, backend services, autosave, or recovery. M13 local image files remain session-only and may be packaged only while available in the active session.
