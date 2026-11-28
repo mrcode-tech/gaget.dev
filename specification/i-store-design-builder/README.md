@@ -22,7 +22,7 @@ This directory defines the product strategy, player journey, milestones, and sup
 | M02 | UX architecture and interactions | [M02](milestones/M02-ux-architecture/README.md) |
 | M03 | Product visual design system | [M03](milestones/M03-visual-design-system/README.md) |
 | M04 | Domain model and persistence | [M04](milestones/M04-domain-model-and-persistence/README.md) |
-| M05 | Application foundation and workspace | [M05](milestones/M05-application-foundation/README.md) |
+| M05 | Application foundation and workspace | [M05](milestones/M05-application-foundation-and-workspace/README.md) |
 | M06 | Website composition engine | [M06](milestones/M06-composition-engine/README.md) |
 | M07 | Design guidance and component library | [M07](milestones/M07-design-intelligence/README.md) |
 | M08 | Journey progress and guided learning | [M08](milestones/M08-game-progression/README.md) |
@@ -96,3 +96,6 @@ M03 approval covers the visual/product design baseline and documentation only. I
 - **M04 — Domain Model and Persistence:** Approved. See [M04 specification](milestones/M04-domain-model-and-persistence/README.md). M04 establishes a browser-only, temporary, in-memory JSON model for the MVP. Persistence, authentication, autosave, history, import/export and collaboration are deferred.
 
 M04 approval covers the conceptual model and specification only. It does not claim application implementation or testing is complete.
+
+
+- **M05 — Application Foundation and Workspace:** Approved — specification baseline complete. See [M05 specification](milestones/M05-application-foundation-and-workspace/README.md). M05 defines a portable, isolated builder module hosted temporarily in GaGet for specification development and the first MVP. It establishes project creation, workspace/canvas foundations, a synthetic sample catalogue, independent previews, typed runtime state, rendering boundaries, styling, accessibility and verification requirements. Implementation and verification remain future work.
