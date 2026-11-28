@@ -1,75 +1,86 @@
 # M03 — Product Visual Design System
 
-## Strategic purpose
+## Status
 
-Give the Design Builder application its own coherent visual language.
+**Approved — M03 visual design system baseline complete.**
+
+This is approval of the product/design baseline and documentation, not a claim that application styles, tokens, interactive showcase, or component samples have been implemented or visually verified.
 
 ## Objective
 
-Define the product UI system separately from the website identity being created by players.
+Define a distinctive professional visual language for the Website Design Builder and a quality framework for its progressively expanding portfolio of predefined website component samples.
 
-## Scope
+## Approved decisions
 
-- Application tokens
-- typography
-- color
-- spacing
-- controls
-- panels
-- cards
-- progress visuals
-- iconography
-- canvas frame
-- themes
-- responsive application shell
-- component states.
+| ID | Area | Decision |
+|---|---|---|
+| M03-01 | Builder personality | Professional with creative character |
+| M03-02 | Inspiration | Independent product identity informed by professional tools, without copying them |
+| M03-03 | Color | Neutral foundation, restrained semantic colors, distinctive brand accent |
+| M03-04 | Theme | Light and dark from the beginning |
+| M03-05 | Typography | Functional sans-serif with distinctive hierarchy and clear control typography |
+| M03-06 | Density | Compact controls/navigation; generous canvas and previews |
+| M03-07 | Catalogue | Flexible visual gallery with adjustable density and useful metadata |
+| M03-08 | Comparison | Browse multiple samples and open enlarged previews |
+| M03-09 | Organization | Component type, optional visual style, and website-purpose filters |
+| M03-10 | Quantity | Curated manageable set, expanded progressively |
+| M03-11 | Consistency | Independent sample visual identities, shared technical/content-slot conventions |
+| M03-12 | Preview | Isolated component and contextual page preview |
+| M03-13 | Canvas | Realistic sample rendering with placeholders for missing content |
+| M03-14 | Architecture | Reuse foundations where practical; independent authoring when appropriate |
+| M03-15 | Growth | Define full taxonomy early; deliver samples progressively by priority |
+| M03-16 | First portfolio | Store-focused first complete journey, generic component foundations |
+| M03-17 | Motion | Subtle, purposeful feedback and transitions |
+| M03-18 | Responsive | Intentional desktop/tablet/mobile presentations |
+| M03-19 | Documentation | Written specifications and interactive visual showcase |
+| M03-20 | Source of truth | Existing application repository |
 
-## Out of scope
+## Two distinct visual systems
 
-Player website design tokens and themes, which are handled in M09.
+### System A — Builder Interface
 
-## Dependencies
+The application interface users operate: workspace, navigation, panels, controls, sample browser, canvases, responsive controls, progress, guidance, feedback, and review. It must be consistent, accessible, distinctive, and visually subordinate to the website being composed.
 
-M02.
+### System B — Website Component Design Portfolio
 
-## Acceptance criteria
+The predefined website designs users browse, select, customize within bounded content fields, and compose: navigation, hero, product grids, content, social proof, conversion, information, and footer components. Samples may have meaningfully different visual identities while sharing technical conventions and content-slot contracts.
 
-Core screens and states can be designed consistently from documented tokens and reusable UI patterns; the existing GaGet shell remains unaffected.
+## Product guardrails inherited from M00–M02
 
-## Deliverables
+- The product remains generic and user-directed; the first complete example is store-focused.
+- Users browse, compare, select, and arrange predefined high-level component samples.
+- Users edit only supported content fields and finite sample options (e.g. text, titles, labels, links, item data, image slots).
+- Users do not freely redesign internal structure, move nested elements, edit arbitrary styles/CSS, or manipulate pixel-level geometry.
+- Desktop is the structural source. Desktop add/remove/replace updates the shared component collection; tablet/mobile independently control supported ordering, visibility, and responsive presentation.
+- Desktop, tablet, and mobile canvases remain visible side by side.
+- No AI-generated/selected designs, automatic recommendations, or automatic composition.
+- No points, badges, rewards, leaderboards, timers, or subjective design-quality scores.
+- The existing GaGet shell and unrelated routes remain unaffected.
 
-Product UI design system and visual specifications.
+## Professional design knowledge
 
-## Required supporting specifications
+The product must apply experienced professional design practice, not generic template conventions or arbitrary visual decisions. See [Professional Design Framework](professional-design-framework.md) and [Design Quality Checklist](design-quality-checklist.md). Areas include visual design, UX, website patterns, design systems, frontend engineering, responsive design, accessibility, research, and critique.
 
-Create or expand the following documents when the milestone is prepared for implementation. Do not create empty documents merely to satisfy a template.
+## Documents
 
-- `objectives-and-scope.md` — measurable goals, boundaries, assumptions, and exclusions.
-- `feature-specification.md` — feature behavior, requirements, and edge cases.
-- `user-stories.md` — user/system stories with traceable identifiers.
-- `interaction-specification.md` — screens, states, flows, and interaction rules where applicable.
-- `technical-design.md` — architecture, module boundaries, and implementation approach.
-- `data-contracts.md` — entities, schemas, events, and API contracts where applicable.
-- `acceptance-criteria.md` — testable milestone completion criteria.
-- `testing-strategy.md` — unit, integration, component, accessibility, and end-to-end verification.
-- `implementation-tasks.md` — dependency-ordered, reviewable engineering tasks.
+- [Visual identity](visual-identity.md)
+- [Design tokens](design-tokens.md)
+- [Builder interface specification](builder-interface-specification.md)
+- [Component portfolio guidelines](component-portfolio-guidelines.md)
+- [Professional design framework](professional-design-framework.md)
+- [Design quality checklist](design-quality-checklist.md)
+- [Responsive design guidelines](responsive-design-guidelines.md)
 
-## Definition of done
+## Completion criteria
 
-- [ ] Scope, assumptions, and exclusions are agreed.
-- [ ] Dependencies are satisfied or explicitly resolved.
-- [ ] Feature requirements and user stories are traceable.
-- [ ] UX and technical decisions are documented where relevant.
-- [ ] Implementation tasks are small enough to review and verify.
-- [ ] Acceptance criteria pass.
-- [ ] Relevant automated and manual verification evidence is recorded.
-- [ ] Known limitations and follow-up work are documented.
-- [ ] The roadmap and feature inventory reflect any approved scope changes.
+- [x] Builder and component-portfolio systems are separated.
+- [x] Builder direction and anti-patterns are documented.
+- [x] Sample catalogue, preview, diversity, and growth conventions are documented.
+- [x] M02 composition and content-only editing boundary is preserved.
+- [x] Responsive conventions and professional quality framework are documented.
+- [x] Repository is the source of truth.
+- [ ] Application implementation and visual verification — later implementation milestones.
 
-## Open decisions
+## Governance
 
-Record unresolved product or technical questions here. Each decision should eventually be resolved or moved to the shared `decisions/` area with rationale and consequences.
-
-## Status
-
-**Planning.** This document defines intended scope; it does not claim implementation is complete.
+The existing application repository is authoritative. Figma may be used as a complementary exploration/review workspace, but it does not replace repository documentation or implementation tokens. New visual decisions must be checked against M00–M02 and preserve the distinction between System A and System B.
