@@ -99,3 +99,35 @@ Downstream ownership:
 - M10–M12 apply responsive sample guidance to homepage and multi-page composition.
 
 M03 approval is a planning/design baseline, not implementation or visual verification evidence.
+
+
+## MVP C decision and M10–M15 delivery alignment
+
+ADR-0001 records the user's accepted MVP C decision and supersedes conflicting earlier save/recovery expectations for the first release.
+
+### Release boundary
+
+- **MVP C — Complete design and handoff:** M00–M14, implemented in staged increments. The user can create a project, compose a homepage and additional pages, configure responsive behavior, manage supported content and session-only local media, review quality, and explicitly export JSON/Markdown or an optional ZIP handoff. Project state remains in browser memory; no account, cloud persistence, autosave, browser storage, undo/redo, version history, import, or backend asset library.
+- **Post-MVP platform — M15:** standalone extraction and platform readiness followed by staged accounts, durable projects, recovery/versioning, hosted assets, sharing, growth tooling, and potentially monetization after separate validation.
+
+### M10–M15 ownership
+
+| Milestone | Owns | Explicitly does not own |
+|---|---|---|
+| M10 | Homepage section discovery, user-selected samples, homepage composition, visitor-action intent, shared-frame references | Responsive engine, multi-page lifecycle, content quality platform |
+| M11 | Three-canvas responsive behavior, inheritance, bounded sample overrides, responsive validation | Arbitrary CSS/breakpoints, component membership on tablet/mobile |
+| M12 | Page planner/lifecycle, page starters, shared site elements, navigation and route integrity | CMS, transactions, automatic page creation |
+| M13 | Structured content readiness, session-only local media, alt text, validation and actionable review | Hosted asset library, stock media, AI rewriting |
+| M14 | Versioned JSON blueprint, Markdown handoff, optional ZIP with selected available media | Import, production code, publishing, cloud save |
+| M15 | Post-MVP standalone extraction, accounts, persistence/recovery, operations, sharing and growth | Any implicit expansion of MVP C |
+
+### Delivery sequence
+
+1. M10 homepage and section library build on M06/M07/M09.
+2. M11 makes the same composed content understandable across device classes.
+3. M12 extends the homepage to a connected set of user-created pages.
+4. M13 improves content/media readiness and aggregates M09/M11/M12 findings.
+5. M14 packages the complete or incomplete project into portable handoff formats.
+6. M15 begins only after the session-based MVP is implemented and validated, with each platform stage separately authorized.
+
+The M10–M15 specifications are planning baselines. Their presence does not mean application code, automated tests, deployment, or platform operations are complete.
