@@ -80,3 +80,19 @@ Broader capability families in the developer-tools proposal (full format parsers
 4. Reproduce the dependency-install issue and run unit/component tests, lint, typecheck, build, smoke and Playwright checks on the evaluated build.
 5. Inspect rendered screenshots from the exact evaluated build, including empty/loaded/error/active states, short viewports, themes, RTL, keyboard/focus, menu anchoring and scroll ownership.
 6. Update this page only when durable implementation facts or verification status change. Keep task progress and build-specific evidence in pull requests and CI artifacts, not as a rolling audit diary.
+
+
+### Design Playground
+- `/design` is an initial Design learning module hosted within the existing Next.js application. The route uses a Design-owned shell and a module under `design/`; the existing GaGet shell bypasses its sidebar/header on Design routes.
+- The GaGet sidebar links to Design after the existing MCP destination; the existing workspace, Dev Tools, Batch Workbench, and MCP order is preserved.
+- Initial style routes: `/design/bauhaus`, `/design/swiss`, `/design/minimalism`, `/design/art-deco`, and `/design/de-stijl`. All render one shared fictional portfolio data source.
+- Design-specific styles are namespaced in a CSS Module. The app still uses one root Tailwind configuration; Tailwind configuration is not independently scoped per source folder.
+- **Status: Partial; source added, runtime/visual verification pending.** Do not treat route existence or source inspection as proof of a verified browser experience.
+
+## Website Design Builder
+
+- `/website-builder` is an internal, non-indexable route for the Generic Website Design Builder. The route renders a feature-owned workspace instead of the shared GaGet header/sidebar; the GaGet sidebar provides the entry point.
+- The Phase 1 foundation includes session-only project creation, a typed in-memory project/page model, an isolated workspace shell, a data-driven initial sample catalogue, a sample renderer registry with local failure handling, responsive canvas scaffolding, scoped light/dark design tokens, reduced-motion handling, and explicit session-loss guidance.
+- The project is intentionally not persisted. Refreshing or closing the page may discard unexported project state. No account, database, cloud storage, autosave, local-storage project persistence, import, publish, or deployment capability is part of this foundation.
+- Phase 1 verification is tied to the GitHub Actions evidence for the tested `feature-design` commit. This status does not imply that the catalogue/composition, full progression, identity, homepage, responsive, multi-page, content/media, export, or final acceptance phases are complete.
+- **Status: Phase 1 foundation verified; Phases 2–10 remain open.**

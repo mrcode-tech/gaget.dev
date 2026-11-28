@@ -18,3 +18,7 @@ Required product direction:
 - Follow existing design-system, responsive, accessibility, localization/RTL, and testing requirements. Update roadmap/progress only with exact-revision test and CI evidence; documentation and wireframes alone do not prove implementation.
 
 Use `command.md` command **MCP web experience** for this scope. Do not skip the phase audit, tests, or CI verification.
+
+## Design Playground
+
+For Design Playground work, read [the Design Playground specification](specification/product/design-playground.md) and follow [the canonical AI workflow](specification/AI_INSTRUCTIONS.md). Keep the experience as an isolated module inside the existing Next.js application: route adapters under `app/design/`, feature-owned implementation under `design/`, and one entry link in the GaGet sidebar. Do not create another Next.js application, package, deployment, or Tailwind configuration. Do not import GaGet presentation components into Design. Scope Design styles/tokens so they cannot affect GaGet. Preserve the existing GaGet shell and navigation order apart from the single Design entry. Use the shared fictional portfolio data across every visual-style demonstration. Update the feature specification, route/component inventories, and verification evidence as implementation progresses.

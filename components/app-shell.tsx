@@ -12,6 +12,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const { locale } = useI18n();
   const direction = localeDirections[locale];
   const pathname = usePathname();
+  const hostShellPath = pathname.replace(/^\/(fa|ar)(?=\/|$)/, "") || "/";
+  if (hostShellPath === "/design" || hostShellPath.startsWith("/design/") || hostShellPath === "/website-builder" || hostShellPath.startsWith("/website-builder/")) return <>{children}</>;
   const isPhotoEditor = /(?:^|\/)images\/editor\/?$/.test(pathname);
   const isAudioEditor = /(?:^|\/)audio\/editor\/?$/.test(pathname);
   const isVideoEditor = /(?:^|\/)video\/editor\/?$/.test(pathname);

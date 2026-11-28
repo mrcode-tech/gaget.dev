@@ -34,6 +34,7 @@ describe("AppSidebar", () => {
   it("shows navigation labels when expanded and hides them when collapsed", () => {
     render(<SidebarHarness />);
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Website Design Builder" }).getAttribute("href")).toBe("/website-builder");
     expect(screen.getByRole("link", { name: "Dev Tools" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Batch Workbench" }).getAttribute("href")).toBe("/workflow/pipeline");
     expect(screen.getByRole("link", { name: "MCP & Integrations" }).getAttribute("href")).toBe("/mcp");
@@ -65,6 +66,15 @@ describe("AppSidebar", () => {
     ]);
   });
 
+  it("adds Design after the existing primary destinations without reordering them", () => {
+    render(<SidebarHarness />);
+    const navigation = within(screen.getByRole("navigation", { name: "Main navigation" }));
+    const hrefs = navigation.getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(navigation.getByRole("link", { name: "Design Playground" }).getAttribute("href")).toBe("/design");
+    expect(hrefs[hrefs.indexOf("/design") - 1]).toBe("/mcp");
+    expect(hrefs[hrefs.indexOf("/website-builder") - 1]).toBe("/design");
+  });
+
   it("shows language and appearance as separately captioned rows in the mobile drawer", () => {
     render(<SidebarHarness />);
     expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull();
@@ -93,9 +103,9 @@ describe("AppSidebar", () => {
   });
 
   it("marks the current route as active", () => {
-    navigation.pathname = "/tools";
+    navigation.pathname = "/website-builder";
     render(<SidebarHarness />);
-    expect(screen.getByRole("link", { name: "Dev Tools" }).className).toContain("bg-accent");
+    expect(screen.getByRole("link", { name: "Website Design Builder" }).className).toContain("bg-accent");
   });
 
   it("keeps the drawer close button in the header instead of floating over the GaGet logo", () => {

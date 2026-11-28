@@ -43,3 +43,23 @@ A component's existence does not imply that all its states or consumers have bee
 - `components/developer-tool-workbench.tsx` composes existing Button, Input, Textarea and Card primitives for the seven standalone developer-tool routes. Its operation contract and current layout are documented in `specification/new-feature/shared-components/developer-tool-workbench.md` and `specification/new-feature/wireframes/developer-tool-workbench.md`.
 
 - components/encoding-workbench.tsx provides the unified Encoding & Decoding selector and uses lib/tools/encoding-operations.ts for pure transforms. Contract: specification/new-feature/shared-components/encoding-workbench.md; wireframe: specification/new-feature/wireframes/encoding-workbench.md.
+
+
+## Design Playground module components
+
+| Area | Source | Responsibility | Audit notes |
+|---|---|---|---|
+| Design application shell | `design/components/design-shell.tsx` | Owns Design navigation, route context and return-to-GaGet link | Rendered instead of the GaGet AppShell on `/design/*`; responsive and keyboard behavior pending browser verification. |
+| Design learning views | `design/components/design-experience.tsx` | Design landing catalogue, shared sample portfolio preview, and style documentation | All styles consume the same canonical sample portfolio; visual QA pending. |
+| Design visual system | `design/styles/design.module.css` | Namespaced Design-only layout, tokens, style variants and responsive rules | CSS Module; avoid global selectors and do not alter GaGet global tokens. |
+| Design content | `design/data/sample-portfolio.ts`, `design/data/styles.ts` | Canonical fictional portfolio and educational style metadata | Data must remain shared across all style previews. |
+
+## Website Design Builder module components
+
+| Area | Source | Responsibility | Audit notes |
+|---|---|---|---|
+| Builder route adapter | `app/website-builder/page.tsx` | Hosts the internal non-indexable builder route | `AppShell` bypasses the shared GaGet chrome on this route; GaGet navigation remains the entry point. |
+| Builder workspace | `components/website-builder/workspace.tsx` | Project setup, feature-owned workspace shell, journey navigation, catalogue interaction and canvas scaffolding | Session-only state; current phase does not represent the complete MVP. |
+| Sample renderer registry | `components/website-builder/sample-renderers.tsx` | Maps catalogue samples to distinct preview renderers and contains renderer failures | Unknown registrations and runtime rendering failures have explicit local fallback states. |
+| Builder token layer | `components/website-builder/website-builder.module.css` | Scoped light/dark semantic tokens, focus styling and reduced-motion behavior | CSS Module; does not change global GaGet tokens or global styles. |
+| Builder domain model | `lib/website-builder/model.ts` | Typed project/page/mission/sample structures and pure project/composition/quality/export transformations | Browser-session project state only; later phase requirements remain to be implemented and verified. |
