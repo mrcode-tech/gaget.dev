@@ -216,3 +216,23 @@ test("insertion positions and drag-and-drop ordering update the active breakpoin
   const tablet = page.getByRole("region", { name: "Tablet website canvas" });
   await expect(tablet.locator("button").first()).toContainText("Objects made to be lived with");
 });
+
+
+test("shared membership changes are disabled outside the desktop canvas", async ({ page }) => {
+  await page.goto("/website-builder");
+  await page.getByLabel("Project name").fill("Responsive Studio");
+  await page.getByLabel("Website purpose").fill("Keep shared structure consistent.");
+  await page.getByRole("button", { name: /Create my website/ }).click();
+  await page.getByRole("button", { name: "Tablet" }).first().click();
+  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  await expect(page.getByRole("button", { name: "Switch to Desktop to insert" })).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Desktop" }).first().click();
+  await page.getByRole("button", { name: "Preview", exact: true }).first().click();
+  await page.getByRole("button", { name: "Choose this design" }).click();
+  await page.getByRole("button", { name: "Insert section" }).click();
+  await page.getByRole("button", { name: "Tablet" }).first().click();
+  await expect(page.getByRole("button", { name: "Duplicate" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Remove" })).toBeDisabled();
+  await expect(page.getByLabel("Replace design")).toBeDisabled();
+});

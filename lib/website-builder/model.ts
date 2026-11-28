@@ -22,6 +22,7 @@ export type FieldDefinition = {
 export type ConfigurationDefinition = { id: string; label: string; defaultValue: string; options: string[] };
 export type TaxonomyType = { id: string; name: string; description: string };
 export type TaxonomyCategory = { id: string; name: string; description: string; types: TaxonomyType[] };
+export type SampleResponsiveContract = { desktop: string; tablet: string; mobile: string; supportedOverrides: string[] };
 export type Sample = {
   id: string;
   version: string;
@@ -37,6 +38,7 @@ export type Sample = {
   keywords: string[];
   lifecycle: "draft" | "review" | "published" | "deprecated" | "retired";
   fields: FieldDefinition[];
+  responsive: SampleResponsiveContract;
   configuration?: ConfigurationDefinition[];
   accent: string;
   layout: "hero" | "cards" | "split" | "banner" | "footer";

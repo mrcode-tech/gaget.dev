@@ -8,15 +8,49 @@ const field = (
   options: Partial<FieldDefinition> = {},
 ): FieldDefinition => ({ id, label, kind, defaultValue, ...options });
 
+const responsiveFor = (layout: Sample["layout"]): Sample["responsive"] => {
+  if (layout === "hero") return {
+    desktop: "A wide opening composition with clear headline and action hierarchy.",
+    tablet: "The opening message remains prominent with a more compact media area.",
+    mobile: "The message and action stack into a single readable column.",
+    supportedOverrides: [],
+  };
+  if (layout === "cards") return {
+    desktop: "A balanced multi-column collection with generous item spacing.",
+    tablet: "The collection reduces column density while preserving item order.",
+    mobile: "Items stack vertically with readable labels and comfortable touch spacing.",
+    supportedOverrides: [],
+  };
+  if (layout === "split") return {
+    desktop: "Text and supporting media share a two-part composition.",
+    tablet: "The two parts rebalance to preserve readable text and media proportions.",
+    mobile: "Media and text stack in a clear reading sequence.",
+    supportedOverrides: [],
+  };
+  if (layout === "banner") return {
+    desktop: "Message and action share a horizontal band.",
+    tablet: "The message and action can wrap while retaining their visual relationship.",
+    mobile: "The message and action form a vertical, full-width sequence.",
+    supportedOverrides: [],
+  };
+  return {
+    desktop: "Brand, closing note, and navigation are arranged in a wide footer.",
+    tablet: "Footer groups wrap into fewer columns without losing hierarchy.",
+    mobile: "Footer content stacks into a compact, readable closing section.",
+    supportedOverrides: [],
+  };
+};
+
 const sample = (
-  definition: Omit<Sample, "version" | "lifecycle" | "secondaryStyles" | "purposes" | "keywords" | "configuration"> &
-    Partial<Pick<Sample, "secondaryStyles" | "purposes" | "keywords" | "configuration">>,
+  definition: Omit<Sample, "version" | "lifecycle" | "secondaryStyles" | "purposes" | "keywords" | "configuration" | "responsive"> &
+    Partial<Pick<Sample, "secondaryStyles" | "purposes" | "keywords" | "configuration" | "responsive">>,
 ): Sample => ({
   version: "1.0.0",
   lifecycle: "published",
   secondaryStyles: [],
   purposes: ["general-business"],
   keywords: [],
+  responsive: responsiveFor(definition.layout),
   ...definition,
 });
 
